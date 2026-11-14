@@ -37,7 +37,7 @@ def _padded(sym: Sym, extra: int) -> Sym:
 
 
 def _problem(syms: list[Sym], nets: list[Net], facts: Facts | None = None) -> PlacementProblem:
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts(far_ends=()))
 
 
 def two_band_columns() -> PlacementProblem:
@@ -63,7 +63,7 @@ def two_rows_equal_ranks() -> PlacementProblem:
 
 def mate_columns() -> PlacementProblem:
     """Columns P and Q: p is 48 tall, so its s pin sits 24 G below its origin; q n is 16 above."""
-    facts = Facts(mates=((PinRef("p", "s"), PinRef("q", "n")),))
+    facts = Facts(mates=((PinRef("p", "s"), PinRef("q", "n")),), far_ends=())
     syms = [elem("gp"), elem("p", height=48), elem("q"), elem("gq")]
     nets = chain(["gp", "p"], "a") + chain(["q", "gq"], "b")
     return _problem(syms, nets, facts)
@@ -74,7 +74,7 @@ def mate_across_rows() -> PlacementProblem:
 
     Row 1 starts below row 0's bottom, so the mate cannot hold as an equality.
     """
-    facts = Facts(mates=((PinRef("p", "s"), PinRef("r", "n")),))
+    facts = Facts(mates=((PinRef("p", "s"), PinRef("r", "n")),), far_ends=())
     syms = [elem("pa"), _wide("p"), _wide("q"), elem("qb"), _wide("r"), elem("ra")]
     nets = chain(["pa", "p"], "a") + chain(["q", "qb"], "b") + chain(["r", "ra"], "c")
     return _problem(syms, nets, facts)
@@ -82,7 +82,7 @@ def mate_across_rows() -> PlacementProblem:
 
 def mate_with_box() -> PlacementProblem:
     """Box A1, pins p1 and p2 each wired to a coil; a mate joins p1 to free column K's n pin."""
-    facts = Facts(mates=((PinRef("A1", "p1"), PinRef("k3", "n")),))
+    facts = Facts(mates=((PinRef("A1", "p1"), PinRef("k3", "n")),), far_ends=())
     syms = [box_sym(2), elem("k1"), elem("k2"), elem("k3"), elem("k4")]
     nets = [net("c1", "A1.p1", "k1.n"), net("c2", "A1.p2", "k2.n")]
     return _problem(syms, [*nets, *chain(["k3", "k4"], "k")], facts)
@@ -127,7 +127,7 @@ def all_three_contradict() -> PlacementProblem:
     syms += [_band("y2", 1), elem("z"), elem("gp"), elem("p", height=48)]
     nets = chain(["x1", "x2"], "x") + chain(["y1", "y2"], "y") + chain(["gp", "p"], "a")
     nets = [*nets, net("f", "x2.s", "y1.n", "z.n")]
-    facts = Facts(mates=((PinRef("p", "s"), PinRef("gp", "n")),))
+    facts = Facts(mates=((PinRef("p", "s"), PinRef("gp", "n")),), far_ends=())
     return _problem(syms, nets, facts)
 
 

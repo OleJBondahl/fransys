@@ -1,426 +1,1253 @@
-# FRANSYS PLACEMENT INSTANCE test_a_long_chain_in_one_block_keeps_its_order__1
+# FRANSYS PLACEMENT INSTANCE w10_long_chain
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group CH order=0 "Chain"
-sym =CH-U1-R1.item group=CH body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin lamp.1 S 0,16
-  pin lamp.2 N 0,-16
-sym =CH-U1-D6.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D7.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D14.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D4.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D16.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D10.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D18.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 0,16
-sym =CH-U1-D1.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 0,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D3.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D8.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D11.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D9.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D2.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D12.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D15.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D13.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D17.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-sym =CH-U1-D5.item group=CH body=-16,-16,176,32 keepout=-16,-16,228,32
-  pin IN.1 N 0,-16
-  pin IN.2 N 32,-16
-  pin IN.3 N 64,-16
-  pin IN.4 N 96,-16
-  pin OUT.1 S 0,16
-  pin OUT.2 S 32,16
-  pin OUT.3 S 64,16
-  pin OUT.4 S 96,16
-  pin pwr.minus N 128,-16
-  pin pwr.plus S 128,16
-net n0 =CH-U1-D4.item.OUT.1 =CH-U1-D5.item.IN.1
-net n1 =CH-U1-D16.item.OUT.1 =CH-U1-D17.item.IN.1
-net n2 =CH-U1-D10.item.OUT.1 =CH-U1-D11.item.IN.1
-net n3 =CH-U1-D2.item.OUT.2 =CH-U1-D3.item.IN.2
-net n4 =CH-U1-D10.item.OUT.2 =CH-U1-D11.item.IN.2
-net n5 =CH-U1-D16.item.pwr.plus =CH-U1-D17.item.pwr.minus
-net n6 =CH-U1-D11.item.OUT.4 =CH-U1-D12.item.IN.4
-net n7 =CH-U1-D4.item.OUT.2 =CH-U1-D5.item.IN.2
-net n8 =CH-U1-D15.item.OUT.2 =CH-U1-D16.item.IN.2
-net n9 =CH-U1-D16.item.OUT.4 =CH-U1-D17.item.IN.4
-net n10 =CH-U1-D5.item.OUT.1 =CH-U1-D6.item.IN.1
-net n11 =CH-U1-D10.item.IN.3 =CH-U1-D9.item.OUT.3
-net n12 =CH-U1-D1.item.OUT.3 =CH-U1-D2.item.IN.3
-net n13 =CH-U1-D16.item.OUT.3 =CH-U1-D17.item.IN.3
-net n14 =CH-U1-D15.item.OUT.1 =CH-U1-D16.item.IN.1
-net n15 =CH-U1-D8.item.OUT.4 =CH-U1-D9.item.IN.4
-net n16 =CH-U1-D17.item.pwr.plus =CH-U1-D18.item.pwr.minus
-net n17 =CH-U1-D5.item.pwr.plus =CH-U1-D6.item.pwr.minus
-net n18 =CH-U1-D7.item.OUT.3 =CH-U1-D8.item.IN.3
-net n19 =CH-U1-D8.item.OUT.1 =CH-U1-D9.item.IN.1
-net n20 =CH-U1-D3.item.OUT.1 =CH-U1-D4.item.IN.1
-net n21 =CH-U1-D18.item.pwr.plus =CH-U1-R1.item.lamp.2
-net n22 =CH-U1-D1.item.OUT.4 =CH-U1-D2.item.IN.4
-net n24 =CH-U1-D10.item.pwr.minus =CH-U1-D9.item.pwr.plus
-net n25 =CH-U1-D13.item.OUT.2 =CH-U1-D14.item.IN.2
-net n26 =CH-U1-D1.item.pwr.minus =CH-U1-R1.item.lamp.1
-net n27 =CH-U1-D12.item.OUT.3 =CH-U1-D13.item.IN.3
-net n28 =CH-U1-D11.item.pwr.plus =CH-U1-D12.item.pwr.minus
-net n29 =CH-U1-D1.item.pwr.plus =CH-U1-D2.item.pwr.minus
-net n30 =CH-U1-D15.item.pwr.plus =CH-U1-D16.item.pwr.minus
-net n31 =CH-U1-D14.item.OUT.2 =CH-U1-D15.item.IN.2
-net n32 =CH-U1-D8.item.OUT.3 =CH-U1-D9.item.IN.3
-net n33 =CH-U1-D4.item.pwr.plus =CH-U1-D5.item.pwr.minus
-net n34 =CH-U1-D10.item.OUT.3 =CH-U1-D11.item.IN.3
-net n35 =CH-U1-D8.item.OUT.2 =CH-U1-D9.item.IN.2
-net n36 =CH-U1-D4.item.OUT.3 =CH-U1-D5.item.IN.3
-net n37 =CH-U1-D17.item.OUT.3 =CH-U1-D18.item.IN.3
-net n38 =CH-U1-D11.item.OUT.1 =CH-U1-D12.item.IN.1
-net n39 =CH-U1-D2.item.OUT.1 =CH-U1-D3.item.IN.1
-net n40 =CH-U1-D14.item.OUT.1 =CH-U1-D15.item.IN.1
-net n41 =CH-U1-D2.item.OUT.4 =CH-U1-D3.item.IN.4
-net n42 =CH-U1-D15.item.OUT.4 =CH-U1-D16.item.IN.4
-net n44 =CH-U1-D7.item.pwr.plus =CH-U1-D8.item.pwr.minus
-net n45 =CH-U1-D10.item.pwr.plus =CH-U1-D11.item.pwr.minus
-net n46 =CH-U1-D5.item.OUT.2 =CH-U1-D6.item.IN.2
-net n47 =CH-U1-D2.item.OUT.3 =CH-U1-D3.item.IN.3
-net n48 =CH-U1-D10.item.IN.1 =CH-U1-D9.item.OUT.1
-net n49 =CH-U1-D7.item.OUT.4 =CH-U1-D8.item.IN.4
-net n50 =CH-U1-D16.item.OUT.2 =CH-U1-D17.item.IN.2
-net n51 =CH-U1-D12.item.pwr.plus =CH-U1-D13.item.pwr.minus
-net n52 =CH-U1-D7.item.OUT.2 =CH-U1-D8.item.IN.2
-net n53 =CH-U1-D10.item.IN.2 =CH-U1-D9.item.OUT.2
-net n54 =CH-U1-D13.item.OUT.1 =CH-U1-D14.item.IN.1
-net n55 =CH-U1-D5.item.OUT.3 =CH-U1-D6.item.IN.3
-net n56 =CH-U1-D1.item.OUT.2 =CH-U1-D2.item.IN.2
-net n58 =CH-U1-D6.item.OUT.2 =CH-U1-D7.item.IN.2
-net n59 =CH-U1-D7.item.OUT.1 =CH-U1-D8.item.IN.1
-net n60 =CH-U1-D14.item.pwr.plus =CH-U1-D15.item.pwr.minus
-net n61 =CH-U1-D6.item.pwr.plus =CH-U1-D7.item.pwr.minus
-net n62 =CH-U1-D17.item.OUT.1 =CH-U1-D18.item.IN.1
-net n63 =CH-U1-D14.item.OUT.3 =CH-U1-D15.item.IN.3
-net n64 =CH-U1-D3.item.OUT.4 =CH-U1-D4.item.IN.4
-net n65 =CH-U1-D6.item.OUT.3 =CH-U1-D7.item.IN.3
-net n66 =CH-U1-D12.item.OUT.4 =CH-U1-D13.item.IN.4
-net n67 =CH-U1-D2.item.pwr.plus =CH-U1-D3.item.pwr.minus
-net n69 =CH-U1-D13.item.OUT.4 =CH-U1-D14.item.IN.4
-net n70 =CH-U1-D17.item.OUT.4 =CH-U1-D18.item.IN.4
-net n71 =CH-U1-D3.item.pwr.plus =CH-U1-D4.item.pwr.minus
-net n72 =CH-U1-D13.item.OUT.3 =CH-U1-D14.item.IN.3
-net n73 =CH-U1-D11.item.OUT.2 =CH-U1-D12.item.IN.2
-net n75 =CH-U1-D8.item.pwr.plus =CH-U1-D9.item.pwr.minus
-net n76 =CH-U1-D6.item.OUT.1 =CH-U1-D7.item.IN.1
-net n77 =CH-U1-D6.item.OUT.4 =CH-U1-D7.item.IN.4
-net n78 =CH-U1-D12.item.OUT.2 =CH-U1-D13.item.IN.2
-net n80 =CH-U1-D1.item.OUT.1 =CH-U1-D2.item.IN.1
-net n81 =CH-U1-D10.item.OUT.4 =CH-U1-D11.item.IN.4
-net n82 =CH-U1-D3.item.OUT.3 =CH-U1-D4.item.IN.3
-net n83 =CH-U1-D13.item.pwr.plus =CH-U1-D14.item.pwr.minus
-net n84 =CH-U1-D3.item.OUT.2 =CH-U1-D4.item.IN.2
-net n85 =CH-U1-D12.item.OUT.1 =CH-U1-D13.item.IN.1
-net n86 =CH-U1-D14.item.OUT.4 =CH-U1-D15.item.IN.4
-net n87 =CH-U1-D11.item.OUT.3 =CH-U1-D12.item.IN.3
-net n88 =CH-U1-D4.item.OUT.4 =CH-U1-D5.item.IN.4
-net n90 =CH-U1-D5.item.OUT.4 =CH-U1-D6.item.IN.4
-net n91 =CH-U1-D15.item.OUT.3 =CH-U1-D16.item.IN.3
-net n93 =CH-U1-D17.item.OUT.2 =CH-U1-D18.item.IN.2
-net n94 =CH-U1-D10.item.IN.4 =CH-U1-D9.item.OUT.4
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+group CH order=0 "CH"
+sym =U1-D1.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D1.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D1.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D1.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D1.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D2.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D2.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D3.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D3.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D4.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D4.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D5.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D5.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D6.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D6.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D7.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D7.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D8.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D8.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D9.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D9.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D10.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D10.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D11.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D11.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D12.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D12.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D13.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D13.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D14.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D14.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D15.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D15.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D16.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D16.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D17.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.1#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.2#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.3#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.4#2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D17.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-D18.1 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D18.2 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D18.3 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D18.4 group=CH body=-16,-16,32,32 keepout=-72,-16,88,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-D18.pwr group=CH body=-16,-16,64,32 keepout=-16,-16,120,32
+  pin minus N 0,-16
+  pin plus S 0,16
+sym =U1-R1.lamp group=CH body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+net n0 =U1-D1.1.in =U1-D2.1.in
+net n1 =U1-D1.2.out =U1-D2.2.out
+net n2 =U1-D1.3.in =U1-D2.3.in
+net n3 =U1-D1.4.out =U1-D2.4.out
+net n4 =U1-D1.pwr.minus =U1-R1.lamp.in
+net n5 =U1-D1.pwr.plus =U1-D2.pwr.minus
+net n6 =U1-D2.1#2.in =U1-D3.1.in
+net n7 =U1-D2.2#2.out =U1-D3.2.out
+net n8 =U1-D2.3#2.in =U1-D3.3.in
+net n9 =U1-D2.4#2.out =U1-D3.4.out
+net n10 =U1-D2.pwr.plus =U1-D3.pwr.minus
+net n11 =U1-D3.1#2.in =U1-D4.1.in
+net n12 =U1-D3.2#2.out =U1-D4.2.out
+net n13 =U1-D3.3#2.in =U1-D4.3.in
+net n14 =U1-D3.4#2.out =U1-D4.4.out
+net n15 =U1-D3.pwr.plus =U1-D4.pwr.minus
+net n16 =U1-D4.1#2.in =U1-D5.1.in
+net n17 =U1-D4.2#2.out =U1-D5.2.out
+net n18 =U1-D4.3#2.in =U1-D5.3.in
+net n19 =U1-D4.4#2.out =U1-D5.4.out
+net n20 =U1-D4.pwr.plus =U1-D5.pwr.minus
+net n21 =U1-D5.1#2.in =U1-D6.1.in
+net n22 =U1-D5.2#2.out =U1-D6.2.out
+net n23 =U1-D5.3#2.in =U1-D6.3.in
+net n24 =U1-D5.4#2.out =U1-D6.4.out
+net n25 =U1-D5.pwr.plus =U1-D6.pwr.minus
+net n26 =U1-D6.1#2.in =U1-D7.1.in
+net n27 =U1-D6.2#2.out =U1-D7.2.out
+net n28 =U1-D6.3#2.in =U1-D7.3.in
+net n29 =U1-D6.4#2.out =U1-D7.4.out
+net n30 =U1-D6.pwr.plus =U1-D7.pwr.minus
+net n31 =U1-D7.1#2.in =U1-D8.1.in
+net n32 =U1-D7.2#2.out =U1-D8.2.out
+net n33 =U1-D7.3#2.in =U1-D8.3.in
+net n34 =U1-D7.4#2.out =U1-D8.4.out
+net n35 =U1-D7.pwr.plus =U1-D8.pwr.minus
+net n36 =U1-D8.1#2.in =U1-D9.1.in
+net n37 =U1-D8.2#2.out =U1-D9.2.out
+net n38 =U1-D8.3#2.in =U1-D9.3.in
+net n39 =U1-D8.4#2.out =U1-D9.4.out
+net n40 =U1-D8.pwr.plus =U1-D9.pwr.minus
+net n41 =U1-D9.1#2.in =U1-D10.1.in
+net n42 =U1-D9.2#2.out =U1-D10.2.out
+net n43 =U1-D9.3#2.in =U1-D10.3.in
+net n44 =U1-D9.4#2.out =U1-D10.4.out
+net n45 =U1-D9.pwr.plus =U1-D10.pwr.minus
+net n46 =U1-D10.1#2.in =U1-D11.1.in
+net n47 =U1-D10.2#2.out =U1-D11.2.out
+net n48 =U1-D10.3#2.in =U1-D11.3.in
+net n49 =U1-D10.4#2.out =U1-D11.4.out
+net n50 =U1-D10.pwr.plus =U1-D11.pwr.minus
+net n51 =U1-D11.1#2.in =U1-D12.1.in
+net n52 =U1-D11.2#2.out =U1-D12.2.out
+net n53 =U1-D11.3#2.in =U1-D12.3.in
+net n54 =U1-D11.4#2.out =U1-D12.4.out
+net n55 =U1-D11.pwr.plus =U1-D12.pwr.minus
+net n56 =U1-D12.1#2.in =U1-D13.1.in
+net n57 =U1-D12.2#2.out =U1-D13.2.out
+net n58 =U1-D12.3#2.in =U1-D13.3.in
+net n59 =U1-D12.4#2.out =U1-D13.4.out
+net n60 =U1-D12.pwr.plus =U1-D13.pwr.minus
+net n61 =U1-D13.1#2.in =U1-D14.1.in
+net n62 =U1-D13.2#2.out =U1-D14.2.out
+net n63 =U1-D13.3#2.in =U1-D14.3.in
+net n64 =U1-D13.4#2.out =U1-D14.4.out
+net n65 =U1-D13.pwr.plus =U1-D14.pwr.minus
+net n66 =U1-D14.1#2.in =U1-D15.1.in
+net n67 =U1-D14.2#2.out =U1-D15.2.out
+net n68 =U1-D14.3#2.in =U1-D15.3.in
+net n69 =U1-D14.4#2.out =U1-D15.4.out
+net n70 =U1-D14.pwr.plus =U1-D15.pwr.minus
+net n71 =U1-D15.1#2.in =U1-D16.1.in
+net n72 =U1-D15.2#2.out =U1-D16.2.out
+net n73 =U1-D15.3#2.in =U1-D16.3.in
+net n74 =U1-D15.4#2.out =U1-D16.4.out
+net n75 =U1-D15.pwr.plus =U1-D16.pwr.minus
+net n76 =U1-D16.1#2.in =U1-D17.1.in
+net n77 =U1-D16.2#2.out =U1-D17.2.out
+net n78 =U1-D16.3#2.in =U1-D17.3.in
+net n79 =U1-D16.4#2.out =U1-D17.4.out
+net n80 =U1-D16.pwr.plus =U1-D17.pwr.minus
+net n81 =U1-D17.1#2.in =U1-D18.1.in
+net n82 =U1-D17.2#2.out =U1-D18.2.out
+net n83 =U1-D17.3#2.in =U1-D18.3.in
+net n84 =U1-D17.4#2.out =U1-D18.4.out
+net n85 =U1-D17.pwr.plus =U1-D18.pwr.minus
+net n86 =U1-D18.pwr.plus =U1-R1.lamp.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =U1-D1.1 =U1-D1.2 =U1-D1.3 =U1-D1.4 =U1-D1.pwr
+fact item =U1-D2.1 =U1-D2.2 =U1-D2.3 =U1-D2.4 =U1-D2.1#2 =U1-D2.2#2 =U1-D2.3#2 =U1-D2.4#2 =U1-D2.pwr
+fact item =U1-D3.1 =U1-D3.2 =U1-D3.3 =U1-D3.4 =U1-D3.1#2 =U1-D3.2#2 =U1-D3.3#2 =U1-D3.4#2 =U1-D3.pwr
+fact item =U1-D4.1 =U1-D4.2 =U1-D4.3 =U1-D4.4 =U1-D4.1#2 =U1-D4.2#2 =U1-D4.3#2 =U1-D4.4#2 =U1-D4.pwr
+fact item =U1-D5.1 =U1-D5.2 =U1-D5.3 =U1-D5.4 =U1-D5.1#2 =U1-D5.2#2 =U1-D5.3#2 =U1-D5.4#2 =U1-D5.pwr
+fact item =U1-D6.1 =U1-D6.2 =U1-D6.3 =U1-D6.4 =U1-D6.1#2 =U1-D6.2#2 =U1-D6.3#2 =U1-D6.4#2 =U1-D6.pwr
+fact item =U1-D7.1 =U1-D7.2 =U1-D7.3 =U1-D7.4 =U1-D7.1#2 =U1-D7.2#2 =U1-D7.3#2 =U1-D7.4#2 =U1-D7.pwr
+fact item =U1-D8.1 =U1-D8.2 =U1-D8.3 =U1-D8.4 =U1-D8.1#2 =U1-D8.2#2 =U1-D8.3#2 =U1-D8.4#2 =U1-D8.pwr
+fact item =U1-D9.1 =U1-D9.2 =U1-D9.3 =U1-D9.4 =U1-D9.1#2 =U1-D9.2#2 =U1-D9.3#2 =U1-D9.4#2 =U1-D9.pwr
+fact item =U1-D10.1 =U1-D10.2 =U1-D10.3 =U1-D10.4 =U1-D10.1#2 =U1-D10.2#2 =U1-D10.3#2 =U1-D10.4#2 =U1-D10.pwr
+fact item =U1-D11.1 =U1-D11.2 =U1-D11.3 =U1-D11.4 =U1-D11.1#2 =U1-D11.2#2 =U1-D11.3#2 =U1-D11.4#2 =U1-D11.pwr
+fact item =U1-D12.1 =U1-D12.2 =U1-D12.3 =U1-D12.4 =U1-D12.1#2 =U1-D12.2#2 =U1-D12.3#2 =U1-D12.4#2 =U1-D12.pwr
+fact item =U1-D13.1 =U1-D13.2 =U1-D13.3 =U1-D13.4 =U1-D13.1#2 =U1-D13.2#2 =U1-D13.3#2 =U1-D13.4#2 =U1-D13.pwr
+fact item =U1-D14.1 =U1-D14.2 =U1-D14.3 =U1-D14.4 =U1-D14.1#2 =U1-D14.2#2 =U1-D14.3#2 =U1-D14.4#2 =U1-D14.pwr
+fact item =U1-D15.1 =U1-D15.2 =U1-D15.3 =U1-D15.4 =U1-D15.1#2 =U1-D15.2#2 =U1-D15.3#2 =U1-D15.4#2 =U1-D15.pwr
+fact item =U1-D16.1 =U1-D16.2 =U1-D16.3 =U1-D16.4 =U1-D16.1#2 =U1-D16.2#2 =U1-D16.3#2 =U1-D16.4#2 =U1-D16.pwr
+fact item =U1-D17.1 =U1-D17.2 =U1-D17.3 =U1-D17.4 =U1-D17.1#2 =U1-D17.2#2 =U1-D17.3#2 =U1-D17.4#2 =U1-D17.pwr
+fact item =U1-D18.1 =U1-D18.2 =U1-D18.3 =U1-D18.4 =U1-D18.pwr
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact boxpin 
+fact boxpin =U1-D1.pwr.minus =U1-D1.pwr.plus =U1-D2.pwr.minus =U1-D2.pwr.plus =U1-D3.pwr.minus =U1-D3.pwr.plus =U1-D4.pwr.minus =U1-D4.pwr.plus =U1-D5.pwr.minus =U1-D5.pwr.plus =U1-D6.pwr.minus =U1-D6.pwr.plus =U1-D7.pwr.minus =U1-D7.pwr.plus =U1-D8.pwr.minus =U1-D8.pwr.plus =U1-D9.pwr.minus =U1-D9.pwr.plus =U1-D10.pwr.minus =U1-D10.pwr.plus =U1-D11.pwr.minus =U1-D11.pwr.plus =U1-D12.pwr.minus =U1-D12.pwr.plus =U1-D13.pwr.minus =U1-D13.pwr.plus =U1-D14.pwr.minus =U1-D14.pwr.plus =U1-D15.pwr.minus =U1-D15.pwr.plus =U1-D16.pwr.minus =U1-D16.pwr.plus =U1-D17.pwr.minus =U1-D17.pwr.plus =U1-D18.pwr.minus =U1-D18.pwr.plus
+fact attached 
+fact head 
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =U1-D2.1.in =U1-D1.1.in
+fact conductor =U1-D2.2.out =U1-D1.2.out
+fact conductor =U1-D2.3.in =U1-D1.3.in
+fact conductor =U1-D2.4.out =U1-D1.4.out
+fact conductor =U1-D2.pwr.minus =U1-D1.pwr.plus
+fact conductor =U1-R1.lamp.in =U1-D1.pwr.minus
+fact conductor =U1-D1.1.in =U1-D2.1.in
+fact conductor =U1-D1.2.out =U1-D2.2.out
+fact conductor =U1-D1.3.in =U1-D2.3.in
+fact conductor =U1-D1.4.out =U1-D2.4.out
+fact conductor =U1-D3.1.in =U1-D2.1#2.in
+fact conductor =U1-D3.2.out =U1-D2.2#2.out
+fact conductor =U1-D3.3.in =U1-D2.3#2.in
+fact conductor =U1-D3.4.out =U1-D2.4#2.out
+fact conductor =U1-D3.pwr.minus =U1-D2.pwr.plus
+fact conductor =U1-D1.pwr.plus =U1-D2.pwr.minus
+fact conductor =U1-D2.1#2.in =U1-D3.1.in
+fact conductor =U1-D2.2#2.out =U1-D3.2.out
+fact conductor =U1-D2.3#2.in =U1-D3.3.in
+fact conductor =U1-D2.4#2.out =U1-D3.4.out
+fact conductor =U1-D4.1.in =U1-D3.1#2.in
+fact conductor =U1-D4.2.out =U1-D3.2#2.out
+fact conductor =U1-D4.3.in =U1-D3.3#2.in
+fact conductor =U1-D4.4.out =U1-D3.4#2.out
+fact conductor =U1-D4.pwr.minus =U1-D3.pwr.plus
+fact conductor =U1-D2.pwr.plus =U1-D3.pwr.minus
+fact conductor =U1-D3.1#2.in =U1-D4.1.in
+fact conductor =U1-D3.2#2.out =U1-D4.2.out
+fact conductor =U1-D3.3#2.in =U1-D4.3.in
+fact conductor =U1-D3.4#2.out =U1-D4.4.out
+fact conductor =U1-D5.1.in =U1-D4.1#2.in
+fact conductor =U1-D5.2.out =U1-D4.2#2.out
+fact conductor =U1-D5.3.in =U1-D4.3#2.in
+fact conductor =U1-D5.4.out =U1-D4.4#2.out
+fact conductor =U1-D5.pwr.minus =U1-D4.pwr.plus
+fact conductor =U1-D3.pwr.plus =U1-D4.pwr.minus
+fact conductor =U1-D4.1#2.in =U1-D5.1.in
+fact conductor =U1-D4.2#2.out =U1-D5.2.out
+fact conductor =U1-D4.3#2.in =U1-D5.3.in
+fact conductor =U1-D4.4#2.out =U1-D5.4.out
+fact conductor =U1-D6.1.in =U1-D5.1#2.in
+fact conductor =U1-D6.2.out =U1-D5.2#2.out
+fact conductor =U1-D6.3.in =U1-D5.3#2.in
+fact conductor =U1-D6.4.out =U1-D5.4#2.out
+fact conductor =U1-D6.pwr.minus =U1-D5.pwr.plus
+fact conductor =U1-D4.pwr.plus =U1-D5.pwr.minus
+fact conductor =U1-D5.1#2.in =U1-D6.1.in
+fact conductor =U1-D5.2#2.out =U1-D6.2.out
+fact conductor =U1-D5.3#2.in =U1-D6.3.in
+fact conductor =U1-D5.4#2.out =U1-D6.4.out
+fact conductor =U1-D7.1.in =U1-D6.1#2.in
+fact conductor =U1-D7.2.out =U1-D6.2#2.out
+fact conductor =U1-D7.3.in =U1-D6.3#2.in
+fact conductor =U1-D7.4.out =U1-D6.4#2.out
+fact conductor =U1-D7.pwr.minus =U1-D6.pwr.plus
+fact conductor =U1-D5.pwr.plus =U1-D6.pwr.minus
+fact conductor =U1-D6.1#2.in =U1-D7.1.in
+fact conductor =U1-D6.2#2.out =U1-D7.2.out
+fact conductor =U1-D6.3#2.in =U1-D7.3.in
+fact conductor =U1-D6.4#2.out =U1-D7.4.out
+fact conductor =U1-D8.1.in =U1-D7.1#2.in
+fact conductor =U1-D8.2.out =U1-D7.2#2.out
+fact conductor =U1-D8.3.in =U1-D7.3#2.in
+fact conductor =U1-D8.4.out =U1-D7.4#2.out
+fact conductor =U1-D8.pwr.minus =U1-D7.pwr.plus
+fact conductor =U1-D6.pwr.plus =U1-D7.pwr.minus
+fact conductor =U1-D7.1#2.in =U1-D8.1.in
+fact conductor =U1-D7.2#2.out =U1-D8.2.out
+fact conductor =U1-D7.3#2.in =U1-D8.3.in
+fact conductor =U1-D7.4#2.out =U1-D8.4.out
+fact conductor =U1-D9.1.in =U1-D8.1#2.in
+fact conductor =U1-D9.2.out =U1-D8.2#2.out
+fact conductor =U1-D9.3.in =U1-D8.3#2.in
+fact conductor =U1-D9.4.out =U1-D8.4#2.out
+fact conductor =U1-D9.pwr.minus =U1-D8.pwr.plus
+fact conductor =U1-D7.pwr.plus =U1-D8.pwr.minus
+fact conductor =U1-D8.1#2.in =U1-D9.1.in
+fact conductor =U1-D8.2#2.out =U1-D9.2.out
+fact conductor =U1-D8.3#2.in =U1-D9.3.in
+fact conductor =U1-D8.4#2.out =U1-D9.4.out
+fact conductor =U1-D10.1.in =U1-D9.1#2.in
+fact conductor =U1-D10.2.out =U1-D9.2#2.out
+fact conductor =U1-D10.3.in =U1-D9.3#2.in
+fact conductor =U1-D10.4.out =U1-D9.4#2.out
+fact conductor =U1-D10.pwr.minus =U1-D9.pwr.plus
+fact conductor =U1-D8.pwr.plus =U1-D9.pwr.minus
+fact conductor =U1-D9.1#2.in =U1-D10.1.in
+fact conductor =U1-D9.2#2.out =U1-D10.2.out
+fact conductor =U1-D9.3#2.in =U1-D10.3.in
+fact conductor =U1-D9.4#2.out =U1-D10.4.out
+fact conductor =U1-D11.1.in =U1-D10.1#2.in
+fact conductor =U1-D11.2.out =U1-D10.2#2.out
+fact conductor =U1-D11.3.in =U1-D10.3#2.in
+fact conductor =U1-D11.4.out =U1-D10.4#2.out
+fact conductor =U1-D11.pwr.minus =U1-D10.pwr.plus
+fact conductor =U1-D9.pwr.plus =U1-D10.pwr.minus
+fact conductor =U1-D10.1#2.in =U1-D11.1.in
+fact conductor =U1-D10.2#2.out =U1-D11.2.out
+fact conductor =U1-D10.3#2.in =U1-D11.3.in
+fact conductor =U1-D10.4#2.out =U1-D11.4.out
+fact conductor =U1-D12.1.in =U1-D11.1#2.in
+fact conductor =U1-D12.2.out =U1-D11.2#2.out
+fact conductor =U1-D12.3.in =U1-D11.3#2.in
+fact conductor =U1-D12.4.out =U1-D11.4#2.out
+fact conductor =U1-D12.pwr.minus =U1-D11.pwr.plus
+fact conductor =U1-D10.pwr.plus =U1-D11.pwr.minus
+fact conductor =U1-D11.1#2.in =U1-D12.1.in
+fact conductor =U1-D11.2#2.out =U1-D12.2.out
+fact conductor =U1-D11.3#2.in =U1-D12.3.in
+fact conductor =U1-D11.4#2.out =U1-D12.4.out
+fact conductor =U1-D13.1.in =U1-D12.1#2.in
+fact conductor =U1-D13.2.out =U1-D12.2#2.out
+fact conductor =U1-D13.3.in =U1-D12.3#2.in
+fact conductor =U1-D13.4.out =U1-D12.4#2.out
+fact conductor =U1-D13.pwr.minus =U1-D12.pwr.plus
+fact conductor =U1-D11.pwr.plus =U1-D12.pwr.minus
+fact conductor =U1-D12.1#2.in =U1-D13.1.in
+fact conductor =U1-D12.2#2.out =U1-D13.2.out
+fact conductor =U1-D12.3#2.in =U1-D13.3.in
+fact conductor =U1-D12.4#2.out =U1-D13.4.out
+fact conductor =U1-D14.1.in =U1-D13.1#2.in
+fact conductor =U1-D14.2.out =U1-D13.2#2.out
+fact conductor =U1-D14.3.in =U1-D13.3#2.in
+fact conductor =U1-D14.4.out =U1-D13.4#2.out
+fact conductor =U1-D14.pwr.minus =U1-D13.pwr.plus
+fact conductor =U1-D12.pwr.plus =U1-D13.pwr.minus
+fact conductor =U1-D13.1#2.in =U1-D14.1.in
+fact conductor =U1-D13.2#2.out =U1-D14.2.out
+fact conductor =U1-D13.3#2.in =U1-D14.3.in
+fact conductor =U1-D13.4#2.out =U1-D14.4.out
+fact conductor =U1-D15.1.in =U1-D14.1#2.in
+fact conductor =U1-D15.2.out =U1-D14.2#2.out
+fact conductor =U1-D15.3.in =U1-D14.3#2.in
+fact conductor =U1-D15.4.out =U1-D14.4#2.out
+fact conductor =U1-D15.pwr.minus =U1-D14.pwr.plus
+fact conductor =U1-D13.pwr.plus =U1-D14.pwr.minus
+fact conductor =U1-D14.1#2.in =U1-D15.1.in
+fact conductor =U1-D14.2#2.out =U1-D15.2.out
+fact conductor =U1-D14.3#2.in =U1-D15.3.in
+fact conductor =U1-D14.4#2.out =U1-D15.4.out
+fact conductor =U1-D16.1.in =U1-D15.1#2.in
+fact conductor =U1-D16.2.out =U1-D15.2#2.out
+fact conductor =U1-D16.3.in =U1-D15.3#2.in
+fact conductor =U1-D16.4.out =U1-D15.4#2.out
+fact conductor =U1-D16.pwr.minus =U1-D15.pwr.plus
+fact conductor =U1-D14.pwr.plus =U1-D15.pwr.minus
+fact conductor =U1-D15.1#2.in =U1-D16.1.in
+fact conductor =U1-D15.2#2.out =U1-D16.2.out
+fact conductor =U1-D15.3#2.in =U1-D16.3.in
+fact conductor =U1-D15.4#2.out =U1-D16.4.out
+fact conductor =U1-D17.1.in =U1-D16.1#2.in
+fact conductor =U1-D17.2.out =U1-D16.2#2.out
+fact conductor =U1-D17.3.in =U1-D16.3#2.in
+fact conductor =U1-D17.4.out =U1-D16.4#2.out
+fact conductor =U1-D17.pwr.minus =U1-D16.pwr.plus
+fact conductor =U1-D15.pwr.plus =U1-D16.pwr.minus
+fact conductor =U1-D16.1#2.in =U1-D17.1.in
+fact conductor =U1-D16.2#2.out =U1-D17.2.out
+fact conductor =U1-D16.3#2.in =U1-D17.3.in
+fact conductor =U1-D16.4#2.out =U1-D17.4.out
+fact conductor =U1-D18.1.in =U1-D17.1#2.in
+fact conductor =U1-D18.2.out =U1-D17.2#2.out
+fact conductor =U1-D18.3.in =U1-D17.3#2.in
+fact conductor =U1-D18.4.out =U1-D17.4#2.out
+fact conductor =U1-D18.pwr.minus =U1-D17.pwr.plus
+fact conductor =U1-D16.pwr.plus =U1-D17.pwr.minus
+fact conductor =U1-D17.1#2.in =U1-D18.1.in
+fact conductor =U1-D17.2#2.out =U1-D18.2.out
+fact conductor =U1-D17.3#2.in =U1-D18.3.in
+fact conductor =U1-D17.4#2.out =U1-D18.4.out
+fact conductor =U1-R1.lamp.out =U1-D18.pwr.plus
+fact conductor =U1-D17.pwr.plus =U1-D18.pwr.minus
+fact conductor =U1-D1.pwr.minus =U1-R1.lamp.in
+fact conductor =U1-D18.pwr.plus =U1-R1.lamp.out
+fact group =U1-D9.2#2.out =U1-D10.2.out
+fact group =U1-D15.pwr.plus =U1-D16.pwr.minus
+fact group =U1-D18.1.in =U1-D17.1#2.in
+fact group =U1-D4.3.in =U1-D3.3#2.in
+fact group =U1-D14.pwr.minus =U1-D13.pwr.plus
+fact group =U1-D6.3.in =U1-D5.3#2.in
+fact group =U1-D15.2.out =U1-D14.2#2.out
+fact group =U1-D5.1.in =U1-D4.1#2.in
+fact group =U1-D8.4#2.out =U1-D9.4.out
+fact group =U1-D17.2#2.out =U1-D18.2.out
+fact group =U1-D3.3.in =U1-D2.3#2.in
+fact group =U1-D12.2#2.out =U1-D13.2.out
+fact group =U1-D16.2.out =U1-D15.2#2.out
+fact group =U1-D7.pwr.plus =U1-D8.pwr.minus
+fact group =U1-D7.3#2.in =U1-D8.3.in
+fact group =U1-D12.1#2.in =U1-D13.1.in
+fact group =U1-D13.3#2.in =U1-D14.3.in
+fact group =U1-D7.1.in =U1-D6.1#2.in
+fact group =U1-D16.3#2.in =U1-D17.3.in
+fact group =U1-D2.1#2.in =U1-D3.1.in
+fact group =U1-D10.4.out =U1-D9.4#2.out
+fact group =U1-D15.1#2.in =U1-D16.1.in
+fact group =U1-D15.pwr.minus =U1-D14.pwr.plus
+fact group =U1-D10.3#2.in =U1-D11.3.in
+fact group =U1-D4.2#2.out =U1-D5.2.out
+fact group =U1-D3.1#2.in =U1-D4.1.in
+fact group =U1-D5.2#2.out =U1-D6.2.out
+fact group =U1-D4.4.out =U1-D3.4#2.out
+fact group =U1-D11.pwr.minus =U1-D10.pwr.plus
+fact group =U1-D15.4.out =U1-D14.4#2.out
+fact group =U1-D5.pwr.minus =U1-D4.pwr.plus
+fact group =U1-D16.3.in =U1-D15.3#2.in
+fact group =U1-R1.lamp.out =U1-D18.pwr.plus
+fact group =U1-D15.1.in =U1-D14.1#2.in
+fact group =U1-D5.4.out =U1-D4.4#2.out
+fact group =U1-D7.1#2.in =U1-D8.1.in
+fact group =U1-D17.3#2.in =U1-D18.3.in
+fact group =U1-D6.2#2.out =U1-D7.2.out
+fact group =U1-D2.4#2.out =U1-D3.4.out
+fact group =U1-D8.3#2.in =U1-D9.3.in
+fact group =U1-D18.4.out =U1-D17.4#2.out
+fact group =U1-D17.1.in =U1-D16.1#2.in
+fact group =U1-D9.pwr.plus =U1-D10.pwr.minus
+fact group =U1-D16.2#2.out =U1-D17.2.out
+fact group =U1-D16.4#2.out =U1-D17.4.out
+fact group =U1-D8.4.out =U1-D7.4#2.out
+fact group =U1-D15.3.in =U1-D14.3#2.in
+fact group =U1-D9.3#2.in =U1-D10.3.in
+fact group =U1-D1.3.in =U1-D2.3.in
+fact group =U1-D9.pwr.minus =U1-D8.pwr.plus
+fact group =U1-D12.2.out =U1-D11.2#2.out
+fact group =U1-D2.pwr.minus =U1-D1.pwr.plus
+fact group =U1-D11.pwr.plus =U1-D12.pwr.minus
+fact group =U1-D12.4#2.out =U1-D13.4.out
+fact group =U1-D18.pwr.minus =U1-D17.pwr.plus
+fact group =U1-D9.1#2.in =U1-D10.1.in
+fact group =U1-D10.4#2.out =U1-D11.4.out
+fact group =U1-D10.1#2.in =U1-D11.1.in
+fact group =U1-D11.3#2.in =U1-D12.3.in
+fact group =U1-D11.4#2.out =U1-D12.4.out
+fact group =U1-D12.pwr.plus =U1-D13.pwr.minus
+fact group =U1-D13.1#2.in =U1-D14.1.in
+fact group =U1-D14.2.out =U1-D13.2#2.out
+fact group =U1-D6.3#2.in =U1-D7.3.in
+fact group =U1-D1.1.in =U1-D2.1.in
+fact group =U1-D7.pwr.minus =U1-D6.pwr.plus
+fact group =U1-D8.2.out =U1-D7.2#2.out
+fact group =U1-D3.2#2.out =U1-D4.2.out
+fact group =U1-D13.3.in =U1-D12.3#2.in
+fact group =U1-D16.pwr.plus =U1-D17.pwr.minus
+fact group =U1-D3.pwr.plus =U1-D4.pwr.minus
+fact group =U1-D15.4#2.out =U1-D16.4.out
+fact group =U1-D2.4.out =U1-D1.4.out
+fact group =U1-D10.2#2.out =U1-D11.2.out
+fact group =U1-D3.pwr.minus =U1-D2.pwr.plus
+fact group =U1-D7.4.out =U1-D6.4#2.out
+fact group =U1-D2.2.out =U1-D1.2.out
+fact group =U1-D6.1.in =U1-D5.1#2.in
+fact group =U1-D6.pwr.minus =U1-D5.pwr.plus
+fact group =U1-D8.2#2.out =U1-D9.2.out
+fact group =U1-D5.4#2.out =U1-D6.4.out
+fact group =U1-D1.pwr.minus =U1-R1.lamp.in
+fact group =U1-D2.2#2.out =U1-D3.2.out
+fact group =U1-D14.4.out =U1-D13.4#2.out
+fact group =U1-D11.1#2.in =U1-D12.1.in
+fact group =U1-D5.3.in =U1-D4.3#2.in
+fact group =U1-D9.1.in =U1-D8.1#2.in
 # legend only: a general placer must not read a symbol's kind.
-kind =CH-U1-R1.item item
-kind =CH-U1-D6.item item
-kind =CH-U1-D7.item item
-kind =CH-U1-D14.item item
-kind =CH-U1-D4.item item
-kind =CH-U1-D16.item item
-kind =CH-U1-D10.item item
-kind =CH-U1-D18.item item
-kind =CH-U1-D1.item item
-kind =CH-U1-D3.item item
-kind =CH-U1-D8.item item
-kind =CH-U1-D11.item item
-kind =CH-U1-D9.item item
-kind =CH-U1-D2.item item
-kind =CH-U1-D12.item item
-kind =CH-U1-D15.item item
-kind =CH-U1-D13.item item
-kind =CH-U1-D17.item item
-kind =CH-U1-D5.item item
-# today's placement: page, origin and orientation of each drawn copy.
-today =CH-U1-R1.item page=1 at=280,560 orient=R0 set=1
-today =CH-U1-D6.item page=1 at=32,432 orient=R0 set=1
-today =CH-U1-D7.item page=1 at=32,496 orient=R0 set=1
-today =CH-U1-D14.item page=1 at=280,240 orient=R0 set=1
-today =CH-U1-D4.item page=1 at=32,304 orient=R0 set=1
-today =CH-U1-D16.item page=1 at=280,368 orient=R0 set=1
-today =CH-U1-D10.item page=1 at=32,688 orient=R0 set=1
-today =CH-U1-D18.item page=1 at=280,496 orient=R0 set=1
-today =CH-U1-D1.item page=1 at=32,112 orient=R0 set=1
-today =CH-U1-D3.item page=1 at=32,240 orient=R0 set=1
-today =CH-U1-D8.item page=1 at=32,560 orient=R0 set=1
-today =CH-U1-D11.item page=1 at=32,752 orient=R0 set=1
-today =CH-U1-D9.item page=1 at=32,624 orient=R0 set=1
-today =CH-U1-D2.item page=1 at=32,176 orient=R0 set=1
-today =CH-U1-D12.item page=1 at=280,112 orient=R0 set=1
-today =CH-U1-D15.item page=1 at=280,304 orient=R0 set=1
-today =CH-U1-D13.item page=1 at=280,176 orient=R0 set=1
-today =CH-U1-D17.item page=1 at=280,432 orient=R0 set=1
-today =CH-U1-D5.item page=1 at=32,368 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n64 page=1 set=1 a==CH-U1-D4.item.IN.4 b==CH-U1-D3.item.OUT.4 128,288 128,256
-route n2 page=1 set=1 a==CH-U1-D11.item.IN.1 b==CH-U1-D10.item.OUT.1 32,736 32,704
-route n35 page=1 set=1 a==CH-U1-D9.item.IN.2 b==CH-U1-D8.item.OUT.2 64,608 64,576
-route n86 page=1 set=1 a==CH-U1-D14.item.OUT.4 b==CH-U1-D15.item.IN.4 376,256 376,288
-route n65 page=1 set=1 a==CH-U1-D7.item.IN.3 b==CH-U1-D6.item.OUT.3 96,480 96,448
-route n3 page=1 set=1 a==CH-U1-D3.item.IN.2 b==CH-U1-D2.item.OUT.2 64,224 64,192
-route n88 page=1 set=1 a==CH-U1-D5.item.IN.4 b==CH-U1-D4.item.OUT.4 128,352 128,320
-route n62 page=1 set=1 a==CH-U1-D17.item.OUT.1 b==CH-U1-D18.item.IN.1 280,448 280,480
-route n78 page=1 set=1 a==CH-U1-D13.item.IN.2 b==CH-U1-D12.item.OUT.2 312,160 312,128
-route n81 page=1 set=1 a==CH-U1-D11.item.IN.4 b==CH-U1-D10.item.OUT.4 128,736 128,704
-route n39 page=1 set=1 a==CH-U1-D3.item.IN.1 b==CH-U1-D2.item.OUT.1 32,224 32,192
-route n83 page=1 set=1 a==CH-U1-D14.item.pwr.minus b==CH-U1-D13.item.pwr.plus 408,224 408,192
-route n75 page=1 set=1 a==CH-U1-D9.item.pwr.minus b==CH-U1-D8.item.pwr.plus 160,608 160,576
-route n71 page=1 set=1 a==CH-U1-D4.item.pwr.minus b==CH-U1-D3.item.pwr.plus 160,288 160,256
-route n61 page=1 set=1 a==CH-U1-D7.item.pwr.minus b==CH-U1-D6.item.pwr.plus 160,480 160,448
-route n58 page=1 set=1 a==CH-U1-D6.item.OUT.2 b==CH-U1-D7.item.IN.2 64,448 64,480
-route n69 page=1 set=1 a==CH-U1-D14.item.IN.4 b==CH-U1-D13.item.OUT.4 376,224 376,192
-route n47 page=1 set=1 a==CH-U1-D3.item.IN.3 b==CH-U1-D2.item.OUT.3 96,224 96,192
-route n7 page=1 set=1 a==CH-U1-D5.item.IN.2 b==CH-U1-D4.item.OUT.2 64,352 64,320
-route n32 page=1 set=1 a==CH-U1-D9.item.IN.3 b==CH-U1-D8.item.OUT.3 96,608 96,576
-route n21 page=1 set=1 a==CH-U1-R1.item.lamp.2 b==CH-U1-D18.item.pwr.plus 280,544 280,512
-route n37 page=1 set=1 a==CH-U1-D17.item.OUT.3 b==CH-U1-D18.item.IN.3 344,448 344,480
-route n18 page=1 set=1 a==CH-U1-D7.item.OUT.3 b==CH-U1-D8.item.IN.3 96,512 96,544
-route n16 page=1 set=1 a==CH-U1-D17.item.pwr.plus b==CH-U1-D18.item.pwr.minus 408,448 408,480
-route n25 page=1 set=1 a==CH-U1-D13.item.OUT.2 b==CH-U1-D14.item.IN.2 312,192 312,224
-route n10 page=1 set=1 a==CH-U1-D5.item.OUT.1 b==CH-U1-D6.item.IN.1 32,384 32,416
-route n40 page=1 set=1 a==CH-U1-D14.item.OUT.1 b==CH-U1-D15.item.IN.1 280,256 280,288
-route n34 page=1 set=1 a==CH-U1-D10.item.OUT.3 b==CH-U1-D11.item.IN.3 96,704 96,736
-route n41 page=1 set=1 a==CH-U1-D2.item.OUT.4 b==CH-U1-D3.item.IN.4 128,192 128,224
-route n30 page=1 set=1 a==CH-U1-D16.item.pwr.minus b==CH-U1-D15.item.pwr.plus 408,352 408,320
-route n17 page=1 set=1 a==CH-U1-D6.item.pwr.minus b==CH-U1-D5.item.pwr.plus 160,416 160,384
-route n93 page=1 set=1 a==CH-U1-D17.item.OUT.2 b==CH-U1-D18.item.IN.2 312,448 312,480
-route n59 page=1 set=1 a==CH-U1-D8.item.IN.1 b==CH-U1-D7.item.OUT.1 32,544 32,512
-route n94 page=1 set=1 a==CH-U1-D9.item.OUT.4 b==CH-U1-D10.item.IN.4 128,640 128,672
-route n67 page=1 set=1 a==CH-U1-D3.item.pwr.minus b==CH-U1-D2.item.pwr.plus 160,224 160,192
-route n51 page=1 set=1 a==CH-U1-D12.item.pwr.plus b==CH-U1-D13.item.pwr.minus 408,128 408,160
-route n24 page=1 set=1 a==CH-U1-D10.item.pwr.minus b==CH-U1-D9.item.pwr.plus 160,672 160,640
-route n85 page=1 set=1 a==CH-U1-D13.item.IN.1 b==CH-U1-D12.item.OUT.1 280,160 280,128
-route n52 page=1 set=1 a==CH-U1-D7.item.OUT.2 b==CH-U1-D8.item.IN.2 64,512 64,544
-route n0 page=1 set=1 a==CH-U1-D5.item.IN.1 b==CH-U1-D4.item.OUT.1 32,352 32,320
-route n44 page=1 set=1 a==CH-U1-D8.item.pwr.minus b==CH-U1-D7.item.pwr.plus 160,544 160,512
-route n4 page=1 set=1 a==CH-U1-D10.item.OUT.2 b==CH-U1-D11.item.IN.2 64,704 64,736
-route n53 page=1 set=1 a==CH-U1-D9.item.OUT.2 b==CH-U1-D10.item.IN.2 64,640 64,672
-route n49 page=1 set=1 a==CH-U1-D8.item.IN.4 b==CH-U1-D7.item.OUT.4 128,544 128,512
-route n76 page=1 set=1 a==CH-U1-D7.item.IN.1 b==CH-U1-D6.item.OUT.1 32,480 32,448
-route n84 page=1 set=1 a==CH-U1-D3.item.OUT.2 b==CH-U1-D4.item.IN.2 64,256 64,288
-route n56 page=1 set=1 a==CH-U1-D2.item.IN.2 b==CH-U1-D1.item.OUT.2 64,160 64,128
-route n54 page=1 set=1 a==CH-U1-D14.item.IN.1 b==CH-U1-D13.item.OUT.1 280,224 280,192
-route n5 page=1 set=1 a==CH-U1-D16.item.pwr.plus b==CH-U1-D17.item.pwr.minus 408,384 408,416
-route n48 page=1 set=1 a==CH-U1-D10.item.IN.1 b==CH-U1-D9.item.OUT.1 32,672 32,640
-route n8 page=1 set=1 a==CH-U1-D16.item.IN.2 b==CH-U1-D15.item.OUT.2 312,352 312,320
-route n55 page=1 set=1 a==CH-U1-D6.item.IN.3 b==CH-U1-D5.item.OUT.3 96,416 96,384
-route n72 page=1 set=1 a==CH-U1-D14.item.IN.3 b==CH-U1-D13.item.OUT.3 344,224 344,192
-route n15 page=1 set=1 a==CH-U1-D8.item.OUT.4 b==CH-U1-D9.item.IN.4 128,576 128,608
-route n91 page=1 set=1 a==CH-U1-D16.item.IN.3 b==CH-U1-D15.item.OUT.3 344,352 344,320
-route n63 page=1 set=1 a==CH-U1-D14.item.OUT.3 b==CH-U1-D15.item.IN.3 344,256 344,288
-route n77 page=1 set=1 a==CH-U1-D7.item.IN.4 b==CH-U1-D6.item.OUT.4 128,480 128,448
-route n20 page=1 set=1 a==CH-U1-D3.item.OUT.1 b==CH-U1-D4.item.IN.1 32,256 32,288
-route n19 page=1 set=1 a==CH-U1-D8.item.OUT.1 b==CH-U1-D9.item.IN.1 32,576 32,608
-route n29 page=1 set=1 a==CH-U1-D1.item.pwr.plus b==CH-U1-D2.item.pwr.minus 160,128 160,160
-route n14 page=1 set=1 a==CH-U1-D15.item.OUT.1 b==CH-U1-D16.item.IN.1 280,320 280,352
-route n36 page=1 set=1 a==CH-U1-D4.item.OUT.3 b==CH-U1-D5.item.IN.3 96,320 96,352
-route n46 page=1 set=1 a==CH-U1-D6.item.IN.2 b==CH-U1-D5.item.OUT.2 64,416 64,384
-route n42 page=1 set=1 a==CH-U1-D15.item.OUT.4 b==CH-U1-D16.item.IN.4 376,320 376,352
-route n27 page=1 set=1 a==CH-U1-D13.item.IN.3 b==CH-U1-D12.item.OUT.3 344,160 344,128
-route n12 page=1 set=1 a==CH-U1-D2.item.IN.3 b==CH-U1-D1.item.OUT.3 96,160 96,128
-route n70 page=1 set=1 a==CH-U1-D17.item.OUT.4 b==CH-U1-D18.item.IN.4 376,448 376,480
-route n80 page=1 set=1 a==CH-U1-D2.item.IN.1 b==CH-U1-D1.item.OUT.1 32,160 32,128
-route n82 page=1 set=1 a==CH-U1-D4.item.IN.3 b==CH-U1-D3.item.OUT.3 96,288 96,256
-route n50 page=1 set=1 a==CH-U1-D17.item.IN.2 b==CH-U1-D16.item.OUT.2 312,416 312,384
-route n22 page=1 set=1 a==CH-U1-D1.item.OUT.4 b==CH-U1-D2.item.IN.4 128,128 128,160
-route n90 page=1 set=1 a==CH-U1-D5.item.OUT.4 b==CH-U1-D6.item.IN.4 128,384 128,416
-route n66 page=1 set=1 a==CH-U1-D13.item.IN.4 b==CH-U1-D12.item.OUT.4 376,160 376,128
-route n13 page=1 set=1 a==CH-U1-D16.item.OUT.3 b==CH-U1-D17.item.IN.3 344,384 344,416
-route n1 page=1 set=1 a==CH-U1-D17.item.IN.1 b==CH-U1-D16.item.OUT.1 280,416 280,384
-route n11 page=1 set=1 a==CH-U1-D9.item.OUT.3 b==CH-U1-D10.item.IN.3 96,640 96,672
-route n45 page=1 set=1 a==CH-U1-D11.item.pwr.minus b==CH-U1-D10.item.pwr.plus 160,736 160,704
-route n31 page=1 set=1 a==CH-U1-D14.item.OUT.2 b==CH-U1-D15.item.IN.2 312,256 312,288
-route n33 page=1 set=1 a==CH-U1-D4.item.pwr.plus b==CH-U1-D5.item.pwr.minus 160,320 160,352
-route n9 page=1 set=1 a==CH-U1-D16.item.OUT.4 b==CH-U1-D17.item.IN.4 376,384 376,416
-route n60 page=1 set=1 a==CH-U1-D14.item.pwr.plus b==CH-U1-D15.item.pwr.minus 408,256 408,288
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
-marker n38 =CH-U1-D11.item.OUT.1 page=1 set=1 at=32,768 side=OWNER star=REF partner==CH-U1-D12.item.IN.1@1.1
-marker n6 =CH-U1-D11.item.OUT.4 page=1 set=1 at=128,768 side=OWNER star=REF partner==CH-U1-D12.item.IN.4@1.1
-marker n28 =CH-U1-D12.item.pwr.minus page=1 set=1 at=408,96 side=USER star=BRANCH partner==CH-U1-D11.item.pwr.plus@1.1
-marker n73 =CH-U1-D12.item.IN.2 page=1 set=1 at=312,96 side=USER star=BRANCH partner==CH-U1-D11.item.OUT.2@1.1
-marker n6 =CH-U1-D12.item.IN.4 page=1 set=1 at=376,96 side=USER star=BRANCH partner==CH-U1-D11.item.OUT.4@1.1
-marker n87 =CH-U1-D12.item.IN.3 page=1 set=1 at=344,96 side=USER star=BRANCH partner==CH-U1-D11.item.OUT.3@1.1
-marker n38 =CH-U1-D12.item.IN.1 page=1 set=1 at=280,96 side=USER star=BRANCH partner==CH-U1-D11.item.OUT.1@1.1
-marker n28 =CH-U1-D11.item.pwr.plus page=1 set=1 at=160,768 side=OWNER star=REF partner==CH-U1-D12.item.pwr.minus@1.1
-marker n26 =CH-U1-D1.item.pwr.minus page=1 set=1 at=32,96 side=OWNER star=REF partner==CH-U1-R1.item.lamp.1@1.1
-marker n26 =CH-U1-R1.item.lamp.1 page=1 set=1 at=280,576 side=USER star=BRANCH partner==CH-U1-D1.item.pwr.minus@1.1
-marker n87 =CH-U1-D11.item.OUT.3 page=1 set=1 at=96,768 side=OWNER star=REF partner==CH-U1-D12.item.IN.3@1.1
-marker n73 =CH-U1-D11.item.OUT.2 page=1 set=1 at=64,768 side=OWNER star=REF partner==CH-U1-D12.item.IN.2@1.1
+kind =U1-D1.1 device
+kind =U1-D1.2 device
+kind =U1-D1.3 device
+kind =U1-D1.4 device
+kind =U1-D1.pwr device
+kind =U1-D2.1 device
+kind =U1-D2.2 device
+kind =U1-D2.3 device
+kind =U1-D2.4 device
+kind =U1-D2.1#2 device
+kind =U1-D2.2#2 device
+kind =U1-D2.3#2 device
+kind =U1-D2.4#2 device
+kind =U1-D2.pwr device
+kind =U1-D3.1 device
+kind =U1-D3.2 device
+kind =U1-D3.3 device
+kind =U1-D3.4 device
+kind =U1-D3.1#2 device
+kind =U1-D3.2#2 device
+kind =U1-D3.3#2 device
+kind =U1-D3.4#2 device
+kind =U1-D3.pwr device
+kind =U1-D4.1 device
+kind =U1-D4.2 device
+kind =U1-D4.3 device
+kind =U1-D4.4 device
+kind =U1-D4.1#2 device
+kind =U1-D4.2#2 device
+kind =U1-D4.3#2 device
+kind =U1-D4.4#2 device
+kind =U1-D4.pwr device
+kind =U1-D5.1 device
+kind =U1-D5.2 device
+kind =U1-D5.3 device
+kind =U1-D5.4 device
+kind =U1-D5.1#2 device
+kind =U1-D5.2#2 device
+kind =U1-D5.3#2 device
+kind =U1-D5.4#2 device
+kind =U1-D5.pwr device
+kind =U1-D6.1 device
+kind =U1-D6.2 device
+kind =U1-D6.3 device
+kind =U1-D6.4 device
+kind =U1-D6.1#2 device
+kind =U1-D6.2#2 device
+kind =U1-D6.3#2 device
+kind =U1-D6.4#2 device
+kind =U1-D6.pwr device
+kind =U1-D7.1 device
+kind =U1-D7.2 device
+kind =U1-D7.3 device
+kind =U1-D7.4 device
+kind =U1-D7.1#2 device
+kind =U1-D7.2#2 device
+kind =U1-D7.3#2 device
+kind =U1-D7.4#2 device
+kind =U1-D7.pwr device
+kind =U1-D8.1 device
+kind =U1-D8.2 device
+kind =U1-D8.3 device
+kind =U1-D8.4 device
+kind =U1-D8.1#2 device
+kind =U1-D8.2#2 device
+kind =U1-D8.3#2 device
+kind =U1-D8.4#2 device
+kind =U1-D8.pwr device
+kind =U1-D9.1 device
+kind =U1-D9.2 device
+kind =U1-D9.3 device
+kind =U1-D9.4 device
+kind =U1-D9.1#2 device
+kind =U1-D9.2#2 device
+kind =U1-D9.3#2 device
+kind =U1-D9.4#2 device
+kind =U1-D9.pwr device
+kind =U1-D10.1 device
+kind =U1-D10.2 device
+kind =U1-D10.3 device
+kind =U1-D10.4 device
+kind =U1-D10.1#2 device
+kind =U1-D10.2#2 device
+kind =U1-D10.3#2 device
+kind =U1-D10.4#2 device
+kind =U1-D10.pwr device
+kind =U1-D11.1 device
+kind =U1-D11.2 device
+kind =U1-D11.3 device
+kind =U1-D11.4 device
+kind =U1-D11.1#2 device
+kind =U1-D11.2#2 device
+kind =U1-D11.3#2 device
+kind =U1-D11.4#2 device
+kind =U1-D11.pwr device
+kind =U1-D12.1 device
+kind =U1-D12.2 device
+kind =U1-D12.3 device
+kind =U1-D12.4 device
+kind =U1-D12.1#2 device
+kind =U1-D12.2#2 device
+kind =U1-D12.3#2 device
+kind =U1-D12.4#2 device
+kind =U1-D12.pwr device
+kind =U1-D13.1 device
+kind =U1-D13.2 device
+kind =U1-D13.3 device
+kind =U1-D13.4 device
+kind =U1-D13.1#2 device
+kind =U1-D13.2#2 device
+kind =U1-D13.3#2 device
+kind =U1-D13.4#2 device
+kind =U1-D13.pwr device
+kind =U1-D14.1 device
+kind =U1-D14.2 device
+kind =U1-D14.3 device
+kind =U1-D14.4 device
+kind =U1-D14.1#2 device
+kind =U1-D14.2#2 device
+kind =U1-D14.3#2 device
+kind =U1-D14.4#2 device
+kind =U1-D14.pwr device
+kind =U1-D15.1 device
+kind =U1-D15.2 device
+kind =U1-D15.3 device
+kind =U1-D15.4 device
+kind =U1-D15.1#2 device
+kind =U1-D15.2#2 device
+kind =U1-D15.3#2 device
+kind =U1-D15.4#2 device
+kind =U1-D15.pwr device
+kind =U1-D16.1 device
+kind =U1-D16.2 device
+kind =U1-D16.3 device
+kind =U1-D16.4 device
+kind =U1-D16.1#2 device
+kind =U1-D16.2#2 device
+kind =U1-D16.3#2 device
+kind =U1-D16.4#2 device
+kind =U1-D16.pwr device
+kind =U1-D17.1 device
+kind =U1-D17.2 device
+kind =U1-D17.3 device
+kind =U1-D17.4 device
+kind =U1-D17.1#2 device
+kind =U1-D17.2#2 device
+kind =U1-D17.3#2 device
+kind =U1-D17.4#2 device
+kind =U1-D17.pwr device
+kind =U1-D18.1 device
+kind =U1-D18.2 device
+kind =U1-D18.3 device
+kind =U1-D18.4 device
+kind =U1-D18.pwr device
+kind =U1-R1.lamp device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =U1-D1.1 page=1 at=96,56 orient=R180 set=1
+today =U1-D1.2 page=1 at=256,40 orient=R0 set=1
+today =U1-D1.3 page=1 at=416,56 orient=R180 set=1
+today =U1-D1.4 page=1 at=576,40 orient=R0 set=1
+today =U1-D1.pwr page=1 at=680,72 orient=R0 set=1
+today =U1-D2.1 page=1 at=96,96 orient=R0 set=1
+today =U1-D2.2 page=1 at=256,112 orient=R180 set=1
+today =U1-D2.3 page=1 at=416,96 orient=R0 set=1
+today =U1-D2.4 page=1 at=576,112 orient=R180 set=1
+today =U1-D2.1#2 page=1 at=872,56 orient=R180 set=1
+today =U1-D2.2#2 page=1 at=1032,40 orient=R0 set=1
+today =U1-D2.3#2 page=1 at=1192,56 orient=R180 set=1
+today =U1-D2.pwr page=1 at=680,112 orient=R0 set=1
+today =U1-D3.1 page=1 at=872,96 orient=R0 set=1
+today =U1-D3.2 page=1 at=1032,112 orient=R180 set=1
+today =U1-D3.3 page=1 at=1192,96 orient=R0 set=1
+today =U1-D3.pwr page=1 at=680,152 orient=R0 set=1
+today =U1-D4.pwr page=1 at=680,192 orient=R0 set=1
+today =U1-D5.pwr page=1 at=680,232 orient=R0 set=1
+today =U1-D6.pwr page=1 at=680,272 orient=R0 set=1
+today =U1-D7.pwr page=1 at=680,312 orient=R0 set=1
+today =U1-D8.pwr page=1 at=680,352 orient=R0 set=1
+today =U1-D9.pwr page=1 at=680,392 orient=R0 set=1
+today =U1-D10.pwr page=1 at=680,432 orient=R0 set=1
+today =U1-D11.pwr page=1 at=680,472 orient=R0 set=1
+today =U1-D12.pwr page=1 at=680,512 orient=R0 set=1
+today =U1-D13.pwr page=1 at=680,552 orient=R0 set=1
+today =U1-D14.pwr page=1 at=680,592 orient=R0 set=1
+today =U1-D15.pwr page=1 at=680,632 orient=R0 set=1
+today =U1-D16.pwr page=1 at=680,672 orient=R0 set=1
+today =U1-D17.pwr page=1 at=680,712 orient=R0 set=1
+today =U1-D18.pwr page=1 at=680,752 orient=R0 set=1
+today =U1-D2.4#2 page=2 at=96,40 orient=R0 set=1
+today =U1-D3.4 page=2 at=96,112 orient=R180 set=1
+today =U1-D3.1#2 page=2 at=256,56 orient=R180 set=1
+today =U1-D3.2#2 page=2 at=416,40 orient=R0 set=1
+today =U1-D3.3#2 page=2 at=576,56 orient=R180 set=1
+today =U1-D3.4#2 page=2 at=736,40 orient=R0 set=1
+today =U1-D4.1 page=2 at=256,96 orient=R0 set=1
+today =U1-D4.2 page=2 at=416,112 orient=R180 set=1
+today =U1-D4.3 page=2 at=576,96 orient=R0 set=1
+today =U1-D4.4 page=2 at=736,112 orient=R180 set=1
+today =U1-D4.1#2 page=2 at=896,56 orient=R180 set=1
+today =U1-D4.2#2 page=2 at=1056,40 orient=R0 set=1
+today =U1-D4.3#2 page=2 at=1216,56 orient=R180 set=1
+today =U1-D4.4#2 page=2 at=96,168 orient=R0 set=1
+today =U1-D5.1 page=2 at=896,96 orient=R0 set=1
+today =U1-D5.2 page=2 at=1056,112 orient=R180 set=1
+today =U1-D5.3 page=2 at=1216,96 orient=R0 set=1
+today =U1-D5.4 page=2 at=96,240 orient=R180 set=1
+today =U1-D5.1#2 page=2 at=256,184 orient=R180 set=1
+today =U1-D5.2#2 page=2 at=416,168 orient=R0 set=1
+today =U1-D5.3#2 page=2 at=576,184 orient=R180 set=1
+today =U1-D5.4#2 page=2 at=736,168 orient=R0 set=1
+today =U1-D6.1 page=2 at=256,224 orient=R0 set=1
+today =U1-D6.2 page=2 at=416,240 orient=R180 set=1
+today =U1-D6.3 page=2 at=576,224 orient=R0 set=1
+today =U1-D6.4 page=2 at=736,240 orient=R180 set=1
+today =U1-D6.1#2 page=2 at=896,184 orient=R180 set=1
+today =U1-D6.2#2 page=2 at=1056,168 orient=R0 set=1
+today =U1-D6.3#2 page=2 at=1216,184 orient=R180 set=1
+today =U1-D6.4#2 page=2 at=96,296 orient=R0 set=1
+today =U1-D7.1 page=2 at=896,224 orient=R0 set=1
+today =U1-D7.2 page=2 at=1056,240 orient=R180 set=1
+today =U1-D7.3 page=2 at=1216,224 orient=R0 set=1
+today =U1-D7.4 page=2 at=96,368 orient=R180 set=1
+today =U1-D7.1#2 page=2 at=256,312 orient=R180 set=1
+today =U1-D7.2#2 page=2 at=416,296 orient=R0 set=1
+today =U1-D7.3#2 page=2 at=576,312 orient=R180 set=1
+today =U1-D7.4#2 page=2 at=736,296 orient=R0 set=1
+today =U1-D8.1 page=2 at=256,352 orient=R0 set=1
+today =U1-D8.2 page=2 at=416,368 orient=R180 set=1
+today =U1-D8.3 page=2 at=576,352 orient=R0 set=1
+today =U1-D8.4 page=2 at=736,368 orient=R180 set=1
+today =U1-D8.1#2 page=2 at=896,312 orient=R180 set=1
+today =U1-D8.2#2 page=2 at=1056,296 orient=R0 set=1
+today =U1-D8.3#2 page=2 at=1216,312 orient=R180 set=1
+today =U1-D8.4#2 page=2 at=112,424 orient=R0 set=1
+today =U1-D9.1 page=2 at=896,352 orient=R0 set=1
+today =U1-D9.2 page=2 at=1056,368 orient=R180 set=1
+today =U1-D9.3 page=2 at=1216,352 orient=R0 set=1
+today =U1-D9.4 page=2 at=112,496 orient=R180 set=1
+today =U1-D9.1#2 page=2 at=288,440 orient=R180 set=1
+today =U1-D9.2#2 page=2 at=464,424 orient=R0 set=1
+today =U1-D9.3#2 page=2 at=640,440 orient=R180 set=1
+today =U1-D9.4#2 page=2 at=816,424 orient=R0 set=1
+today =U1-D10.1 page=2 at=288,480 orient=R0 set=1
+today =U1-D10.2 page=2 at=464,496 orient=R180 set=1
+today =U1-D10.3 page=2 at=640,480 orient=R0 set=1
+today =U1-D10.4 page=2 at=816,496 orient=R180 set=1
+today =U1-D10.1#2 page=2 at=992,440 orient=R180 set=1
+today =U1-D10.2#2 page=2 at=1168,424 orient=R0 set=1
+today =U1-D11.1 page=2 at=992,480 orient=R0 set=1
+today =U1-D11.2 page=2 at=1168,496 orient=R180 set=1
+today =U1-D10.3#2 page=3 at=96,56 orient=R180 set=1
+today =U1-D10.4#2 page=3 at=256,40 orient=R0 set=1
+today =U1-D11.3 page=3 at=96,96 orient=R0 set=1
+today =U1-D11.4 page=3 at=256,112 orient=R180 set=1
+today =U1-D11.1#2 page=3 at=416,56 orient=R180 set=1
+today =U1-D11.2#2 page=3 at=576,40 orient=R0 set=1
+today =U1-D11.3#2 page=3 at=736,56 orient=R180 set=1
+today =U1-D11.4#2 page=3 at=896,40 orient=R0 set=1
+today =U1-D12.1 page=3 at=416,96 orient=R0 set=1
+today =U1-D12.2 page=3 at=576,112 orient=R180 set=1
+today =U1-D12.3 page=3 at=736,96 orient=R0 set=1
+today =U1-D12.4 page=3 at=896,112 orient=R180 set=1
+today =U1-D12.1#2 page=3 at=1056,56 orient=R180 set=1
+today =U1-D12.2#2 page=3 at=1216,40 orient=R0 set=1
+today =U1-D12.3#2 page=3 at=96,184 orient=R180 set=1
+today =U1-D12.4#2 page=3 at=256,168 orient=R0 set=1
+today =U1-D13.1 page=3 at=1056,96 orient=R0 set=1
+today =U1-D13.2 page=3 at=1216,112 orient=R180 set=1
+today =U1-D13.3 page=3 at=96,224 orient=R0 set=1
+today =U1-D13.4 page=3 at=256,240 orient=R180 set=1
+today =U1-D13.1#2 page=3 at=416,184 orient=R180 set=1
+today =U1-D13.2#2 page=3 at=576,168 orient=R0 set=1
+today =U1-D13.3#2 page=3 at=736,184 orient=R180 set=1
+today =U1-D13.4#2 page=3 at=896,168 orient=R0 set=1
+today =U1-D14.1 page=3 at=416,224 orient=R0 set=1
+today =U1-D14.2 page=3 at=576,240 orient=R180 set=1
+today =U1-D14.3 page=3 at=736,224 orient=R0 set=1
+today =U1-D14.4 page=3 at=896,240 orient=R180 set=1
+today =U1-D14.1#2 page=3 at=1056,184 orient=R180 set=1
+today =U1-D14.2#2 page=3 at=1216,168 orient=R0 set=1
+today =U1-D14.3#2 page=3 at=96,312 orient=R180 set=1
+today =U1-D14.4#2 page=3 at=256,296 orient=R0 set=1
+today =U1-D15.1 page=3 at=1056,224 orient=R0 set=1
+today =U1-D15.2 page=3 at=1216,240 orient=R180 set=1
+today =U1-D15.3 page=3 at=96,352 orient=R0 set=1
+today =U1-D15.4 page=3 at=256,368 orient=R180 set=1
+today =U1-D15.1#2 page=3 at=416,312 orient=R180 set=1
+today =U1-D15.2#2 page=3 at=576,296 orient=R0 set=1
+today =U1-D15.3#2 page=3 at=736,312 orient=R180 set=1
+today =U1-D15.4#2 page=3 at=896,296 orient=R0 set=1
+today =U1-D16.1 page=3 at=416,352 orient=R0 set=1
+today =U1-D16.2 page=3 at=576,368 orient=R180 set=1
+today =U1-D16.3 page=3 at=736,352 orient=R0 set=1
+today =U1-D16.4 page=3 at=896,368 orient=R180 set=1
+today =U1-D16.1#2 page=3 at=1056,312 orient=R180 set=1
+today =U1-D16.2#2 page=3 at=1216,296 orient=R0 set=1
+today =U1-D16.3#2 page=3 at=120,440 orient=R180 set=1
+today =U1-D16.4#2 page=3 at=304,424 orient=R0 set=1
+today =U1-D17.1 page=3 at=1056,352 orient=R0 set=1
+today =U1-D17.2 page=3 at=1216,368 orient=R180 set=1
+today =U1-D17.3 page=3 at=120,480 orient=R0 set=1
+today =U1-D17.4 page=3 at=304,496 orient=R180 set=1
+today =U1-D17.1#2 page=3 at=488,440 orient=R180 set=1
+today =U1-D17.2#2 page=3 at=672,424 orient=R0 set=1
+today =U1-D17.3#2 page=3 at=856,440 orient=R180 set=1
+today =U1-D17.4#2 page=3 at=1040,424 orient=R0 set=1
+today =U1-D18.1 page=3 at=488,480 orient=R0 set=1
+today =U1-D18.2 page=3 at=672,496 orient=R180 set=1
+today =U1-D18.3 page=3 at=856,480 orient=R0 set=1
+today =U1-D18.4 page=3 at=1040,496 orient=R180 set=1
+today =U1-R1.lamp page=3 at=1216,456 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n4 page=1 set=1 a==U1-D1.pwr.minus b=- 680,56 680,48
+route n86 page=1 set=1 a==U1-D18.pwr.plus b=- 680,768 680,776
+route n0 page=1 set=1 a==U1-D1.1.in b==U1-D2.1.in 96,72 96,80
+route n1 page=1 set=1 a==U1-D1.2.out b==U1-D2.2.out 256,56 256,96
+route n2 page=1 set=1 a==U1-D1.3.in b==U1-D2.3.in 416,72 416,80
+route n3 page=1 set=1 a==U1-D1.4.out b==U1-D2.4.out 576,56 576,96
+route n5 page=1 set=1 a==U1-D1.pwr.plus b==U1-D2.pwr.minus 680,88 680,96
+route n10 page=1 set=1 a==U1-D2.pwr.plus b==U1-D3.pwr.minus 680,128 680,136
+route n15 page=1 set=1 a==U1-D3.pwr.plus b==U1-D4.pwr.minus 680,168 680,176
+route n20 page=1 set=1 a==U1-D4.pwr.plus b==U1-D5.pwr.minus 680,208 680,216
+route n25 page=1 set=1 a==U1-D5.pwr.plus b==U1-D6.pwr.minus 680,248 680,256
+route n30 page=1 set=1 a==U1-D6.pwr.plus b==U1-D7.pwr.minus 680,288 680,296
+route n35 page=1 set=1 a==U1-D7.pwr.plus b==U1-D8.pwr.minus 680,328 680,336
+route n40 page=1 set=1 a==U1-D8.pwr.plus b==U1-D9.pwr.minus 680,368 680,376
+route n45 page=1 set=1 a==U1-D9.pwr.plus b==U1-D10.pwr.minus 680,408 680,416
+route n50 page=1 set=1 a==U1-D10.pwr.plus b==U1-D11.pwr.minus 680,448 680,456
+route n55 page=1 set=1 a==U1-D11.pwr.plus b==U1-D12.pwr.minus 680,488 680,496
+route n60 page=1 set=1 a==U1-D12.pwr.plus b==U1-D13.pwr.minus 680,528 680,536
+route n65 page=1 set=1 a==U1-D13.pwr.plus b==U1-D14.pwr.minus 680,568 680,576
+route n70 page=1 set=1 a==U1-D14.pwr.plus b==U1-D15.pwr.minus 680,608 680,616
+route n75 page=1 set=1 a==U1-D15.pwr.plus b==U1-D16.pwr.minus 680,648 680,656
+route n80 page=1 set=1 a==U1-D16.pwr.plus b==U1-D17.pwr.minus 680,688 680,696
+route n85 page=1 set=1 a==U1-D17.pwr.plus b==U1-D18.pwr.minus 680,728 680,736
+route n6 page=1 set=1 a==U1-D2.1#2.in b==U1-D3.1.in 872,72 872,80
+route n7 page=1 set=1 a==U1-D2.2#2.out b==U1-D3.2.out 1032,56 1032,96
+route n8 page=1 set=1 a==U1-D2.3#2.in b==U1-D3.3.in 1192,72 1192,80
+route n9 page=2 set=1 a==U1-D2.4#2.out b==U1-D3.4.out 96,56 96,96
+route n11 page=2 set=1 a==U1-D3.1#2.in b==U1-D4.1.in 256,72 256,80
+route n12 page=2 set=1 a==U1-D3.2#2.out b==U1-D4.2.out 416,56 416,96
+route n13 page=2 set=1 a==U1-D3.3#2.in b==U1-D4.3.in 576,72 576,80
+route n14 page=2 set=1 a==U1-D3.4#2.out b==U1-D4.4.out 736,56 736,96
+route n16 page=2 set=1 a==U1-D4.1#2.in b==U1-D5.1.in 896,72 896,80
+route n17 page=2 set=1 a==U1-D4.2#2.out b==U1-D5.2.out 1056,56 1056,96
+route n18 page=2 set=1 a==U1-D4.3#2.in b==U1-D5.3.in 1216,72 1216,80
+route n19 page=2 set=1 a==U1-D4.4#2.out b==U1-D5.4.out 96,184 96,224
+route n21 page=2 set=1 a==U1-D5.1#2.in b==U1-D6.1.in 256,200 256,208
+route n22 page=2 set=1 a==U1-D5.2#2.out b==U1-D6.2.out 416,184 416,224
+route n23 page=2 set=1 a==U1-D5.3#2.in b==U1-D6.3.in 576,200 576,208
+route n24 page=2 set=1 a==U1-D5.4#2.out b==U1-D6.4.out 736,184 736,224
+route n26 page=2 set=1 a==U1-D6.1#2.in b==U1-D7.1.in 896,200 896,208
+route n27 page=2 set=1 a==U1-D6.2#2.out b==U1-D7.2.out 1056,184 1056,224
+route n28 page=2 set=1 a==U1-D6.3#2.in b==U1-D7.3.in 1216,200 1216,208
+route n29 page=2 set=1 a==U1-D6.4#2.out b==U1-D7.4.out 96,312 96,352
+route n31 page=2 set=1 a==U1-D7.1#2.in b==U1-D8.1.in 256,328 256,336
+route n32 page=2 set=1 a==U1-D7.2#2.out b==U1-D8.2.out 416,312 416,352
+route n33 page=2 set=1 a==U1-D7.3#2.in b==U1-D8.3.in 576,328 576,336
+route n34 page=2 set=1 a==U1-D7.4#2.out b==U1-D8.4.out 736,312 736,352
+route n36 page=2 set=1 a==U1-D8.1#2.in b==U1-D9.1.in 896,328 896,336
+route n37 page=2 set=1 a==U1-D8.2#2.out b==U1-D9.2.out 1056,312 1056,352
+route n38 page=2 set=1 a==U1-D8.3#2.in b==U1-D9.3.in 1216,328 1216,336
+route n39 page=2 set=1 a==U1-D8.4#2.out b==U1-D9.4.out 112,440 112,480
+route n41 page=2 set=1 a==U1-D9.1#2.in b==U1-D10.1.in 288,456 288,464
+route n42 page=2 set=1 a==U1-D9.2#2.out b==U1-D10.2.out 464,440 464,480
+route n43 page=2 set=1 a==U1-D9.3#2.in b==U1-D10.3.in 640,456 640,464
+route n44 page=2 set=1 a==U1-D9.4#2.out b==U1-D10.4.out 816,440 816,480
+route n46 page=2 set=1 a==U1-D10.1#2.in b==U1-D11.1.in 992,456 992,464
+route n47 page=2 set=1 a==U1-D10.2#2.out b==U1-D11.2.out 1168,440 1168,480
+route n4 page=3 set=1 a==U1-R1.lamp.in b=- 1216,440 1216,432
+route n86 page=3 set=1 a==U1-R1.lamp.out b=- 1216,472 1216,480
+route n48 page=3 set=1 a==U1-D10.3#2.in b==U1-D11.3.in 96,72 96,80
+route n49 page=3 set=1 a==U1-D10.4#2.out b==U1-D11.4.out 256,56 256,96
+route n51 page=3 set=1 a==U1-D11.1#2.in b==U1-D12.1.in 416,72 416,80
+route n52 page=3 set=1 a==U1-D11.2#2.out b==U1-D12.2.out 576,56 576,96
+route n53 page=3 set=1 a==U1-D11.3#2.in b==U1-D12.3.in 736,72 736,80
+route n54 page=3 set=1 a==U1-D11.4#2.out b==U1-D12.4.out 896,56 896,96
+route n56 page=3 set=1 a==U1-D12.1#2.in b==U1-D13.1.in 1056,72 1056,80
+route n57 page=3 set=1 a==U1-D12.2#2.out b==U1-D13.2.out 1216,56 1216,96
+route n58 page=3 set=1 a==U1-D12.3#2.in b==U1-D13.3.in 96,200 96,208
+route n59 page=3 set=1 a==U1-D12.4#2.out b==U1-D13.4.out 256,184 256,224
+route n61 page=3 set=1 a==U1-D13.1#2.in b==U1-D14.1.in 416,200 416,208
+route n62 page=3 set=1 a==U1-D13.2#2.out b==U1-D14.2.out 576,184 576,224
+route n63 page=3 set=1 a==U1-D13.3#2.in b==U1-D14.3.in 736,200 736,208
+route n64 page=3 set=1 a==U1-D13.4#2.out b==U1-D14.4.out 896,184 896,224
+route n66 page=3 set=1 a==U1-D14.1#2.in b==U1-D15.1.in 1056,200 1056,208
+route n67 page=3 set=1 a==U1-D14.2#2.out b==U1-D15.2.out 1216,184 1216,224
+route n68 page=3 set=1 a==U1-D14.3#2.in b==U1-D15.3.in 96,328 96,336
+route n69 page=3 set=1 a==U1-D14.4#2.out b==U1-D15.4.out 256,312 256,352
+route n71 page=3 set=1 a==U1-D15.1#2.in b==U1-D16.1.in 416,328 416,336
+route n72 page=3 set=1 a==U1-D15.2#2.out b==U1-D16.2.out 576,312 576,352
+route n73 page=3 set=1 a==U1-D15.3#2.in b==U1-D16.3.in 736,328 736,336
+route n74 page=3 set=1 a==U1-D15.4#2.out b==U1-D16.4.out 896,312 896,352
+route n76 page=3 set=1 a==U1-D16.1#2.in b==U1-D17.1.in 1056,328 1056,336
+route n77 page=3 set=1 a==U1-D16.2#2.out b==U1-D17.2.out 1216,312 1216,352
+route n78 page=3 set=1 a==U1-D16.3#2.in b==U1-D17.3.in 120,456 120,464
+route n79 page=3 set=1 a==U1-D16.4#2.out b==U1-D17.4.out 304,440 304,480
+route n81 page=3 set=1 a==U1-D17.1#2.in b==U1-D18.1.in 488,456 488,464
+route n82 page=3 set=1 a==U1-D17.2#2.out b==U1-D18.2.out 672,440 672,480
+route n83 page=3 set=1 a==U1-D17.3#2.in b==U1-D18.3.in 856,456 856,464
+route n84 page=3 set=1 a==U1-D17.4#2.out b==U1-D18.4.out 1040,440 1040,480
+# reference markers of the core: one per printed cross-reference.
+marker n4 =U1-D1.pwr.minus page=1 set=1 at=680,48 side=N star=- partner=-
+marker n4 =U1-R1.lamp.in page=3 set=1 at=1216,432 side=N star=- partner=-
+marker n86 =U1-D18.pwr.plus page=1 set=1 at=680,776 side=S star=- partner=-
+marker n86 =U1-R1.lamp.out page=3 set=1 at=1216,480 side=S star=- partner=-

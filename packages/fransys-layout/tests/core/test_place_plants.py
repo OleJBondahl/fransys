@@ -29,7 +29,7 @@ def lamp_ring() -> PlacementProblem:
         net("n4", "c.s", "d.n"),
         net("n5", "d.s", "lamp.n"),
     )
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
 
 
 def test_a_symbol_dealt_into_two_lanes_of_one_column_is_placed() -> None:
@@ -81,7 +81,7 @@ def test_a_row_group_the_cut_spread_over_two_rows_is_not_dropped() -> None:
         tuple(syms),
         tuple(nets),
         hints=Hints(group_order=("G0", "G1")),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
     found = place_pages(
         cut_of(prob),

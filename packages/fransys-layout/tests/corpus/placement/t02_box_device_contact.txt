@@ -1,125 +1,164 @@
-# FRANSYS PLACEMENT INSTANCE test_box_device_contact_stands_in_its_circuit__2
+# FRANSYS PLACEMENT INSTANCE t02_box_device_contact
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group G order=0 "Group"
-sym +CAB-X2:L:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym +CAB-X2:L:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =G+CAB-K1.coil group=G body=-16,-24,32,48 keepout=-68,-24,84,48
+group G order=0 "G"
+sym =K1.coil group=G body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym +CAB-X1:L:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =G+CAB-M1.dc_ok group=G body=-8,-16,8,32 keepout=-60,-16,74,32
-  pin in N 0,-16
-  pin out S 0,16
-sym +CAB-X1:L:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =G+CAB-K1.co_1 group=G body=-16,-16,16,32 keepout=-80,-16,94,32
+sym =K1.co_1 group=G body=-16,-16,16,32 keepout=-80,-16,96,32
   pin com N 0,-16
   pin nc S -16,16
   pin no S 0,16
-sym =G+CAB-M1.supply group=G body=-16,-16,200,32 keepout=-16,-16,252,32
+sym =e8c9eae9f72e528b954f2a09d4664b08:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =e8c9eae9f72e528b954f2a09d4664b08:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =M1.in_1 group=G body=-16,-16,80,32 keepout=-16,-16,136,32
   pin in_1.1+ N 0,-16
   pin in_1.1- N 16,-16
-  pin in_2.2+ N 152,-16
-  pin in_2.2- N 168,-16
+  pin in_2.2+ N 32,-16
+  pin in_2.2- N 48,-16
   pin out.+ S 0,16
-  pin out.- S 48,16
-sym =G+CAB-T1.supply group=G body=-16,-16,48,32 keepout=-16,-16,100,32
+  pin out.- S 16,16
+sym =M1.dc_ok group=G body=-8,-16,8,32 keepout=-64,-16,80,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =T1.input group=G body=-16,-16,48,32 keepout=-16,-16,104,32
   pin input.L N 0,-16
   pin input.N N 16,-16
   pin output.+ S 0,16
   pin output.- S 16,16
-sym =G+CAB-U1.item group=G body=-16,-16,32,32 keepout=-16,-16,84,32
+sym =T2.input group=G body=-16,-16,48,32 keepout=-16,-16,104,32
+  pin input.L N 0,-16
+  pin input.N N 16,-16
+  pin output.+ S 0,16
+  pin output.- S 16,16
+sym =U1.di_1 group=G body=-16,-16,32,32 keepout=-16,-16,88,32
   pin di_1.1 N 0,-16
   pin di_2.2 S 0,16
-sym =G+CAB-T2.supply group=G body=-16,-16,48,32 keepout=-16,-16,100,32
-  pin input.L N 0,-16
-  pin input.N N 16,-16
-  pin output.+ S 0,16
-  pin output.- S 16,16
-sym +CAB-X1:L:2.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym +CAB-X1:L:2.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-net n1 =G+CAB-K1.coil.in =G+CAB-M1.dc_ok.out
-net n2 +CAB-X1:L:1.terminal.n +CAB-X1:L:1.terminal.s +CAB-X1:L:2.terminal.n +CAB-X1:L:2.terminal.s +CAB-X1:L:2.terminal@1.n +CAB-X1:L:2.terminal@1.s +CAB-X1:L:2.terminal@2.n +CAB-X1:L:2.terminal@2.s =G+CAB-K1.co_1.com =G+CAB-M1.dc_ok.in =G+CAB-M1.supply.out.+
-net n3 =G+CAB-M1.supply.in_2.2- =G+CAB-T2.supply.output.-
-net n4 =G+CAB-M1.supply.in_1.1- =G+CAB-T1.supply.output.-
-net n5 =G+CAB-K1.co_1.no =G+CAB-U1.item.di_1.1
-net n9 +CAB-X2:L:1.terminal.n +CAB-X2:L:1.terminal.s +CAB-X2:L:2.terminal.n +CAB-X2:L:2.terminal.s =G+CAB-K1.coil.out =G+CAB-M1.supply.out.-
-net n12 =G+CAB-M1.supply.in_1.1+ =G+CAB-T1.supply.output.+
-net n20 =G+CAB-M1.supply.in_2.2+ =G+CAB-T2.supply.output.+
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
-fact item =G+CAB-K1.coil =G+CAB-K1.co_1
-fact item =G+CAB-M1.dc_ok =G+CAB-M1.supply
-fact item +CAB-X1:L:2.terminal +CAB-X1:L:2.terminal@1 +CAB-X1:L:2.terminal@2
+net n0 =K1.coil.in =M1.dc_ok.out
+net n1 =K1.coil.out =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.n =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.s
+net n2 =K1.co_1.com =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =M1.dc_ok.in
+net n3 =K1.co_1.no =U1.di_1.di_1.1
+net n4 =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s =M1.in_1.out.+
+net n5 =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.n =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.s =M1.in_1.out.-
+net n6 =M1.in_1.in_1.1+ =T1.input.output.+
+net n7 =M1.in_1.in_1.1- =T1.input.output.-
+net n8 =M1.in_1.in_2.2+ =T2.input.output.+
+net n9 =M1.in_1.in_2.2- =T2.input.output.-
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =K1.coil =K1.co_1
+fact item =M1.in_1 =M1.dc_ok
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact boxpin =G+CAB-U1.item.di_1.1 =G+CAB-U1.item.di_2.2
-fact attached =G+CAB-K1.coil
-fact strip -X2 +CAB-X2:L:1.terminal +CAB-X2:L:2.terminal
-fact strip -X1 +CAB-X1:L:1.terminal +CAB-X1:L:2.terminal +CAB-X1:L:2.terminal@1 +CAB-X1:L:2.terminal@2
+fact boxpin =M1.in_1.in_1.1+ =M1.in_1.in_1.1- =M1.in_1.in_2.2+ =M1.in_1.in_2.2- =M1.in_1.out.+ =M1.in_1.out.- =T1.input.input.L =T1.input.input.N =T1.input.output.+ =T1.input.output.- =T2.input.input.L =T2.input.input.N =T2.input.output.+ =T2.input.output.- =U1.di_1.di_1.1 =U1.di_1.di_2.2
+fact attached =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal =K1.co_1 =e8c9eae9f72e528b954f2a09d4664b08:1.terminal
+fact head =T1.input =T2.input =K1.coil =e8c9eae9f72e528b954f2a09d4664b08:2.terminal
+fact strip e8c9eae9f72e528b954f2a09d4664b08 =e8c9eae9f72e528b954f2a09d4664b08:1.terminal =e8c9eae9f72e528b954f2a09d4664b08:2.terminal
+fact strip 4ad4b8fbc15a55d2ac1fc59e0ead5461 =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =K1.co_1.com
+fact conductor =U1.di_1.di_1.1 =K1.co_1.no
+fact conductor =M1.dc_ok.out =K1.coil.in
+fact conductor =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.s =K1.coil.out
+fact conductor =T1.input.output.+ =M1.in_1.in_1.1+
+fact conductor =T1.input.output.- =M1.in_1.in_1.1-
+fact conductor =T2.input.output.+ =M1.in_1.in_2.2+
+fact conductor =T2.input.output.- =M1.in_1.in_2.2-
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =M1.dc_ok.in
+fact conductor =K1.coil.in =M1.dc_ok.out
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s =M1.in_1.out.+
+fact conductor =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.s =M1.in_1.out.-
+fact conductor =M1.in_1.in_1.1+ =T1.input.output.+
+fact conductor =M1.in_1.in_1.1- =T1.input.output.-
+fact conductor =M1.in_1.in_2.2+ =T2.input.output.+
+fact conductor =M1.in_1.in_2.2- =T2.input.output.-
+fact conductor =K1.co_1.no =U1.di_1.di_1.1
+fact conductor =M1.in_1.out.+ =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s
+fact conductor =K1.co_1.com =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s
+fact conductor =M1.dc_ok.in =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s
+fact conductor =M1.in_1.out.- =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.s
+fact conductor =K1.coil.out =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.s
+fact group =T2.input.output.- =M1.in_1.in_2.2-
+fact group =K1.co_1.no =U1.di_1.di_1.1
+fact group =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =K1.co_1.com
+fact group =M1.in_1.in_1.1- =T1.input.output.-
+fact group =T2.input.output.+ =M1.in_1.in_2.2+
+fact group =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s =M1.in_1.out.+
+fact group =M1.dc_ok.in =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s
+fact group =K1.coil.out =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.s
+fact group =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.s =M1.in_1.out.-
+fact group =M1.in_1.in_1.1+ =T1.input.output.+
+fact group =K1.coil.in =M1.dc_ok.out
+fact group =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.n =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.s
+fact group =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.n =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.s
+fact group =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n
+fact group =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n
 # legend only: a general placer must not read a symbol's kind.
-kind +CAB-X2:L:1.terminal terminal
-kind +CAB-X2:L:2.terminal terminal
-kind =G+CAB-K1.coil coil
-kind +CAB-X1:L:1.terminal terminal
-kind =G+CAB-M1.dc_ok contact_no
-kind +CAB-X1:L:2.terminal terminal
-kind =G+CAB-K1.co_1 contact_co
-kind =G+CAB-M1.supply supply
-kind =G+CAB-T1.supply supply
-kind =G+CAB-U1.item item
-kind =G+CAB-T2.supply supply
-kind +CAB-X1:L:2.terminal@1 terminal
-kind +CAB-X1:L:2.terminal@2 terminal
-# today's placement: page, origin and orientation of each drawn copy.
-today +CAB-X2:L:1.terminal page=1 at=224,336 orient=R180 set=1
-today +CAB-X2:L:2.terminal page=1 at=480,432 orient=R180 set=1
-today =G+CAB-K1.coil page=1 at=480,312 orient=R0 set=1
-today +CAB-X1:L:1.terminal page=1 at=176,336 orient=R180 set=1
-today =G+CAB-M1.dc_ok page=1 at=480,184 orient=R0 set=1
-today +CAB-X1:L:2.terminal@1 page=1 at=480,128 orient=R0 set=1
-today +CAB-X1:L:2.terminal@2 page=1 at=72,128 orient=R0 set=1
-today =G+CAB-K1.co_1 page=1 at=72,184 orient=R0 set=1
-today =G+CAB-M1.supply page=1 at=176,176 orient=R0 set=1
-today =G+CAB-T1.supply page=1 at=176,112 orient=R0 set=1
-today =G+CAB-U1.item page=1 at=72,304 orient=R0 set=1
-today =G+CAB-T2.supply page=1 at=328,112 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n2 page=1 set=1 a==G+CAB-M1.supply.out.+ b=+CAB-X1:L:1.terminal.s 176,192 176,328
-route n1 page=1 set=1 a==G+CAB-M1.dc_ok.out b==G+CAB-K1.coil.in 480,200 480,288
-route n9 page=1 set=1 a=+CAB-X2:L:1.terminal.s b==G+CAB-M1.supply.out.- 224,328 224,192
-route n20 page=1 set=1 a==G+CAB-T2.supply.output.+ b==G+CAB-M1.supply.in_2.2+ 328,128 328,160
-route n3 page=1 set=1 a==G+CAB-M1.supply.in_2.2- b==G+CAB-T2.supply.output.- 344,160 344,128
-route n4 page=1 set=1 a==G+CAB-M1.supply.in_1.1- b==G+CAB-T1.supply.output.- 192,160 192,128
-route n5 page=1 set=1 a==G+CAB-U1.item.di_1.1 b==G+CAB-K1.co_1.no 72,288 72,200
-route n2 page=1 set=1 a==G+CAB-M1.dc_ok.in b=+CAB-X1:L:2.terminal@1.s 480,168 480,136
-route n12 page=1 set=1 a==G+CAB-M1.supply.in_1.1+ b==G+CAB-T1.supply.output.+ 176,160 176,128
-route n9 page=1 set=1 a=+CAB-X2:L:2.terminal.s b==G+CAB-K1.coil.out 480,424 480,336
-route n2 page=1 set=1 a=+CAB-X1:L:2.terminal@2.s b==G+CAB-K1.co_1.com 72,136 72,168
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
+kind =K1.coil device
+kind =K1.co_1 device
+kind =e8c9eae9f72e528b954f2a09d4664b08:1.terminal terminal
+kind =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal terminal
+kind =e8c9eae9f72e528b954f2a09d4664b08:2.terminal terminal
+kind =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal terminal
+kind =M1.in_1 device
+kind =M1.dc_ok device
+kind =T1.input device
+kind =T2.input device
+kind =U1.di_1 plc_module
+# placement of the core: page, origin and orientation of each placed symbol.
+today =K1.coil page=1 at=1184,120 orient=R0 set=1
+today =K1.co_1 page=1 at=944,72 orient=R0 set=1
+today =e8c9eae9f72e528b954f2a09d4664b08:1.terminal page=1 at=120,176 orient=R0 set=1
+today =4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal page=1 at=296,176 orient=R0 set=1
+today =e8c9eae9f72e528b954f2a09d4664b08:2.terminal page=1 at=944,32 orient=R0 set=1
+today =4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal page=1 at=1184,176 orient=R0 set=1
+today =M1.in_1 page=1 at=120,128 orient=R0 set=1
+today =M1.dc_ok page=1 at=1184,72 orient=R0 set=1
+today =T1.input page=1 at=480,40 orient=R0 set=1
+today =T2.input page=1 at=680,40 orient=R0 set=1
+today =U1.di_1 page=1 at=880,112 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n3 page=1 set=1 a==U1.di_1.di_1.1 b==K1.co_1.no 944,96 944,88
+route n4 page=1 set=1 a==M1.in_1.out.+ b==e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n 120,144 120,168
+route n5 page=1 set=1 a==M1.in_1.out.- b==4ad4b8fbc15a55d2ac1fc59e0ead5461:1.terminal.n 296,144 296,168
+route n0 page=1 set=1 a==M1.dc_ok.out b==K1.coil.in 1184,88 1184,96
+route n1 page=1 set=1 a==K1.coil.out b=- 1184,144 1184,160
+route n1 page=1 set=1 a==4ad4b8fbc15a55d2ac1fc59e0ead5461:2.terminal.n b=- 1184,168 1184,160
+route n2 page=1 set=1 a=- b=- 944,48 1184,48
+route n2 page=1 set=1 a==e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s b=- 944,40 944,48
+route n2 page=1 set=1 a==K1.co_1.com b=- 944,56 944,48
+route n2 page=1 set=1 a==M1.dc_ok.in b=- 1184,56 1184,48
+route n6 page=1 set=1 a=- b=- 120,72 480,72
+route n6 page=1 set=1 a==T1.input.output.+ b=- 480,56 480,72
+route n6 page=1 set=1 a==M1.in_1.in_1.1+ b=- 120,112 120,72
+route n7 page=1 set=1 a=- b=- 136,80 496,80
+route n7 page=1 set=1 a==T1.input.output.- b=- 496,56 496,80
+route n7 page=1 set=1 a==M1.in_1.in_1.1- b=- 136,112 136,80
+route n8 page=1 set=1 a=- b=- 152,88 680,88
+route n8 page=1 set=1 a==T2.input.output.+ b=- 680,56 680,88
+route n8 page=1 set=1 a==M1.in_1.in_2.2+ b=- 152,112 152,88
+route n9 page=1 set=1 a=- b=- 168,96 696,96
+route n9 page=1 set=1 a==T2.input.output.- b=- 696,56 696,96
+route n9 page=1 set=1 a==M1.in_1.in_2.2- b=- 168,112 168,96
+# reference markers of the core: one per printed cross-reference.

@@ -113,7 +113,7 @@ def test_mates_off_the_page_are_left_alone_and_across_rows_are_returned() -> Non
     prob = fx.mate_columns()
     gone = replace(
         prob,
-        facts=Facts(mates=((PinRef("p", "s"), PinRef("elsewhere", "n")),)),
+        facts=Facts(mates=((PinRef("p", "s"), PinRef("elsewhere", "n")),), far_ends=()),
     )
     env = env_of(gone)
     assert mate_aligns(env) == ()
@@ -137,7 +137,7 @@ def test_row_groups_keep_their_head_and_foot_lines() -> None:
 def test_aligns_are_in_natural_order_whatever_the_input_order() -> None:
     """Mates given reversed, and each pair swapped, give the same Align values up to line order."""
     prob = fx.mate_columns()
-    swapped = replace(prob, facts=Facts(mates=((PinRef("q", "n"), PinRef("p", "s")),)))
+    swapped = replace(prob, facts=Facts(mates=((PinRef("q", "n"), PinRef("p", "s")),), far_ends=()))
     first = mate_aligns(env_of(prob))[0]
     other = mate_aligns(env_of(swapped))[0]
     assert sorted(first.lines[0]) == sorted(other.lines[0])
@@ -179,13 +179,13 @@ def test_neighbours_within_one_pitch_stay_one_run_and_a_wider_gap_cuts_it() -> N
 def test_a_strip_terminal_at_neither_end_of_its_column_is_a_run_of_one() -> None:
     """The middle of a column is no head and no foot: not level with any other, it stands alone."""
     mid = refit(elem("m"), row_group="G")
-    prob = PlacementProblem(AREA, (elem("a"), mid, elem("b")), tuple(chain(["a", "m", "b"])), facts=Facts())
+    prob = PlacementProblem(AREA, (elem("a"), mid, elem("b")), tuple(chain(["a", "m", "b"])), facts=Facts(far_ends=()))
     assert _runs(prob) == [({"m"}, "G run at m")]
 
 
 def test_a_run_key_that_is_a_symbol_id_is_refused_naming_the_strip() -> None:
     """The key is the run's annex owner: one id space with the symbols."""
     syms = (elem("a"), refit(elem("m"), row_group="G"), elem("b"), elem("G run at m"))
-    prob = PlacementProblem(AREA, syms, tuple(chain(["a", "m", "b", "G run at m"])), facts=Facts())
+    prob = PlacementProblem(AREA, syms, tuple(chain(["a", "m", "b", "G run at m"])), facts=Facts(far_ends=()))
     with pytest.raises(CoreError, match="strip G"):
         _runs(prob)

@@ -115,7 +115,7 @@ def _case(
     placed_all = tuple(placed(sid, x, y) for sid, x, y in at)
     page = PagePlacement(1, placed_all, (), (), (), ())
     routes = Routes((PageRoutes(1, wires, (), Counts(0, 0, 0, 0), (), (), ()),))
-    problem = PlacementProblem(Size(400, 300), syms, (), facts=Facts())
+    problem = PlacementProblem(Size(400, 300), syms, (), facts=Facts(far_ends=()))
     return LabelCase(Placement((page,)), routes, markers, anchored, problem)
 
 

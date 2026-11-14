@@ -82,7 +82,7 @@ UP037 = 2
 # SUPPLY-SLOT (R1619, TEXT-BOX-MEASURED): OVERLAP now sees slot ink, a looks rise: machine_panel 0 -> 2, panel_di16p 0 -> 1
 distribution_board = 0
 machine_panel = 0  # INK-PATH (R2219, layout-0595): slot ink is the string, not its room, so the WHERE text no longer touches the neighbour slot; was 1; KI-761 (looks, designer R1905): the WHERE text of a terminal touches a neighbour's slot text; ONE-PAGE (R1830): the wider reserved marker lets the cards clear; measured 0 again with OVERLAP-CHECK (R1828) on the merged tree; was 3 (R1771, KI-688), before that 4 (R1730)
-mcc = 20  # R1828 OVERLAP-CHECK (looks class, checker-only, owner 10-29 rule): edge runs and diagonals now count, one per member, mcc pages byte-identical to main; was 0, before that 3 (R1730)
+mcc = 0  # LEVEL-JOIN merged tree (R2316 P1): falls 20 -> 0; R1828 OVERLAP-CHECK (looks class, checker-only, owner 10-29 rule): edge runs and diagonals now count, one per member, mcc pages byte-identical to main; was 0, before that 3 (R1730)
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # ONE-PAGE (R1830): as machine_panel; was 3. R1771 (looks class, KI-688): the N5c below-branch card reserve; was 1
 remote_io = 0  # B3 merged tree: falls from 1 (R2090); TRUNK-Y-SHARE (R2090): trunks of one row keep apart, 7 -> 1; ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0

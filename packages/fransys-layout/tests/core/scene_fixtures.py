@@ -59,7 +59,7 @@ def problem() -> PlacementProblem:
             Net("n1", (PinRef("K", "c1"), PinRef("A", "in"))),
             Net("n2", (PinRef("F", "out"), PinRef("A", "out"), PinRef("T", "s"))),
         ),
-        Facts(),
+        Facts(far_ends=()),
     )
 
 

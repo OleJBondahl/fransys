@@ -19,7 +19,7 @@ def _net_across_three_pages() -> PlacementProblem:
         AREA,
         syms,
         (net("k", "y.e", "z.e"), net("m", "x.e", "z.e")),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 

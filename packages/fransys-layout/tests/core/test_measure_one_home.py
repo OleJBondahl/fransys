@@ -52,14 +52,14 @@ def test_the_recut_stops_on_a_repeated_cut(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(widen_module, "_attempt", lambda *a: (calls.append(a[3]), same)[1])
     monkeypatch.setattr(widen_module, "_excess", lambda *_: (8, 0))
     monkeypatch.setattr(widen_module, "_spans_of", lambda measured, *_: measured)
-    prob = PlacementProblem(Size(100, 4000), (elem("e", 40, 32),), (), facts=Facts())
+    prob = PlacementProblem(Size(100, 4000), (elem("e", 40, 32),), (), facts=Facts(far_ends=()))
     widen_module._recut((), cast("Any", None), prob, OPTS, Measured())
     assert len(calls) == 2, calls
 
 
 def test_the_lanes_stop_where_the_page_would_fall_under_the_tallest_block_that_fits_it() -> None:
     """R460: 822 G of room, a block 780 G high, 8 G lanes: five lanes at most (782 G left)."""
-    prob = PlacementProblem(Size(100, 4000), (), (), facts=Facts())
+    prob = PlacementProblem(Size(100, 4000), (), (), facts=Facts(far_ends=()))
     room = prob.area.h - OPTS.page_headroom
     tall = Measured(heights={"fan": room - 5 * OPTS.wiring_grid, "wider": room + 40})
     assert widen_module._lanes(0, 8 * OPTS.wiring_grid, tall, prob, OPTS) == 5
@@ -77,7 +77,7 @@ def test_a_fan_whose_span_jumps_at_attempt_zero_keeps_the_page_it_fits(
     The trigger: a widen gap that grows, plus a fan whose span jumps at attempt 0 (272 G in, 736 G
     fresh, the page 114 G over). The old rule took 15 lanes and left 702 G for the 736 G fan.
     """
-    prob = PlacementProblem(Size(100, 822 + OPTS.page_headroom), (), (), facts=Facts())
+    prob = PlacementProblem(Size(100, 822 + OPTS.page_headroom), (), (), facts=Facts(far_ends=()))
     room = prob.area.h - OPTS.page_headroom
     assert room == 822
     lanes_used: list[int] = []

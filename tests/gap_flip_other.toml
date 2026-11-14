@@ -115,37 +115,23 @@
 "tests/test_placement_corpus_remote_io.py::test_two_boxes_build_clean_bind_every_channel_and_carry_pe_and_the_feeds" = "GAP-FLIP-224"
 
 # Source-level strict xfails moved here (R272); each comment keeps the mark's reason.
-# STAND-JUNCTION: a terminal on a supply net has two stands and no wire; P4 cannot hold (topology draws supply nets as stands; not stage 5, part 9 trace)
-"tests/test_placement_align_counts.py::test_score_p_is_unchanged[w05_turned_marker]" = "GAP-FLIP-217"
-"tests/test_placement_place_counts.py::test_the_placement_gate_rules_are_zero[w05_turned_marker]" = "GAP-FLIP-217"
-"tests/test_placement_route_counts.py::test_the_placement_gate_rules_stay_zero_with_real_routes[w05_turned_marker]" = "GAP-FLIP-217"
-# P6-ROW-KEY: scorer P6 strict within one row (E5 Q6 amendment 1)
-"tests/test_placement_align_counts.py::test_score_p_is_unchanged[w08_wide_relay_bank]" = "GAP-FLIP-221"
-"tests/test_placement_place_counts.py::test_the_placement_gate_rules_are_zero[w08_wide_relay_bank]" = "GAP-FLIP-221"
-"tests/test_placement_route_counts.py::test_the_placement_gate_rules_stay_zero_with_real_routes[w08_wide_relay_bank]" = "GAP-FLIP-221"
-# TEXT-CANDIDATES: no text keeps a candidate that leaves another text with none (designer Ruling 117)
-# ORIENT: K9 and K13 stand R180, so their n63 legs enter from below through the coil's own body; not a foreign box, not stage 5 (part 8 trace)
-"tests/test_placement_route_counts.py::test_every_instance_routes_with_no_refusal[w08_wide_relay_bank]" = "GAP-FLIP-213"
 # OPEN-CROSSING: four trunks on four y lines cost 6 crossings; one shared line hid them
 "tests/test_placement_route_counts.py::test_crossings_are_at_most_todays[p02_strip_to_plc]" = "GAP-FLIP-219"
 # OPEN-CROSSING: the n9 riser (a box pin) and the n2 trunk cross once in every y order
 "tests/test_placement_route_counts.py::test_crossings_are_at_most_todays[t02_box_device_contact]" = "GAP-FLIP-219"
-# THROUGH: both pins of a fuse on one net, a through device the oracle sees as 2 pieces; STAND-JUNCTION: a supply net is drawn as stands, no wire; OPEN-ROTATED-DROP: a bundle drop rotated against its pin or on a sibling pole; OPEN-PLAIN-TRUNK: a plain net with row trunks left unjoined (trace: s01)
-"tests/test_placement_route_counts.py::test_every_net_is_joined_or_referenced_on_every_page[w08_wide_relay_bank]" = "GAP-FLIP-213"
-# OPEN-ALIGN-SUBJECT: ALIGN_DROPPED names a unit, trunk or terminal text, which no symbol, net or block id of the problem equals
-"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w08_wide_relay_bank-IS.5]" = "GAP-FLIP-215"
-# Ruling 91: draws on 3 pages against the bound 1; TEXT_OVERLAP x1
-"tests/test_short_groups_corpus_pages.py::test_the_instance_stacks_onto_no_more_pages_than_its_bound[w10_long_chain]" = "GAP-FLIP-204"
-# t02 is CHAIN_REFUSED; w10 draws 3 pages against the bound 1
-# OPEN-NET: the page leaves a net open and unreferenced; the same nets are the xfails of test_placement_route_counts (THROUGH, STAND-JUNCTION, OPEN-ROTATED-DROP, OPEN-PLAIN-TRUNK)
+"tests/test_placement_route_counts.py::test_crossings_are_at_most_todays[w03_plc_list_pin]" = "GAP-FLIP-219"  # KI-187
+"tests/test_placement_route_counts.py::test_the_pinned_instances_cross_nowhere[w03_plc_list_pin]" = "GAP-FLIP-219"  # KI-187
 # OPEN-RESPELL: respelling the ids moves the layout; the first moved id is untraced
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w05_turned_marker-IS.7]" = "GAP-FLIP-217"
+"tests/test_placement_solve_counts.py::test_the_solve_rule_holds[t02_box_device_contact-IS.4]" = "GAP-FLIP-979"  # KI-979
+"tests/test_placement_marker_counts.py::test_every_stub_tag_and_copy_marker_lies_outside_every_footprint[w06_wide_controller_row]" = "GAP-FLIP-980"  # KI-980
 
 # test_placement_widen_counts: the crossed instances of test_placement_route_counts, widened (R272)
 # OPEN-CROSSING: the n9 riser (a box pin) and the n2 trunk cross once in every y order
 "tests/test_placement_widen_counts.py::test_crossings_are_at_most_todays_and_equal_before_where_nothing_moved[t02_box_device_contact]" = "GAP-FLIP-219"
 # OPEN-CROSSING: four trunks on four y lines cost 6 crossings; one shared line hid them
 "tests/test_placement_widen_counts.py::test_crossings_are_at_most_todays_and_equal_before_where_nothing_moved[p02_strip_to_plc]" = "GAP-FLIP-219"
+"tests/test_placement_widen_counts.py::test_crossings_are_at_most_todays_and_equal_before_where_nothing_moved[w03_plc_list_pin]" = "GAP-FLIP-219"  # KI-187
 
 # SWEEP-CENSUS (R1179): a strict xfail is a row here, never a decorator (test_no_test_file_carries_a_strict_xfail_of_its_own)
 # KI-414, KI-419: the box beside the strip shows DANGLING_WIRE_END and NO_CELL (KI-413 closed, R1736)

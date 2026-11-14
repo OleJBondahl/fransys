@@ -1,778 +1,867 @@
-# FRANSYS PLACEMENT INSTANCE test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds__1
-# sides: half split of fransys_el; today and route lines as exported
+# FRANSYS PLACEMENT INSTANCE w08_wide_relay_bank
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group PLC order=0 "Controller"
-group R1 order=1 "Relay 1"
-group R2 order=2 "Relay 2"
-group R3 order=3 "Relay 3"
-group R4 order=4 "Relay 4"
-group R5 order=5 "Relay 5"
-group R6 order=6 "Relay 6"
-group R7 order=7 "Relay 7"
-group R8 order=8 "Relay 8"
-group R9 order=9 "Relay 9"
-group R10 order=10 "Relay 10"
-group R11 order=11 "Relay 11"
-group R12 order=12 "Relay 12"
-group R13 order=13 "Relay 13"
-group R14 order=14 "Relay 14"
-group R15 order=15 "Relay 15"
-group R16 order=16 "Relay 16"
-sym =R16-U1-K16.co_1 group=R16 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R1-U1-X1:1.terminal group=R1 body=-8,-8,16,16 keepout=-8,-30,60,38
+group PLC order=0 "PLC"
+group R1 order=1 "R1"
+group R2 order=2 "R2"
+group R3 order=3 "R3"
+group R4 order=4 "R4"
+group R5 order=5 "R5"
+group R6 order=6 "R6"
+group R7 order=7 "R7"
+group R8 order=8 "R8"
+group R9 order=9 "R9"
+group R10 order=10 "R10"
+group R11 order=11 "R11"
+group R12 order=12 "R12"
+group R13 order=13 "R13"
+group R14 order=14 "R14"
+group R15 order=15 "R15"
+group R16 order=16 "R16"
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal group=R1 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R4-U1-K4.coil group=R4 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R5-U1-K5.coil group=R5 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R7-U1-K7.coil group=R7 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R8-U1-K8.co_1 group=R8 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R3-U1-X1:3.terminal group=R3 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal group=R1 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R10-U1-P10.lamp group=R10 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R3-U1-K3.coil group=R3 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R6-U1-P6.lamp group=R6 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R5-U1-K5.co_1 group=R5 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R15-U1-P15.lamp group=R15 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R10-U1-K10.co_1 group=R10 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym -U1-X1:5.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal group=R1 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal group=R1 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal group=R2 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R4-U1-P4.lamp group=R4 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R5-U1-P5.lamp group=R5 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R14-U1-K14.co_1 group=R14 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R3-U1-K3.co_1 group=R3 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R4-U1-X1:4.terminal group=R4 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal group=R3 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R6-U1-K6.coil group=R6 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R9-U1-K9.coil group=R9 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R13-U1-K13.coil group=R13 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R16-U1-K16.coil group=R16 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R11-U1-P11.lamp group=R11 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R16-U1-P16.lamp group=R16 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R2-U1-X1:2.terminal group=R2 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal group=R4 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R13-U1-P13.lamp group=R13 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R4-U1-X2:4.terminal group=R4 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal group=R5 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R1-U1-K1.co_1 group=R1 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R12-U1-P12.lamp group=R12 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R9-U1-K9.co_1 group=R9 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R9-U1-P9.lamp group=R9 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym -U1-X1:7.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal group=R6 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R4-U1-K4.co_1 group=R4 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R12-U1-K12.coil group=R12 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R3-U1-X2:3.terminal group=R3 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal group=R7 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R1-U1-X2:1.terminal group=R1 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal group=R8 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R2-U1-K2.coil group=R2 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym -U1-X1:6.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal group=R9 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R11-U1-K11.co_1 group=R11 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R7-U1-K7.co_1 group=R7 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R2-U1-P2.lamp group=R2 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R2-U1-K2.co_1 group=R2 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R1-U1-P1.lamp group=R1 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R14-U1-K14.coil group=R14 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R1-U1-K1.coil group=R1 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R8-U1-P8.lamp group=R8 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R6-U1-X2:6.terminal group=R6 body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal group=R10 body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R14-U1-P14.lamp group=R14 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R15-U1-K15.coil group=R15 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R12-U1-K12.co_1 group=R12 body=-16,-16,16,32 keepout=-80,-16,94,32
-  pin com N 0,-16
-  pin nc S -16,16
-  pin no S 0,16
-sym =R8-U1-K8.coil group=R8 body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =PLC-U1-A1.box group=PLC body=-16,-16,496,32 keepout=-16,-16,548,32
+sym =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal group=R11 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal group=R12 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal group=R13 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal group=R14 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal group=R15 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal group=R16 body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =U1-A1.box group=PLC body=-16,-16,288,32 keepout=-16,-16,344,32
   pin CH01- N 0,-16
-  pin CH02- N 56,-16
-  pin CH03- N 112,-16
-  pin CH04- N 168,-16
-  pin CH05- N 224,-16
-  pin CH06- N 280,-16
-  pin CH07- N 336,-16
-  pin CH08- N 392,-16
+  pin CH02- N 32,-16
+  pin CH03- N 64,-16
+  pin CH04- N 96,-16
+  pin CH05- N 128,-16
+  pin CH06- N 160,-16
+  pin CH07- N 192,-16
+  pin CH08- N 224,-16
   pin CH09- S 0,16
-  pin CH10- S 56,16
-  pin CH11- S 112,16
-  pin CH12- S 168,16
-  pin CH13- S 224,16
-  pin CH14- S 280,16
-  pin CH15- S 336,16
-  pin CH16- S 392,16
-sym =R3-U1-P3.lamp group=R3 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R11-U1-K11.coil group=R11 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin CH10- S 32,16
+  pin CH11- S 64,16
+  pin CH12- S 96,16
+  pin CH13- S 128,16
+  pin CH14- S 160,16
+  pin CH15- S 192,16
+  pin CH16- S 224,16
+sym =U1-K1.coil group=R1 body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R6-U1-K6.co_1 group=R6 body=-16,-16,16,32 keepout=-80,-16,94,32
+sym =U1-K1.co_1 group=R1 body=-16,-16,16,32 keepout=-80,-16,96,32
   pin com N 0,-16
   pin nc S -16,16
   pin no S 0,16
-sym =R10-U1-K10.coil group=R10 body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K2.coil group=R2 body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R15-U1-K15.co_1 group=R15 body=-16,-16,16,32 keepout=-80,-16,94,32
+sym =U1-K2.co_1 group=R2 body=-16,-16,16,32 keepout=-80,-16,96,32
   pin com N 0,-16
   pin nc S -16,16
   pin no S 0,16
-sym =R5-U1-X2:5.terminal group=R5 body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -U1-X1:8.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R2-U1-X2:2.terminal group=R2 body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R7-U1-P7.lamp group=R7 body=-16,-16,32,32 keepout=-16,-16,84,32
-  pin 1 N 0,-16
-  pin 2 S 0,16
-sym =R13-U1-K13.co_1 group=R13 body=-16,-16,16,32 keepout=-80,-16,94,32
+sym =U1-K3.coil group=R3 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K3.co_1 group=R3 body=-16,-16,16,32 keepout=-80,-16,96,32
   pin com N 0,-16
   pin nc S -16,16
   pin no S 0,16
-sym =R2-U1-X2:2.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R2-U1-X2:2.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:1.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@3 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R4-U1-X2:4.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:1.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R2-U1-X2:2.terminal@3 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@4 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R4-U1-X2:4.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@5 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@6 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:1.terminal@3 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R6-U1-X2:6.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@7 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@8 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@9 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@10 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@11 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@12 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R6-U1-X2:6.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@13 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R5-U1-X2:5.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@14 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@15 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R3-U1-X2:3.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R3-U1-X2:3.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R4-U1-X2:4.terminal@3 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R5-U1-X2:5.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R1-U1-X2:7.terminal@16 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym =R3-U1-X2:3.terminal@3 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-net n0 =PLC-U1-A1.box.CH01- =R1-U1-K1.coil.out
-net n1 =R16-U1-K16.co_1.no =R16-U1-P16.lamp.1
-net n2 =R11-U1-K11.co_1.com =R5-U1-K5.co_1.com =R5-U1-X2:5.terminal.n =R5-U1-X2:5.terminal.s =R5-U1-X2:5.terminal@1.n =R5-U1-X2:5.terminal@1.s =R5-U1-X2:5.terminal@2.n =R5-U1-X2:5.terminal@2.s
-net n3 =R1-U1-P1.lamp.2 =R1-U1-X2:7.terminal.n =R1-U1-X2:7.terminal.s =R1-U1-X2:7.terminal@1.n =R1-U1-X2:7.terminal@1.s =R1-U1-X2:7.terminal@10.n =R1-U1-X2:7.terminal@10.s =R1-U1-X2:7.terminal@11.n =R1-U1-X2:7.terminal@11.s =R1-U1-X2:7.terminal@12.n =R1-U1-X2:7.terminal@12.s =R1-U1-X2:7.terminal@13.n =R1-U1-X2:7.terminal@13.s =R1-U1-X2:7.terminal@14.n =R1-U1-X2:7.terminal@14.s =R1-U1-X2:7.terminal@15.n =R1-U1-X2:7.terminal@15.s =R1-U1-X2:7.terminal@16.n =R1-U1-X2:7.terminal@16.s =R1-U1-X2:7.terminal@2.n =R1-U1-X2:7.terminal@2.s =R1-U1-X2:7.terminal@3.n =R1-U1-X2:7.terminal@3.s =R1-U1-X2:7.terminal@4.n =R1-U1-X2:7.terminal@4.s =R1-U1-X2:7.terminal@5.n =R1-U1-X2:7.terminal@5.s =R1-U1-X2:7.terminal@6.n =R1-U1-X2:7.terminal@6.s =R1-U1-X2:7.terminal@7.n =R1-U1-X2:7.terminal@7.s =R1-U1-X2:7.terminal@8.n =R1-U1-X2:7.terminal@8.s =R1-U1-X2:7.terminal@9.n =R1-U1-X2:7.terminal@9.s =R10-U1-P10.lamp.2 =R11-U1-P11.lamp.2 =R12-U1-P12.lamp.2 =R13-U1-P13.lamp.2 =R14-U1-P14.lamp.2 =R15-U1-P15.lamp.2 =R16-U1-P16.lamp.2 =R2-U1-P2.lamp.2 =R3-U1-P3.lamp.2 =R4-U1-P4.lamp.2 =R5-U1-P5.lamp.2 =R6-U1-P6.lamp.2 =R7-U1-P7.lamp.2 =R8-U1-P8.lamp.2 =R9-U1-P9.lamp.2
-net n4 =PLC-U1-A1.box.CH06- =R6-U1-K6.coil.out
-net n5 =R6-U1-K6.co_1.no =R6-U1-P6.lamp.1
-net n6 =R5-U1-K5.co_1.no =R5-U1-P5.lamp.1
-net n8 =R10-U1-K10.coil.in =R14-U1-K14.coil.in =R2-U1-K2.coil.in =R2-U1-X1:2.terminal.n =R2-U1-X1:2.terminal.s =R6-U1-K6.coil.in
-net n10 =PLC-U1-A1.box.CH13- =R13-U1-K13.coil.out
-net n11 =PLC-U1-A1.box.CH10- =R10-U1-K10.coil.out
-net n12 =R8-U1-K8.co_1.no =R8-U1-P8.lamp.1
-net n13 =R4-U1-K4.co_1.no =R4-U1-P4.lamp.1
-net n14 =PLC-U1-A1.box.CH02- =R2-U1-K2.coil.out
-net n15 =PLC-U1-A1.box.CH04- =R4-U1-K4.coil.out
-net n16 =R1-U1-K1.co_1.no =R1-U1-P1.lamp.1
-net n17 =PLC-U1-A1.box.CH08- =R8-U1-K8.coil.out
-net n18 =R15-U1-K15.co_1.com =R3-U1-K3.co_1.com =R3-U1-X2:3.terminal.n =R3-U1-X2:3.terminal.s =R3-U1-X2:3.terminal@1.n =R3-U1-X2:3.terminal@1.s =R3-U1-X2:3.terminal@2.n =R3-U1-X2:3.terminal@2.s =R3-U1-X2:3.terminal@3.n =R3-U1-X2:3.terminal@3.s =R9-U1-K9.co_1.com
-net n20 =R1-U1-K1.co_1.com =R1-U1-X2:1.terminal.n =R1-U1-X2:1.terminal.s =R1-U1-X2:1.terminal@1.n =R1-U1-X2:1.terminal@1.s =R1-U1-X2:1.terminal@2.n =R1-U1-X2:1.terminal@2.s =R1-U1-X2:1.terminal@3.n =R1-U1-X2:1.terminal@3.s =R13-U1-K13.co_1.com =R7-U1-K7.co_1.com
-net n21 =PLC-U1-A1.box.CH14- =R14-U1-K14.coil.out
-net n22 =PLC-U1-A1.box.CH16- =R16-U1-K16.coil.out
-net n24 =R15-U1-K15.co_1.no =R15-U1-P15.lamp.1
-net n25 =R10-U1-K10.co_1.com =R16-U1-K16.co_1.com =R4-U1-K4.co_1.com =R4-U1-X2:4.terminal.n =R4-U1-X2:4.terminal.s =R4-U1-X2:4.terminal@1.n =R4-U1-X2:4.terminal@1.s =R4-U1-X2:4.terminal@2.n =R4-U1-X2:4.terminal@2.s =R4-U1-X2:4.terminal@3.n =R4-U1-X2:4.terminal@3.s
-net n26 =R9-U1-K9.co_1.no =R9-U1-P9.lamp.1
-net n27 =PLC-U1-A1.box.CH09- =R9-U1-K9.coil.out
-net n28 =R3-U1-K3.co_1.no =R3-U1-P3.lamp.1
-net n29 =R14-U1-K14.co_1.com =R2-U1-K2.co_1.com =R2-U1-X2:2.terminal.n =R2-U1-X2:2.terminal.s =R2-U1-X2:2.terminal@1.n =R2-U1-X2:2.terminal@1.s =R2-U1-X2:2.terminal@2.n =R2-U1-X2:2.terminal@2.s =R2-U1-X2:2.terminal@3.n =R2-U1-X2:2.terminal@3.s =R8-U1-K8.co_1.com
-net n30 -U1-X1:5.terminal.n -U1-X1:5.terminal.s
-net n34 =R11-U1-K11.coil.in =R15-U1-K15.coil.in =R3-U1-K3.coil.in =R3-U1-X1:3.terminal.n =R3-U1-X1:3.terminal.s =R7-U1-K7.coil.in
-net n36 =R7-U1-K7.co_1.no =R7-U1-P7.lamp.1
-net n37 =PLC-U1-A1.box.CH11- =R11-U1-K11.coil.out
-net n40 =R2-U1-K2.co_1.no =R2-U1-P2.lamp.1
-net n41 =R12-U1-K12.coil.in =R16-U1-K16.coil.in =R4-U1-K4.coil.in =R4-U1-X1:4.terminal.n =R4-U1-X1:4.terminal.s =R8-U1-K8.coil.in
-net n44 =R12-U1-K12.co_1.no =R12-U1-P12.lamp.1
-net n45 =R11-U1-K11.co_1.no =R11-U1-P11.lamp.1
-net n48 =PLC-U1-A1.box.CH05- =R5-U1-K5.coil.out
-net n51 =PLC-U1-A1.box.CH15- =R15-U1-K15.coil.out
-net n52 =R12-U1-K12.co_1.com =R6-U1-K6.co_1.com =R6-U1-X2:6.terminal.n =R6-U1-X2:6.terminal.s =R6-U1-X2:6.terminal@1.n =R6-U1-X2:6.terminal@1.s =R6-U1-X2:6.terminal@2.n =R6-U1-X2:6.terminal@2.s
-net n54 =PLC-U1-A1.box.CH07- =R7-U1-K7.coil.out
-net n59 =R10-U1-K10.co_1.no =R10-U1-P10.lamp.1
-net n63 =R1-U1-K1.coil.in =R1-U1-X1:1.terminal.n =R1-U1-X1:1.terminal.s =R13-U1-K13.coil.in =R5-U1-K5.coil.in =R9-U1-K9.coil.in
-net n69 -U1-X1:7.terminal.n -U1-X1:7.terminal.s
-net n74 -U1-X1:6.terminal.n -U1-X1:6.terminal.s
-net n84 =R13-U1-K13.co_1.no =R13-U1-P13.lamp.1
-net n85 =R14-U1-K14.co_1.no =R14-U1-P14.lamp.1
-net n89 -U1-X1:8.terminal.n -U1-X1:8.terminal.s
-net n93 =PLC-U1-A1.box.CH03- =R3-U1-K3.coil.out
-net n97 =PLC-U1-A1.box.CH12- =R12-U1-K12.coil.out
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
-fact item =R16-U1-K16.co_1 =R16-U1-K16.coil
-fact item =R4-U1-K4.coil =R4-U1-K4.co_1
-fact item =R5-U1-K5.coil =R5-U1-K5.co_1
-fact item =R7-U1-K7.coil =R7-U1-K7.co_1
-fact item =R8-U1-K8.co_1 =R8-U1-K8.coil
-fact item =R3-U1-K3.coil =R3-U1-K3.co_1
-fact item =R10-U1-K10.co_1 =R10-U1-K10.coil
-fact item =R1-U1-X2:7.terminal =R1-U1-X2:7.terminal@1 =R1-U1-X2:7.terminal@2 =R1-U1-X2:7.terminal@3 =R1-U1-X2:7.terminal@4 =R1-U1-X2:7.terminal@5 =R1-U1-X2:7.terminal@6 =R1-U1-X2:7.terminal@7 =R1-U1-X2:7.terminal@8 =R1-U1-X2:7.terminal@9 =R1-U1-X2:7.terminal@10 =R1-U1-X2:7.terminal@11 =R1-U1-X2:7.terminal@12 =R1-U1-X2:7.terminal@13 =R1-U1-X2:7.terminal@14 =R1-U1-X2:7.terminal@15 =R1-U1-X2:7.terminal@16
-fact item =R14-U1-K14.co_1 =R14-U1-K14.coil
-fact item =R6-U1-K6.coil =R6-U1-K6.co_1
-fact item =R9-U1-K9.coil =R9-U1-K9.co_1
-fact item =R13-U1-K13.coil =R13-U1-K13.co_1
-fact item =R4-U1-X2:4.terminal =R4-U1-X2:4.terminal@1 =R4-U1-X2:4.terminal@2 =R4-U1-X2:4.terminal@3
-fact item =R1-U1-K1.co_1 =R1-U1-K1.coil
-fact item =R12-U1-K12.coil =R12-U1-K12.co_1
-fact item =R3-U1-X2:3.terminal =R3-U1-X2:3.terminal@1 =R3-U1-X2:3.terminal@2 =R3-U1-X2:3.terminal@3
-fact item =R1-U1-X2:1.terminal =R1-U1-X2:1.terminal@1 =R1-U1-X2:1.terminal@2 =R1-U1-X2:1.terminal@3
-fact item =R2-U1-K2.coil =R2-U1-K2.co_1
-fact item =R11-U1-K11.co_1 =R11-U1-K11.coil
-fact item =R6-U1-X2:6.terminal =R6-U1-X2:6.terminal@1 =R6-U1-X2:6.terminal@2
-fact item =R15-U1-K15.coil =R15-U1-K15.co_1
-fact item =R5-U1-X2:5.terminal =R5-U1-X2:5.terminal@1 =R5-U1-X2:5.terminal@2
-fact item =R2-U1-X2:2.terminal =R2-U1-X2:2.terminal@1 =R2-U1-X2:2.terminal@2 =R2-U1-X2:2.terminal@3
+sym =U1-K4.coil group=R4 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K4.co_1 group=R4 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K5.coil group=R5 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K5.co_1 group=R5 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K6.coil group=R6 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K6.co_1 group=R6 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K7.coil group=R7 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K7.co_1 group=R7 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K8.coil group=R8 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K8.co_1 group=R8 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K9.coil group=R9 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K9.co_1 group=R9 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K10.coil group=R10 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K10.co_1 group=R10 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K11.coil group=R11 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K11.co_1 group=R11 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K12.coil group=R12 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K12.co_1 group=R12 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K13.coil group=R13 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K13.co_1 group=R13 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K14.coil group=R14 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K14.co_1 group=R14 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K15.coil group=R15 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K15.co_1 group=R15 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-K16.coil group=R16 body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K16.co_1 group=R16 body=-16,-16,16,32 keepout=-80,-16,96,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =U1-P1.lamp group=R1 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P2.lamp group=R2 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P3.lamp group=R3 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P4.lamp group=R4 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P5.lamp group=R5 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P6.lamp group=R6 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P7.lamp group=R7 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P8.lamp group=R8 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P9.lamp group=R9 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P10.lamp group=R10 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P11.lamp group=R11 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P12.lamp group=R12 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P13.lamp group=R13 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P14.lamp group=R14 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P15.lamp group=R15 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+sym =U1-P16.lamp group=R16 body=-8,-16,16,32 keepout=-64,-24,80,48
+  pin in N 0,-16
+  pin out S 0,16
+net n0 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s =U1-K1.coil.in =U1-K2.coil.in =U1-K3.coil.in =U1-K4.coil.in =U1-K5.coil.in =U1-K6.coil.in =U1-K7.coil.in =U1-K8.coil.in =U1-K9.coil.in =U1-K10.coil.in =U1-K11.coil.in =U1-K12.coil.in =U1-K13.coil.in =U1-K14.coil.in =U1-K15.coil.in =U1-K16.coil.in
+net n1 =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.s =U1-K1.co_1.com =U1-K2.co_1.com =U1-K3.co_1.com =U1-K4.co_1.com =U1-K5.co_1.com =U1-K6.co_1.com =U1-K7.co_1.com =U1-K8.co_1.com =U1-K9.co_1.com =U1-K10.co_1.com =U1-K11.co_1.com =U1-K12.co_1.com =U1-K13.co_1.com =U1-K14.co_1.com =U1-K15.co_1.com =U1-K16.co_1.com
+net n2 =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.s =U1-P1.lamp.out
+net n3 =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.s =U1-P2.lamp.out
+net n4 =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.s =U1-P3.lamp.out
+net n5 =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.s =U1-P4.lamp.out
+net n6 =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.s =U1-P5.lamp.out
+net n7 =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.s =U1-P6.lamp.out
+net n8 =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.s =U1-P7.lamp.out
+net n9 =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.s =U1-P8.lamp.out
+net n10 =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.s =U1-P9.lamp.out
+net n11 =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.s =U1-P10.lamp.out
+net n12 =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.s =U1-P11.lamp.out
+net n13 =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.s =U1-P12.lamp.out
+net n14 =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.s =U1-P13.lamp.out
+net n15 =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.s =U1-P14.lamp.out
+net n16 =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.s =U1-P15.lamp.out
+net n17 =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.s =U1-P16.lamp.out
+net n18 =U1-A1.box.CH01- =U1-K1.coil.out
+net n19 =U1-A1.box.CH02- =U1-K2.coil.out
+net n20 =U1-A1.box.CH03- =U1-K3.coil.out
+net n21 =U1-A1.box.CH04- =U1-K4.coil.out
+net n22 =U1-A1.box.CH05- =U1-K5.coil.out
+net n23 =U1-A1.box.CH06- =U1-K6.coil.out
+net n24 =U1-A1.box.CH07- =U1-K7.coil.out
+net n25 =U1-A1.box.CH08- =U1-K8.coil.out
+net n26 =U1-A1.box.CH09- =U1-K9.coil.out
+net n27 =U1-A1.box.CH10- =U1-K10.coil.out
+net n28 =U1-A1.box.CH11- =U1-K11.coil.out
+net n29 =U1-A1.box.CH12- =U1-K12.coil.out
+net n30 =U1-A1.box.CH13- =U1-K13.coil.out
+net n31 =U1-A1.box.CH14- =U1-K14.coil.out
+net n32 =U1-A1.box.CH15- =U1-K15.coil.out
+net n33 =U1-A1.box.CH16- =U1-K16.coil.out
+net n34 =U1-K1.co_1.no =U1-P1.lamp.in
+net n35 =U1-K2.co_1.no =U1-P2.lamp.in
+net n36 =U1-K3.co_1.no =U1-P3.lamp.in
+net n37 =U1-K4.co_1.no =U1-P4.lamp.in
+net n38 =U1-K5.co_1.no =U1-P5.lamp.in
+net n39 =U1-K6.co_1.no =U1-P6.lamp.in
+net n40 =U1-K7.co_1.no =U1-P7.lamp.in
+net n41 =U1-K8.co_1.no =U1-P8.lamp.in
+net n42 =U1-K9.co_1.no =U1-P9.lamp.in
+net n43 =U1-K10.co_1.no =U1-P10.lamp.in
+net n44 =U1-K11.co_1.no =U1-P11.lamp.in
+net n45 =U1-K12.co_1.no =U1-P12.lamp.in
+net n46 =U1-K13.co_1.no =U1-P13.lamp.in
+net n47 =U1-K14.co_1.no =U1-P14.lamp.in
+net n48 =U1-K15.co_1.no =U1-P15.lamp.in
+net n49 =U1-K16.co_1.no =U1-P16.lamp.in
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =U1-K1.coil =U1-K1.co_1
+fact item =U1-K2.coil =U1-K2.co_1
+fact item =U1-K3.coil =U1-K3.co_1
+fact item =U1-K4.coil =U1-K4.co_1
+fact item =U1-K5.coil =U1-K5.co_1
+fact item =U1-K6.coil =U1-K6.co_1
+fact item =U1-K7.coil =U1-K7.co_1
+fact item =U1-K8.coil =U1-K8.co_1
+fact item =U1-K9.coil =U1-K9.co_1
+fact item =U1-K10.coil =U1-K10.co_1
+fact item =U1-K11.coil =U1-K11.co_1
+fact item =U1-K12.coil =U1-K12.co_1
+fact item =U1-K13.coil =U1-K13.co_1
+fact item =U1-K14.coil =U1-K14.co_1
+fact item =U1-K15.coil =U1-K15.co_1
+fact item =U1-K16.coil =U1-K16.co_1
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact boxpin =PLC-U1-A1.box.CH06- =PLC-U1-A1.box.CH13- =PLC-U1-A1.box.CH02- =PLC-U1-A1.box.CH04- =PLC-U1-A1.box.CH14- =PLC-U1-A1.box.CH16- =PLC-U1-A1.box.CH09- =PLC-U1-A1.box.CH05- =PLC-U1-A1.box.CH10- =PLC-U1-A1.box.CH01- =PLC-U1-A1.box.CH11- =PLC-U1-A1.box.CH07- =PLC-U1-A1.box.CH03- =PLC-U1-A1.box.CH12- =PLC-U1-A1.box.CH15- =PLC-U1-A1.box.CH08-
-fact attached =R4-U1-K4.coil =R5-U1-K5.coil =R7-U1-K7.coil =R3-U1-K3.coil =R6-U1-K6.coil =R9-U1-K9.coil =R13-U1-K13.coil =R16-U1-K16.coil =R12-U1-K12.coil =R2-U1-K2.coil =R14-U1-K14.coil =R1-U1-K1.coil =R15-U1-K15.coil =R8-U1-K8.coil =R11-U1-K11.coil =R10-U1-K10.coil
-fact strip -U1-X1 =R1-U1-X1:1.terminal =R3-U1-X1:3.terminal -U1-X1:5.terminal =R4-U1-X1:4.terminal =R2-U1-X1:2.terminal -U1-X1:7.terminal -U1-X1:6.terminal -U1-X1:8.terminal
-fact strip -U1-X2 =R1-U1-X2:7.terminal =R4-U1-X2:4.terminal =R3-U1-X2:3.terminal =R1-U1-X2:1.terminal =R6-U1-X2:6.terminal =R5-U1-X2:5.terminal =R2-U1-X2:2.terminal =R2-U1-X2:2.terminal@1 =R2-U1-X2:2.terminal@2 =R1-U1-X2:1.terminal@1 =R1-U1-X2:7.terminal@1 =R1-U1-X2:7.terminal@2 =R1-U1-X2:7.terminal@3 =R4-U1-X2:4.terminal@1 =R1-U1-X2:1.terminal@2 =R2-U1-X2:2.terminal@3 =R1-U1-X2:7.terminal@4 =R4-U1-X2:4.terminal@2 =R1-U1-X2:7.terminal@5 =R1-U1-X2:7.terminal@6 =R1-U1-X2:1.terminal@3 =R6-U1-X2:6.terminal@1 =R1-U1-X2:7.terminal@7 =R1-U1-X2:7.terminal@8 =R1-U1-X2:7.terminal@9 =R1-U1-X2:7.terminal@10 =R1-U1-X2:7.terminal@11 =R1-U1-X2:7.terminal@12 =R6-U1-X2:6.terminal@2 =R1-U1-X2:7.terminal@13 =R5-U1-X2:5.terminal@1 =R1-U1-X2:7.terminal@14 =R1-U1-X2:7.terminal@15 =R3-U1-X2:3.terminal@1 =R3-U1-X2:3.terminal@2 =R4-U1-X2:4.terminal@3 =R5-U1-X2:5.terminal@2 =R1-U1-X2:7.terminal@16 =R3-U1-X2:3.terminal@3
+fact boxpin =U1-A1.box.CH01- =U1-A1.box.CH02- =U1-A1.box.CH03- =U1-A1.box.CH04- =U1-A1.box.CH05- =U1-A1.box.CH06- =U1-A1.box.CH07- =U1-A1.box.CH08- =U1-A1.box.CH09- =U1-A1.box.CH10- =U1-A1.box.CH11- =U1-A1.box.CH12- =U1-A1.box.CH13- =U1-A1.box.CH14- =U1-A1.box.CH15- =U1-A1.box.CH16-
+fact attached =U1-K9.coil =U1-K11.coil =U1-K14.coil =U1-K10.coil =U1-K4.coil =U1-K13.coil =U1-K8.coil =U1-K12.coil =U1-K7.coil =U1-K6.coil =U1-K2.coil =U1-K1.coil =U1-K3.coil =U1-K5.coil =U1-K15.coil =U1-K16.coil
+fact head =U1-P16.lamp =U1-P7.lamp =U1-P4.lamp =U1-P3.lamp =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal =U1-P5.lamp =U1-P1.lamp =U1-P6.lamp =U1-P12.lamp =U1-P9.lamp =U1-P13.lamp =U1-P11.lamp =U1-P2.lamp =U1-P14.lamp =U1-P15.lamp =U1-P10.lamp =U1-P8.lamp
+fact strip 3c12d51896f05e84ad5fd5e04c06a7b5 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal
+fact strip 454e6b0ce71e5724ae6476e2c6a8df35 =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =U1-K1.coil.out =U1-A1.box.CH01-
+fact conductor =U1-K2.coil.out =U1-A1.box.CH02-
+fact conductor =U1-K3.coil.out =U1-A1.box.CH03-
+fact conductor =U1-K4.coil.out =U1-A1.box.CH04-
+fact conductor =U1-K5.coil.out =U1-A1.box.CH05-
+fact conductor =U1-K6.coil.out =U1-A1.box.CH06-
+fact conductor =U1-K7.coil.out =U1-A1.box.CH07-
+fact conductor =U1-K8.coil.out =U1-A1.box.CH08-
+fact conductor =U1-K9.coil.out =U1-A1.box.CH09-
+fact conductor =U1-K10.coil.out =U1-A1.box.CH10-
+fact conductor =U1-K11.coil.out =U1-A1.box.CH11-
+fact conductor =U1-K12.coil.out =U1-A1.box.CH12-
+fact conductor =U1-K13.coil.out =U1-A1.box.CH13-
+fact conductor =U1-K14.coil.out =U1-A1.box.CH14-
+fact conductor =U1-K15.coil.out =U1-A1.box.CH15-
+fact conductor =U1-K16.coil.out =U1-A1.box.CH16-
+fact conductor =U1-K2.co_1.com =U1-K1.co_1.com
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n =U1-K1.co_1.com
+fact conductor =U1-P1.lamp.in =U1-K1.co_1.no
+fact conductor =U1-K2.coil.in =U1-K1.coil.in
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-K1.coil.in
+fact conductor =U1-A1.box.CH01- =U1-K1.coil.out
+fact conductor =U1-K1.co_1.com =U1-K2.co_1.com
+fact conductor =U1-K3.co_1.com =U1-K2.co_1.com
+fact conductor =U1-P2.lamp.in =U1-K2.co_1.no
+fact conductor =U1-K1.coil.in =U1-K2.coil.in
+fact conductor =U1-K3.coil.in =U1-K2.coil.in
+fact conductor =U1-A1.box.CH02- =U1-K2.coil.out
+fact conductor =U1-K2.co_1.com =U1-K3.co_1.com
+fact conductor =U1-K4.co_1.com =U1-K3.co_1.com
+fact conductor =U1-P3.lamp.in =U1-K3.co_1.no
+fact conductor =U1-K2.coil.in =U1-K3.coil.in
+fact conductor =U1-K4.coil.in =U1-K3.coil.in
+fact conductor =U1-A1.box.CH03- =U1-K3.coil.out
+fact conductor =U1-K3.co_1.com =U1-K4.co_1.com
+fact conductor =U1-K5.co_1.com =U1-K4.co_1.com
+fact conductor =U1-P4.lamp.in =U1-K4.co_1.no
+fact conductor =U1-K3.coil.in =U1-K4.coil.in
+fact conductor =U1-K5.coil.in =U1-K4.coil.in
+fact conductor =U1-A1.box.CH04- =U1-K4.coil.out
+fact conductor =U1-K4.co_1.com =U1-K5.co_1.com
+fact conductor =U1-K6.co_1.com =U1-K5.co_1.com
+fact conductor =U1-P5.lamp.in =U1-K5.co_1.no
+fact conductor =U1-K4.coil.in =U1-K5.coil.in
+fact conductor =U1-K6.coil.in =U1-K5.coil.in
+fact conductor =U1-A1.box.CH05- =U1-K5.coil.out
+fact conductor =U1-K5.co_1.com =U1-K6.co_1.com
+fact conductor =U1-K7.co_1.com =U1-K6.co_1.com
+fact conductor =U1-P6.lamp.in =U1-K6.co_1.no
+fact conductor =U1-K5.coil.in =U1-K6.coil.in
+fact conductor =U1-K7.coil.in =U1-K6.coil.in
+fact conductor =U1-A1.box.CH06- =U1-K6.coil.out
+fact conductor =U1-K6.co_1.com =U1-K7.co_1.com
+fact conductor =U1-K8.co_1.com =U1-K7.co_1.com
+fact conductor =U1-P7.lamp.in =U1-K7.co_1.no
+fact conductor =U1-K6.coil.in =U1-K7.coil.in
+fact conductor =U1-K8.coil.in =U1-K7.coil.in
+fact conductor =U1-A1.box.CH07- =U1-K7.coil.out
+fact conductor =U1-K7.co_1.com =U1-K8.co_1.com
+fact conductor =U1-K9.co_1.com =U1-K8.co_1.com
+fact conductor =U1-P8.lamp.in =U1-K8.co_1.no
+fact conductor =U1-K7.coil.in =U1-K8.coil.in
+fact conductor =U1-K9.coil.in =U1-K8.coil.in
+fact conductor =U1-A1.box.CH08- =U1-K8.coil.out
+fact conductor =U1-K8.co_1.com =U1-K9.co_1.com
+fact conductor =U1-K10.co_1.com =U1-K9.co_1.com
+fact conductor =U1-P9.lamp.in =U1-K9.co_1.no
+fact conductor =U1-K8.coil.in =U1-K9.coil.in
+fact conductor =U1-K10.coil.in =U1-K9.coil.in
+fact conductor =U1-A1.box.CH09- =U1-K9.coil.out
+fact conductor =U1-K9.co_1.com =U1-K10.co_1.com
+fact conductor =U1-K11.co_1.com =U1-K10.co_1.com
+fact conductor =U1-P10.lamp.in =U1-K10.co_1.no
+fact conductor =U1-K9.coil.in =U1-K10.coil.in
+fact conductor =U1-K11.coil.in =U1-K10.coil.in
+fact conductor =U1-A1.box.CH10- =U1-K10.coil.out
+fact conductor =U1-K10.co_1.com =U1-K11.co_1.com
+fact conductor =U1-K12.co_1.com =U1-K11.co_1.com
+fact conductor =U1-P11.lamp.in =U1-K11.co_1.no
+fact conductor =U1-K10.coil.in =U1-K11.coil.in
+fact conductor =U1-K12.coil.in =U1-K11.coil.in
+fact conductor =U1-A1.box.CH11- =U1-K11.coil.out
+fact conductor =U1-K11.co_1.com =U1-K12.co_1.com
+fact conductor =U1-K13.co_1.com =U1-K12.co_1.com
+fact conductor =U1-P12.lamp.in =U1-K12.co_1.no
+fact conductor =U1-K11.coil.in =U1-K12.coil.in
+fact conductor =U1-K13.coil.in =U1-K12.coil.in
+fact conductor =U1-A1.box.CH12- =U1-K12.coil.out
+fact conductor =U1-K12.co_1.com =U1-K13.co_1.com
+fact conductor =U1-K14.co_1.com =U1-K13.co_1.com
+fact conductor =U1-P13.lamp.in =U1-K13.co_1.no
+fact conductor =U1-K12.coil.in =U1-K13.coil.in
+fact conductor =U1-K14.coil.in =U1-K13.coil.in
+fact conductor =U1-A1.box.CH13- =U1-K13.coil.out
+fact conductor =U1-K13.co_1.com =U1-K14.co_1.com
+fact conductor =U1-K15.co_1.com =U1-K14.co_1.com
+fact conductor =U1-P14.lamp.in =U1-K14.co_1.no
+fact conductor =U1-K13.coil.in =U1-K14.coil.in
+fact conductor =U1-K15.coil.in =U1-K14.coil.in
+fact conductor =U1-A1.box.CH14- =U1-K14.coil.out
+fact conductor =U1-K14.co_1.com =U1-K15.co_1.com
+fact conductor =U1-K16.co_1.com =U1-K15.co_1.com
+fact conductor =U1-P15.lamp.in =U1-K15.co_1.no
+fact conductor =U1-K14.coil.in =U1-K15.coil.in
+fact conductor =U1-K16.coil.in =U1-K15.coil.in
+fact conductor =U1-A1.box.CH15- =U1-K15.coil.out
+fact conductor =U1-K15.co_1.com =U1-K16.co_1.com
+fact conductor =U1-P16.lamp.in =U1-K16.co_1.no
+fact conductor =U1-K15.coil.in =U1-K16.coil.in
+fact conductor =U1-A1.box.CH16- =U1-K16.coil.out
+fact conductor =U1-K1.co_1.no =U1-P1.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =U1-P1.lamp.out
+fact conductor =U1-K2.co_1.no =U1-P2.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n =U1-P2.lamp.out
+fact conductor =U1-K3.co_1.no =U1-P3.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n =U1-P3.lamp.out
+fact conductor =U1-K4.co_1.no =U1-P4.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n =U1-P4.lamp.out
+fact conductor =U1-K5.co_1.no =U1-P5.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n =U1-P5.lamp.out
+fact conductor =U1-K6.co_1.no =U1-P6.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n =U1-P6.lamp.out
+fact conductor =U1-K7.co_1.no =U1-P7.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n =U1-P7.lamp.out
+fact conductor =U1-K8.co_1.no =U1-P8.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n =U1-P8.lamp.out
+fact conductor =U1-K9.co_1.no =U1-P9.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n =U1-P9.lamp.out
+fact conductor =U1-K10.co_1.no =U1-P10.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n =U1-P10.lamp.out
+fact conductor =U1-K11.co_1.no =U1-P11.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n =U1-P11.lamp.out
+fact conductor =U1-K12.co_1.no =U1-P12.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n =U1-P12.lamp.out
+fact conductor =U1-K13.co_1.no =U1-P13.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n =U1-P13.lamp.out
+fact conductor =U1-K14.co_1.no =U1-P14.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n =U1-P14.lamp.out
+fact conductor =U1-K15.co_1.no =U1-P15.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n =U1-P15.lamp.out
+fact conductor =U1-K16.co_1.no =U1-P16.lamp.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n =U1-P16.lamp.out
+fact conductor =U1-K1.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n
+fact conductor =U1-K1.co_1.com =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n
+fact conductor =U1-P1.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n
+fact conductor =U1-P2.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n
+fact conductor =U1-P3.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n
+fact conductor =U1-P4.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n
+fact conductor =U1-P5.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n
+fact conductor =U1-P6.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n
+fact conductor =U1-P7.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n
+fact conductor =U1-P8.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n
+fact conductor =U1-P9.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n
+fact conductor =U1-P10.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n
+fact conductor =U1-P11.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n
+fact conductor =U1-P12.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n
+fact conductor =U1-P13.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n
+fact conductor =U1-P14.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n
+fact conductor =U1-P15.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n
+fact conductor =U1-P16.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n
+fact group =U1-P8.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n
+fact group =U1-K1.co_1.no =U1-P1.lamp.in
+fact group =U1-P8.lamp.in =U1-K8.co_1.no
+fact group =U1-K7.co_1.com =U1-K8.co_1.com
+fact group =U1-P9.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n
+fact group =U1-P14.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n
+fact group =U1-K13.coil.in =U1-K14.coil.in
+fact group =U1-K12.co_1.com =U1-K11.co_1.com
+fact group =U1-A1.box.CH10- =U1-K10.coil.out
+fact group =U1-K10.co_1.no =U1-P10.lamp.in
+fact group =U1-K4.co_1.com =U1-K5.co_1.com
+fact group =U1-P5.lamp.in =U1-K5.co_1.no
+fact group =U1-A1.box.CH07- =U1-K7.coil.out
+fact group =U1-P4.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-K1.coil.in
+fact group =U1-P10.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n
+fact group =U1-P7.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =U1-P1.lamp.out
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n =U1-P15.lamp.out
+fact group =U1-K1.coil.out =U1-A1.box.CH01-
+fact group =U1-K15.co_1.com =U1-K14.co_1.com
+fact group =U1-A1.box.CH14- =U1-K14.coil.out
+fact group =U1-K6.co_1.com =U1-K5.co_1.com
+fact group =U1-P13.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n
+fact group =U1-K10.co_1.com =U1-K9.co_1.com
+fact group =U1-P6.lamp.in =U1-K6.co_1.no
+fact group =U1-K9.co_1.com =U1-K8.co_1.com
+fact group =U1-K11.coil.out =U1-A1.box.CH11-
+fact group =U1-K6.coil.out =U1-A1.box.CH06-
+fact group =U1-K11.co_1.com =U1-K10.co_1.com
+fact group =U1-A1.box.CH02- =U1-K2.coil.out
+fact group =U1-P9.lamp.in =U1-K9.co_1.no
+fact group =U1-K3.co_1.com =U1-K2.co_1.com
+fact group =U1-K12.co_1.com =U1-K13.co_1.com
+fact group =U1-A1.box.CH04- =U1-K4.coil.out
+fact group =U1-K14.co_1.com =U1-K13.co_1.com
+fact group =U1-K1.coil.in =U1-K2.coil.in
+fact group =U1-P13.lamp.in =U1-K13.co_1.no
+fact group =U1-K5.coil.in =U1-K6.coil.in
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n =U1-P16.lamp.out
+fact group =U1-K12.co_1.no =U1-P12.lamp.in
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n =U1-P5.lamp.out
+fact group =U1-P7.lamp.in =U1-K7.co_1.no
+fact group =U1-K4.coil.in =U1-K5.coil.in
+fact group =U1-K1.co_1.com =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n
+fact group =U1-K15.co_1.com =U1-K16.co_1.com
+fact group =U1-K11.coil.in =U1-K12.coil.in
+fact group =U1-K6.co_1.com =U1-K7.co_1.com
+fact group =U1-K13.coil.in =U1-K12.coil.in
+fact group =U1-P12.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n
+fact group =U1-K16.coil.out =U1-A1.box.CH16-
+fact group =U1-K4.coil.in =U1-K3.coil.in
+fact group =U1-A1.box.CH03- =U1-K3.coil.out
+fact group =U1-A1.box.CH05- =U1-K5.coil.out
+fact group =U1-P3.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n
+fact group =U1-P2.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n
+fact group =U1-K11.co_1.no =U1-P11.lamp.in
+fact group =U1-K11.coil.in =U1-K10.coil.in
+fact group =U1-P2.lamp.in =U1-K2.co_1.no
+fact group =U1-K3.coil.in =U1-K2.coil.in
+fact group =U1-A1.box.CH15- =U1-K15.coil.out
+fact group =U1-K7.coil.in =U1-K8.coil.in
+fact group =U1-P14.lamp.in =U1-K14.co_1.no
+fact group =U1-K15.co_1.no =U1-P15.lamp.in
+fact group =U1-K8.coil.out =U1-A1.box.CH08-
+fact group =U1-K15.coil.in =U1-K16.coil.in
+fact group =U1-K9.coil.in =U1-K8.coil.in
+fact group =U1-K14.coil.in =U1-K15.coil.in
+fact group =U1-P3.lamp.in =U1-K3.co_1.no
+fact group =U1-K4.co_1.com =U1-K3.co_1.com
+fact group =U1-P4.lamp.in =U1-K4.co_1.no
+fact group =U1-P6.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n
+fact group =U1-P11.lamp.out =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n
+fact group =U1-K1.co_1.com =U1-K2.co_1.com
+fact group =U1-A1.box.CH12- =U1-K12.coil.out
+fact group =U1-A1.box.CH09- =U1-K9.coil.out
+fact group =U1-P16.lamp.in =U1-K16.co_1.no
+fact group =U1-K9.coil.in =U1-K10.coil.in
+fact group =U1-A1.box.CH13- =U1-K13.coil.out
+fact group =U1-K6.coil.in =U1-K7.coil.in
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.s
 # legend only: a general placer must not read a symbol's kind.
-kind =R16-U1-K16.co_1 contact_co
-kind =R1-U1-X1:1.terminal terminal
-kind =R4-U1-K4.coil coil
-kind =R5-U1-K5.coil coil
-kind =R7-U1-K7.coil coil
-kind =R8-U1-K8.co_1 contact_co
-kind =R3-U1-X1:3.terminal terminal
-kind =R10-U1-P10.lamp load
-kind =R3-U1-K3.coil coil
-kind =R6-U1-P6.lamp load
-kind =R5-U1-K5.co_1 contact_co
-kind =R15-U1-P15.lamp load
-kind =R10-U1-K10.co_1 contact_co
-kind -U1-X1:5.terminal terminal
-kind =R1-U1-X2:7.terminal terminal
-kind =R4-U1-P4.lamp load
-kind =R5-U1-P5.lamp load
-kind =R14-U1-K14.co_1 contact_co
-kind =R3-U1-K3.co_1 contact_co
-kind =R4-U1-X1:4.terminal terminal
-kind =R6-U1-K6.coil coil
-kind =R9-U1-K9.coil coil
-kind =R13-U1-K13.coil coil
-kind =R16-U1-K16.coil coil
-kind =R11-U1-P11.lamp load
-kind =R16-U1-P16.lamp load
-kind =R2-U1-X1:2.terminal terminal
-kind =R13-U1-P13.lamp load
-kind =R4-U1-X2:4.terminal terminal
-kind =R1-U1-K1.co_1 contact_co
-kind =R12-U1-P12.lamp load
-kind =R9-U1-K9.co_1 contact_co
-kind =R9-U1-P9.lamp load
-kind -U1-X1:7.terminal terminal
-kind =R4-U1-K4.co_1 contact_co
-kind =R12-U1-K12.coil coil
-kind =R3-U1-X2:3.terminal terminal
-kind =R1-U1-X2:1.terminal terminal
-kind =R2-U1-K2.coil coil
-kind -U1-X1:6.terminal terminal
-kind =R11-U1-K11.co_1 contact_co
-kind =R7-U1-K7.co_1 contact_co
-kind =R2-U1-P2.lamp load
-kind =R2-U1-K2.co_1 contact_co
-kind =R1-U1-P1.lamp load
-kind =R14-U1-K14.coil coil
-kind =R1-U1-K1.coil coil
-kind =R8-U1-P8.lamp load
-kind =R6-U1-X2:6.terminal terminal
-kind =R14-U1-P14.lamp load
-kind =R15-U1-K15.coil coil
-kind =R12-U1-K12.co_1 contact_co
-kind =R8-U1-K8.coil coil
-kind =PLC-U1-A1.box generic
-kind =R3-U1-P3.lamp load
-kind =R11-U1-K11.coil coil
-kind =R6-U1-K6.co_1 contact_co
-kind =R10-U1-K10.coil coil
-kind =R15-U1-K15.co_1 contact_co
-kind =R5-U1-X2:5.terminal terminal
-kind -U1-X1:8.terminal terminal
-kind =R2-U1-X2:2.terminal terminal
-kind =R7-U1-P7.lamp load
-kind =R13-U1-K13.co_1 contact_co
-kind =R2-U1-X2:2.terminal@1 terminal
-kind =R2-U1-X2:2.terminal@2 terminal
-kind =R1-U1-X2:1.terminal@1 terminal
-kind =R1-U1-X2:7.terminal@1 terminal
-kind =R1-U1-X2:7.terminal@2 terminal
-kind =R1-U1-X2:7.terminal@3 terminal
-kind =R4-U1-X2:4.terminal@1 terminal
-kind =R1-U1-X2:1.terminal@2 terminal
-kind =R2-U1-X2:2.terminal@3 terminal
-kind =R1-U1-X2:7.terminal@4 terminal
-kind =R4-U1-X2:4.terminal@2 terminal
-kind =R1-U1-X2:7.terminal@5 terminal
-kind =R1-U1-X2:7.terminal@6 terminal
-kind =R1-U1-X2:1.terminal@3 terminal
-kind =R6-U1-X2:6.terminal@1 terminal
-kind =R1-U1-X2:7.terminal@7 terminal
-kind =R1-U1-X2:7.terminal@8 terminal
-kind =R1-U1-X2:7.terminal@9 terminal
-kind =R1-U1-X2:7.terminal@10 terminal
-kind =R1-U1-X2:7.terminal@11 terminal
-kind =R1-U1-X2:7.terminal@12 terminal
-kind =R6-U1-X2:6.terminal@2 terminal
-kind =R1-U1-X2:7.terminal@13 terminal
-kind =R5-U1-X2:5.terminal@1 terminal
-kind =R1-U1-X2:7.terminal@14 terminal
-kind =R1-U1-X2:7.terminal@15 terminal
-kind =R3-U1-X2:3.terminal@1 terminal
-kind =R3-U1-X2:3.terminal@2 terminal
-kind =R4-U1-X2:4.terminal@3 terminal
-kind =R5-U1-X2:5.terminal@2 terminal
-kind =R1-U1-X2:7.terminal@16 terminal
-kind =R3-U1-X2:3.terminal@3 terminal
-# today's placement: page, origin and orientation of each drawn copy.
-today =R8-U1-K8.co_1 page=1 at=1024,184 orient=R0 set=1
-today =R6-U1-P6.lamp page=1 at=752,304 orient=R0 set=1
-today =R5-U1-K5.co_1 page=1 at=616,184 orient=R0 set=1
-today =R1-U1-X2:7.terminal@8 page=1 at=208,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@5 page=1 at=616,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@12 page=1 at=480,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@13 page=1 at=1160,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@14 page=1 at=72,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@16 page=1 at=344,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@9 page=1 at=888,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@10 page=1 at=1024,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@1 page=1 at=752,384 orient=R0 set=1
-today =R4-U1-P4.lamp page=1 at=480,304 orient=R0 set=1
-today =R5-U1-P5.lamp page=1 at=616,304 orient=R0 set=1
-today =R3-U1-K3.co_1 page=1 at=344,184 orient=R0 set=1
-today =R4-U1-X2:4.terminal@1 page=1 at=480,104 orient=R180 set=1
-today =R1-U1-K1.co_1 page=1 at=72,184 orient=R0 set=1
-today =R9-U1-K9.co_1 page=1 at=1160,184 orient=R0 set=1
-today =R9-U1-P9.lamp page=1 at=1160,304 orient=R0 set=1
-today =R4-U1-K4.co_1 page=1 at=480,184 orient=R0 set=1
-today =R3-U1-X2:3.terminal@2 page=1 at=344,104 orient=R180 set=1
-today =R3-U1-X2:3.terminal@1 page=1 at=1160,104 orient=R180 set=1
-today =R1-U1-X2:1.terminal@1 page=1 at=72,104 orient=R180 set=1
-today =R1-U1-X2:1.terminal@2 page=1 at=888,104 orient=R180 set=1
-today =R7-U1-K7.co_1 page=1 at=888,184 orient=R0 set=1
-today =R2-U1-P2.lamp page=1 at=208,304 orient=R0 set=1
-today =R2-U1-K2.co_1 page=1 at=208,184 orient=R0 set=1
-today =R1-U1-P1.lamp page=1 at=72,304 orient=R0 set=1
-today =R8-U1-P8.lamp page=1 at=1024,304 orient=R0 set=1
-today =R6-U1-X2:6.terminal@2 page=1 at=752,104 orient=R180 set=1
-today =R3-U1-P3.lamp page=1 at=344,304 orient=R0 set=1
-today =R6-U1-K6.co_1 page=1 at=752,184 orient=R0 set=1
-today =R5-U1-X2:5.terminal@2 page=1 at=616,104 orient=R180 set=1
-today =R2-U1-X2:2.terminal@3 page=1 at=208,104 orient=R180 set=1
-today =R2-U1-X2:2.terminal@1 page=1 at=1024,104 orient=R180 set=1
-today =R7-U1-P7.lamp page=1 at=888,304 orient=R0 set=1
-today =R16-U1-K16.co_1 page=2 at=944,184 orient=R0 set=1
-today =R10-U1-P10.lamp page=2 at=80,304 orient=R0 set=1
-today =R15-U1-P15.lamp page=2 at=800,304 orient=R0 set=1
-today =R10-U1-K10.co_1 page=2 at=80,184 orient=R0 set=1
-today =R1-U1-X2:7.terminal@6 page=2 at=80,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@15 page=2 at=800,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@2 page=2 at=512,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@3 page=2 at=944,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@7 page=2 at=224,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@11 page=2 at=368,384 orient=R0 set=1
-today =R1-U1-X2:7.terminal@4 page=2 at=656,384 orient=R0 set=1
-today =R14-U1-K14.co_1 page=2 at=656,184 orient=R0 set=1
-today =R11-U1-P11.lamp page=2 at=224,304 orient=R0 set=1
-today =R16-U1-P16.lamp page=2 at=944,304 orient=R0 set=1
-today =R13-U1-P13.lamp page=2 at=512,304 orient=R0 set=1
-today =R4-U1-X2:4.terminal@3 page=2 at=80,104 orient=R180 set=1
-today =R4-U1-X2:4.terminal@2 page=2 at=944,104 orient=R180 set=1
-today =R12-U1-P12.lamp page=2 at=368,304 orient=R0 set=1
-today =R3-U1-X2:3.terminal@3 page=2 at=800,104 orient=R180 set=1
-today =R1-U1-X2:1.terminal@3 page=2 at=512,104 orient=R180 set=1
-today =R11-U1-K11.co_1 page=2 at=224,184 orient=R0 set=1
-today =R6-U1-X2:6.terminal@1 page=2 at=368,104 orient=R180 set=1
-today =R14-U1-P14.lamp page=2 at=656,304 orient=R0 set=1
-today =R12-U1-K12.co_1 page=2 at=368,184 orient=R0 set=1
-today =R15-U1-K15.co_1 page=2 at=800,184 orient=R0 set=1
-today =R5-U1-X2:5.terminal@1 page=2 at=224,104 orient=R180 set=1
-today =R2-U1-X2:2.terminal@2 page=2 at=656,104 orient=R180 set=1
-today =R13-U1-K13.co_1 page=2 at=512,184 orient=R0 set=1
-today =R1-U1-X1:1.terminal page=3 at=760,104 orient=R180 set=1
-today =R4-U1-K4.coil page=3 at=224,168 orient=R0 set=1
-today =R5-U1-K5.coil page=3 at=280,168 orient=R0 set=1
-today =R7-U1-K7.coil page=3 at=392,168 orient=R0 set=1
-today =R3-U1-X1:3.terminal page=3 at=632,104 orient=R180 set=1
-today =R3-U1-K3.coil page=3 at=168,168 orient=R0 set=1
-today =R4-U1-X1:4.terminal page=3 at=952,104 orient=R180 set=1
-today =R6-U1-K6.coil page=3 at=336,168 orient=R0 set=1
-today =R9-U1-K9.coil page=3 at=504,168 orient=R0 set=1
-today =R13-U1-K13.coil page=3 at=760,168 orient=R0 set=1
-today =R16-U1-K16.coil page=3 at=952,168 orient=R0 set=1
-today =R2-U1-X1:2.terminal page=3 at=112,104 orient=R180 set=1
-today =R12-U1-K12.coil page=3 at=696,168 orient=R0 set=1
-today =R2-U1-K2.coil page=3 at=112,168 orient=R0 set=1
-today =R14-U1-K14.coil page=3 at=824,168 orient=R0 set=1
-today =R1-U1-K1.coil page=3 at=56,168 orient=R0 set=1
-today =R15-U1-K15.coil page=3 at=888,168 orient=R0 set=1
-today =R8-U1-K8.coil page=3 at=448,168 orient=R0 set=1
-today =PLC-U1-A1.box page=3 at=56,240 orient=R0 set=1
-today =R11-U1-K11.coil page=3 at=632,168 orient=R0 set=1
-today =R10-U1-K10.coil page=3 at=568,168 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n29 page=1 set=1 a==R8-U1-K8.co_1.com b==R2-U1-X2:2.terminal@1.n 1024,168 1024,112
-route n40 page=1 set=1 a==R2-U1-P2.lamp.1 b==R2-U1-K2.co_1.no 208,288 208,200
-route n12 page=1 set=1 a==R8-U1-P8.lamp.1 b==R8-U1-K8.co_1.no 1024,288 1024,200
-route n20 page=1 set=1 a==R1-U1-K1.co_1.com b==R1-U1-X2:1.terminal@1.n 72,168 72,112
-route n3 page=1 set=1 a==R6-U1-P6.lamp.2 b==R1-U1-X2:7.terminal@1.n 752,320 752,376
-route n13 page=1 set=1 a==R4-U1-P4.lamp.1 b==R4-U1-K4.co_1.no 480,288 480,200
-route n25 page=1 set=1 a==R4-U1-X2:4.terminal@1.n b==R4-U1-K4.co_1.com 480,112 480,168
-route n20 page=1 set=1 a==R1-U1-X2:1.terminal@2.n b==R7-U1-K7.co_1.com 888,112 888,168
-route n29 page=1 set=1 a==R2-U1-K2.co_1.com b==R2-U1-X2:2.terminal@3.n 208,168 208,112
-route n28 page=1 set=1 a==R3-U1-K3.co_1.no b==R3-U1-P3.lamp.1 344,200 344,288
-route n16 page=1 set=1 a==R1-U1-P1.lamp.1 b==R1-U1-K1.co_1.no 72,288 72,200
-route n3 page=1 set=1 a==R5-U1-P5.lamp.2 b==R1-U1-X2:7.terminal@5.n 616,320 616,376
-route n5 page=1 set=1 a==R6-U1-K6.co_1.no b==R6-U1-P6.lamp.1 752,200 752,288
-route n3 page=1 set=1 a==R2-U1-P2.lamp.2 b==R1-U1-X2:7.terminal@8.n 208,320 208,376
-route n6 page=1 set=1 a==R5-U1-P5.lamp.1 b==R5-U1-K5.co_1.no 616,288 616,200
-route n3 page=1 set=1 a==R7-U1-P7.lamp.2 b==R1-U1-X2:7.terminal@9.n 888,320 888,376
-route n3 page=1 set=1 a==R8-U1-P8.lamp.2 b==R1-U1-X2:7.terminal@10.n 1024,320 1024,376
-route n3 page=1 set=1 a==R4-U1-P4.lamp.2 b==R1-U1-X2:7.terminal@12.n 480,320 480,376
-route n52 page=1 set=1 a==R6-U1-X2:6.terminal@2.n b==R6-U1-K6.co_1.com 752,112 752,168
-route n3 page=1 set=1 a==R9-U1-P9.lamp.2 b==R1-U1-X2:7.terminal@13.n 1160,320 1160,376
-route n36 page=1 set=1 a==R7-U1-P7.lamp.1 b==R7-U1-K7.co_1.no 888,288 888,200
-route n3 page=1 set=1 a==R1-U1-P1.lamp.2 b==R1-U1-X2:7.terminal@14.n 72,320 72,376
-route n26 page=1 set=1 a==R9-U1-P9.lamp.1 b==R9-U1-K9.co_1.no 1160,288 1160,200
-route n18 page=1 set=1 a==R3-U1-X2:3.terminal@1.n b==R9-U1-K9.co_1.com 1160,112 1160,168
-route n18 page=1 set=1 a==R3-U1-K3.co_1.com b==R3-U1-X2:3.terminal@2.n 344,168 344,112
-route n2 page=1 set=1 a==R5-U1-X2:5.terminal@2.n b==R5-U1-K5.co_1.com 616,112 616,168
-route n3 page=1 set=1 a==R3-U1-P3.lamp.2 b==R1-U1-X2:7.terminal@16.n 344,320 344,376
-route n29 page=2 set=1 a==R2-U1-X2:2.terminal@2.n b==R14-U1-K14.co_1.com 656,112 656,168
-route n3 page=2 set=1 a==R13-U1-P13.lamp.2 b==R1-U1-X2:7.terminal@2.n 512,320 512,376
-route n3 page=2 set=1 a==R16-U1-P16.lamp.2 b==R1-U1-X2:7.terminal@3.n 944,320 944,376
-route n59 page=2 set=1 a==R10-U1-K10.co_1.no b==R10-U1-P10.lamp.1 80,200 80,288
-route n3 page=2 set=1 a==R1-U1-X2:7.terminal@4.n b==R14-U1-P14.lamp.2 656,376 656,320
-route n25 page=2 set=1 a==R16-U1-K16.co_1.com b==R4-U1-X2:4.terminal@2.n 944,168 944,112
-route n85 page=2 set=1 a==R14-U1-K14.co_1.no b==R14-U1-P14.lamp.1 656,200 656,288
-route n3 page=2 set=1 a==R10-U1-P10.lamp.2 b==R1-U1-X2:7.terminal@6.n 80,320 80,376
-route n20 page=2 set=1 a==R1-U1-X2:1.terminal@3.n b==R13-U1-K13.co_1.com 512,112 512,168
-route n52 page=2 set=1 a==R12-U1-K12.co_1.com b==R6-U1-X2:6.terminal@1.n 368,168 368,112
-route n3 page=2 set=1 a==R11-U1-P11.lamp.2 b==R1-U1-X2:7.terminal@7.n 224,320 224,376
-route n1 page=2 set=1 a==R16-U1-K16.co_1.no b==R16-U1-P16.lamp.1 944,200 944,288
-route n3 page=2 set=1 a==R12-U1-P12.lamp.2 b==R1-U1-X2:7.terminal@11.n 368,320 368,376
-route n2 page=2 set=1 a==R11-U1-K11.co_1.com b==R5-U1-X2:5.terminal@1.n 224,168 224,112
-route n84 page=2 set=1 a==R13-U1-K13.co_1.no b==R13-U1-P13.lamp.1 512,200 512,288
-route n3 page=2 set=1 a==R15-U1-P15.lamp.2 b==R1-U1-X2:7.terminal@15.n 800,320 800,376
-route n45 page=2 set=1 a==R11-U1-P11.lamp.1 b==R11-U1-K11.co_1.no 224,288 224,200
-route n25 page=2 set=1 a==R10-U1-K10.co_1.com b==R4-U1-X2:4.terminal@3.n 80,168 80,112
-route n24 page=2 set=1 a==R15-U1-K15.co_1.no b==R15-U1-P15.lamp.1 800,200 800,288
-route n18 page=2 set=1 a==R15-U1-K15.co_1.com b==R3-U1-X2:3.terminal@3.n 800,168 800,112
-route n44 page=2 set=1 a==R12-U1-P12.lamp.1 b==R12-U1-K12.co_1.no 368,288 368,200
-route n21 page=3 set=1 a==PLC-U1-A1.box.CH14- b==R14-U1-K14.coil.out 824,224 824,192
-route n93 page=3 set=1 a==PLC-U1-A1.box.CH03- b==R3-U1-K3.coil.out 168,224 168,192
-route n27 page=3 set=1 a==R9-U1-K9.coil.out b==PLC-U1-A1.box.CH09- 504,192 504,224
-route n8 page=3 set=1 a==R2-U1-K2.coil.in b==R2-U1-X1:2.terminal.n 112,144 112,112
-route n34 page=3 set=1 a==R3-U1-X1:3.terminal.n b==R11-U1-K11.coil.in 632,112 632,144
-route n63 page=3 set=1 a==R13-U1-K13.coil.in b==R1-U1-X1:1.terminal.n 760,144 760,112
-route n41 page=3 set=1 a==R16-U1-K16.coil.in b==R4-U1-X1:4.terminal.n 952,144 952,112
-route n15 page=3 set=1 a==PLC-U1-A1.box.CH04- b==R4-U1-K4.coil.out 224,224 224,192
-route n11 page=3 set=1 a==R10-U1-K10.coil.out b==PLC-U1-A1.box.CH10- 568,192 568,224
-route n48 page=3 set=1 a==PLC-U1-A1.box.CH05- b==R5-U1-K5.coil.out 280,224 280,192
-route n34 page=3 set=1 a==R3-U1-X1:3.terminal.n b==R3-U1-K3.coil.in 632,112 632,120 168,120 168,144
-route n34 page=3 set=1 a==R3-U1-X1:3.terminal.n b==R15-U1-K15.coil.in 632,112 632,120 744,120 744,80 888,80 888,144
-route n4 page=3 set=1 a==PLC-U1-A1.box.CH06- b==R6-U1-K6.coil.out 336,224 336,192
-route n22 page=3 set=1 a==PLC-U1-A1.box.CH16- b==R16-U1-K16.coil.out 952,224 952,192
-route n8 page=3 set=1 a==R14-U1-K14.coil.in b==R2-U1-X1:2.terminal.n 824,144 824,88 568,88 568,128 112,128 112,112
-route n8 page=3 set=1 a==R2-U1-X1:2.terminal.n b==R6-U1-K6.coil.in 112,112 112,128 336,128 336,144
-route n63 page=3 set=1 a==R1-U1-K1.coil.in b==R1-U1-X1:1.terminal.n 56,144 56,72 776,72 776,120 760,120 760,112
-route n34 page=3 set=1 a==R3-U1-X1:3.terminal.n b==R7-U1-K7.coil.in 632,112 632,120 392,120 392,144
-route n10 page=3 set=1 a==PLC-U1-A1.box.CH13- b==R13-U1-K13.coil.out 760,224 760,192
-route n8 page=3 set=1 a==R2-U1-X1:2.terminal.n b==R10-U1-K10.coil.in 112,112 112,128 568,128 568,144
-route n14 page=3 set=1 a==PLC-U1-A1.box.CH02- b==R2-U1-K2.coil.out 112,224 112,192
-route n0 page=3 set=1 a==R1-U1-K1.coil.out b==PLC-U1-A1.box.CH01- 56,192 56,224
-route n63 page=3 set=1 a==R9-U1-K9.coil.in b==R1-U1-X1:1.terminal.n 504,144 504,72 776,72 776,120 760,120 760,112
-route n37 page=3 set=1 a==R11-U1-K11.coil.out b==PLC-U1-A1.box.CH11- 632,192 632,224
-route n41 page=3 set=1 a==R12-U1-K12.coil.in b==R4-U1-X1:4.terminal.n 696,144 696,64 936,64 936,120 952,120 952,112
-route n41 page=3 set=1 a==R4-U1-K4.coil.in b==R4-U1-X1:4.terminal.n 224,144 224,64 936,64 936,120 952,120 952,112
-route n41 page=3 set=1 a==R8-U1-K8.coil.in b==R4-U1-X1:4.terminal.n 448,144 448,64 936,64 936,120 952,120 952,112
-route n51 page=3 set=1 a==R15-U1-K15.coil.out b==PLC-U1-A1.box.CH15- 888,192 888,224
-route n54 page=3 set=1 a==R7-U1-K7.coil.out b==PLC-U1-A1.box.CH07- 392,192 392,224
-route n17 page=3 set=1 a==R8-U1-K8.coil.out b==PLC-U1-A1.box.CH08- 448,192 448,224
-route n63 page=3 set=1 a==R5-U1-K5.coil.in b==R1-U1-X1:1.terminal.n 280,144 280,72 776,72 776,120 760,120 760,112
-route n97 page=3 set=1 a==R12-U1-K12.coil.out b==PLC-U1-A1.box.CH12- 696,192 696,224
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal terminal
+kind =U1-A1.box device
+kind =U1-K1.coil device
+kind =U1-K1.co_1 device
+kind =U1-K2.coil device
+kind =U1-K2.co_1 device
+kind =U1-K3.coil device
+kind =U1-K3.co_1 device
+kind =U1-K4.coil device
+kind =U1-K4.co_1 device
+kind =U1-K5.coil device
+kind =U1-K5.co_1 device
+kind =U1-K6.coil device
+kind =U1-K6.co_1 device
+kind =U1-K7.coil device
+kind =U1-K7.co_1 device
+kind =U1-K8.coil device
+kind =U1-K8.co_1 device
+kind =U1-K9.coil device
+kind =U1-K9.co_1 device
+kind =U1-K10.coil device
+kind =U1-K10.co_1 device
+kind =U1-K11.coil device
+kind =U1-K11.co_1 device
+kind =U1-K12.coil device
+kind =U1-K12.co_1 device
+kind =U1-K13.coil device
+kind =U1-K13.co_1 device
+kind =U1-K14.coil device
+kind =U1-K14.co_1 device
+kind =U1-K15.coil device
+kind =U1-K15.co_1 device
+kind =U1-K16.coil device
+kind =U1-K16.co_1 device
+kind =U1-P1.lamp device
+kind =U1-P2.lamp device
+kind =U1-P3.lamp device
+kind =U1-P4.lamp device
+kind =U1-P5.lamp device
+kind =U1-P6.lamp device
+kind =U1-P7.lamp device
+kind =U1-P8.lamp device
+kind =U1-P9.lamp device
+kind =U1-P10.lamp device
+kind =U1-P11.lamp device
+kind =U1-P12.lamp device
+kind =U1-P13.lamp device
+kind =U1-P14.lamp device
+kind =U1-P15.lamp device
+kind =U1-P16.lamp device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal page=1 at=296,32 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal page=1 at=96,224 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal page=1 at=96,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:3.terminal page=1 at=240,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:4.terminal page=1 at=368,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:5.terminal page=1 at=496,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:6.terminal page=1 at=624,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:7.terminal page=1 at=752,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:8.terminal page=1 at=880,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:9.terminal page=1 at=1008,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:10.terminal page=1 at=1136,368 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:11.terminal page=1 at=192,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:12.terminal page=1 at=360,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:13.terminal page=1 at=528,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:14.terminal page=1 at=696,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:15.terminal page=1 at=864,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:16.terminal page=1 at=1032,536 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:17.terminal page=1 at=1200,536 orient=R0 set=1
+today =U1-A1.box page=1 at=240,120 orient=R0 set=1
+today =U1-K1.coil page=1 at=296,72 orient=R0 set=1
+today =U1-K1.co_1 page=1 at=96,272 orient=R0 set=1
+today =U1-K2.coil page=1 at=432,72 orient=R0 set=1
+today =U1-K2.co_1 page=1 at=240,272 orient=R0 set=1
+today =U1-K3.coil page=1 at=528,72 orient=R0 set=1
+today =U1-K3.co_1 page=1 at=368,272 orient=R0 set=1
+today =U1-K4.coil page=1 at=624,72 orient=R0 set=1
+today =U1-K4.co_1 page=1 at=496,272 orient=R0 set=1
+today =U1-K5.coil page=1 at=720,72 orient=R0 set=1
+today =U1-K5.co_1 page=1 at=624,272 orient=R0 set=1
+today =U1-K6.coil page=1 at=816,72 orient=R0 set=1
+today =U1-K6.co_1 page=1 at=752,272 orient=R0 set=1
+today =U1-K7.coil page=1 at=912,72 orient=R0 set=1
+today =U1-K7.co_1 page=1 at=880,272 orient=R0 set=1
+today =U1-K8.coil page=1 at=1008,72 orient=R0 set=1
+today =U1-K8.co_1 page=1 at=1008,272 orient=R0 set=1
+today =U1-K9.coil page=1 at=296,168 orient=R180 set=1
+today =U1-K9.co_1 page=1 at=1136,272 orient=R0 set=1
+today =U1-K10.coil page=1 at=432,168 orient=R180 set=1
+today =U1-K10.co_1 page=1 at=192,440 orient=R0 set=1
+today =U1-K11.coil page=1 at=528,168 orient=R180 set=1
+today =U1-K11.co_1 page=1 at=360,440 orient=R0 set=1
+today =U1-K12.coil page=1 at=624,168 orient=R180 set=1
+today =U1-K12.co_1 page=1 at=528,440 orient=R0 set=1
+today =U1-K13.coil page=1 at=720,168 orient=R180 set=1
+today =U1-K13.co_1 page=1 at=696,440 orient=R0 set=1
+today =U1-K14.coil page=1 at=816,168 orient=R180 set=1
+today =U1-K14.co_1 page=1 at=864,440 orient=R0 set=1
+today =U1-K15.coil page=1 at=912,168 orient=R180 set=1
+today =U1-K15.co_1 page=1 at=1032,440 orient=R0 set=1
+today =U1-K16.coil page=1 at=1008,168 orient=R180 set=1
+today =U1-K16.co_1 page=1 at=1200,440 orient=R0 set=1
+today =U1-P1.lamp page=1 at=96,320 orient=R0 set=1
+today =U1-P2.lamp page=1 at=240,320 orient=R0 set=1
+today =U1-P3.lamp page=1 at=368,320 orient=R0 set=1
+today =U1-P4.lamp page=1 at=496,320 orient=R0 set=1
+today =U1-P5.lamp page=1 at=624,320 orient=R0 set=1
+today =U1-P6.lamp page=1 at=752,320 orient=R0 set=1
+today =U1-P7.lamp page=1 at=880,320 orient=R0 set=1
+today =U1-P8.lamp page=1 at=1008,320 orient=R0 set=1
+today =U1-P9.lamp page=1 at=1136,320 orient=R0 set=1
+today =U1-P10.lamp page=1 at=192,488 orient=R0 set=1
+today =U1-P11.lamp page=1 at=360,488 orient=R0 set=1
+today =U1-P12.lamp page=1 at=528,488 orient=R0 set=1
+today =U1-P13.lamp page=1 at=696,488 orient=R0 set=1
+today =U1-P14.lamp page=1 at=864,488 orient=R0 set=1
+today =U1-P15.lamp page=1 at=1032,488 orient=R0 set=1
+today =U1-P16.lamp page=1 at=1200,488 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n0 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s b==U1-K1.coil.in 296,40 296,48
+route n18 page=1 set=1 a==U1-A1.box.CH01- b==U1-K1.coil.out 296,104 296,96
+route n34 page=1 set=1 a==U1-K1.co_1.no b==U1-P1.lamp.in 96,288 96,304
+route n19 page=1 set=1 a==U1-A1.box.CH02- b==U1-K2.coil.out 432,104 432,96
+route n35 page=1 set=1 a==U1-K2.co_1.no b==U1-P2.lamp.in 240,288 240,304
+route n20 page=1 set=1 a==U1-A1.box.CH03- b==U1-K3.coil.out 528,104 528,96
+route n36 page=1 set=1 a==U1-K3.co_1.no b==U1-P3.lamp.in 368,288 368,304
+route n21 page=1 set=1 a==U1-A1.box.CH04- b==U1-K4.coil.out 624,104 624,96
+route n37 page=1 set=1 a==U1-K4.co_1.no b==U1-P4.lamp.in 496,288 496,304
+route n22 page=1 set=1 a==U1-A1.box.CH05- b==U1-K5.coil.out 720,104 720,96
+route n38 page=1 set=1 a==U1-K5.co_1.no b==U1-P5.lamp.in 624,288 624,304
+route n23 page=1 set=1 a==U1-A1.box.CH06- b==U1-K6.coil.out 816,104 816,96
+route n39 page=1 set=1 a==U1-K6.co_1.no b==U1-P6.lamp.in 752,288 752,304
+route n24 page=1 set=1 a==U1-A1.box.CH07- b==U1-K7.coil.out 912,104 912,96
+route n40 page=1 set=1 a==U1-K7.co_1.no b==U1-P7.lamp.in 880,288 880,304
+route n25 page=1 set=1 a==U1-A1.box.CH08- b==U1-K8.coil.out 1008,104 1008,96
+route n41 page=1 set=1 a==U1-K8.co_1.no b==U1-P8.lamp.in 1008,288 1008,304
+route n26 page=1 set=1 a==U1-A1.box.CH09- b==U1-K9.coil.out 296,136 296,144
+route n42 page=1 set=1 a==U1-K9.co_1.no b==U1-P9.lamp.in 1136,288 1136,304
+route n27 page=1 set=1 a==U1-A1.box.CH10- b==U1-K10.coil.out 432,136 432,144
+route n43 page=1 set=1 a==U1-K10.co_1.no b==U1-P10.lamp.in 192,456 192,472
+route n28 page=1 set=1 a==U1-A1.box.CH11- b==U1-K11.coil.out 528,136 528,144
+route n44 page=1 set=1 a==U1-K11.co_1.no b==U1-P11.lamp.in 360,456 360,472
+route n29 page=1 set=1 a==U1-A1.box.CH12- b==U1-K12.coil.out 624,136 624,144
+route n45 page=1 set=1 a==U1-K12.co_1.no b==U1-P12.lamp.in 528,456 528,472
+route n30 page=1 set=1 a==U1-A1.box.CH13- b==U1-K13.coil.out 720,136 720,144
+route n46 page=1 set=1 a==U1-K13.co_1.no b==U1-P13.lamp.in 696,456 696,472
+route n31 page=1 set=1 a==U1-A1.box.CH14- b==U1-K14.coil.out 816,136 816,144
+route n47 page=1 set=1 a==U1-K14.co_1.no b==U1-P14.lamp.in 864,456 864,472
+route n32 page=1 set=1 a==U1-A1.box.CH15- b==U1-K15.coil.out 912,136 912,144
+route n48 page=1 set=1 a==U1-K15.co_1.no b==U1-P15.lamp.in 1032,456 1032,472
+route n33 page=1 set=1 a==U1-A1.box.CH16- b==U1-K16.coil.out 1008,136 1008,144
+route n49 page=1 set=1 a==U1-K16.co_1.no b==U1-P16.lamp.in 1200,456 1200,472
+route n1 page=1 set=1 a=- b=- 96,240 1166,240
+route n1 page=1 set=1 a=- b=- 1138,240 1158,240 1158,248
+route n1 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.s b=- 96,232 96,240
+route n1 page=1 set=1 a==U1-K1.co_1.com b=- 96,256 96,240
+route n1 page=1 set=1 a==U1-K2.co_1.com b=- 240,256 240,240
+route n1 page=1 set=1 a==U1-K3.co_1.com b=- 368,256 368,240
+route n1 page=1 set=1 a==U1-K4.co_1.com b=- 496,256 496,240
+route n1 page=1 set=1 a==U1-K5.co_1.com b=- 624,256 624,240
+route n1 page=1 set=1 a==U1-K6.co_1.com b=- 752,256 752,240
+route n1 page=1 set=1 a==U1-K7.co_1.com b=- 880,256 880,240
+route n1 page=1 set=1 a==U1-K8.co_1.com b=- 1008,256 1008,240
+route n1 page=1 set=1 a==U1-K9.co_1.com b=- 1136,256 1136,240
+route n1 page=1 set=1 a=- b=- 192,408 1200,408
+route n1 page=1 set=1 a=- b=- 1200,408 1222,408 1222,416
+route n1 page=1 set=1 a==U1-K10.co_1.com b=- 192,424 192,408
+route n1 page=1 set=1 a==U1-K11.co_1.com b=- 360,424 360,408
+route n1 page=1 set=1 a==U1-K12.co_1.com b=- 528,424 528,408
+route n1 page=1 set=1 a==U1-K13.co_1.com b=- 696,424 696,408
+route n1 page=1 set=1 a==U1-K14.co_1.com b=- 864,424 864,408
+route n1 page=1 set=1 a==U1-K15.co_1.com b=- 1032,424 1032,408
+route n1 page=1 set=1 a==U1-K16.co_1.com b=- 1200,424 1200,408
+route n2 page=1 set=1 a==U1-P1.lamp.out b=- 96,336 96,352
+route n2 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n b=- 96,360 96,352
+route n3 page=1 set=1 a==U1-P2.lamp.out b=- 240,336 240,352
+route n3 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:3.terminal.n b=- 240,360 240,352
+route n4 page=1 set=1 a==U1-P3.lamp.out b=- 368,336 368,352
+route n4 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:4.terminal.n b=- 368,360 368,352
+route n5 page=1 set=1 a==U1-P4.lamp.out b=- 496,336 496,352
+route n5 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:5.terminal.n b=- 496,360 496,352
+route n6 page=1 set=1 a==U1-P5.lamp.out b=- 624,336 624,352
+route n6 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:6.terminal.n b=- 624,360 624,352
+route n7 page=1 set=1 a==U1-P6.lamp.out b=- 752,336 752,352
+route n7 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:7.terminal.n b=- 752,360 752,352
+route n8 page=1 set=1 a==U1-P7.lamp.out b=- 880,336 880,352
+route n8 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:8.terminal.n b=- 880,360 880,352
+route n9 page=1 set=1 a==U1-P8.lamp.out b=- 1008,336 1008,352
+route n9 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:9.terminal.n b=- 1008,360 1008,352
+route n10 page=1 set=1 a==U1-P9.lamp.out b=- 1136,336 1136,352
+route n10 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:10.terminal.n b=- 1136,360 1136,352
+route n11 page=1 set=1 a==U1-P10.lamp.out b=- 192,504 192,520
+route n11 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:11.terminal.n b=- 192,528 192,520
+route n12 page=1 set=1 a==U1-P11.lamp.out b=- 360,504 360,520
+route n12 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:12.terminal.n b=- 360,528 360,520
+route n13 page=1 set=1 a==U1-P12.lamp.out b=- 528,504 528,520
+route n13 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:13.terminal.n b=- 528,528 528,520
+route n14 page=1 set=1 a==U1-P13.lamp.out b=- 696,504 696,520
+route n14 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:14.terminal.n b=- 696,528 696,520
+route n15 page=1 set=1 a==U1-P14.lamp.out b=- 864,504 864,520
+route n15 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:15.terminal.n b=- 864,528 864,520
+route n16 page=1 set=1 a==U1-P15.lamp.out b=- 1032,504 1032,520
+route n16 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:16.terminal.n b=- 1032,528 1032,520
+route n17 page=1 set=1 a==U1-P16.lamp.out b=- 1200,504 1200,520
+route n17 page=1 set=1 a==454e6b0ce71e5724ae6476e2c6a8df35:17.terminal.n b=- 1200,528 1200,520
+route n0 page=1 set=1 a==U1-K9.coil.in b==U1-K10.coil.in 296,192 296,200 432,200 432,192
+route n0 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n b=- 296,24 296,8 216,8 216,200 296,200
+route n0 page=1 set=1 a==U1-K2.coil.in b=- 432,48 432,16 296,16
+route n0 page=1 set=1 a==U1-K3.coil.in b=- 528,48 528,32 432,32
+route n0 page=1 set=1 a==U1-K4.coil.in b=- 624,48 624,32 528,32
+route n0 page=1 set=1 a==U1-K5.coil.in b=- 720,48 720,32 624,32
+route n0 page=1 set=1 a==U1-K6.coil.in b=- 816,48 816,32 720,32
+route n0 page=1 set=1 a==U1-K7.coil.in b=- 912,48 912,32 816,32
+route n0 page=1 set=1 a==U1-K8.coil.in b=- 1008,48 1008,32 912,32
+route n0 page=1 set=1 a==U1-K11.coil.in b=- 528,192 528,200 432,200
+route n0 page=1 set=1 a==U1-K12.coil.in b=- 624,192 624,200 528,200
+route n0 page=1 set=1 a==U1-K13.coil.in b=- 720,192 720,200 624,200
+route n0 page=1 set=1 a==U1-K14.coil.in b=- 816,192 816,200 720,200
+route n0 page=1 set=1 a==U1-K15.coil.in b=- 912,192 912,200 816,200
+route n0 page=1 set=1 a==U1-K16.coil.in b=- 1008,192 1008,200 912,200
+# reference markers of the core: one per printed cross-reference.
+marker f:U1-1_0_terminal_U1/X2/terminal/1/fn/terminal_external_port:c1755f906aaa511286f24e0086209951 =U1-K9.co_1.com page=1 set=1 at=1166,240 side=N star=- partner=-
+marker f:U1-1_0_terminal_U1/X2/terminal/1/fn/terminal_external_port:c1755f906aaa511286f24e0086209951 =U1-K10.co_1.com page=1 set=1 at=192,408 side=N star=- partner=-
+marker n1 =U1-K9.co_1.com page=1 set=1 at=1158,248 side=N star=OFF partner=-
+marker n1 =U1-K10.co_1.com page=1 set=1 at=1222,416 side=N star=OFF partner=-

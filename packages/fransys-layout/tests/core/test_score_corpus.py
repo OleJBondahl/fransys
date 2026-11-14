@@ -1,4 +1,4 @@
-"""The scorer on the 18 corpus instances reproduces today's numbers in their `.score.json`."""
+"""The scorer on the 17 corpus instances reproduces today's numbers in their `.score.json`."""
 
 import json
 from typing import Any
@@ -28,9 +28,6 @@ STORED = json.loads((CORPUS / "scorer_baseline.json").read_text(encoding="utf-8"
 READ = {n: read_instance(CORPUS / f"{n}.txt").scene for n in NAMES}  # one read
 SCORED = {n: score(READ[n]) for n in NAMES}
 FLAGS = {n: placement_flags(READ[n]) for n in NAMES}
-# p02: the baseline counter keys pages by number alone, so a terminal of set 1 page 1 counts as
-# touched by a wire of set 2 page 1 at the same coordinates. The scorer keys by (set, page).
-P4_BASELINE_SET_BLIND = {"p02_strip_to_plc": 14}
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -53,7 +50,6 @@ def test_loose_equals_the_baseline_counter(name: str) -> None:
 @pytest.mark.parametrize("name", NAMES)
 def test_junction_off_line_equals_the_terminal_counter(name: str) -> None:
     want = read_score(name)["placement"].get("terminal_off_column", 0)
-    want = P4_BASELINE_SET_BLIND.get(name, want)
     assert len(FLAGS[name]["junction_off_line"]) == want
 
 
@@ -63,15 +59,9 @@ def test_attached_off_pin_equals_the_coil_counter(name: str) -> None:
     assert len(FLAGS[name]["attached_off_pin"]) == want
 
 
-# source_off_loads_page picks one page when two legs tie; head_off_legs flags only a page
-# that holds strictly fewer legs than another, so w02 and w05 (ties) read 0 against 2.
-P3_BASELINE_TIES = {"w02_unit_profile": 0, "w05_turned_marker": 0}
-
-
 @pytest.mark.parametrize("name", NAMES)
 def test_head_off_legs_equals_the_source_counter_except_on_ties(name: str) -> None:
     want = read_score(name)["placement"].get("source_off_loads_page", 0)
-    want = P3_BASELINE_TIES.get(name, want)
     assert len(FLAGS[name]["head_off_legs"]) == want
 
 

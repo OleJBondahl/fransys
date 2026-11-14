@@ -120,7 +120,7 @@ def cut_of(
     options: Options | None = None,
 ) -> CutResult:
     """Run stages 1 to 4 on a problem built from these symbols and nets."""
-    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts(), hints or Hints())
+    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts(far_ends=()), hints or Hints())
     return pipeline_fixtures.cut_of(prob, options)
 
 

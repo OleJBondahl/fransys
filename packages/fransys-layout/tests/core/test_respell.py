@@ -67,7 +67,7 @@ def two_page_fan() -> PlacementProblem:
         legs = (f"a{tag}x{i}.n" for i in (1, 2, 3))
         nets.append(net(f"feed{tag}", f"t{tag}.e", *legs))
     hints = Hints(group_order=("G2", "G10"))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts(far_ends=()))
 
 
 def card_that_wraps() -> PlacementProblem:
@@ -78,14 +78,14 @@ def card_that_wraps() -> PlacementProblem:
     nets = [net(f"n{i:02d}", f"A1.p{i}", f"k{i:02d}.n") for i in range(1, 17)]
     nets += [net("fr", "f0.s", "f1.n"), net("gr", "g0.s", "g1.n")]
     hints = Hints(group_order=("FR", "PLC", "CH", "GR"))
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), hints=hints, facts=Facts(far_ends=()))
 
 
 def tall_column() -> PlacementProblem:
     """Twelve cells of 96 G in one column: the cut folds it into c#a and c#b over one tag."""
     ids = [f"k{i:02d}" for i in range(12)]
     syms = tuple(elem(i, 40, 96) for i in ids)
-    return PlacementProblem(AREA, syms, tuple(chain(ids)), facts=Facts())
+    return PlacementProblem(AREA, syms, tuple(chain(ids)), facts=Facts(far_ends=()))
 
 
 CASES = {
@@ -366,6 +366,7 @@ CASES_align: dict[str, Callable[[], PlacementProblem]] = {
 def _mates(prob: PlacementProblem, maps: dict[str, str]) -> Facts:
     return Facts(
         mates=tuple((PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.mates),
+        far_ends=(),
     )
 
 
@@ -391,7 +392,7 @@ def test_banded_placement_does_not_depend_on_the_order_of_the_input(case: str) -
         prob,
         symbols=tuple(reversed(prob.symbols)),
         nets=tuple(reversed(prob.nets)),
-        facts=Facts(mates=mates),
+        facts=Facts(mates=mates, far_ends=()),
     )
     got = place_pages(cut_of(flipped, ALIGN_OPTIONS), flipped, ALIGN_OPTIONS)
     assert canon_placement(got, back_of({})) == want

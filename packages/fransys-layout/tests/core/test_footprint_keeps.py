@@ -89,7 +89,7 @@ def _two_cards():
     syms = (box_sym(4), replace(box_sym(2), id="A2"), *(elem(s, 40) for s in ("k1", "k3", "k5")))
     nets = [net("v", "A1.p1", "k1.n", "k3.n"), net("w", "A2.p1", "k5.n")]
     opts = core_options(marker=MARKER)
-    prob = PlacementProblem(AREA, syms, tuple(nets), Facts())
+    prob = PlacementProblem(AREA, syms, tuple(nets), Facts(far_ends=()))
     (env,) = page_envs(cut_of(prob, opts), prob, opts)
     return env, place_x(env)[0]
 

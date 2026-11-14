@@ -1,6 +1,6 @@
 # Placement instances (Q1, Q22)
 
-Each `.txt` file is one invented demo circuit, exported from today's engine on main at bc1f5c36b. The PLACEMENT-SCORER step re-dumped them to add `route` and `marker` lines and the `set=` tokens. Every `.score.json` is unchanged. In `s01`, `t02` and `w08` a function drawn as several copies is now named `SID@k`, k from 1, in its `sym`, `net`, `fact`, `today` and `kind` lines. The PNG pages are not kept here. The format needs no repo. Each `.score.json` is today's score of that drawing.
+Each `.txt` file is one invented demo circuit, regenerated from today's engine at c32a93e4d by `internal/placement_corpus/dump.py` (internal-0006). The dump adds the conductor and part-join facts. `t01_precharge` is retired: its builder was deleted. Every `.score.json` is the scorer's count of its file. In `s01`, `t02` and `w08` a function drawn as several copies is named `SID@k`, k from 1. The PNG pages are not kept here. The format needs no repo.
 
 ## Which files
 
@@ -10,7 +10,7 @@ Each `.txt` file is one invented demo circuit, exported from today's engine on m
 | `w01` to `w10` | the ten field-case builds with the most references plus crossings | Q22 worst |
 | `p01_sixteen_channel` | a 16-channel output card with a coil under every pin | the brief; today draws it right (the prototype's 16-channel circuit, where today places 13 of 16, is a different circuit) |
 | `p02_strip_to_plc` | terminals wired to a card's pins, today drawn as a staircase | worst on the terminal counter |
-| `t01` to `t05` | five typical builds, 13 to 22 symbols, near the median of builds with 10 or more symbols | Q22 typical |
+| `t02` to `t05` | four typical builds, near the median of builds with 10 or more symbols | Q22 typical |
 
 The brief asked for the five worst builds by placement count; Fable's Q22 asked for the worst by references plus crossings. This folder follows Q22. Three of the placement top list are here: `w02`, `w06` and `p02`. The others are left out. Three are builds whose `loose` count comes from parts a test draws without wires (a harness assembly, a board of headers, a unit boundary check). One is a PE-rail build that reproduced only in the full suite run.
 
@@ -31,6 +31,7 @@ Units are G. 8 G is one wiring grid, 2.5 mm. x grows right and y grows down. Lin
 - `net nI [rail rank=r power=K] SYM.PIN ...`: one physical net and its drawn pins. `rail` marks a net that carries a declared supply potential. A smaller `rank` is drawn higher: AC rails by phase, DC rails high to low, 0 V, PE last. `power=SUPPLY`, `GROUND` or `PE` draws as power symbols; `NONE` draws as wires.
 - `fact item SYM ...`: symbols that are parts of one device, such as a relay coil and its contacts.
 - `fact boxpin SYM.PIN ...`: pins of a box that sit on a PLC channel and can move along their edge. `fact attached SYM ...`: symbols that head a column hung on such a pin. `fact head SYM ...`: symbols that head a fan, a protective device feeding several legs. `fact strip TAG SYM ...`: the terminals of one strip. They were added by the PLACEMENT-SCORER step.
+- `fact conductors`, `fact conductor SYM.PIN SYM.PIN`, `fact group SYM.PIN ...`: the conductors as `Facts.far_ends` (one line per ordered pair of pins a wire joins) and the part joins as `Facts.groups`. `fact conductors` is always present, so a problem built from a file states its conductors even when it has none.
 - `kind SYM K`: today's kind of each symbol. It is a legend for a human reader. A general placer must not read it.
 - `today SYM page=P at=x,y orient=O set=K`: today's placement of each drawn copy. One symbol can have several copies.
 - `route NET page=P set=K a=SYM.PIN b=SYM.PIN x,y x,y ...`: one routed polyline of today's engine, on page P, from pin a to pin b. The vertices are pin-absolute points in G, in order. NET is the `nI` of the net it belongs to. One net can have many routes (a trunk and its drops).

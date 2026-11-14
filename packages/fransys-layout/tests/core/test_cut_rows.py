@@ -84,7 +84,7 @@ def unit_of(case: str, options: Options = OPTIONS):
         tuple(syms),
         tuple(nets),
         hints=hints or Hints(),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
     flow = flow_of(prob, options)
     unit = order_blocks(blocks_of(prob, options), flow, options)[0]

@@ -54,7 +54,7 @@ def tag_chain() -> PlacementProblem:
         AREA,
         tuple(elem(i, 40, 300) for i in ids),
         tuple(chain(ids)),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 
@@ -66,7 +66,7 @@ def row_wrapped_fan() -> PlacementProblem:
     """
     syms = (poles("M3"), poles("M9", 30), poles("M10", 30), poles("M11", 30))
     legs = ("M9.n0", "M10.n0", "M11.n0")
-    return PlacementProblem(AREA, syms, (net("bn0", "M3.s0", *legs),), facts=Facts())
+    return PlacementProblem(AREA, syms, (net("bn0", "M3.s0", *legs),), facts=Facts(far_ends=()))
 
 
 def page_wrapped_fan() -> PlacementProblem:
@@ -79,7 +79,7 @@ def page_wrapped_fan() -> PlacementProblem:
         AREA,
         tuple(syms),
         (net("feed", "d0.s", "k1.n", "k2.n", "k3.n"),),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 
@@ -116,7 +116,7 @@ def copied_hub() -> PlacementProblem:
         tuple(syms),
         nets,
         hints=Hints(group_order=("G2",)),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 
@@ -136,7 +136,7 @@ def spilled_tags() -> PlacementProblem:
     """A 40-pin box over 40 columns: the card keeps what fits, the rest leave it, a tag each."""
     syms = [box_sym(40), *(elem(f"k{i}", 64, 32, "CH") for i in range(1, 41))]
     nets = tuple(net(f"n{i}", f"A1.p{i}", f"k{i}.n") for i in range(1, 41))
-    return PlacementProblem(AREA, tuple(syms), nets, facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), nets, facts=Facts(far_ends=()))
 
 
 def spilled_pair() -> PlacementProblem:
@@ -147,7 +147,7 @@ def spilled_pair() -> PlacementProblem:
     """
     syms = [box_sym(37, 19), *(elem(f"k{i}", 64, 32, "CH") for i in range(1, 20))]
     nets = tuple(net(f"n{i}", f"A1.p{i}", f"k{i}.n") for i in range(1, 20))
-    return PlacementProblem(AREA, tuple(syms), nets, facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), nets, facts=Facts(far_ends=()))
 
 
 def star_three() -> PlacementProblem:

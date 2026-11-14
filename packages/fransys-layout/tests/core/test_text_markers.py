@@ -507,7 +507,7 @@ def _bundle_of_cut_pins(count: int = 8, pole: int | None = None) -> PlacementPro
         replace(net(f"n{i}", f"A1.p{i}", crosses_unit=True), bundle=Bundle("b", i if pole is None else pole), cut=(CutEnd(pins[i - 1]),))
         for i in range(1, count + 1)
     )
-    return PlacementProblem(AREA, (box,), nets, Facts(units=(Unit("U1", None, pins),)))
+    return PlacementProblem(AREA, (box,), nets, Facts(units=(Unit("U1", None, pins),), far_ends=()))
 
 
 def test_one_stub_per_bundle_per_page() -> None:

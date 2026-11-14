@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def _env() -> PageEnv:
-    return env_of(PlacementProblem(AREA, (elem("k1", 40), elem("k2", 40)), (), Facts()))
+    return env_of(PlacementProblem(AREA, (elem("k1", 40), elem("k2", 40)), (), Facts(far_ends=())))
 
 
 def _pc(hold: int) -> PlacedColumn:

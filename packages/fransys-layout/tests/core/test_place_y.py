@@ -100,7 +100,7 @@ def _two_heights() -> PlacementProblem:
     """Two coils of different heights hang on one box, both in row group G."""
     coils = [replace(elem("k1", 84, 32), row_group="G"), replace(elem("k2", 84, 48), row_group="G")]
     nets = [net(f"c{i}", f"A1.p{i}", f"k{i}.n") for i in (1, 2)]
-    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets), facts=Facts(far_ends=()))
 
 
 def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> None:

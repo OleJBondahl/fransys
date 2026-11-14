@@ -14,7 +14,7 @@ from .test_place_x import env_of
 def test_a_mate_subject_does_not_depend_on_the_order_of_its_halves() -> None:
     """Mate(p.s, q.n) and Mate(q.n, p.s) give one subject, the natural-order one."""
     prob = fx.mate_columns()
-    swapped = replace(prob, facts=Facts(mates=((PinRef("q", "n"), PinRef("p", "s")),)))
+    swapped = replace(prob, facts=Facts(mates=((PinRef("q", "n"), PinRef("p", "s")),), far_ends=()))
     (kept,) = mate_aligns(env_of(prob))
     (flipped,) = mate_aligns(env_of(swapped))
     assert flipped.subject == kept.subject

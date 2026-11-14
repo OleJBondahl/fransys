@@ -40,7 +40,7 @@ def _stair(upper_pitch: int, lower_pitch: int, shift: int) -> PlacementProblem:
     """Upper U and lower L, four nets U.s<k> to L.n<k>: the pole pitches differ, so lanes jog."""
     syms = (_pitched("U", upper_pitch, 0), _pitched("L", lower_pitch, shift))
     nets = tuple(net(f"n{k}", f"U.s{k}", f"L.n{k}") for k in range(4))
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
 
 
 def _step(prob: PlacementProblem) -> int:
@@ -62,7 +62,7 @@ def test_four_fan_trunks_with_overlapping_spans_take_four_y_lines() -> None:
     """
     syms = (poles("D", 4), poles("L", 4), poles("M", 4))
     nets = tuple(net(f"n{k}", f"D.s{k}", f"L.n{k}", f"M.n{k}") for k in range(4))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
     cut = cut_of(prob, OPTIONS)
     placement = placed_from(cut, prob, OPTIONS)
     assert sorted(t.y for pg in placement.pages for t in pg.trunks) == [64, 72, 80, 88]
@@ -75,7 +75,7 @@ def test_a_free_tall_column_inside_a_trunk_span_stands_below_the_trunk() -> None
     """
     syms = (poles("D", 2), poles("L", 2), poles("M", 2), elem("T", 16, 96), elem("W", 16, 32))
     nets = (net("a", "D.s0", "L.n0", "M.n0"), net("b", "T.s", "W.n"), net("c", "D.s1", "T.n"))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
     placement = placed_from(cut_of(prob, OPTIONS), prob, OPTIONS)
     (page,) = placement.pages
     (trunk,) = [t for t in page.trunks if t.fan == "f:a"]
@@ -89,7 +89,7 @@ def test_a_box_riser_is_a_span_of_its_fan_for_the_level_ordering() -> None:
     """
     syms = (box_sym(2), poles("L", 2), poles("M", 2))
     nets = (net("n1", "A1.p1", "L.n0", "M.n0"), net("n2", "A1.p2", "L.n1", "M.n1"))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     ends = {s.fan: s.x1 for s in _spans(env, place_x(env)[0])}
     assert ends == {"f:n1": 984, "f:n2": 1000}

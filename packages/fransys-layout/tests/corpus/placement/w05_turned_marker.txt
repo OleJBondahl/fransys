@@ -1,168 +1,255 @@
-# FRANSYS PLACEMENT INSTANCE test_a_turned_marker_keeps_off_another_nets_wire__1
+# FRANSYS PLACEMENT INSTANCE w05_turned_marker
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group CTRL order=0 "Control"
-group MAIN order=1 "Motor power"
-sym =MAIN-U1-M1.motor group=MAIN body=-16,-16,64,32 keepout=-16,-16,116,32
-  pin PE S 0,16
-  pin U N 0,-16
-  pin V N 16,-16
-  pin W N 32,-16
-sym -U1-X1:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+group CTRL order=0 "CTRL"
+group MAIN order=1 "MAIN"
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym -U1-X1:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0 stand=-1 rank=3
+  pin s S 0,8 node=0 stand=-1 rank=3
+  pin w W -8,0 node=0
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =MAIN-U1-F1.main group=MAIN body=-8,-24,80,48 keepout=-60,-24,138,48
+sym =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0 stand=1 rank=4
+  pin s S 0,8 node=0 stand=1 rank=4
+  pin w W -8,0 node=0
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =U1-F1.main group=MAIN body=-8,-24,80,48 keepout=-64,-24,144,48
   pin 1.in N 0,-24
   pin 1.out S 0,24
   pin 2.in N 32,-24
   pin 2.out S 32,24
   pin 3.in N 64,-24
   pin 3.out S 64,24
-sym -U1-K2.coil group=- body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-F1.aux group=CTRL body=0,-16,10,32 keepout=-56,-24,72,40
+  pin in N 0,-16 stand=-1 rank=3
+  pin out S 0,16
+sym =U1-K1.coil group=- body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
-  pin out S 0,24 stand=16
-sym -U1-X1:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -U1-X2:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0 stand=16
-  pin s S 0,8 node=0 stand=16
-  pin w W -8,0 node=0
-sym =CTRL-U1-S0.sw group=CTRL body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin out S 0,24 stand=1 rank=4
+sym =U1-K1.main group=- body=-8,-16,72,32 keepout=-64,-16,144,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =U1-K2.coil group=- body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24 stand=1 rank=4
+sym =U1-K2.main group=- body=-8,-16,72,32 keepout=-64,-16,144,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =U1-M1.motor group=MAIN body=-24,-40,56,64 keepout=-80,-40,128,64
+  pin pe N 32,-40
+  pin u N -16,-40
+  pin v N 0,-40
+  pin w N 16,-40
+sym =U1-Q1.element group=MAIN body=-8,-16,76,32 keepout=-64,-24,144,40
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =U1-S0.sw group=CTRL body=-28,-16,38,32 keepout=-80,-24,96,40
   pin in N 0,-16
   pin out S 0,16
-sym =MAIN-U1-Q1.element group=MAIN body=-8,-16,76,32 keepout=-60,-22,138,38
-  pin 1.in N 0,-16
-  pin 1.out S 0,16
-  pin 2.in N 32,-16
-  pin 2.out S 32,16
-  pin 3.in N 64,-16
-  pin 3.out S 64,16
-sym -U1-K1.main group=- body=-8,-16,72,32 keepout=-60,-16,138,32
-  pin 1.in N 0,-16
-  pin 1.out S 0,16
-  pin 2.in N 32,-16
-  pin 2.out S 32,16
-  pin 3.in N 64,-16
-  pin 3.out S 64,16
-sym =MAIN-U1-F1.aux group=MAIN body=0,-16,10,32 keepout=-52,-22,66,38
-  pin in N 0,-16 stand=16
-  pin out S 0,16
-sym -U1-X2:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0 stand=16
-  pin s S 0,8 node=0 stand=16
-  pin w W -8,0 node=0
-sym -U1-K2.main group=- body=-8,-16,72,32 keepout=-60,-16,138,32
-  pin 1.in N 0,-16
-  pin 1.out S 0,16
-  pin 2.in N 32,-16
-  pin 2.out S 32,16
-  pin 3.in N 64,-16
-  pin 3.out S 64,16
-sym -U1-K1.coil group=- body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24 stand=16
-net n2 [rail rank=0 power=NONE] -U1-K1.main.2.out -U1-K2.main.2.out =MAIN-U1-F1.main.2.in
-net n3 [rail rank=2 power=NONE] -U1-K1.main.3.out -U1-K2.main.3.out =MAIN-U1-F1.main.3.in
-net n4 [rail rank=3 power=NONE] -U1-K1.coil.in -U1-K2.coil.in =CTRL-U1-S0.sw.out
-net n5 [rail rank=0 power=NONE] -U1-X1:1.terminal.n -U1-X1:1.terminal.s =MAIN-U1-Q1.element.1.in
-net n6 [rail rank=1 power=NONE] -U1-X1:2.terminal.n -U1-X1:2.terminal.s =MAIN-U1-Q1.element.2.in
-net n7 [rail rank=2 power=NONE] -U1-X1:3.terminal.n -U1-X1:3.terminal.s =MAIN-U1-Q1.element.3.in
-net n9 [rail rank=4 power=GROUND] -U1-K1.coil.out -U1-K2.coil.out -U1-X2:2.terminal.n -U1-X2:2.terminal.s
-net n10 [rail rank=0 power=NONE] -U1-K1.main.1.in -U1-K2.main.2.in =MAIN-U1-Q1.element.1.out
-net n11 [rail rank=2 power=NONE] -U1-K1.main.3.in -U1-K2.main.3.in =MAIN-U1-Q1.element.3.out
-net n13 [rail rank=3 power=NONE] =CTRL-U1-S0.sw.in =MAIN-U1-F1.aux.out
-net n14 [rail rank=0 power=NONE] -U1-K1.main.1.out -U1-K2.main.1.out =MAIN-U1-F1.main.1.in
-net n17 [rail rank=0 power=NONE] -U1-K1.main.2.in -U1-K2.main.1.in =MAIN-U1-Q1.element.2.out
-net n18 [rail rank=3 power=SUPPLY] -U1-X2:1.terminal.n -U1-X2:1.terminal.s =MAIN-U1-F1.aux.in
-net n19 =MAIN-U1-F1.main.2.out =MAIN-U1-M1.motor.V
-net n20 =MAIN-U1-F1.main.3.out =MAIN-U1-M1.motor.W
-net n21 =MAIN-U1-F1.main.1.out =MAIN-U1-M1.motor.U
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
-fact item =MAIN-U1-F1.main =MAIN-U1-F1.aux
-fact item -U1-K2.coil -U1-K2.main
-fact item -U1-K1.main -U1-K1.coil
+net n0 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s =U1-Q1.element.1.in
+net n1 =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s =U1-Q1.element.2.in
+net n2 =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s =U1-Q1.element.3.in
+net n3 =U1-F1.main.1.in =U1-K1.main.1.out =U1-K2.main.1.out
+net n4 =U1-F1.main.1.out =U1-M1.motor.u
+net n5 =U1-F1.main.2.in =U1-K1.main.2.out =U1-K2.main.2.out
+net n6 =U1-F1.main.2.out =U1-M1.motor.v
+net n7 =U1-F1.main.3.in =U1-K1.main.3.out =U1-K2.main.3.out
+net n8 =U1-F1.main.3.out =U1-M1.motor.w
+net n9 =U1-F1.aux.out =U1-S0.sw.in
+net n10 =U1-K1.coil.in =U1-K2.coil.in =U1-S0.sw.out
+net n11 =U1-K1.main.1.in =U1-K2.main.2.in =U1-Q1.element.1.out
+net n12 =U1-K1.main.2.in =U1-K2.main.1.in =U1-Q1.element.2.out
+net n13 =U1-K1.main.3.in =U1-K2.main.3.in =U1-Q1.element.3.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =U1-F1.main =U1-F1.aux
+fact item =U1-K1.coil =U1-K1.main
+fact item =U1-K2.coil =U1-K2.main
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
 fact boxpin 
-fact head =MAIN-U1-F1.main =MAIN-U1-Q1.element
-fact attached -U1-K2.coil -U1-K1.coil
-fact strip -U1-X1 -U1-X1:1.terminal -U1-X1:3.terminal -U1-X1:2.terminal
-fact strip -U1-X2 -U1-X2:1.terminal -U1-X2:2.terminal
+fact attached 
+fact head =U1-S0.sw
+fact strip 3c12d51896f05e84ad5fd5e04c06a7b5 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal
+fact strip 454e6b0ce71e5724ae6476e2c6a8df35 =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =U1-K1.main.1.out =U1-F1.main.1.in
+fact conductor =U1-K2.main.1.out =U1-F1.main.1.in
+fact conductor =U1-M1.motor.u =U1-F1.main.1.out
+fact conductor =U1-K1.main.2.out =U1-F1.main.2.in
+fact conductor =U1-K2.main.2.out =U1-F1.main.2.in
+fact conductor =U1-M1.motor.v =U1-F1.main.2.out
+fact conductor =U1-K1.main.3.out =U1-F1.main.3.in
+fact conductor =U1-K2.main.3.out =U1-F1.main.3.in
+fact conductor =U1-M1.motor.w =U1-F1.main.3.out
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n =U1-F1.aux.in
+fact conductor =U1-S0.sw.in =U1-F1.aux.out
+fact conductor =U1-Q1.element.1.out =U1-K1.main.1.in
+fact conductor =U1-F1.main.1.in =U1-K1.main.1.out
+fact conductor =U1-Q1.element.2.out =U1-K1.main.2.in
+fact conductor =U1-F1.main.2.in =U1-K1.main.2.out
+fact conductor =U1-Q1.element.3.out =U1-K1.main.3.in
+fact conductor =U1-F1.main.3.in =U1-K1.main.3.out
+fact conductor =U1-S0.sw.out =U1-K1.coil.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =U1-K1.coil.out
+fact conductor =U1-Q1.element.2.out =U1-K2.main.1.in
+fact conductor =U1-F1.main.1.in =U1-K2.main.1.out
+fact conductor =U1-Q1.element.1.out =U1-K2.main.2.in
+fact conductor =U1-F1.main.2.in =U1-K2.main.2.out
+fact conductor =U1-Q1.element.3.out =U1-K2.main.3.in
+fact conductor =U1-F1.main.3.in =U1-K2.main.3.out
+fact conductor =U1-S0.sw.out =U1-K2.coil.in
+fact conductor =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =U1-K2.coil.out
+fact conductor =U1-F1.main.1.out =U1-M1.motor.u
+fact conductor =U1-F1.main.2.out =U1-M1.motor.v
+fact conductor =U1-F1.main.3.out =U1-M1.motor.w
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-Q1.element.1.in
+fact conductor =U1-K1.main.1.in =U1-Q1.element.1.out
+fact conductor =U1-K2.main.2.in =U1-Q1.element.1.out
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =U1-Q1.element.2.in
+fact conductor =U1-K1.main.2.in =U1-Q1.element.2.out
+fact conductor =U1-K2.main.1.in =U1-Q1.element.2.out
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =U1-Q1.element.3.in
+fact conductor =U1-K1.main.3.in =U1-Q1.element.3.out
+fact conductor =U1-K2.main.3.in =U1-Q1.element.3.out
+fact conductor =U1-F1.aux.out =U1-S0.sw.in
+fact conductor =U1-K1.coil.in =U1-S0.sw.out
+fact conductor =U1-K2.coil.in =U1-S0.sw.out
+fact conductor =U1-Q1.element.1.in =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n
+fact conductor =U1-Q1.element.2.in =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n
+fact conductor =U1-Q1.element.3.in =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n
+fact conductor =U1-F1.aux.in =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n
+fact conductor =U1-K1.coil.out =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n
+fact conductor =U1-K2.coil.out =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n
+fact group =U1-Q1.element.2.out =U1-K1.main.2.in
+fact group =U1-M1.motor.u =U1-F1.main.1.out
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n =U1-K1.coil.out
+fact group =U1-F1.aux.out =U1-S0.sw.in
+fact group =U1-K1.main.3.in =U1-Q1.element.3.out
+fact group =U1-S0.sw.out =U1-K1.coil.in
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-Q1.element.1.in
+fact group =U1-F1.main.1.in =U1-K2.main.1.out
+fact group =U1-K2.main.1.in =U1-Q1.element.2.out
+fact group =U1-Q1.element.1.out =U1-K2.main.2.in
+fact group =U1-K2.main.3.out =U1-F1.main.3.in
+fact group =U1-M1.motor.v =U1-F1.main.2.out
+fact group =U1-F1.aux.in =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n
+fact group =U1-K2.coil.out =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n
+fact group =U1-K2.main.3.in =U1-Q1.element.3.out
+fact group =U1-Q1.element.1.out =U1-K1.main.1.in
+fact group =U1-K2.coil.in =U1-S0.sw.out
+fact group =U1-K1.main.2.out =U1-F1.main.2.in
+fact group =U1-F1.main.3.out =U1-M1.motor.w
+fact group =U1-F1.main.1.in =U1-K1.main.1.out
+fact group =U1-Q1.element.3.in =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =U1-Q1.element.2.in
+fact group =U1-K1.main.3.out =U1-F1.main.3.in
+fact group =U1-F1.main.2.in =U1-K2.main.2.out
+fact group =U1-F1.main.2.in =U1-F1.main.2.out
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.s =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal.n
+fact group =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.s =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal.n
+fact group =U1-F1.main.3.in =U1-F1.main.3.out
+fact group =U1-F1.main.1.out =U1-F1.main.1.in
 # legend only: a general placer must not read a symbol's kind.
-kind =MAIN-U1-M1.motor actuator
-kind -U1-X1:1.terminal terminal
-kind -U1-X1:3.terminal terminal
-kind =MAIN-U1-F1.main protection
-kind -U1-K2.coil coil
-kind -U1-X1:2.terminal terminal
-kind -U1-X2:1.terminal terminal
-kind =CTRL-U1-S0.sw switch
-kind =MAIN-U1-Q1.element protection
-kind -U1-K1.main contact_no
-kind =MAIN-U1-F1.aux contact_nc
-kind -U1-X2:2.terminal terminal
-kind -U1-K2.main contact_no
-kind -U1-K1.coil coil
-# today's placement: page, origin and orientation of each drawn copy.
-today =MAIN-U1-M1.motor page=1 at=768,248 orient=R0 set=1
-today -U1-X1:1.terminal page=1 at=56,104 orient=R180 set=1
-today -U1-X1:3.terminal page=1 at=120,104 orient=R180 set=1
-today =MAIN-U1-F1.main page=1 at=768,120 orient=R0 set=1
-today -U1-K2.coil page=1 at=480,192 orient=R0 set=1
-today -U1-X1:2.terminal page=1 at=88,104 orient=R180 set=1
-today -U1-X2:1.terminal page=1 at=240,104 orient=R180 set=1
-today =CTRL-U1-S0.sw page=1 at=680,120 orient=R0 set=1
-today =MAIN-U1-Q1.element page=1 at=56,224 orient=R0 set=1
-today -U1-K1.main page=1 at=920,112 orient=R0 set=1
-today =MAIN-U1-F1.aux page=1 at=240,248 orient=R0 set=1
-today -U1-X2:2.terminal page=1 at=336,336 orient=R0 set=1
-today -U1-K1.coil page=1 at=336,192 orient=R0 set=1
-today -U1-K2.main page=2 at=48,112 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n9 page=1 set=1 a=-U1-K2.coil.out b=-U1-X2:2.terminal.n 480,216 480,224 336,224 336,328
-route n5 page=1 set=1 a==MAIN-U1-Q1.element.1.in b=-U1-X1:1.terminal.n 56,208 56,112
-route n21 page=1 set=1 a==MAIN-U1-M1.motor.U b==MAIN-U1-F1.main.1.out 768,232 768,144
-route n19 page=1 set=1 a==MAIN-U1-F1.main.2.out b==MAIN-U1-M1.motor.V 800,144 800,216 784,216 784,232
-route n14 page=1 set=1 a=-U1-K1.main.1.out b==MAIN-U1-F1.main.1.in 920,128 920,160 736,160 736,88 768,88 768,96
-route n9 page=1 set=1 a=-U1-K1.coil.out b=-U1-X2:2.terminal.n 336,216 336,328
-route n6 page=1 set=1 a=-U1-X1:2.terminal.n b==MAIN-U1-Q1.element.2.in 88,112 88,208
-route n3 page=1 set=1 a=-U1-K1.main.3.out b==MAIN-U1-F1.main.3.in 984,128 984,152 848,152 848,88 832,88 832,96
-route n4 page=1 set=1 a=-U1-K1.coil.in b==CTRL-U1-S0.sw.out 336,168 336,144 680,144 680,136
-route n4 page=1 set=1 a==CTRL-U1-S0.sw.out b=-U1-K2.coil.in 680,136 680,144 480,144 480,168
-route n7 page=1 set=1 a=-U1-X1:3.terminal.n b==MAIN-U1-Q1.element.3.in 120,112 120,208
-route n18 page=1 set=1 a==MAIN-U1-F1.aux.in b=-U1-X2:1.terminal.n 240,232 240,112
-route n20 page=1 set=1 a==MAIN-U1-F1.main.3.out b==MAIN-U1-M1.motor.W 832,144 832,224 800,224 800,232
-route n2 page=1 set=1 a==MAIN-U1-F1.main.2.in b=-U1-K1.main.2.out 800,96 800,32 888,32 888,144 952,144 952,128
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
-marker n17 -U1-K1.main.2.in page=1 set=1 at=952,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.2.out@1.1
-marker n17 =MAIN-U1-Q1.element.2.out page=1 set=1 at=88,240 side=OWNER star=REF partner=-U1-K1.main.2.in@1.1
-marker n10 =MAIN-U1-Q1.element.1.out page=1 set=1 at=56,240 side=OWNER star=REF partner=-U1-K2.main.2.in@1.2
-marker n17 -U1-K2.main.1.in page=2 set=1 at=48,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.2.out@1.1
-marker n11 =MAIN-U1-Q1.element.3.out page=1 set=1 at=120,240 side=OWNER star=REF partner=-U1-K2.main.3.in@1.2
-marker n2 -U1-K2.main.2.out page=2 set=1 at=80,128 side=USER star=BRANCH partner==MAIN-U1-F1.main.2.in@1.1
-marker n3 -U1-K2.main.3.out page=2 set=1 at=112,128 side=USER star=BRANCH partner==MAIN-U1-F1.main.3.in@1.1
-marker n3 =MAIN-U1-F1.main.3.in page=1 set=1 at=832,96 side=OWNER star=REF partner=-U1-K2.main.3.out@1.2
-marker n11 -U1-K1.main.3.in page=1 set=1 at=984,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.3.out@1.1
-marker n13 =CTRL-U1-S0.sw.in page=1 set=1 at=680,104 side=OWNER star=REF partner==MAIN-U1-F1.aux.out@1.1
-marker n14 -U1-K2.main.1.out page=2 set=1 at=48,128 side=USER star=BRANCH partner==MAIN-U1-F1.main.1.in@1.1
-marker n13 =MAIN-U1-F1.aux.out page=1 set=1 at=240,264 side=USER star=BRANCH partner==CTRL-U1-S0.sw.in@1.1
-marker n10 -U1-K1.main.1.in page=1 set=1 at=920,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.1.out@1.1
-marker n14 =MAIN-U1-F1.main.1.in page=1 set=1 at=768,96 side=OWNER star=REF partner=-U1-K2.main.1.out@1.2
-marker n2 =MAIN-U1-F1.main.2.in page=1 set=1 at=800,96 side=OWNER star=REF partner=-U1-K2.main.2.out@1.2
-marker n11 -U1-K2.main.3.in page=2 set=1 at=112,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.3.out@1.1
-marker n10 -U1-K2.main.2.in page=2 set=1 at=80,96 side=USER star=BRANCH partner==MAIN-U1-Q1.element.1.out@1.1
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal terminal
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal terminal
+kind =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal terminal
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal terminal
+kind =U1-F1.main device
+kind =U1-F1.aux device
+kind =U1-K1.coil device
+kind =U1-K1.main device
+kind =U1-K2.coil device
+kind =U1-K2.main device
+kind =U1-M1.motor device
+kind =U1-Q1.element device
+kind =U1-S0.sw device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal page=1 at=944,32 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:1.terminal page=1 at=1096,112 orient=R0 set=1
+today =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal page=1 at=976,32 orient=R0 set=1
+today =454e6b0ce71e5724ae6476e2c6a8df35:2.terminal page=1 at=1192,112 orient=R0 set=1
+today =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal page=1 at=1008,32 orient=R0 set=1
+today =U1-F1.main page=1 at=440,224 orient=R0 set=1
+today =U1-F1.aux page=1 at=112,120 orient=R0 set=1
+today =U1-K1.coil page=1 at=224,232 orient=R0 set=1
+today =U1-K1.main page=1 at=608,152 orient=R0 set=1
+today =U1-K2.coil page=1 at=336,232 orient=R0 set=1
+today =U1-K2.main page=1 at=776,152 orient=R0 set=1
+today =U1-M1.motor page=1 at=456,312 orient=R0 set=1
+today =U1-Q1.element page=1 at=944,88 orient=R0 set=1
+today =U1-S0.sw page=1 at=112,168 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n4 page=1 set=1 a==U1-F1.main.1.out b==U1-M1.motor.u 440,248 440,272
+route n9 page=1 set=1 a==U1-F1.aux.out b==U1-S0.sw.in 112,136 112,152
+route n6 page=1 set=1 a==U1-F1.main.2.out b==U1-M1.motor.v 472,248 472,256 456,256 456,272
+route n8 page=1 set=1 a==U1-F1.main.3.out b==U1-M1.motor.w 504,248 504,264 472,264 472,272
+route n0 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s b=- 944,40 944,48
+route n1 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s b=- 976,40 976,56
+route n2 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s b=- 1008,40 1008,64
+route n0 page=1 set=1 a==U1-Q1.element.1.in b=- 944,72 944,48
+route n1 page=1 set=1 a==U1-Q1.element.2.in b=- 976,72 976,56
+route n2 page=1 set=1 a==U1-Q1.element.3.in b=- 1008,72 1008,64
+route n3 page=1 set=1 a=- b=- 440,176 776,176
+route n5 page=1 set=1 a=- b=- 472,184 808,184
+route n7 page=1 set=1 a=- b=- 504,192 840,192
+route n3 page=1 set=1 a==U1-K1.main.1.out b=- 608,168 608,176
+route n3 page=1 set=1 a==U1-K2.main.1.out b=- 776,168 776,176
+route n5 page=1 set=1 a==U1-K1.main.2.out b=- 640,168 640,184
+route n5 page=1 set=1 a==U1-K2.main.2.out b=- 808,168 808,184
+route n7 page=1 set=1 a==U1-K1.main.3.out b=- 672,168 672,192
+route n7 page=1 set=1 a==U1-K2.main.3.out b=- 840,168 840,192
+route n3 page=1 set=1 a==U1-F1.main.1.in b=- 440,200 440,176
+route n5 page=1 set=1 a==U1-F1.main.2.in b=- 472,200 472,184
+route n7 page=1 set=1 a==U1-F1.main.3.in b=- 504,200 504,192
+route n10 page=1 set=1 a=- b=- 112,200 336,200
+route n10 page=1 set=1 a==U1-S0.sw.out b=- 112,184 112,200
+route n10 page=1 set=1 a==U1-K1.coil.in b=- 224,208 224,200
+route n10 page=1 set=1 a==U1-K2.coil.in b=- 336,208 336,200
+route n11 page=1 set=1 a=- b=- 608,112 944,112
+route n12 page=1 set=1 a=- b=- 640,120 976,120
+route n13 page=1 set=1 a=- b=- 672,128 1008,128
+route n11 page=1 set=1 a==U1-Q1.element.1.out b=- 944,104 944,112
+route n12 page=1 set=1 a==U1-Q1.element.2.out b=- 976,104 976,120
+route n13 page=1 set=1 a==U1-Q1.element.3.out b=- 1008,104 1008,128
+route n11 page=1 set=1 a==U1-K1.main.1.in b=- 608,136 608,112
+route n11 page=1 set=1 a==U1-K2.main.2.in b=- 808,136 808,112
+route n12 page=1 set=1 a==U1-K1.main.2.in b=- 640,136 640,120
+route n12 page=1 set=1 a==U1-K2.main.1.in b=- 776,136 776,120
+route n13 page=1 set=1 a==U1-K1.main.3.in b=- 672,136 672,128
+route n13 page=1 set=1 a==U1-K2.main.3.in b=- 840,136 840,128
+# reference markers of the core: one per printed cross-reference.

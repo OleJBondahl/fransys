@@ -26,7 +26,7 @@ def test_a_two_lane_column_taller_than_the_page_is_cut_into_columns() -> None:
     lanes = tuple(Lane(tuple(Cell(i, "R0", "n", "s") for i in ids[12 * n : 12 * n + 12]), 48 * n) for n in (0, 1))
     col = Column("c", lanes, (End("open"), End("open")), (End("open"), End("open")), 1240, 88)
     flow = FlowGraph((col,), (), (), (), ())
-    prob = PlacementProblem(AREA, syms, (), facts=Facts())
+    prob = PlacementProblem(AREA, syms, (), facts=Facts(far_ends=()))
     lists = order_blocks(
         assign_blocks(
             flow,

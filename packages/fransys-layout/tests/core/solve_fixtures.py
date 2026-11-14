@@ -59,6 +59,7 @@ def two_unit_crossing_nets() -> PlacementProblem:
             Unit("U1", None, (PinRef("x", "e"), PinRef("p", "e"))),
             Unit("U2", None, (PinRef("z", "e"), PinRef("r", "e"))),
         ),
+        far_ends=(),
     )
     nets = (
         net("m", "x.e", "y.e", "z.e", crosses_unit=True),

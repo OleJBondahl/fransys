@@ -36,7 +36,7 @@ def three_columns() -> PlacementProblem:
     names = [[f"{c}{k}" for k in range(2)] for c in "abc"]
     syms = tuple(elem(n) for col in names for n in col)
     nets = tuple(n for col in names for n in chain(col, prefix=col[0]))
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
 
 
 def planted() -> list[PlacementProblem]:
@@ -112,7 +112,7 @@ def fan_legs() -> PlacementProblem:
         Size(100, 854),
         syms,
         (net("feed", "t0.e", "k1.n", "k2.n", "k3.n"),),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 
@@ -131,7 +131,7 @@ def two_heights() -> PlacementProblem:
     """Two columns in one row: a stack of two 150 G elements and a stack of two 60 G ones."""
     syms = (elem("a0", 16, 150), elem("a1", 16, 150), elem("b0", 16, 60), elem("b1", 16, 60))
     nets = (*chain(["a0", "a1"], "a"), *chain(["b0", "b1"], "b"))
-    return PlacementProblem(AREA, syms, tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, syms, tuple(nets), facts=Facts(far_ends=()))
 
 
 def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
@@ -153,7 +153,7 @@ def fan_rows() -> PlacementProblem:
     """One fan block of five 40 x 32 legs 100 G wide: its legs stack in five rows."""
     syms = (free("t0"), *(elem(f"k{i}", 40, 32) for i in range(1, 6)))
     pins = ["t0.e", *(f"k{i}.n" for i in range(1, 6))]
-    return PlacementProblem(Size(100, 854), syms, (net("feed", *pins),), facts=Facts())
+    return PlacementProblem(Size(100, 854), syms, (net("feed", *pins),), facts=Facts(far_ends=()))
 
 
 def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_on_a_page() -> None:
@@ -190,7 +190,7 @@ def test_an_annex_owner_s_block_grows_by_the_annex_height_in_its_measure_and_its
 def test_a_fold_piece_is_placed_within_the_page_room_with_the_tags_it_places() -> None:
     """KI-542 (R1427, R1430): the fold counts the tag at each piece end, so no placed piece is taller than the page room."""
     syms = [elem(f"e{i}", height=250) for i in range(8)]
-    prob = PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts())
+    prob = PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts(far_ends=()))
     cut = cut_of(prob, PLAIN)
     placement = placed_from(cut, prob, PLAIN)
     sized = {c.id for c in cut.flow.columns if "#" in c.id}
@@ -233,7 +233,7 @@ def test_a_label_blocked_at_the_page_edge_widens_the_gap_at_its_other_side() -> 
 def stacked_column_annexes() -> PlacementProblem:
     """One column of two elements; the lower one has a 60-high box above it, where the upper one stands."""
     names = ["a0", "a1"]
-    prob = PlacementProblem(AREA, tuple(elem(n) for n in names), tuple(chain(names, prefix="a0")), facts=Facts())
+    prob = PlacementProblem(AREA, tuple(elem(n) for n in names), tuple(chain(names, prefix="a0")), facts=Facts(far_ends=()))
     return replace(prob, annexes=(Annex("a1", Size(16, 60), None, {"R0": (Spot("TR", "TR", 0, -60, "down", 8),)}),))
 
 

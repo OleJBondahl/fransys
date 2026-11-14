@@ -54,7 +54,7 @@ def fan(fid: str, *cols: str) -> Fan:
 
 
 def problem_of(syms: Sequence[Sym], hints: Hints | None = None, area: Size = AREA) -> PlacementProblem:
-    return PlacementProblem(area, tuple(syms), (), hints=hints or Hints(), facts=Facts())
+    return PlacementProblem(area, tuple(syms), (), hints=hints or Hints(), facts=Facts(far_ends=()))
 
 
 def build(

@@ -202,15 +202,13 @@ def lane_wires(env: RouteEnv, col: Column) -> Drawn:
 
 
 def _join_end(env: RouteEnv, col: Column, lane: int, which: tuple[int, End, str]) -> Drawn:
-    """A member lane's join: level pins are one run, else a Z-wire nested with the jogs (E6)."""
+    """A member lane's join: a Z-wire nested with the jogs, level pins included (E6, R2287)."""
     third, end, pin = which
     cell = col.lanes[lane].cells[0 if third == 1 else -1]
     a = pin_point(env, end.pin.sym, end.pin.pin) if end.pin else None
     m = pin_point(env, cell.sym, pin)
     if a is None or m is None or end.net is None or end.pin is None:
         return _refused(f"join of column {col.id} lane {lane}: pin gone")
-    if a[1] == m[1]:
-        return Drawn(wires=(Wire(end.net, env.page, (a, m), "join"),))
     top, bottom = (a, m) if a[1] < m[1] else (m, a)
     return Drawn(jogs=(Jog(end.net, top, bottom, "join", source_top=top is m, ends=(end.pin, PinRef(cell.sym, pin))),))
 

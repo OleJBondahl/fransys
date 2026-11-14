@@ -29,7 +29,7 @@ def _trunk_over_a_hung_column() -> PlacementProblem:
     """Box pin p1 fans to k1 and k3, and s2 hangs on pin p4: a foreign cell near the trunk."""
     syms = (box_sym(4), *(elem(s, 40) for s in ("k1", "s2", "k3")))
     nets = [net("v", "A1.p1", "k1.n", "k3.n"), net("sig", "A1.p4", "s2.n")]
-    return PlacementProblem(AREA, syms, tuple(nets), Facts())
+    return PlacementProblem(AREA, syms, tuple(nets), Facts(far_ends=()))
 
 
 def test_a_trunk_over_a_hung_column_lifts_the_column_not_a_y_cycle() -> None:
@@ -49,7 +49,7 @@ def _held_crossing() -> PlacementProblem:
         net("b", "s1.s", "k2.n", "k3.n"),
         net("c", "A1.p1", "k4.n", "k5.n"),
     ]
-    return PlacementProblem(AREA, syms, tuple(nets), Facts())
+    return PlacementProblem(AREA, syms, tuple(nets), Facts(far_ends=()))
 
 
 def _lines_in_bodies(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> list[str]:

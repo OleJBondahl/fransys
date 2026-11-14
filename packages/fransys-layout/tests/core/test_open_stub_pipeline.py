@@ -24,7 +24,7 @@ HEAD = ((864, 74), (864, 66))  # e2.n (N) out 8 G, under the 48 G the tag above 
 def tall_problem() -> PlacementProblem:
     """Four 300 G elements in one chain: taller than the page, so cut_tall folds it in two."""
     syms = [elem(f"e{i}", height=300) for i in range(4)]
-    return PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(chain([s.id for s in syms])), facts=Facts(far_ends=()))
 
 
 def routed(open_stub: int, obstacles: tuple[Keep, ...] = ()):

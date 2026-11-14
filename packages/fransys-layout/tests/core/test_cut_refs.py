@@ -155,6 +155,7 @@ def test_an_end_that_carries_an_arrow_gets_no_stub() -> None:
     syms = [replace(side(n, 700, 500), unit=u) for n, u in zip("xyz", ("U1", "U3", "U2"), strict=True)]
     facts = Facts(
         units=(Unit("U1", None, (PinRef("x", "e"),)), Unit("U2", None, (PinRef("z", "e"),))),
+        far_ends=(),
     )
     result = cut_of(syms, [net("m", "x.e", "y.e", "z.e", crosses_unit=True)], facts)
     assert refs_of(result, "stub") == []
@@ -178,7 +179,7 @@ def test_a_copied_hub_end_on_a_page_cut_gets_no_stub_at_the_copied_end() -> None
 def test_a_hub_with_boundary_pins_on_both_sides_is_cut_by_an_arrow_pair_not_copied() -> None:
     """R455: the copy of a unit's boundary terminal tells a reader nothing the arrow pair does."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    facts = Facts(units=(Unit("U1", None, (PinRef("t0", "n"), PinRef("t0", "s"))),))
+    facts = Facts(units=(Unit("U1", None, (PinRef("t0", "n"), PinRef("t0", "s"))),), far_ends=())
     result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n")], facts)
     assert page_of(result) == {"c:k1": 1, "c:k2": 2, "c:k3": 2}
     assert refs_of(result, "copy") == []
@@ -240,7 +241,7 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
         AREA,
         tuple(syms),
         (*chain(ids), net("tail", "k11.s", "w.n", "y.n")),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
     options = core_options(
         marker=MARKER,

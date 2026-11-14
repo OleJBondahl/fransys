@@ -64,14 +64,13 @@ def _wires(
             yield (pc.id, 0, i), pc.lanes[0][i], pa.pin, pc.lanes[0][i + 1], pb.pin, net
 
 
-def _no_row(env: PageEnv, y: Mapping[str, int], pc: PlacedColumn, foot: tuple[int, Cell], target: tuple[tuple[int, int], Cell, str]) -> bool:
-    """True when the join's two pins stand one grid apart in y, so its stair has room 0."""
-    (li, top), ((tl, ti), bottom, pin) = foot, target
-    if top.bottom_pin is None:
-        return False
-    yt = y[cell_node(pc.id, li, len(pc.lanes[li]) - 1)] + pin_xy(env.syms[top.sym], top, top.bottom_pin)[1]
+def _no_row(env: PageEnv, y: Mapping[str, int], pc: PlacedColumn, end: tuple[int, int, str], target: tuple[tuple[int, int], Cell, str]) -> bool:
+    """True when the join's two pins stand level or one grid apart in y, so its stair has room 0."""
+    (li, i, pin_a), ((tl, ti), bottom, pin) = end, target
+    cell = pc.lanes[li][i]
+    yt = y[cell_node(pc.id, li, i)] + pin_xy(env.syms[cell.sym], cell, pin_a)[1]
     yb = y[cell_node(pc.id, tl, ti)] + pin_xy(env.syms[bottom.sym], bottom, pin)[1]
-    return abs(yt - yb) > 0 and stair_room(0, abs(yt - yb), env.options.wiring_grid) < 1
+    return stair_room(0, abs(yt - yb), env.options.wiring_grid) < 1
 
 
 def _net_wires(env: PageEnv, step: Step, foot: Cell, target: Cell) -> Iterator[tuple[Step, Cell, str, Cell, str, str]]:
@@ -85,7 +84,7 @@ def _net_wires(env: PageEnv, step: Step, foot: Cell, target: Cell) -> Iterator[t
 def _join_wires(
     env: PageEnv, pc: PlacedColumn, y: Mapping[str, int] | None, busy: AbstractSet[Step]
 ) -> Iterator[tuple[Step, Cell, str, Cell, str, str]]:
-    """The nets of a lane's foot join into another lane, where `y` leaves it no row or its step holds jogs (R456).
+    """The nets of a lane end's join into another lane, where `y` leaves it no row or its step holds jogs (R456).
 
     With no `y` (the page not yet solved) no join is reserved; every other join keeps its bend.
     """
@@ -93,16 +92,18 @@ def _join_wires(
         return
     col = env.columns[pc.id]
     where = {c.sym: (li, i) for li, cells in enumerate(pc.lanes) for i, c in enumerate(cells)}
-    for li, end in enumerate(col.heads if pc.flipped else col.feet):
-        if end.pin is None or not end.is_join:
+    near, far = (col.heads, col.feet) if pc.flipped else (col.feet, col.heads)
+    for li, end, at in [(li, e, -1) for li, e in enumerate(near)] + [(li, e, 0) for li, e in enumerate(far)]:
+        cell = pc.lanes[li][at]
+        pin_a = cell.top_pin if at == 0 else cell.bottom_pin
+        pin = end.pin
+        into = where.get(pin.sym) if pin and end.is_join and pin_a else None
+        if into is None or pin is None or pin_a is None:
             continue
-        into = where.get(end.pin.sym)
-        if into is None or into[1] == 0:
-            continue
-        foot, target = pc.lanes[li][-1], pc.lanes[into[0]][into[1]]
-        if (pc.id, into[0], into[1] - 1) not in busy and not _no_row(env, y, pc, (li, foot), (into, target, end.pin.pin)):
-            continue
-        yield from _net_wires(env, (pc.id, into[0], into[1] - 1), foot, target)
+        target = pc.lanes[into[0]][into[1]]
+        step = (pc.id, into[0], into[1] - (pin.pin != target.bottom_pin))  # a join on the target's south pin bends below it
+        if step[2] >= -1 and (step in busy or _no_row(env, y, pc, (li, at % len(pc.lanes[li]), pin_a), (into, target, pin.pin))):
+            yield from (w for w in _net_wires(env, step, cell, target) if w[5] == end.net)
 
 
 def _moved(env: PageEnv, origin: Mapping[str, int], pc: PlacedColumn, wires: Iterator[tuple[Step, Cell, str, Cell, str, str]]) -> Iterator[_Jog]:

@@ -19,4 +19,4 @@ def gap_width(placement: Placement, gap_id: str, page: int = 1) -> int:
 def overflowing_row(area: Size = AREA) -> PlacementProblem:
     """One element 8 G wider than the page, wired to a small one: the row overflows by one block."""
     wide = elem("wide", area.w + 8)
-    return PlacementProblem(area, (wide, elem("e")), (net("w", "wide.s", "e.n"),), facts=Facts())
+    return PlacementProblem(area, (wide, elem("e")), (net("w", "wide.s", "e.n"),), facts=Facts(far_ends=()))

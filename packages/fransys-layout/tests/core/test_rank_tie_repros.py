@@ -31,7 +31,7 @@ def _cut_problem(spelling: Mapping[str, str]) -> PlacementProblem:
     items = {"A 1": "I1", "A 2": "I1", "B 1": "I2", "B 2": "I2"}
     syms = tuple(replace(side(spelling[i], 40, 40, "G"), item=items[i]) for i in IDS)
     pins = (f"{spelling['A 1']}.e", f"{spelling['B 1']}.e", f"{spelling['B 2']}.e")
-    return PlacementProblem(Size(150, 200), syms, (net("n", *pins),), Facts(), Hints())
+    return PlacementProblem(Size(150, 200), syms, (net("n", *pins),), Facts(far_ends=()), Hints())
 
 
 def _pages(spelling: Mapping[str, str]) -> set[frozenset[str]]:

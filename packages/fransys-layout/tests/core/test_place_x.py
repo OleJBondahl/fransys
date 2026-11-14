@@ -82,7 +82,7 @@ def _reach(spec: RowSpec, x: dict[str, int]) -> int:
 def _four_columns() -> PlacementProblem:
     syms = [elem(f"{k}{i}", 100) for i in range(4) for k in "ab"]
     nets = [net(f"n{i}", f"a{i}.s", f"b{i}.n") for i in range(4)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:

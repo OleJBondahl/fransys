@@ -1,11 +1,10 @@
-# FRANSYS PLACEMENT INSTANCE test_plc_list_pin_of_a_later_channel__1
-# sides: half split of fransys_el; today and route lines as exported
+# FRANSYS PLACEMENT INSTANCE w03_plc_list_pin
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-sym +C1-A2.item group=- body=-16,-16,80,32 keepout=-16,-16,132,32
+sym =A2.ai_1 group=- body=-16,-16,80,32 keepout=-16,-16,136,32
   pin ai_1.1 N 0,-16
   pin ai_1.2 N 16,-16
   pin ai_2.5 S 0,16
@@ -14,65 +13,101 @@ sym +C1-A2.item group=- body=-16,-16,80,32 keepout=-16,-16,132,32
   pin ai_3.4 N 48,-16
   pin ai_4.7 S 32,16
   pin ai_4.8 S 48,16
-sym +C1-J2.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+sym =J1.1 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J3.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J1.2 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J1.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J2.1 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J3.connector#2 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J2.2 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J1.connector#2 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J3.1 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J4.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J3.2 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J2.connector#2 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J4.1 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-sym +C1-J4.connector#2 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =J4.2 group=- body=-16,-16,32,32 keepout=-72,-16,88,48
   pin in N 0,-16
-net n0 +C1-A2.item.ai_3.4 +C1-J3.connector.in
-net n1 +C1-A2.item.ai_4.8 +C1-J4.connector.in
-net n2 +C1-A2.item.ai_2.6 +C1-J2.connector.in
-net n3 +C1-A2.item.ai_3.3 +C1-J3.connector#2.in
-net n4 +C1-A2.item.ai_1.1 +C1-J1.connector.in
-net n5 +C1-A2.item.ai_2.5 +C1-J2.connector#2.in
-net n6 +C1-A2.item.ai_4.7 +C1-J4.connector#2.in
-net n7 +C1-A2.item.ai_1.2 +C1-J1.connector#2.in
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
-fact item +C1-J2.connector +C1-J2.connector#2
-fact item +C1-J3.connector +C1-J3.connector#2
-fact item +C1-J1.connector +C1-J1.connector#2
-fact item +C1-J4.connector +C1-J4.connector#2
+  pin out S 0,16
+net n0 =A2.ai_1.ai_1.1 =J1.1.in
+net n1 =A2.ai_1.ai_1.2 =J1.2.out
+net n2 =A2.ai_1.ai_2.5 =J2.1.in
+net n3 =A2.ai_1.ai_2.6 =J2.2.out
+net n4 =A2.ai_1.ai_3.3 =J3.1.in
+net n5 =A2.ai_1.ai_3.4 =J3.2.out
+net n6 =A2.ai_1.ai_4.7 =J4.1.in
+net n7 =A2.ai_1.ai_4.8 =J4.2.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =J1.1 =J1.2
+fact item =J2.1 =J2.2
+fact item =J3.1 =J3.2
+fact item =J4.1 =J4.2
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact boxpin +C1-A2.item.ai_3.4 +C1-A2.item.ai_4.8 +C1-A2.item.ai_2.6 +C1-A2.item.ai_3.3 +C1-A2.item.ai_2.5 +C1-A2.item.ai_1.1 +C1-A2.item.ai_4.7 +C1-A2.item.ai_1.2
+fact boxpin =A2.ai_1.ai_1.1 =A2.ai_1.ai_1.2 =A2.ai_1.ai_2.5 =A2.ai_1.ai_2.6 =A2.ai_1.ai_3.3 =A2.ai_1.ai_3.4 =A2.ai_1.ai_4.7 =A2.ai_1.ai_4.8
+fact attached =J4.1 =J2.2 =J2.1 =J1.1 =J3.1 =J1.2 =J3.2 =J4.2
+fact head 
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =J1.1.in =A2.ai_1.ai_1.1
+fact conductor =J1.2.out =A2.ai_1.ai_1.2
+fact conductor =J3.1.in =A2.ai_1.ai_3.3
+fact conductor =J3.2.out =A2.ai_1.ai_3.4
+fact conductor =J2.1.in =A2.ai_1.ai_2.5
+fact conductor =J2.2.out =A2.ai_1.ai_2.6
+fact conductor =J4.1.in =A2.ai_1.ai_4.7
+fact conductor =J4.2.out =A2.ai_1.ai_4.8
+fact conductor =A2.ai_1.ai_1.1 =J1.1.in
+fact conductor =A2.ai_1.ai_1.2 =J1.2.out
+fact conductor =A2.ai_1.ai_2.5 =J2.1.in
+fact conductor =A2.ai_1.ai_2.6 =J2.2.out
+fact conductor =A2.ai_1.ai_3.3 =J3.1.in
+fact conductor =A2.ai_1.ai_3.4 =J3.2.out
+fact conductor =A2.ai_1.ai_4.7 =J4.1.in
+fact conductor =A2.ai_1.ai_4.8 =J4.2.out
+fact group =J4.1.in =A2.ai_1.ai_4.7
+fact group =J1.2.out =A2.ai_1.ai_1.2
+fact group =A2.ai_1.ai_2.5 =J2.1.in
+fact group =A2.ai_1.ai_2.6 =J2.2.out
+fact group =J4.2.out =A2.ai_1.ai_4.8
+fact group =A2.ai_1.ai_3.4 =J3.2.out
+fact group =A2.ai_1.ai_3.3 =J3.1.in
+fact group =A2.ai_1.ai_1.1 =J1.1.in
 # legend only: a general placer must not read a symbol's kind.
-kind +C1-A2.item item
-kind +C1-J2.connector connector
-kind +C1-J3.connector connector
-kind +C1-J1.connector connector
-kind +C1-J3.connector#2 connector
-kind +C1-J1.connector#2 connector
-kind +C1-J4.connector connector
-kind +C1-J2.connector#2 connector
-kind +C1-J4.connector#2 connector
-# today's placement: page, origin and orientation of each drawn copy.
-today +C1-A2.item page=1 at=32,112 orient=R0 set=1
-today +C1-J2.connector page=1 at=576,112 orient=R0 set=1
-today +C1-J3.connector page=1 at=784,112 orient=R0 set=1
-today +C1-J1.connector page=1 at=264,112 orient=R0 set=1
-today +C1-J3.connector#2 page=1 at=680,112 orient=R0 set=1
-today +C1-J1.connector#2 page=1 at=368,112 orient=R0 set=1
-today +C1-J4.connector page=1 at=992,112 orient=R0 set=1
-today +C1-J2.connector#2 page=1 at=472,112 orient=R0 set=1
-today +C1-J4.connector#2 page=1 at=888,112 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n3 page=1 set=1 a=+C1-A2.item.ai_3.3 b=+C1-J3.connector#2.in 64,96 64,64 680,64 680,96
-route n7 page=1 set=1 a=+C1-J1.connector#2.in b=+C1-A2.item.ai_1.2 368,96 368,72 48,72 48,96
-route n0 page=1 set=1 a=+C1-A2.item.ai_3.4 b=+C1-J3.connector.in 80,96 80,56 784,56 784,96
-route n2 page=1 set=1 a=+C1-A2.item.ai_2.6 b=+C1-J2.connector.in 112,96 112,40 576,40 576,96
-route n5 page=1 set=1 a=+C1-A2.item.ai_2.5 b=+C1-J2.connector#2.in 96,96 96,48 472,48 472,96
-route n4 page=1 set=1 a=+C1-J1.connector.in b=+C1-A2.item.ai_1.1 264,96 264,80 32,80 32,96
-route n1 page=1 set=1 a=+C1-A2.item.ai_4.8 b=+C1-J4.connector.in 144,96 144,88 224,88 224,136 952,136 952,88 992,88 992,96
-route n6 page=1 set=1 a=+C1-A2.item.ai_4.7 b=+C1-J4.connector#2.in 128,96 128,32 888,32 888,96
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
+kind =A2.ai_1 plc_module
+kind =J1.1 connector
+kind =J1.2 connector
+kind =J2.1 connector
+kind =J2.2 connector
+kind =J3.1 connector
+kind =J3.2 connector
+kind =J4.1 connector
+kind =J4.2 connector
+# placement of the core: page, origin and orientation of each placed symbol.
+today =A2.ai_1 page=1 at=368,96 orient=R0 set=1
+today =J1.1 page=1 at=424,56 orient=R180 set=1
+today =J1.2 page=1 at=576,48 orient=R0 set=1
+today =J2.1 page=1 at=424,136 orient=R0 set=1
+today =J2.2 page=1 at=576,144 orient=R180 set=1
+today =J3.1 page=1 at=728,56 orient=R180 set=1
+today =J3.2 page=1 at=880,48 orient=R0 set=1
+today =J4.1 page=1 at=728,136 orient=R0 set=1
+today =J4.2 page=1 at=880,144 orient=R180 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n0 page=1 set=1 a==A2.ai_1.ai_1.1 b==J1.1.in 424,80 424,72
+route n1 page=1 set=1 a==A2.ai_1.ai_1.2 b==J1.2.out 576,80 576,64
+route n2 page=1 set=1 a==A2.ai_1.ai_2.5 b==J2.1.in 424,112 424,120
+route n3 page=1 set=1 a==A2.ai_1.ai_2.6 b==J2.2.out 576,112 576,128
+route n4 page=1 set=1 a==A2.ai_1.ai_3.3 b==J3.1.in 728,80 728,72
+route n5 page=1 set=1 a==A2.ai_1.ai_3.4 b==J3.2.out 880,80 880,64
+route n6 page=1 set=1 a==A2.ai_1.ai_4.7 b==J4.1.in 728,112 728,120
+route n7 page=1 set=1 a==A2.ai_1.ai_4.8 b==J4.2.out 880,112 880,128
+# reference markers of the core: one per printed cross-reference.

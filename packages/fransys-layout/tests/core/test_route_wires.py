@@ -195,10 +195,11 @@ def test_a_tie_in_source_x_is_broken_by_destination_x(env: RouteEnv) -> None:
     assert turn["b"] < turn["a"]
 
 
-def test_level_join_pins_are_one_run(env: RouteEnv) -> None:
-    col = join_column(env, "n", "n", foot=False)
-    (wire,) = join_wires(env, col).wires
-    assert wire.points == ((552, 152), (656, 152))
+def test_level_join_pins_are_a_jog_like_any_other(env: RouteEnv) -> None:
+    """R2287 D1: a run between two level pins would say a conductor joins them; the join bends on a row of its own and stands on a dot."""
+    drawn = join_wires(env, join_column(env, "n", "n", foot=False))
+    (jog,) = drawn.jogs
+    assert (drawn.wires, jog.drawn_as, (jog.top[1], jog.bottom[1])) == ((), "join", (152, 152))
 
 
 def ring_env() -> tuple[RouteEnv, Column]:

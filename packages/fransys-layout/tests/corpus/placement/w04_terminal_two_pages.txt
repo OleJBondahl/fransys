@@ -1,144 +1,274 @@
-# FRANSYS PLACEMENT INSTANCE test_a_terminal_wired_to_devices_on_two_pages_is_drawn_on_each__2
+# FRANSYS PLACEMENT INSTANCE w04_terminal_two_pages
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group R order=0 "Relays"
-sym =R-U1-K1.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym -U1-X1:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+group R order=0 "R"
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym -U1-X1:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R-U1-K7.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym =R-U1-K9.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
-  pin in N 0,-24
-  pin out S 0,24
-sym -U1-X1:4.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym -U1-X1:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+sym =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
   pin e E 8,0 node=0
   pin n N 0,-8 node=0
   pin s S 0,8 node=0
   pin w W -8,0 node=0
-sym =R-U1-K4.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K1.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K3.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K2.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K8.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K3.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K2.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K4.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K5.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K5.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K10.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K6.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K12.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K7.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K6.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K8.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-sym =R-U1-K11.coil group=R body=-16,-24,32,48 keepout=-68,-24,84,48
+sym =U1-K9.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
   pin in N 0,-24
   pin out S 0,24
-net n0 =R-U1-K1.coil.out =R-U1-K10.coil.out =R-U1-K11.coil.out =R-U1-K12.coil.out =R-U1-K2.coil.out =R-U1-K3.coil.out =R-U1-K4.coil.out =R-U1-K5.coil.out =R-U1-K6.coil.out =R-U1-K7.coil.out =R-U1-K8.coil.out =R-U1-K9.coil.out
-net n6 -U1-X1:2.terminal.n -U1-X1:2.terminal.s =R-U1-K10.coil.in =R-U1-K2.coil.in =R-U1-K6.coil.in
-net n9 -U1-X1:3.terminal.n -U1-X1:3.terminal.s =R-U1-K11.coil.in =R-U1-K3.coil.in =R-U1-K7.coil.in
-net n12 -U1-X1:4.terminal.n -U1-X1:4.terminal.s =R-U1-K12.coil.in =R-U1-K4.coil.in =R-U1-K8.coil.in
-net n20 -U1-X1:1.terminal.n -U1-X1:1.terminal.s =R-U1-K1.coil.in =R-U1-K5.coil.in =R-U1-K9.coil.in
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+sym =U1-K10.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K11.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K12.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K13.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K14.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K15.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =U1-K16.coil group=R body=-16,-24,32,48 keepout=-72,-24,88,48
+  pin in N 0,-24
+  pin out S 0,24
+net n0 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s =U1-K1.coil.in =U1-K5.coil.in =U1-K9.coil.in =U1-K13.coil.in
+net n1 =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s =U1-K2.coil.in =U1-K6.coil.in =U1-K10.coil.in =U1-K14.coil.in
+net n2 =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s =U1-K3.coil.in =U1-K7.coil.in =U1-K11.coil.in =U1-K15.coil.in
+net n3 =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.s =U1-K4.coil.in =U1-K8.coil.in =U1-K12.coil.in =U1-K16.coil.in
+net n4 =U1-K1.coil.out =U1-K2.coil.out =U1-K3.coil.out =U1-K4.coil.out =U1-K5.coil.out =U1-K6.coil.out =U1-K7.coil.out =U1-K8.coil.out =U1-K9.coil.out =U1-K10.coil.out =U1-K11.coil.out =U1-K12.coil.out =U1-K13.coil.out =U1-K14.coil.out =U1-K15.coil.out =U1-K16.coil.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact attached =R-U1-K1.coil =R-U1-K7.coil =R-U1-K9.coil =R-U1-K4.coil =R-U1-K3.coil =R-U1-K8.coil =R-U1-K2.coil =R-U1-K5.coil =R-U1-K10.coil =R-U1-K12.coil =R-U1-K6.coil =R-U1-K11.coil
 fact boxpin 
-fact strip -U1-X1 -U1-X1:1.terminal -U1-X1:3.terminal -U1-X1:4.terminal -U1-X1:2.terminal
+fact attached 
+fact head =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal
+fact strip 3c12d51896f05e84ad5fd5e04c06a7b5 =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =U1-K5.coil.in =U1-K1.coil.in
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-K1.coil.in
+fact conductor =U1-K2.coil.out =U1-K1.coil.out
+fact conductor =U1-K6.coil.in =U1-K2.coil.in
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =U1-K2.coil.in
+fact conductor =U1-K1.coil.out =U1-K2.coil.out
+fact conductor =U1-K3.coil.out =U1-K2.coil.out
+fact conductor =U1-K7.coil.in =U1-K3.coil.in
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =U1-K3.coil.in
+fact conductor =U1-K2.coil.out =U1-K3.coil.out
+fact conductor =U1-K4.coil.out =U1-K3.coil.out
+fact conductor =U1-K8.coil.in =U1-K4.coil.in
+fact conductor =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.n =U1-K4.coil.in
+fact conductor =U1-K3.coil.out =U1-K4.coil.out
+fact conductor =U1-K5.coil.out =U1-K4.coil.out
+fact conductor =U1-K1.coil.in =U1-K5.coil.in
+fact conductor =U1-K9.coil.in =U1-K5.coil.in
+fact conductor =U1-K4.coil.out =U1-K5.coil.out
+fact conductor =U1-K6.coil.out =U1-K5.coil.out
+fact conductor =U1-K2.coil.in =U1-K6.coil.in
+fact conductor =U1-K10.coil.in =U1-K6.coil.in
+fact conductor =U1-K5.coil.out =U1-K6.coil.out
+fact conductor =U1-K7.coil.out =U1-K6.coil.out
+fact conductor =U1-K3.coil.in =U1-K7.coil.in
+fact conductor =U1-K11.coil.in =U1-K7.coil.in
+fact conductor =U1-K6.coil.out =U1-K7.coil.out
+fact conductor =U1-K8.coil.out =U1-K7.coil.out
+fact conductor =U1-K4.coil.in =U1-K8.coil.in
+fact conductor =U1-K12.coil.in =U1-K8.coil.in
+fact conductor =U1-K7.coil.out =U1-K8.coil.out
+fact conductor =U1-K9.coil.out =U1-K8.coil.out
+fact conductor =U1-K5.coil.in =U1-K9.coil.in
+fact conductor =U1-K13.coil.in =U1-K9.coil.in
+fact conductor =U1-K8.coil.out =U1-K9.coil.out
+fact conductor =U1-K10.coil.out =U1-K9.coil.out
+fact conductor =U1-K6.coil.in =U1-K10.coil.in
+fact conductor =U1-K14.coil.in =U1-K10.coil.in
+fact conductor =U1-K9.coil.out =U1-K10.coil.out
+fact conductor =U1-K11.coil.out =U1-K10.coil.out
+fact conductor =U1-K7.coil.in =U1-K11.coil.in
+fact conductor =U1-K15.coil.in =U1-K11.coil.in
+fact conductor =U1-K10.coil.out =U1-K11.coil.out
+fact conductor =U1-K12.coil.out =U1-K11.coil.out
+fact conductor =U1-K8.coil.in =U1-K12.coil.in
+fact conductor =U1-K16.coil.in =U1-K12.coil.in
+fact conductor =U1-K11.coil.out =U1-K12.coil.out
+fact conductor =U1-K13.coil.out =U1-K12.coil.out
+fact conductor =U1-K9.coil.in =U1-K13.coil.in
+fact conductor =U1-K12.coil.out =U1-K13.coil.out
+fact conductor =U1-K14.coil.out =U1-K13.coil.out
+fact conductor =U1-K10.coil.in =U1-K14.coil.in
+fact conductor =U1-K13.coil.out =U1-K14.coil.out
+fact conductor =U1-K15.coil.out =U1-K14.coil.out
+fact conductor =U1-K11.coil.in =U1-K15.coil.in
+fact conductor =U1-K14.coil.out =U1-K15.coil.out
+fact conductor =U1-K16.coil.out =U1-K15.coil.out
+fact conductor =U1-K12.coil.in =U1-K16.coil.in
+fact conductor =U1-K15.coil.out =U1-K16.coil.out
+fact conductor =U1-K1.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n
+fact conductor =U1-K2.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n
+fact conductor =U1-K3.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n
+fact conductor =U1-K4.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.n
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.n =U1-K4.coil.in
+fact group =U1-K13.coil.in =U1-K9.coil.in
+fact group =U1-K5.coil.in =U1-K9.coil.in
+fact group =U1-K2.coil.in =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =U1-K3.coil.in
+fact group =U1-K12.coil.in =U1-K8.coil.in
+fact group =U1-K14.coil.out =U1-K13.coil.out
+fact group =U1-K3.coil.out =U1-K4.coil.out
+fact group =U1-K6.coil.out =U1-K7.coil.out
+fact group =U1-K5.coil.out =U1-K6.coil.out
+fact group =U1-K7.coil.in =U1-K11.coil.in
+fact group =U1-K9.coil.out =U1-K10.coil.out
+fact group =U1-K10.coil.in =U1-K6.coil.in
+fact group =U1-K12.coil.out =U1-K13.coil.out
+fact group =U1-K16.coil.in =U1-K12.coil.in
+fact group =U1-K3.coil.out =U1-K2.coil.out
+fact group =U1-K8.coil.out =U1-K7.coil.out
+fact group =U1-K15.coil.out =U1-K14.coil.out
+fact group =U1-K2.coil.out =U1-K1.coil.out
+fact group =U1-K12.coil.out =U1-K11.coil.out
+fact group =U1-K11.coil.in =U1-K15.coil.in
+fact group =U1-K1.coil.in =U1-K5.coil.in
+fact group =U1-K10.coil.out =U1-K11.coil.out
+fact group =U1-K4.coil.in =U1-K8.coil.in
+fact group =U1-K2.coil.in =U1-K6.coil.in
+fact group =U1-K7.coil.in =U1-K3.coil.in
+fact group =U1-K8.coil.out =U1-K9.coil.out
+fact group =U1-K10.coil.in =U1-K14.coil.in
+fact group =U1-K5.coil.out =U1-K4.coil.out
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =U1-K1.coil.in
+fact group =U1-K15.coil.out =U1-K16.coil.out
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.s
+fact group =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.n =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s
 # legend only: a general placer must not read a symbol's kind.
-kind =R-U1-K1.coil coil
-kind -U1-X1:1.terminal terminal
-kind -U1-X1:3.terminal terminal
-kind =R-U1-K7.coil coil
-kind =R-U1-K9.coil coil
-kind -U1-X1:4.terminal terminal
-kind -U1-X1:2.terminal terminal
-kind =R-U1-K4.coil coil
-kind =R-U1-K3.coil coil
-kind =R-U1-K8.coil coil
-kind =R-U1-K2.coil coil
-kind =R-U1-K5.coil coil
-kind =R-U1-K10.coil coil
-kind =R-U1-K12.coil coil
-kind =R-U1-K6.coil coil
-kind =R-U1-K11.coil coil
-# today's placement: page, origin and orientation of each drawn copy.
-today -U1-X1:4.terminal page=1 at=568,104 orient=R180 set=1
-today -U1-X1:2.terminal page=1 at=72,104 orient=R180 set=1
-today =R-U1-K4.coil page=1 at=712,248 orient=R0 set=1
-today =R-U1-K8.coil page=1 at=856,248 orient=R0 set=1
-today =R-U1-K2.coil page=1 at=216,248 orient=R0 set=1
-today =R-U1-K10.coil page=1 at=72,248 orient=R0 set=1
-today =R-U1-K12.coil page=1 at=568,248 orient=R0 set=1
-today =R-U1-K6.coil page=1 at=360,248 orient=R0 set=1
-today =R-U1-K1.coil page=2 at=72,248 orient=R0 set=1
-today -U1-X1:1.terminal page=2 at=72,104 orient=R180 set=1
-today -U1-X1:3.terminal page=2 at=568,104 orient=R180 set=1
-today =R-U1-K7.coil page=2 at=856,248 orient=R0 set=1
-today =R-U1-K9.coil page=2 at=360,248 orient=R0 set=1
-today =R-U1-K3.coil page=2 at=712,248 orient=R0 set=1
-today =R-U1-K5.coil page=2 at=216,248 orient=R0 set=1
-today =R-U1-K11.coil page=2 at=568,248 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n6 page=1 set=1 a=-U1-X1:2.terminal.n b==R-U1-K10.coil.in 72,112 72,224
-route n12 page=1 set=1 a==R-U1-K8.coil.in b=-U1-X1:4.terminal.n 856,224 856,216 568,216 568,112
-route n12 page=1 set=1 a=-U1-X1:4.terminal.n b==R-U1-K12.coil.in 568,112 568,224
-route n6 page=1 set=1 a=-U1-X1:2.terminal.n b==R-U1-K2.coil.in 72,112 72,216 216,216 216,224
-route n6 page=1 set=1 a=-U1-X1:2.terminal.n b==R-U1-K6.coil.in 72,112 72,216 360,216 360,224
-route n12 page=1 set=1 a==R-U1-K4.coil.in b=-U1-X1:4.terminal.n 712,224 712,216 568,216 568,112
-route n9 page=2 set=1 a=-U1-X1:3.terminal.n b==R-U1-K11.coil.in 568,112 568,224
-route n9 page=2 set=1 a=-U1-X1:3.terminal.n b==R-U1-K7.coil.in 568,112 568,216 856,216 856,224
-route n20 page=2 set=1 a==R-U1-K1.coil.in b=-U1-X1:1.terminal.n 72,224 72,112
-route n9 page=2 set=1 a=-U1-X1:3.terminal.n b==R-U1-K3.coil.in 568,112 568,216 712,216 712,224
-route n20 page=2 set=1 a==R-U1-K5.coil.in b=-U1-X1:1.terminal.n 216,224 216,216 72,216 72,112
-route n20 page=2 set=1 a==R-U1-K9.coil.in b=-U1-X1:1.terminal.n 360,224 360,216 72,216 72,112
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
-marker n0 =R-U1-K12.coil.out page=1 set=1 at=568,272 side=USER star=BRANCH partner==R-U1-K11.coil.out@1.2
-marker n0 =R-U1-K4.coil.out page=1 set=1 at=712,272 side=OWNER star=- partner==R-U1-K3.coil.out@1.2
-marker n0 =R-U1-K3.coil.out page=2 set=1 at=712,272 side=USER star=- partner==R-U1-K4.coil.out@1.1
-marker n0 =R-U1-K1.coil.out page=2 set=1 at=72,272 side=USER star=- partner==R-U1-K2.coil.out@1.1
-marker n0 =R-U1-K11.coil.out page=2 set=1 at=568,272 side=OWNER star=REF partner==R-U1-K10.coil.out@1.1
-marker n0 =R-U1-K4.coil.out page=1 set=1 at=712,272 side=OWNER star=- partner==R-U1-K5.coil.out@1.2
-marker n0 =R-U1-K2.coil.out page=1 set=1 at=216,272 side=OWNER star=- partner==R-U1-K1.coil.out@1.2
-marker n0 =R-U1-K3.coil.out page=2 set=1 at=712,272 side=USER star=- partner==R-U1-K2.coil.out@1.1
-marker n0 =R-U1-K2.coil.out page=1 set=1 at=216,272 side=OWNER star=- partner==R-U1-K3.coil.out@1.2
-marker n0 =R-U1-K7.coil.out page=2 set=1 at=856,272 side=USER star=- partner==R-U1-K6.coil.out@1.1
-marker n0 =R-U1-K8.coil.out page=1 set=1 at=856,272 side=OWNER star=- partner==R-U1-K9.coil.out@1.2
-marker n0 =R-U1-K6.coil.out page=1 set=1 at=360,272 side=OWNER star=- partner==R-U1-K5.coil.out@1.2
-marker n0 =R-U1-K10.coil.out page=1 set=1 at=72,272 side=USER star=BRANCH partner==R-U1-K11.coil.out@1.2
-marker n0 =R-U1-K5.coil.out page=2 set=1 at=216,272 side=USER star=- partner==R-U1-K4.coil.out@1.1
-marker n0 =R-U1-K8.coil.out page=1 set=1 at=856,272 side=OWNER star=- partner==R-U1-K7.coil.out@1.2
-marker n0 =R-U1-K9.coil.out page=2 set=1 at=360,272 side=USER star=- partner==R-U1-K8.coil.out@1.1
-marker n0 =R-U1-K10.coil.out page=1 set=1 at=72,272 side=OWNER star=- partner==R-U1-K9.coil.out@1.2
-marker n0 =R-U1-K1.coil.out page=2 set=1 at=72,272 side=USER star=BRANCH partner==R-U1-K11.coil.out@1.2
-marker n0 =R-U1-K5.coil.out page=2 set=1 at=216,272 side=USER star=- partner==R-U1-K6.coil.out@1.1
-marker n0 =R-U1-K9.coil.out page=2 set=1 at=360,272 side=USER star=- partner==R-U1-K10.coil.out@1.1
-marker n0 =R-U1-K7.coil.out page=2 set=1 at=856,272 side=USER star=- partner==R-U1-K8.coil.out@1.1
-marker n0 =R-U1-K6.coil.out page=1 set=1 at=360,272 side=OWNER star=- partner==R-U1-K7.coil.out@1.2
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal terminal
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal terminal
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal terminal
+kind =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal terminal
+kind =U1-K1.coil device
+kind =U1-K2.coil device
+kind =U1-K3.coil device
+kind =U1-K4.coil device
+kind =U1-K5.coil device
+kind =U1-K6.coil device
+kind =U1-K7.coil device
+kind =U1-K8.coil device
+kind =U1-K9.coil device
+kind =U1-K10.coil device
+kind =U1-K11.coil device
+kind =U1-K12.coil device
+kind =U1-K13.coil device
+kind =U1-K14.coil device
+kind =U1-K15.coil device
+kind =U1-K16.coil device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal page=1 at=128,32 orient=R0 set=1
+today =3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal page=1 at=712,32 orient=R0 set=1
+today =3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal page=1 at=184,168 orient=R0 set=1
+today =3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal page=1 at=768,168 orient=R0 set=1
+today =U1-K1.coil page=1 at=128,80 orient=R0 set=1
+today =U1-K2.coil page=1 at=712,80 orient=R0 set=1
+today =U1-K3.coil page=1 at=184,216 orient=R0 set=1
+today =U1-K4.coil page=1 at=768,216 orient=R0 set=1
+today =U1-K5.coil page=1 at=304,80 orient=R0 set=1
+today =U1-K6.coil page=1 at=888,80 orient=R0 set=1
+today =U1-K7.coil page=1 at=360,216 orient=R0 set=1
+today =U1-K8.coil page=1 at=944,216 orient=R0 set=1
+today =U1-K9.coil page=1 at=440,80 orient=R0 set=1
+today =U1-K10.coil page=1 at=1024,80 orient=R0 set=1
+today =U1-K11.coil page=1 at=496,216 orient=R0 set=1
+today =U1-K12.coil page=1 at=1080,216 orient=R0 set=1
+today =U1-K13.coil page=1 at=576,80 orient=R0 set=1
+today =U1-K14.coil page=1 at=1160,80 orient=R0 set=1
+today =U1-K15.coil page=1 at=632,216 orient=R0 set=1
+today =U1-K16.coil page=1 at=1216,216 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n0 page=1 set=1 a=- b=- 128,48 576,48
+route n0 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:1.terminal.s b=- 128,40 128,48
+route n0 page=1 set=1 a==U1-K1.coil.in b=- 128,56 128,48
+route n0 page=1 set=1 a==U1-K5.coil.in b=- 304,56 304,48
+route n0 page=1 set=1 a==U1-K9.coil.in b=- 440,56 440,48
+route n0 page=1 set=1 a==U1-K13.coil.in b=- 576,56 576,48
+route n1 page=1 set=1 a=- b=- 712,48 1160,48
+route n1 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:2.terminal.s b=- 712,40 712,48
+route n1 page=1 set=1 a==U1-K2.coil.in b=- 712,56 712,48
+route n1 page=1 set=1 a==U1-K6.coil.in b=- 888,56 888,48
+route n1 page=1 set=1 a==U1-K10.coil.in b=- 1024,56 1024,48
+route n1 page=1 set=1 a==U1-K14.coil.in b=- 1160,56 1160,48
+route n2 page=1 set=1 a=- b=- 184,184 632,184
+route n2 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:3.terminal.s b=- 184,176 184,184
+route n2 page=1 set=1 a==U1-K3.coil.in b=- 184,192 184,184
+route n2 page=1 set=1 a==U1-K7.coil.in b=- 360,192 360,184
+route n2 page=1 set=1 a==U1-K11.coil.in b=- 496,192 496,184
+route n2 page=1 set=1 a==U1-K15.coil.in b=- 632,192 632,184
+route n3 page=1 set=1 a=- b=- 768,184 1216,184
+route n3 page=1 set=1 a==3c12d51896f05e84ad5fd5e04c06a7b5:4.terminal.s b=- 768,176 768,184
+route n3 page=1 set=1 a==U1-K4.coil.in b=- 768,192 768,184
+route n3 page=1 set=1 a==U1-K8.coil.in b=- 944,192 944,184
+route n3 page=1 set=1 a==U1-K12.coil.in b=- 1080,192 1080,184
+route n3 page=1 set=1 a==U1-K16.coil.in b=- 1216,192 1216,184
+route n4 page=1 set=1 a=- b=- 128,120 1160,120
+route n4 page=1 set=1 a==U1-K1.coil.out b=- 128,104 128,120
+route n4 page=1 set=1 a==U1-K2.coil.out b=- 712,104 712,120
+route n4 page=1 set=1 a==U1-K5.coil.out b=- 304,104 304,120
+route n4 page=1 set=1 a==U1-K6.coil.out b=- 888,104 888,120
+route n4 page=1 set=1 a==U1-K9.coil.out b=- 440,104 440,120
+route n4 page=1 set=1 a==U1-K10.coil.out b=- 1024,104 1024,120
+route n4 page=1 set=1 a==U1-K13.coil.out b=- 576,104 576,120
+route n4 page=1 set=1 a==U1-K14.coil.out b=- 1160,104 1160,120
+route n4 page=1 set=1 a=- b=- 184,256 1216,256
+route n4 page=1 set=1 a==U1-K3.coil.out b=- 184,240 184,256
+route n4 page=1 set=1 a==U1-K4.coil.out b=- 768,240 768,256
+route n4 page=1 set=1 a==U1-K7.coil.out b=- 360,240 360,256
+route n4 page=1 set=1 a==U1-K8.coil.out b=- 944,240 944,256
+route n4 page=1 set=1 a==U1-K11.coil.out b=- 496,240 496,256
+route n4 page=1 set=1 a==U1-K12.coil.out b=- 1080,240 1080,256
+route n4 page=1 set=1 a==U1-K15.coil.out b=- 632,240 632,256
+route n4 page=1 set=1 a==U1-K16.coil.out b=- 1216,240 1216,256
+# reference markers of the core: one per printed cross-reference.
+marker f:U1-K1_0_coil_U1/R/K1/fn/coil_A2_port:ece03d39dfd459c798c7123f160fb87f =U1-K14.coil.out page=1 set=1 at=1160,120 side=S star=- partner=-
+marker f:U1-K1_0_coil_U1/R/K1/fn/coil_A2_port:ece03d39dfd459c798c7123f160fb87f =U1-K3.coil.out page=1 set=1 at=184,256 side=S star=- partner=-

@@ -28,7 +28,7 @@ def test_page_plan_groups_list_the_groups_of_the_page_in_order() -> None:
     cols = [column(f"c{i}", f"s{i}") for i in range(1, 5)]
     blocks = tuple(_block(f"b{i}", f"c{i}", g) for i, g in enumerate(groups, 1))
     flow = FlowGraph(tuple(cols), (), (), (), ())
-    prob = PlacementProblem(AREA, tuple(syms), (), facts=Facts())
+    prob = PlacementProblem(AREA, tuple(syms), (), facts=Facts(far_ends=()))
     result = cut_pages(
         (BlockList("u", blocks),),
         flow,
@@ -47,7 +47,7 @@ def test_the_cut_result_carries_the_flow_after_tall_splits() -> None:
     assert [c.id for c in result.flow.columns] == ["c:k00#a", "c:k00#b"]
     assert result.blocks[0].blocks[0].columns == ("c:k00#a", "c:k00#b")
     small = [elem(i, 40, 32) for i in ids]
-    prob = PlacementProblem(AREA, tuple(small), tuple(chain(ids)), facts=Facts())
+    prob = PlacementProblem(AREA, tuple(small), tuple(chain(ids)), facts=Facts(far_ends=()))
     flow = flow_of(prob)
     lists = order_blocks(
         blocks_of(prob),

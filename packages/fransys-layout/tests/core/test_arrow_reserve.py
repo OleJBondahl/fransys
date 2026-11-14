@@ -52,7 +52,7 @@ ArrowMap = dict[tuple[int, str, int], tuple[tuple[int, tuple[PinRef, str]], ...]
 def _env():
     syms = (box_sym(2), poles("L", 2), poles("M", 2))
     nets = (net("n1", "A1.p1", "L.n0", "M.n0"), net("n2", "A1.p2", "L.n1", "M.n1"))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     return env
 

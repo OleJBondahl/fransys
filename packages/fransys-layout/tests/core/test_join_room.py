@@ -24,7 +24,7 @@ def _fold(b_below: int | None):
     """The env, x and column of the fold, and y with b's cell `b_below` lower than the solved y (None: page unsolved)."""
     syms = (elem("src", stand_n="SUPPLY"), elem("a"), elem("b"))
     nets = (net("n1", "src.s", "a.n", "b.n"), net("n2", "a.s", "b.s"))
-    env = env_of(PlacementProblem(AREA, syms, nets, facts=Facts()), OPTIONS)
+    env = env_of(PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=())), OPTIONS)
     x, _ = place_x(env)
     pc = env.pcs[env.flow.columns[0].id]
     y = None
@@ -40,14 +40,15 @@ def _reserved(b_below: int | None) -> int:
     return step_rooms(env, x, y).get((pc.id, 0, 0), 0)
 
 
-def test_a_join_one_grid_apart_reserves_its_turn_row() -> None:
-    """Pins one grid apart leave a stair no row: the step above the join's cell is reserved."""
-    assert _reserved(G) >= G * OPTIONS.jog_lanes
+@pytest.mark.parametrize("apart", [0, G])
+def test_a_join_level_or_one_grid_apart_reserves_its_turn_row(apart: int) -> None:
+    """Pins level or one grid apart leave a stair no row: the step above the join's cell is reserved (R2287 A4)."""
+    assert _reserved(apart) >= G * OPTIONS.jog_lanes
 
 
-@pytest.mark.parametrize("apart", [None, 0, 2 * G, 3 * G])
+@pytest.mark.parametrize("apart", [None, 2 * G, 3 * G])
 def test_a_join_unsolved_level_or_with_a_row_reserves_nothing(apart: int | None) -> None:
-    """An unsolved page reserves none; level pins are one run; pins two or more grids apart already have a row (R456)."""
+    """An unsolved page reserves none; pins two or more grids apart already have a row (R456)."""
     assert _reserved(apart) == 0
 
 

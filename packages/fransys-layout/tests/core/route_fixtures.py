@@ -43,7 +43,7 @@ def jog_stair(*, mirror: bool = False) -> PlacementProblem:
     order = (2, 1, 0) if mirror else (0, 1, 2)
     syms = [elem(f"u{k}", 16) for k in range(3)] + [elem(f"v{k}", 16) for k in range(3)]
     nets = [net(f"j{k}", f"u{k}.s", f"v{k}.n") for k in order]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
@@ -51,7 +51,7 @@ def reversing_pair(perm: Sequence[int] = (2, 1, 0)) -> PlacementProblem:
     syms = [poles(name) for name in ("Q1", "K1", "K2", "M1")]
     nets = [net(f"L{k + 1}", f"Q1.s{k}", f"K1.n{k}", f"K2.n{perm[k]}", bundle=Bundle("bL", k)) for k in range(3)]
     nets += [net(f"T{k + 1}", f"K1.s{k}", f"K2.s{k}", f"M1.n{k}", bundle=Bundle("bT", k)) for k in range(3)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def link_across_box() -> PlacementProblem:
@@ -64,7 +64,7 @@ def two_links_one_gap() -> PlacementProblem:
     rings = (("a", ring_problem()), ("b", ring_problem()))
     syms = tuple(replace(s, id=f"{k}{s.id}") for k, p in rings for s in p.symbols)
     nets = tuple(replace(n, id=f"{k}{n.id}", pins=tuple(replace(r, sym=f"{k}{r.sym}") for r in n.pins)) for k, p in rings for n in p.nets)
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
 
 
 def _wires(routes: Routes) -> list[Wire]:

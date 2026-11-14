@@ -57,7 +57,7 @@ def test_a_single_lane_fan_is_one_plain_line() -> None:
             AREA,
             (poles("A", 1), poles("B", 1), poles("C", 1)),
             (net("n", "A.s0", "B.n0", "C.n0"),),
-            facts=Facts(),
+            facts=Facts(far_ends=()),
         )
     )
     trunk = trunk_of(env, "f:n")

@@ -45,7 +45,7 @@ OPTIONS = core_options(
 def _env():
     syms = (box_sym(1), poles("L", 2))
     nets = (net("n1", "A1.p1", "L.n0"), net("n2", "A1.p1", "L.n1"))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts())
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     return env
 
@@ -72,7 +72,7 @@ def test_a_page_with_no_ref_and_no_anchor_has_no_hangings() -> None:
 
 def _kind_boxes(kind: RefKind, options: Options) -> dict[tuple[str, str, str], tuple[Side, Box]]:
     """For a free symbol's pins n and e: (sym, pin, orient) -> (side, box_rel) of its hanging."""
-    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts())
+    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts(far_ends=()))
     ends = tuple(RefEnd(1, None, PinRef("H", p)) for p in ("n", "e"))
     found = page_hangings([Ref("n1", kind, ends)], prob, options, (1, frozenset()))
     return {key: (hs[0].side, hs[0].box_rel) for key, hs in found.items()}
@@ -130,7 +130,7 @@ def _b2_hangings(options: Options = OPTIONS):
         ref(RefKind.STUB, RefEnd(page, None, pin["w"])),
         ref(RefKind.ARROW, RefEnd(page, None, pin["e"])),
     ]
-    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts(), anchors=(Anchor(pin["n"], POSES),))
+    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts(far_ends=()), anchors=(Anchor(pin["n"], POSES),))
     return prob, refs, page_hangings(refs, prob, options, (page, frozenset({"H"})))
 
 
@@ -177,7 +177,7 @@ def test_a_missing_marker_size_skips_the_marker_but_not_the_anchor() -> None:
 def test_page_hangings_over_a_real_cut_count_the_non_arrow_ends_and_anchors() -> None:
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
     nets = [cut_net("feed", "t0.e", "k1.n", "k2.n", "k3.n")]
-    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
     cut = cut_of_syms(syms, nets, options=OPTIONS)
     envs = page_envs(cut, prob, OPTIONS)
     assert len(envs) == 2
@@ -210,7 +210,7 @@ def test_a_mixed_pins_hanging_stands_at_a_vertical_sibling_and_stays_at_a_horizo
     pin = {k: PinRef("H", k) for k in "news"}
     far = {k: PinRef("F", k) for k in "news"}
     refs = [Ref("n1", RefKind.STUB, (RefEnd(1, None, pin["w"]),))]
-    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts())
+    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts(far_ends=()))
     undrawn = [(pin["w"], far["w"])]
     vertical = stand_pins([*undrawn, (pin["w"], far["e"])], ([(pin["w"], far["e"])], (), ()), prob.symbols)
     placed = page_hangings(refs, prob, OPTIONS, (1, frozenset({"H"})), vertical)
@@ -225,7 +225,7 @@ def test_a_mixed_pin_stands_at_the_first_free_vertical_pin_though_a_horizontal_o
     """R829: with `n` and `w` drawn, `e` (horizontal) comes before `s` in pin order; the stand takes `s`, not the pin itself."""
     pin = {k: PinRef("H", k) for k in "news"}
     far = {k: PinRef("F", k) for k in "news"}
-    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts())
+    prob = PlacementProblem(AREA, (free("H"),), (), facts=Facts(far_ends=()))
     pairs = [(pin["n"], far["n"]), (pin["w"], far["w"])]
     got = stand_pins([*pairs, (pin["w"], far["e"])], (pairs, (), ()), prob.symbols)
     assert got[pin["w"]]["R0"] == pin["s"]

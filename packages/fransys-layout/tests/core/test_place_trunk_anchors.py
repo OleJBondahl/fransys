@@ -33,7 +33,7 @@ def _card_leg(*, anchored: bool, held: tuple[str, ...] = ("A1.p1", "A1.p3")) -> 
     nets = [net("v", "k1.s", "k3.s", *held), net("zero", "A1.p2")]
     pose = Pose("R0", (0, -REACH), Box(-8, -REACH, 16, REACH - 8), (0, -8))
     anchors = (Anchor(PinRef("A1", "p2"), (("N", pose),)),) if anchored else ()
-    return replace(PlacementProblem(AREA, syms, tuple(nets), Facts()), anchors=anchors)
+    return replace(PlacementProblem(AREA, syms, tuple(nets), Facts(far_ends=())), anchors=anchors)
 
 
 def _gap(prob: PlacementProblem, hung: str | None = None) -> int:
@@ -92,7 +92,7 @@ def test_a_frame_members_placed_footprint_is_its_bare_join_grown_by_the_frame_ro
     pose = Pose("R0", (0, -REACH), Box(-8, -REACH, 16, REACH - 8), (0, -8))
     syms = (elem("k1"), elem("k2"))
     nets = (net("v", "k1.s", "k2.n"),)
-    base = replace(PlacementProblem(AREA, syms, nets, Facts()), anchors=(Anchor(PinRef("k1", "n"), (("N", pose),)),))
+    base = replace(PlacementProblem(AREA, syms, nets, Facts(far_ends=())), anchors=(Anchor(PinRef("k1", "n"), (("N", pose),)),))
     room = _ROOM
     got = {}
     for tag, hints in (("bare", Hints()), ("framed", Hints(frames=(("u", frozenset({"k1"})),)))):

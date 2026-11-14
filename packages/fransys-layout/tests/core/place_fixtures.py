@@ -24,7 +24,7 @@ def _coil_card(coils: list[str], coil_width: int, north: int = 0) -> PlacementPr
     """A box with one pin per coil, net c<i> from pin p<i> to the n pin of coil i."""
     syms = [box_sym(len(coils), north), *(elem(k, coil_width) for k in coils)]
     nets = [net(f"c{i}", f"A1.p{i}", f"{k}.n") for i, k in enumerate(coils, 1)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def card_with_coils(n: int = 4, coil_width: int = 96) -> PlacementProblem:
@@ -42,14 +42,14 @@ def row_group_three(group: str | None) -> PlacementProblem:
     hubs = [refit(free(f"h{k}"), row_group=group, footprint=Box(-8, -16 * (k + 1), 16, 16 * (k + 2))) for k in range(3)]
     syms = [*hubs, *(elem(f"e{k}") for k in range(3))]
     nets = [net(f"a{k}", f"h{k}.s", f"e{k}.n") for k in range(3)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def bundle_fan() -> PlacementProblem:
     """One driver M3 feeds three legs M9, M10 and M11 pole by pole, each pole net in bundle bd1."""
     syms = [poles("M3"), poles("M9"), poles("M10"), poles("M11")]
     nets = [net(f"bn{k}", f"M3.s{k}", f"M9.n{k}", f"M10.n{k}", f"M11.n{k}", bundle=Bundle("bd1", k)) for k in range(3)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def wide_row() -> PlacementProblem:
@@ -58,7 +58,7 @@ def wide_row() -> PlacementProblem:
         AREA,
         (elem("wide", 1400), elem("e")),
         (net("w", "wide.s", "e.n"),),
-        facts=Facts(),
+        facts=Facts(far_ends=()),
     )
 
 

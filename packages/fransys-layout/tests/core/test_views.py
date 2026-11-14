@@ -62,7 +62,7 @@ def test_a_missing_view_is_refused_naming_the_symbol() -> None:
 
 
 def test_the_pin_sides_are_the_views_not_a_turn_of_r0() -> None:
-    problem = PlacementProblem(Size(100, 100), (_planted(),), (), facts=Facts())
+    problem = PlacementProblem(Size(100, 100), (_planted(),), (), facts=Facts(far_ends=()))
     sides = pin_sides(problem)
     assert (sides["U", "a", "R0"], sides["U", "a", "R90"], sides["U", "b", "R90"]) == (
         "N",

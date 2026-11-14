@@ -41,7 +41,7 @@ def dual() -> Sym:
 def _problem() -> PlacementProblem:
     syms = (box_sym(4), dual(), elem("k", 84))
     nets = (net("na", "dual.a", "A1.p2"), net("nb", "dual.b", "A1.p1"), net("nk", "A1.p4", "k.n"))
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
 
 
 def _env(options: Options) -> PageEnv:

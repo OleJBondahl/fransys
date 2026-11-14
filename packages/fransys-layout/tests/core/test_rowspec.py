@@ -23,7 +23,7 @@ NONE: frozenset[str] = frozenset[str]()
 
 def world(syms: list[Sym], cols: list[Any]) -> tuple[FlowGraph, PlacementProblem]:
     flow = FlowGraph(tuple(cols), (), (), (), ())
-    return flow, PlacementProblem(AREA, tuple(syms), (), facts=Facts())
+    return flow, PlacementProblem(AREA, tuple(syms), (), facts=Facts(far_ends=()))
 
 
 def test_a_lone_column_measures_its_extent() -> None:

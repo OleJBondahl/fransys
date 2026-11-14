@@ -1,151 +1,214 @@
-# FRANSYS PLACEMENT INSTANCE test_two_three_phase_supplies_with_named_rails__1
+# FRANSYS PLACEMENT INSTANCE t04_two_three_phase
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-sym -Q2.main group=- body=-8,-16,72,32 keepout=-60,-16,138,32
+sym =6ba55eaaf4285a6996571964b28d3162:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =e8c9eae9f72e528b954f2a09d4664b08:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =612d1a8816fe54bdb4e8599b282b01c1:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =6ba55eaaf4285a6996571964b28d3162:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =e8c9eae9f72e528b954f2a09d4664b08:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =612d1a8816fe54bdb4e8599b282b01c1:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =6ba55eaaf4285a6996571964b28d3162:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =e8c9eae9f72e528b954f2a09d4664b08:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =612d1a8816fe54bdb4e8599b282b01c1:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal group=- body=-8,-8,16,16 keepout=-8,-32,64,40
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =F1.element group=- body=-8,-16,12,32 keepout=-64,-24,80,40
+  pin in N 0,-16
+  pin out S 0,16
+sym =F2.element group=- body=-8,-16,12,32 keepout=-64,-24,80,40
+  pin in N 0,-16
+  pin out S 0,16
+sym =F3.element group=- body=-8,-16,12,32 keepout=-64,-24,80,40
+  pin in N 0,-16
+  pin out S 0,16
+sym =Q2.main group=- body=-8,-16,72,32 keepout=-64,-16,144,32
   pin 1.in N 0,-16
   pin 1.out S 0,16
   pin 2.in N 32,-16
   pin 2.out S 32,16
   pin 3.in N 64,-16
   pin 3.out S 64,16
-sym -X1:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X1:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -F3.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
-  pin in N 0,-16
-  pin out S 0,16
-sym -X9:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X0:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X8:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X1:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X8:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X0:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X8:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X0:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -X9:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-sym -F1.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
-  pin in N 0,-16
-  pin out S 0,16
-sym -F2.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
-  pin in N 0,-16
-  pin out S 0,16
-sym -X9:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
-  pin e E 8,0 node=0
-  pin n N 0,-8 node=0
-  pin s S 0,8 node=0
-  pin w W -8,0 node=0
-net n0 [rail rank=5 power=NONE] -F3.element.out -X8:3.terminal.n -X8:3.terminal.s
-net n2 [rail rank=4 power=NONE] -Q2.main.3.in -X1:3.terminal.n -X1:3.terminal.s
-net n3 [rail rank=1 power=NONE] -F1.element.in -X0:1.terminal.n -X0:1.terminal.s
-net n4 [rail rank=0 power=NONE] -Q2.main.1.in -X1:1.terminal.n -X1:1.terminal.s
-net n5 [rail rank=2 power=NONE] -Q2.main.2.out -X9:2.terminal.n -X9:2.terminal.s
-net n6 [rail rank=0 power=NONE] -Q2.main.1.out -X9:1.terminal.n -X9:1.terminal.s
-net n7 [rail rank=5 power=NONE] -F3.element.in -X0:3.terminal.n -X0:3.terminal.s
-net n8 [rail rank=3 power=NONE] -F2.element.in -X0:2.terminal.n -X0:2.terminal.s
-net n9 [rail rank=2 power=NONE] -Q2.main.2.in -X1:2.terminal.n -X1:2.terminal.s
-net n12 [rail rank=3 power=NONE] -F2.element.out -X8:2.terminal.n -X8:2.terminal.s
-net n13 [rail rank=4 power=NONE] -Q2.main.3.out -X9:3.terminal.n -X9:3.terminal.s
-net n14 [rail rank=1 power=NONE] -F1.element.out -X8:1.terminal.n -X8:1.terminal.s
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+net n0 =6ba55eaaf4285a6996571964b28d3162:1.terminal.n =6ba55eaaf4285a6996571964b28d3162:1.terminal.s =F1.element.in
+net n1 =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s =Q2.main.1.in
+net n2 =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.s =F1.element.out
+net n3 =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.s =Q2.main.1.out
+net n4 =6ba55eaaf4285a6996571964b28d3162:2.terminal.n =6ba55eaaf4285a6996571964b28d3162:2.terminal.s =F2.element.in
+net n5 =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s =Q2.main.2.in
+net n6 =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.s =F2.element.out
+net n7 =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.s =Q2.main.2.out
+net n8 =6ba55eaaf4285a6996571964b28d3162:3.terminal.n =6ba55eaaf4285a6996571964b28d3162:3.terminal.s =F3.element.in
+net n9 =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.s =Q2.main.3.in
+net n10 =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.s =F3.element.out
+net n11 =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.s =Q2.main.3.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
 fact boxpin 
-fact head -F3.element -F1.element -F2.element
-fact strip -X1 -X1:3.terminal -X1:2.terminal -X1:1.terminal
-fact strip -X9 -X9:3.terminal -X9:1.terminal -X9:2.terminal
-fact strip -X0 -X0:3.terminal -X0:1.terminal -X0:2.terminal
-fact strip -X8 -X8:1.terminal -X8:3.terminal -X8:2.terminal
+fact attached 
+fact head =6ba55eaaf4285a6996571964b28d3162:3.terminal =F2.element =6ba55eaaf4285a6996571964b28d3162:1.terminal =6ba55eaaf4285a6996571964b28d3162:2.terminal =F1.element =F3.element
+fact strip 6ba55eaaf4285a6996571964b28d3162 =6ba55eaaf4285a6996571964b28d3162:1.terminal =6ba55eaaf4285a6996571964b28d3162:2.terminal =6ba55eaaf4285a6996571964b28d3162:3.terminal
+fact strip e8c9eae9f72e528b954f2a09d4664b08 =e8c9eae9f72e528b954f2a09d4664b08:1.terminal =e8c9eae9f72e528b954f2a09d4664b08:2.terminal =e8c9eae9f72e528b954f2a09d4664b08:3.terminal
+fact strip 612d1a8816fe54bdb4e8599b282b01c1 =612d1a8816fe54bdb4e8599b282b01c1:1.terminal =612d1a8816fe54bdb4e8599b282b01c1:2.terminal =612d1a8816fe54bdb4e8599b282b01c1:3.terminal
+fact strip c1c7fd356cc25ecfa789af02f8aa9441 =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =6ba55eaaf4285a6996571964b28d3162:1.terminal.n =F1.element.in
+fact conductor =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n =F1.element.out
+fact conductor =6ba55eaaf4285a6996571964b28d3162:2.terminal.n =F2.element.in
+fact conductor =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n =F2.element.out
+fact conductor =6ba55eaaf4285a6996571964b28d3162:3.terminal.n =F3.element.in
+fact conductor =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n =F3.element.out
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n =Q2.main.1.in
+fact conductor =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n =Q2.main.1.out
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n =Q2.main.2.in
+fact conductor =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n =Q2.main.2.out
+fact conductor =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.n =Q2.main.3.in
+fact conductor =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n =Q2.main.3.out
+fact conductor =F1.element.in =6ba55eaaf4285a6996571964b28d3162:1.terminal.n
+fact conductor =F2.element.in =6ba55eaaf4285a6996571964b28d3162:2.terminal.n
+fact conductor =F3.element.in =6ba55eaaf4285a6996571964b28d3162:3.terminal.n
+fact conductor =Q2.main.1.in =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n
+fact conductor =Q2.main.2.in =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n
+fact conductor =Q2.main.3.in =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.n
+fact conductor =F1.element.out =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n
+fact conductor =F2.element.out =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n
+fact conductor =F3.element.out =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n
+fact conductor =Q2.main.1.out =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n
+fact conductor =Q2.main.2.out =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n
+fact conductor =Q2.main.3.out =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n
+fact group =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n =Q2.main.3.out
+fact group =Q2.main.1.out =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n
+fact group =F1.element.in =6ba55eaaf4285a6996571964b28d3162:1.terminal.n
+fact group =F2.element.in =6ba55eaaf4285a6996571964b28d3162:2.terminal.n
+fact group =F1.element.out =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n
+fact group =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n =F3.element.out
+fact group =6ba55eaaf4285a6996571964b28d3162:3.terminal.n =F3.element.in
+fact group =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n =F2.element.out
+fact group =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n =Q2.main.1.in
+fact group =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.n =Q2.main.3.in
+fact group =Q2.main.2.out =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n
+fact group =Q2.main.2.in =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n
+fact group =6ba55eaaf4285a6996571964b28d3162:3.terminal.n =6ba55eaaf4285a6996571964b28d3162:3.terminal.s
+fact group =6ba55eaaf4285a6996571964b28d3162:2.terminal.n =6ba55eaaf4285a6996571964b28d3162:2.terminal.s
+fact group =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:3.terminal.s
+fact group =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s
+fact group =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.s
+fact group =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.s
+fact group =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:3.terminal.s
+fact group =6ba55eaaf4285a6996571964b28d3162:1.terminal.n =6ba55eaaf4285a6996571964b28d3162:1.terminal.s
+fact group =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.s
+fact group =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:2.terminal.s
+fact group =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n =612d1a8816fe54bdb4e8599b282b01c1:1.terminal.s
+fact group =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.n =e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s
 # legend only: a general placer must not read a symbol's kind.
-kind -Q2.main contact_no
-kind -X1:3.terminal terminal
-kind -X1:2.terminal terminal
-kind -F3.element protection
-kind -X9:3.terminal terminal
-kind -X0:3.terminal terminal
-kind -X8:1.terminal terminal
-kind -X1:1.terminal terminal
-kind -X8:3.terminal terminal
-kind -X0:1.terminal terminal
-kind -X8:2.terminal terminal
-kind -X0:2.terminal terminal
-kind -X9:1.terminal terminal
-kind -F1.element protection
-kind -F2.element protection
-kind -X9:2.terminal terminal
-# today's placement: page, origin and orientation of each drawn copy.
-today -Q2.main page=1 at=432,216 orient=R0 set=1
-today -X1:3.terminal page=1 at=496,104 orient=R180 set=1
-today -X1:2.terminal page=1 at=464,104 orient=R180 set=1
-today -F3.element page=1 at=328,248 orient=R0 set=1
-today -X9:3.terminal page=1 at=496,328 orient=R0 set=1
-today -X0:3.terminal page=1 at=328,104 orient=R180 set=1
-today -X8:1.terminal page=1 at=72,384 orient=R0 set=1
-today -X1:1.terminal page=1 at=432,104 orient=R180 set=1
-today -X8:3.terminal page=1 at=328,384 orient=R0 set=1
-today -X0:1.terminal page=1 at=72,104 orient=R180 set=1
-today -X8:2.terminal page=1 at=200,384 orient=R0 set=1
-today -X0:2.terminal page=1 at=200,104 orient=R180 set=1
-today -X9:1.terminal page=1 at=432,328 orient=R0 set=1
-today -F1.element page=1 at=72,248 orient=R0 set=1
-today -F2.element page=1 at=200,248 orient=R0 set=1
-today -X9:2.terminal page=1 at=464,328 orient=R0 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n8 page=1 set=1 a=-F2.element.in b=-X0:2.terminal.n 200,232 200,112
-route n7 page=1 set=1 a=-X0:3.terminal.n b=-F3.element.in 328,112 328,232
-route n4 page=1 set=1 a=-X1:1.terminal.n b=-Q2.main.1.in 432,112 432,200
-route n3 page=1 set=1 a=-X0:1.terminal.n b=-F1.element.in 72,112 72,232
-route n12 page=1 set=1 a=-F2.element.out b=-X8:2.terminal.n 200,264 200,376
-route n13 page=1 set=1 a=-X9:3.terminal.n b=-Q2.main.3.out 496,320 496,232
-route n14 page=1 set=1 a=-X8:1.terminal.n b=-F1.element.out 72,376 72,264
-route n0 page=1 set=1 a=-F3.element.out b=-X8:3.terminal.n 328,264 328,376
-route n9 page=1 set=1 a=-Q2.main.2.in b=-X1:2.terminal.n 464,200 464,112
-route n5 page=1 set=1 a=-Q2.main.2.out b=-X9:2.terminal.n 464,232 464,320
-route n2 page=1 set=1 a=-X1:3.terminal.n b=-Q2.main.3.in 496,112 496,200
-route n6 page=1 set=1 a=-Q2.main.1.out b=-X9:1.terminal.n 432,232 432,320
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
+kind =6ba55eaaf4285a6996571964b28d3162:1.terminal terminal
+kind =e8c9eae9f72e528b954f2a09d4664b08:1.terminal terminal
+kind =612d1a8816fe54bdb4e8599b282b01c1:1.terminal terminal
+kind =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal terminal
+kind =6ba55eaaf4285a6996571964b28d3162:2.terminal terminal
+kind =e8c9eae9f72e528b954f2a09d4664b08:2.terminal terminal
+kind =612d1a8816fe54bdb4e8599b282b01c1:2.terminal terminal
+kind =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal terminal
+kind =6ba55eaaf4285a6996571964b28d3162:3.terminal terminal
+kind =e8c9eae9f72e528b954f2a09d4664b08:3.terminal terminal
+kind =612d1a8816fe54bdb4e8599b282b01c1:3.terminal terminal
+kind =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal terminal
+kind =F1.element device
+kind =F2.element device
+kind =F3.element device
+kind =Q2.main device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =6ba55eaaf4285a6996571964b28d3162:1.terminal page=1 at=224,32 orient=R0 set=1
+today =e8c9eae9f72e528b954f2a09d4664b08:1.terminal page=1 at=1040,32 orient=R0 set=1
+today =612d1a8816fe54bdb4e8599b282b01c1:1.terminal page=1 at=224,120 orient=R0 set=1
+today =c1c7fd356cc25ecfa789af02f8aa9441:1.terminal page=1 at=1040,144 orient=R0 set=1
+today =6ba55eaaf4285a6996571964b28d3162:2.terminal page=1 at=496,32 orient=R0 set=1
+today =e8c9eae9f72e528b954f2a09d4664b08:2.terminal page=1 at=1072,32 orient=R0 set=1
+today =612d1a8816fe54bdb4e8599b282b01c1:2.terminal page=1 at=496,120 orient=R0 set=1
+today =c1c7fd356cc25ecfa789af02f8aa9441:2.terminal page=1 at=1072,144 orient=R0 set=1
+today =6ba55eaaf4285a6996571964b28d3162:3.terminal page=1 at=768,32 orient=R0 set=1
+today =e8c9eae9f72e528b954f2a09d4664b08:3.terminal page=1 at=1104,32 orient=R0 set=1
+today =612d1a8816fe54bdb4e8599b282b01c1:3.terminal page=1 at=768,120 orient=R0 set=1
+today =c1c7fd356cc25ecfa789af02f8aa9441:3.terminal page=1 at=1104,144 orient=R0 set=1
+today =F1.element page=1 at=224,72 orient=R0 set=1
+today =F2.element page=1 at=496,72 orient=R0 set=1
+today =F3.element page=1 at=768,72 orient=R0 set=1
+today =Q2.main page=1 at=1040,88 orient=R0 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n0 page=1 set=1 a==6ba55eaaf4285a6996571964b28d3162:1.terminal.s b=- 224,40 224,48
+route n0 page=1 set=1 a==F1.element.in b=- 224,56 224,48
+route n1 page=1 set=1 a==e8c9eae9f72e528b954f2a09d4664b08:1.terminal.s b=- 1040,40 1040,48
+route n5 page=1 set=1 a==e8c9eae9f72e528b954f2a09d4664b08:2.terminal.s b=- 1072,40 1072,56
+route n9 page=1 set=1 a==e8c9eae9f72e528b954f2a09d4664b08:3.terminal.s b=- 1104,40 1104,64
+route n1 page=1 set=1 a==Q2.main.1.in b=- 1040,72 1040,48
+route n5 page=1 set=1 a==Q2.main.2.in b=- 1072,72 1072,56
+route n9 page=1 set=1 a==Q2.main.3.in b=- 1104,72 1104,64
+route n2 page=1 set=1 a==F1.element.out b=- 224,88 224,104
+route n2 page=1 set=1 a==612d1a8816fe54bdb4e8599b282b01c1:1.terminal.n b=- 224,112 224,104
+route n3 page=1 set=1 a==Q2.main.1.out b=- 1040,104 1040,112
+route n7 page=1 set=1 a==Q2.main.2.out b=- 1072,104 1072,120
+route n11 page=1 set=1 a==Q2.main.3.out b=- 1104,104 1104,128
+route n3 page=1 set=1 a==c1c7fd356cc25ecfa789af02f8aa9441:1.terminal.n b=- 1040,136 1040,112
+route n7 page=1 set=1 a==c1c7fd356cc25ecfa789af02f8aa9441:2.terminal.n b=- 1072,136 1072,120
+route n11 page=1 set=1 a==c1c7fd356cc25ecfa789af02f8aa9441:3.terminal.n b=- 1104,136 1104,128
+route n4 page=1 set=1 a==6ba55eaaf4285a6996571964b28d3162:2.terminal.s b=- 496,40 496,48
+route n4 page=1 set=1 a==F2.element.in b=- 496,56 496,48
+route n6 page=1 set=1 a==F2.element.out b=- 496,88 496,104
+route n6 page=1 set=1 a==612d1a8816fe54bdb4e8599b282b01c1:2.terminal.n b=- 496,112 496,104
+route n8 page=1 set=1 a==6ba55eaaf4285a6996571964b28d3162:3.terminal.s b=- 768,40 768,48
+route n8 page=1 set=1 a==F3.element.in b=- 768,56 768,48
+route n10 page=1 set=1 a==F3.element.out b=- 768,88 768,104
+route n10 page=1 set=1 a==612d1a8816fe54bdb4e8599b282b01c1:3.terminal.n b=- 768,112 768,104
+# reference markers of the core: one per printed cross-reference.

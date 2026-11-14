@@ -39,7 +39,7 @@ def test_mated_pins_share_a_y_through_the_stages() -> None:
     """p.s and q.n meet at one y, read from the placed pins; without the mate they differ."""
     prob = fx.mate_columns()
     held = all_pins(placed_of(prob))
-    free = all_pins(placed_of(replace(prob, facts=Facts())))
+    free = all_pins(placed_of(replace(prob, facts=Facts(far_ends=()))))
     assert held[("p", "s")][1] == held[("q", "n")][1]
     assert free[("p", "s")][1] != free[("q", "n")][1]
 

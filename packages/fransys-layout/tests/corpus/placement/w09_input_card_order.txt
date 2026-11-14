@@ -1,44 +1,30 @@
-# FRANSYS PLACEMENT INSTANCE test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order__2
-# sides: half split of fransys_el; today and route lines as exported
+# FRANSYS PLACEMENT INSTANCE w09_input_card_order
 # Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
 # symbol origin, at orientation R0. A pin's side is the way its wire leaves.
 # [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
 # higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
 area 1312 854
-group B1 order=0 "Block 1"
-group B2 order=1 "Block 2"
-group B3 order=2 "Block 3"
-group B4 order=3 "Block 4"
-group B5 order=4 "Block 5"
-group B6 order=5 "Block 6"
-group G0 order=6 "PLC inputs"
-sym =B2+CAB-S2.no group=B2 body=-8,-16,8,32 keepout=-60,-16,74,32
+group B1 order=0 "B1"
+group B2 order=1 "B2"
+group B3 order=2 "B3"
+group B4 order=3 "B4"
+group B5 order=4 "B5"
+group B6 order=5 "B6"
+group G0 order=6 "G0"
+sym =A1.1 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =B3+CAB-S3.no group=B3 body=-8,-16,8,32 keepout=-60,-16,74,32
+sym =A1.2 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =B6+CAB-S6.no group=B6 body=-8,-16,8,32 keepout=-60,-16,74,32
+sym =A1.3 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =B1+CAB-S1.no group=B1 body=-8,-16,8,32 keepout=-60,-16,74,32
+sym =A1.4 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =B4+CAB-S4.no group=B4 body=-8,-16,8,32 keepout=-60,-16,74,32
+sym =A1.5 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =B5+CAB-S5.no group=B5 body=-8,-16,8,32 keepout=-60,-16,74,32
+sym =A1.6 group=- body=-8,-16,16,32 keepout=-72,-16,88,32
   pin in N 0,-16
-  pin out S 0,16
-sym =G0+CAB-K1.item group=G0 body=-16,-16,224,32 keepout=-16,-16,276,32
+sym =K1.di_1 group=G0 body=-16,-16,224,32 keepout=-16,-16,280,32
   pin di_1.1 N 0,-16
-  pin di_10.10 S 96,16
-  pin di_11.11 S 112,16
-  pin di_12.12 S 128,16
-  pin di_13.13 S 144,16
-  pin di_14.14 S 160,16
-  pin di_15.15 S 176,16
-  pin di_16.16 S 192,16
   pin di_2.2 N 16,-16
   pin di_3.3 N 32,-16
   pin di_4.4 S 0,16
@@ -47,81 +33,127 @@ sym =G0+CAB-K1.item group=G0 body=-16,-16,224,32 keepout=-16,-16,276,32
   pin di_7.7 S 48,16
   pin di_8.8 S 64,16
   pin di_9.9 S 80,16
-sym +CAB-A1.item group=- body=-16,-16,128,32 keepout=-16,-16,180,32
-  pin supply_field.F24V1 N 0,-16
-  pin supply_field.FGND1 S 0,16
-  pin supply_system.S24V S 32,16
-  pin supply_system.SGND S 64,16
-sym +CAB-A1.connector group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin di_10.10 S 96,16
+  pin di_11.11 S 112,16
+  pin di_12.12 S 128,16
+  pin di_13.13 S 144,16
+  pin di_14.14 S 160,16
+  pin di_15.15 S 176,16
+  pin di_16.16 S 192,16
+sym =S1.no group=B1 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-sym +CAB-A1.connector#2 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =S2.no group=B2 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-sym +CAB-A1.connector#3 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =S3.no group=B3 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-sym +CAB-A1.connector#4 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =S4.no group=B4 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-sym +CAB-A1.connector#5 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =S5.no group=B5 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-sym +CAB-A1.connector#6 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin out S 0,16
+sym =S6.no group=B6 body=-8,-16,8,32 keepout=-64,-16,80,32
   pin in N 0,-16
-net n0 +CAB-A1.connector.in =B1+CAB-S1.no.in
-net n2 +CAB-A1.connector#6.in =B5+CAB-S5.no.in
-net n3 +CAB-A1.connector#2.in =B6+CAB-S6.no.in
-net n4 =B5+CAB-S5.no.out =G0+CAB-K1.item.di_5.5
-net n5 =B1+CAB-S1.no.out =G0+CAB-K1.item.di_1.1
-net n7 =B3+CAB-S3.no.out =G0+CAB-K1.item.di_3.3
-net n9 =B2+CAB-S2.no.out =G0+CAB-K1.item.di_2.2
-net n12 +CAB-A1.connector#4.in =B4+CAB-S4.no.in
-net n13 +CAB-A1.connector#3.in =B2+CAB-S2.no.in
-net n18 =B6+CAB-S6.no.out =G0+CAB-K1.item.di_6.6
-net n21 +CAB-A1.connector#5.in =B3+CAB-S3.no.in
-net n22 =B4+CAB-S4.no.out =G0+CAB-K1.item.di_4.4
-# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
-fact item +CAB-A1.item +CAB-A1.connector +CAB-A1.connector#2 +CAB-A1.connector#3 +CAB-A1.connector#4 +CAB-A1.connector#5 +CAB-A1.connector#6
+  pin out S 0,16
+net n0 =A1.1.in =S1.no.in
+net n1 =A1.2.in =S2.no.in
+net n2 =A1.3.in =S3.no.in
+net n3 =A1.4.in =S4.no.in
+net n4 =A1.5.in =S5.no.in
+net n5 =A1.6.in =S6.no.in
+net n6 =K1.di_1.di_1.1 =S1.no.out
+net n7 =K1.di_1.di_2.2 =S2.no.out
+net n8 =K1.di_1.di_3.3 =S3.no.out
+net n9 =K1.di_1.di_4.4 =S4.no.out
+net n10 =K1.di_1.di_5.5 =S5.no.out
+net n11 =K1.di_1.di_6.6 =S6.no.out
+# facts: not wires. 'item' = symbols that are parts of one device (coil and contacts).
+fact item =A1.1 =A1.2 =A1.3 =A1.4 =A1.5 =A1.6
 # facts the placement rules read: box pins on a PLC channel, coils attached to them,
 # fan heads (protective devices), terminals by strip tag.
-fact boxpin =G0+CAB-K1.item.di_1.1 =G0+CAB-K1.item.di_5.5 =G0+CAB-K1.item.di_9.9 =G0+CAB-K1.item.di_2.2 =G0+CAB-K1.item.di_8.8 =G0+CAB-K1.item.di_13.13 =G0+CAB-K1.item.di_10.10 =G0+CAB-K1.item.di_15.15 =G0+CAB-K1.item.di_14.14 =G0+CAB-K1.item.di_4.4 =G0+CAB-K1.item.di_7.7 =G0+CAB-K1.item.di_11.11 =G0+CAB-K1.item.di_16.16 =G0+CAB-K1.item.di_6.6 =G0+CAB-K1.item.di_3.3 =G0+CAB-K1.item.di_12.12
+fact boxpin =K1.di_1.di_1.1 =K1.di_1.di_2.2 =K1.di_1.di_3.3 =K1.di_1.di_4.4 =K1.di_1.di_5.5 =K1.di_1.di_6.6 =K1.di_1.di_7.7 =K1.di_1.di_8.8 =K1.di_1.di_9.9 =K1.di_1.di_10.10 =K1.di_1.di_11.11 =K1.di_1.di_12.12 =K1.di_1.di_13.13 =K1.di_1.di_14.14 =K1.di_1.di_15.15 =K1.di_1.di_16.16
+fact attached =S5.no =S6.no =S3.no =S1.no =S4.no =S2.no
+fact head 
+# conductors (one line per ordered pair of pins a wire joins) and part joins (the pins one group holds).
+fact conductors
+fact conductor =S1.no.in =A1.1.in
+fact conductor =S2.no.in =A1.2.in
+fact conductor =S3.no.in =A1.3.in
+fact conductor =S4.no.in =A1.4.in
+fact conductor =S5.no.in =A1.5.in
+fact conductor =S6.no.in =A1.6.in
+fact conductor =S1.no.out =K1.di_1.di_1.1
+fact conductor =S2.no.out =K1.di_1.di_2.2
+fact conductor =S3.no.out =K1.di_1.di_3.3
+fact conductor =S4.no.out =K1.di_1.di_4.4
+fact conductor =S5.no.out =K1.di_1.di_5.5
+fact conductor =S6.no.out =K1.di_1.di_6.6
+fact conductor =A1.1.in =S1.no.in
+fact conductor =K1.di_1.di_1.1 =S1.no.out
+fact conductor =A1.2.in =S2.no.in
+fact conductor =K1.di_1.di_2.2 =S2.no.out
+fact conductor =A1.3.in =S3.no.in
+fact conductor =K1.di_1.di_3.3 =S3.no.out
+fact conductor =A1.4.in =S4.no.in
+fact conductor =K1.di_1.di_4.4 =S4.no.out
+fact conductor =A1.5.in =S5.no.in
+fact conductor =K1.di_1.di_5.5 =S5.no.out
+fact conductor =A1.6.in =S6.no.in
+fact conductor =K1.di_1.di_6.6 =S6.no.out
+fact group =K1.di_1.di_2.2 =S2.no.out
+fact group =S1.no.out =K1.di_1.di_1.1
+fact group =S2.no.in =A1.2.in
+fact group =S6.no.in =A1.6.in
+fact group =K1.di_1.di_3.3 =S3.no.out
+fact group =A1.5.in =S5.no.in
+fact group =S6.no.out =K1.di_1.di_6.6
+fact group =S4.no.in =A1.4.in
+fact group =A1.3.in =S3.no.in
+fact group =K1.di_1.di_4.4 =S4.no.out
+fact group =A1.1.in =S1.no.in
+fact group =K1.di_1.di_5.5 =S5.no.out
 # legend only: a general placer must not read a symbol's kind.
-kind =B2+CAB-S2.no switch
-kind =B3+CAB-S3.no switch
-kind =B6+CAB-S6.no switch
-kind =B1+CAB-S1.no switch
-kind =B4+CAB-S4.no switch
-kind =B5+CAB-S5.no switch
-kind =G0+CAB-K1.item item
-kind +CAB-A1.item item
-kind +CAB-A1.connector connector
-kind +CAB-A1.connector#2 connector
-kind +CAB-A1.connector#3 connector
-kind +CAB-A1.connector#4 connector
-kind +CAB-A1.connector#5 connector
-kind +CAB-A1.connector#6 connector
-# today's placement: page, origin and orientation of each drawn copy.
-today =B2+CAB-S2.no page=1 at=48,232 orient=R0 set=1
-today =B3+CAB-S3.no page=1 at=192,232 orient=R0 set=1
-today =B6+CAB-S6.no page=1 at=624,232 orient=R0 set=1
-today =B1+CAB-S1.no page=1 at=768,232 orient=R0 set=1
-today =B4+CAB-S4.no page=1 at=336,232 orient=R0 set=1
-today =B5+CAB-S5.no page=1 at=480,232 orient=R0 set=1
-today =G0+CAB-K1.item page=1 at=768,352 orient=R0 set=1
-today +CAB-A1.item page=1 at=1024,112 orient=R0 set=1
-today +CAB-A1.connector page=1 at=768,112 orient=R180 set=1
-today +CAB-A1.connector#2 page=1 at=624,112 orient=R180 set=1
-today +CAB-A1.connector#3 page=1 at=48,112 orient=R180 set=1
-today +CAB-A1.connector#4 page=1 at=336,112 orient=R180 set=1
-today +CAB-A1.connector#5 page=1 at=192,112 orient=R180 set=1
-today +CAB-A1.connector#6 page=1 at=480,112 orient=R180 set=1
-# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
-route n5 page=1 set=1 a==G0+CAB-K1.item.di_1.1 b==B1+CAB-S1.no.out 768,336 768,248
-route n18 page=1 set=1 a==B6+CAB-S6.no.out b==G0+CAB-K1.item.di_6.6 624,248 624,304 848,304 848,336
-route n13 page=1 set=1 a==B2+CAB-S2.no.in b=+CAB-A1.connector#3.in 48,216 48,128
-route n7 page=1 set=1 a==B3+CAB-S3.no.out b==G0+CAB-K1.item.di_3.3 192,248 192,320 800,320 800,336
-route n0 page=1 set=1 a=+CAB-A1.connector.in b==B1+CAB-S1.no.in 768,128 768,216
-route n21 page=1 set=1 a==B3+CAB-S3.no.in b=+CAB-A1.connector#5.in 192,216 192,128
-route n4 page=1 set=1 a==B5+CAB-S5.no.out b==G0+CAB-K1.item.di_5.5 480,248 480,312 832,312 832,336
-route n22 page=1 set=1 a==G0+CAB-K1.item.di_4.4 b==B4+CAB-S4.no.out 816,336 816,272 336,272 336,248
-route n9 page=1 set=1 a==G0+CAB-K1.item.di_2.2 b==B2+CAB-S2.no.out 784,336 784,264 48,264 48,248
-route n12 page=1 set=1 a==B4+CAB-S4.no.in b=+CAB-A1.connector#4.in 336,216 336,128
-route n3 page=1 set=1 a=+CAB-A1.connector#2.in b==B6+CAB-S6.no.in 624,128 624,216
-route n2 page=1 set=1 a==B5+CAB-S5.no.in b=+CAB-A1.connector#6.in 480,216 480,128
-# today's reference markers: one per printed cross-reference (net, pin, page, place).
+kind =A1.1 plc_module
+kind =A1.2 plc_module
+kind =A1.3 plc_module
+kind =A1.4 plc_module
+kind =A1.5 plc_module
+kind =A1.6 plc_module
+kind =K1.di_1 plc_module
+kind =S1.no device
+kind =S2.no device
+kind =S3.no device
+kind =S4.no device
+kind =S5.no device
+kind =S6.no device
+# placement of the core: page, origin and orientation of each placed symbol.
+today =A1.1 page=1 at=392,40 orient=R180 set=1
+today =A1.2 page=1 at=536,40 orient=R180 set=1
+today =A1.3 page=1 at=680,40 orient=R180 set=1
+today =A1.4 page=1 at=400,200 orient=R0 set=1
+today =A1.5 page=1 at=544,200 orient=R0 set=1
+today =A1.6 page=1 at=688,200 orient=R0 set=1
+today =K1.di_1 page=1 at=344,120 orient=R0 set=1
+today =S1.no page=1 at=392,80 orient=R0 set=1
+today =S2.no page=1 at=536,80 orient=R0 set=1
+today =S3.no page=1 at=680,80 orient=R0 set=1
+today =S4.no page=1 at=400,160 orient=R180 set=1
+today =S5.no page=1 at=544,160 orient=R180 set=1
+today =S6.no page=1 at=688,160 orient=R180 set=1
+# routes of the core: one polyline per line, vertices in order from a to b.
+route n0 page=1 set=1 a==A1.1.in b==S1.no.in 392,56 392,64
+route n6 page=1 set=1 a==K1.di_1.di_1.1 b==S1.no.out 392,104 392,96
+route n1 page=1 set=1 a==A1.2.in b==S2.no.in 536,56 536,64
+route n7 page=1 set=1 a==K1.di_1.di_2.2 b==S2.no.out 536,104 536,96
+route n2 page=1 set=1 a==A1.3.in b==S3.no.in 680,56 680,64
+route n8 page=1 set=1 a==K1.di_1.di_3.3 b==S3.no.out 680,104 680,96
+route n3 page=1 set=1 a==S4.no.in b==A1.4.in 400,176 400,184
+route n9 page=1 set=1 a==K1.di_1.di_4.4 b==S4.no.out 400,136 400,144
+route n4 page=1 set=1 a==S5.no.in b==A1.5.in 544,176 544,184
+route n10 page=1 set=1 a==K1.di_1.di_5.5 b==S5.no.out 544,136 544,144
+route n5 page=1 set=1 a==S6.no.in b==A1.6.in 688,176 688,184
+route n11 page=1 set=1 a==K1.di_1.di_6.6 b==S6.no.out 688,136 688,144
+# reference markers of the core: one per printed cross-reference.

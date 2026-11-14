@@ -127,11 +127,12 @@ def _row_constraints(g: Graph, r: int, env: PageEnv) -> None:
     g.at_least(f"row:{r}", env.options.top_headroom)
 
 
-def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, *, above: bool, slack: bool = False) -> None:
+def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], hang: tuple[bool, bool]) -> None:
     """An attached column hangs wire_min under the box's S edge, or stands over its N edge.
 
-    A `slack` column hangs at least that far: a trunk of a foreign fan runs between it and the box.
+    `hang` is (above, slack): a `slack` column hangs at least that far, a trunk of a foreign fan runs between it and the box.
     """
+    above, slack = hang
     box = env.attach[pc.id][0]
     body, cells = env.syms[box].body, pc.lanes[0]
     if above:
@@ -141,7 +142,8 @@ def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, *, above: bool, slack: b
     else:
         dy = _pin_y(env, cells[0], cells[0].top_pin)
         fp = env.syms[box].footprint
-        wire = grid_up(_box_gap(env, cells[0], above=False, dy=dy) + fp.y + fp.h - body.y - body.h, env.options.wiring_grid)
+        room = max((rooms.get((pc.id, li, -1), 0) for li in range(len(pc.lanes))), default=0)  # a join on the head's top pin bends in this gap
+        wire = grid_up(max(_box_gap(env, cells[0], above=False, dy=dy) + fp.y + fp.h - body.y - body.h, room), env.options.wiring_grid)
         at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + wire - dy
         g.after(*at) if slack else g.equal(*at)
 
@@ -163,7 +165,7 @@ def _row_graph(g: Graph, r: int, env: PageEnv, rooms: Mapping[Step, int], free: 
         above = col in env.attach and box_edge(env.blocks, row, *env.attach[col][:2]) == "N"
         stack_constraints(g, env.pcs[col], env, rooms, rigid=above and col not in loose)
         if col in env.attach:
-            _attach_y(g, env.pcs[col], env, above=above, slack=col in slack)
+            _attach_y(g, env.pcs[col], env, rooms, (above, col in slack))
     for b in row.blocks:
         if env.blocks[b].is_card:
             box = env.blocks[b].anchor or ""

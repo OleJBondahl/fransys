@@ -20,7 +20,7 @@ from .text_fixtures import leaving
 
 def _drawn(*, cut: bool):
     lone = replace(net("m", "x.s"), cut=(CutEnd(PinRef("x", "s")),) if cut else ())
-    prob = PlacementProblem(AREA, (elem("x"),), (lone,), facts=Facts(**leaving(PinRef("x", "s"))) if cut else Facts())
+    prob = PlacementProblem(AREA, (elem("x"),), (lone,), facts=Facts(**leaving(PinRef("x", "s"))) if cut else Facts(far_ends=()))
     opts = core_options(
         marker=MARKER,
     )

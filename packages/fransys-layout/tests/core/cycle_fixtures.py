@@ -21,7 +21,7 @@ def ring_problem(extra: int = 0) -> PlacementProblem:
         net(f"n{k + 4}", "d.s", "lamp.n"),
     ]
     names = (*chain, "b", "c", "d", "s")
-    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets), facts=Facts())
+    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets), facts=Facts(far_ends=()))
 
 
 def acyclic_problem() -> PlacementProblem:
@@ -33,4 +33,4 @@ def acyclic_problem() -> PlacementProblem:
         net("f1", "a.s", "b.n"),
         net("f2", "b.s", "s.s", "c.n"),
     )
-    return PlacementProblem(AREA, syms, nets, facts=Facts())
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))

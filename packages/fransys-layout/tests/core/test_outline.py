@@ -83,7 +83,7 @@ def _opts(**given: Any) -> Options:
 
 def _frames(*syms: Placed, members: tuple[str, ...] = ("a", "b"), area: Size = _AREA) -> tuple[tuple[Outline, ...], tuple[Finding, ...]]:
     placement = Placement((PagePlacement(1, syms, (), (), (), ()),))
-    problem = PlacementProblem(area, (), (), Facts(), Hints(frames=(("u", frozenset(members)),)))
+    problem = PlacementProblem(area, (), (), Facts(far_ends=()), Hints(frames=(("u", frozenset(members)),)))
     return unit_hulls(
         placement,
         problem,
@@ -134,7 +134,7 @@ def _sym(sid: str) -> Sym:
 
 
 def test_a_member_symbol_holds_the_margin_and_the_label_room_only():
-    problem = PlacementProblem(_AREA, (_sym("a"), _sym("z")), (), Facts(), Hints(frames=(("u", frozenset({"a"})),)))
+    problem = PlacementProblem(_AREA, (_sym("a"), _sym("z")), (), Facts(far_ends=()), Hints(frames=(("u", frozenset({"a"})),)))
     a, z = framed(problem, _opts(outline=_ROOM)).symbols
     assert (a.footprint, a.row_footprint, z.footprint) == (Box(-12, -10, 24, 46), Box(-12, -10, 24, 46), Box(-8, 0, 16, 32))
     assert framed(problem, _opts()) is problem

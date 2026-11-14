@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from route_oracle import _on
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 OLD_ENGINE_DOTS = 2
-MEETING_WIRES = 2  # a dot sits where at least two drawn wires end
 
 
 def _seal_in(cover: Path) -> tuple[fr.Design, Any]:
@@ -36,8 +36,8 @@ def test_a_seal_in_core_build_has_the_old_engines_junction_count(tmp_path: Path)
     pages = drawn_pages(result.model)
     dots = [(page, s) for page, d in pages.items() for s in d.symbols if s.key == "junction-dot"]
     assert len(dots) == OLD_ENGINE_DOTS
+    # the dots stand on the jog T and the B1 J-star (R2287): one wire passes through, another bends or ends there; two wires meet
     for page, dot in dots:
-        ends = [(w.points[i][0], w.points[i][1]) for w in pages[page].wires for i in (0, -1)]
-        assert ends.count((dot.x, dot.y)) >= MEETING_WIRES
+        assert sum(any(_on((dot.x, dot.y), a, b) for a, b in zip(w.points, w.points[1:], strict=False)) for w in pages[page].wires) >= 2
     written = fr.write(result, tmp_path / "out", intermediates=tmp_path / "mid")
     assert [p for p in written if p.suffix == ".pdf"]

@@ -176,13 +176,16 @@ class Unit:
 
 @dataclass(frozen=True, slots=True)
 class Facts:
-    """Problem facts: groups kept whole, units, mated pins, series, page-free far ends, the model's required pin groups."""
+    """Problem facts: groups kept whole, units, mated pins, series, page-free far ends, the model's required pin groups.
+
+    `far_ends` has no default: a problem states its conductors (`far_ends=()` when it has none), so a missing fact is a TypeError naming the field.
+    """
 
     keep_whole: tuple[frozenset[str], ...] = ()
     units: tuple[Unit, ...] = ()
     mates: tuple[tuple[PinRef, PinRef], ...] = ()
     series: tuple[Series, ...] = ()
-    far_ends: tuple[tuple[PinRef, PinRef], ...] = ()
+    far_ends: tuple[tuple[PinRef, PinRef], ...] = field(kw_only=True)
     groups: tuple[tuple[PinRef, ...], ...] = ()
 
 

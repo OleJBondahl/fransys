@@ -66,11 +66,6 @@ def overview_fold_line_text(line: FoldLine) -> str:
     return line.label or overview_lifted_text(line.kind, (), line.count)
 
 
-def overview_fold_stub_text(model: Model, unit: Id[Unit], stub: FoldStub) -> str:
-    """The text of the line to a folded stub: its carrier relative to `unit`, else the count."""
-    return overview_end_text(model, unit, stub.kind, stub.via, stub.count)
-
-
 def overview_closed_text(count: int) -> str:
     """The text of a line to a closed fold (`closed_fold`) of `count` connections: `x N`."""
     return f"x {count}"

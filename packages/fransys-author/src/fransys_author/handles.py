@@ -265,7 +265,7 @@ class Terminal:
     if not TYPE_CHECKING:
 
         def __getattr__(self, name: str) -> None:
-            """Raise the removed-name text for `limits`; any other missing name is a plain AttributeError."""
+            """Raise the AttributeError for a missing name."""
             refuse("Terminal", name)
 
     @property

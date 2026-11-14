@@ -65,7 +65,6 @@ from .page_slices import page_slice
 from .paper import PaperChoice, paper_choice, sheet_format_record
 from .results import (
     POWER_SLOT,
-    CrossReferencePartner,
     DrawingSet,
     LinkMarker,
     MarkerPair,
@@ -79,7 +78,6 @@ from .tables import (
     derived_layout_ids,
     layout_of,
     profile_of,
-    profile_of_page,
     sheet_for,
     sheet_format_of,
     tuning_of,
@@ -97,7 +95,6 @@ __all__ = [
     "SHEET_KINDS",
     "BoxKey",
     "Corner",
-    "CrossReferencePartner",
     "DesignationForm",
     "DrawingLibrary",
     "DrawingSet",
@@ -155,7 +152,6 @@ __all__ = [
     "page_slice",
     "paper_choice",
     "profile_of",
-    "profile_of_page",
     "ref_token",
     "sheet_for",
     "sheet_format_of",

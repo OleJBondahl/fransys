@@ -1,6 +1,5 @@
 """Vocabulary: type-level kinds declared on a `Part` (design/vocabulary.md 6, "Type level"; 7)."""
 
-import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.elecdef import LinkKind, PinRole, Side
@@ -139,8 +138,7 @@ class PortTemplate:
     pin_role: PinRole | None = None
     side: Side | None = None
     conductor_mark: ConductorMark | None = None
-    # KI-872: omit_none breaks "canonical JSON writes every value" (BOX-SIDE-OMIT-NONE)
-    source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
+    source_row: WiringRow | None = None
     joins: Id[PortTemplate] | None = None
     connector: Id[FunctionTemplate] | None = None
     connector_pin: str | None = None

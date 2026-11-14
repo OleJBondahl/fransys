@@ -148,8 +148,7 @@ def _fields(cls: type, item: frozendict[str, Any], what: str) -> dict[str, Any]:
     annotations = annotations_of(cls)
     fields = fields_of(cls)
     names = {field.name for field in fields}
-    optional = {field.name for field in fields if field.metadata.get("omit_none")}
-    unknown, missing = sorted(set(item) - names), sorted(names - optional - set(item))
+    unknown, missing = sorted(set(item) - names), sorted(names - set(item))
     if unknown or missing:
         msg = f"{what}: unknown fields {unknown}, missing fields {missing}"
         raise SchemaError(msg, kind=what)

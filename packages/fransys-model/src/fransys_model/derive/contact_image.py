@@ -11,11 +11,10 @@ from fransys_model.derive.contact_entries import (
 )
 from fransys_model.derive.contacts import owned_contacts
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.tag_text import item_tag_text
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.vocab.tables import functions
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Function, Item, Unit
+lazy from fransys_model.vocab.core import Function
 
 CONTACTS_HEADED = "contacts.headed"  # a contact table sharing its column foot: heading line (0170)
 
@@ -37,14 +36,6 @@ def table_contacts(model: Model, function: Id[Function]) -> tuple[Id[Function], 
     if function_role(model, function).operator:
         return owned_contacts(model, functions(model)[function].item)
     return ()
-
-
-def coil_heading(model: Model, coil: Id[Item], *, unit: Id[Unit] | None = None) -> str:
-    """The heading line of the contact table of item `coil`: layout measures it first.
-
-    It is the coil's own tag in the set drawn (`unit`), so heading and coil read the same.
-    """
-    return item_tag_text(model, coil, unit=unit)
 
 
 def contact_marks(model: Model, function: Id[Function]) -> tuple[list[str], list[str]]:

@@ -62,8 +62,6 @@ class FieldInfo:
     fields: tuple[dataclasses.Field[Any], ...]
     names: tuple[str, ...]
     annotations: dict[str, Any]
-    omit_none: frozenset[str] = frozenset()
-    """Fields declared with `metadata={"omit_none": True}`: written only when not `None`."""
 
 
 def field_info(cls: type) -> FieldInfo:
@@ -73,7 +71,6 @@ def field_info(cls: type) -> FieldInfo:
         fields=fields,
         names=tuple(sorted(field.name for field in fields)),
         annotations=annotations_of(cls),
-        omit_none=frozenset(f.name for f in fields if f.metadata.get("omit_none")),
     )
 
 

@@ -58,4 +58,4 @@ def read(syms: list[Sym], nets: list[Net]) -> Read:
 
 def box(sym_id: str) -> Sym:
     """A box symbol with pins n (N side) and s (S side)."""
-    return replace(elem(sym_id), box=BoxSpec(("n", "s"), 16, 16))
+    return replace(elem(sym_id), box=BoxSpec(("n", "s"), 16))

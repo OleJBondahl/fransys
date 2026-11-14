@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 31,
+  "schema_version": 32,
   "tables": {
     "aspect_node": [
       {
@@ -886,6 +886,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:b1578ce20f9053c1b9f6ff97863ffb33"
       },
       {
@@ -903,6 +904,7 @@
         "marking": null,
         "name": "PE",
         "pin_role": "PE",
+        "source_row": null,
         "template": "port_template:2244dca59b085c3d9e8dc634d55af4a4"
       },
       {
@@ -920,6 +922,7 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:91c40786b3db51daac25049668af1135"
       },
       {
@@ -938,6 +941,7 @@
         "marking": null,
         "name": "A1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:e78955861141585cbb7173ce07bfbb7c"
       },
       {
@@ -953,6 +957,7 @@
         "marking": null,
         "name": "signal",
         "pin_role": null,
+        "source_row": null,
         "template": null
       },
       {
@@ -970,6 +975,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:dea50ecb18415f4daec73366d9f043dd"
       },
       {
@@ -987,6 +993,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:ab51b55467c0521893398a0b00b557c5"
       },
       {
@@ -1005,6 +1012,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:fccfdea4485c5403a7e82780aa6f7d7e"
       },
       {
@@ -1022,6 +1030,7 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:26a9e6856d2553ed8b8414cfca3d433d"
       },
       {
@@ -1039,6 +1048,7 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:52438f45c0315adfaccbec4aa210f8dc"
       },
       {
@@ -1057,6 +1067,7 @@
         "marking": null,
         "name": "A2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:68e535e74e0056bd8717516e9926aab5"
       },
       {
@@ -1075,6 +1086,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:d89733e355525e7ca660e66b9e9f0570"
       },
       {
@@ -1092,6 +1104,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:2a692e78c20b524f99dc584f025ca4e9"
       },
       {
@@ -1109,6 +1122,7 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:d130fa823b7659fea851d8283e56d9a4"
       },
       {
@@ -1127,6 +1141,7 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:01cd9469cbbc5dd4b5e181d62af2942d"
       },
       {
@@ -1142,6 +1157,7 @@
         "marking": null,
         "name": "signal",
         "pin_role": null,
+        "source_row": null,
         "template": null
       },
       {
@@ -1157,6 +1173,7 @@
         "marking": null,
         "name": "signal",
         "pin_role": null,
+        "source_row": null,
         "template": null
       },
       {
@@ -1175,6 +1192,7 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:5cebd1647a9e5c77b53652fe5555adcc"
       }
     ],
@@ -1196,7 +1214,8 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1215,7 +1234,8 @@
         "marking": null,
         "name": "PE",
         "pin_role": "PE",
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1234,7 +1254,8 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1253,7 +1274,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1272,7 +1294,8 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1291,7 +1314,8 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1310,7 +1334,8 @@
         "marking": null,
         "name": "A2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1329,7 +1354,8 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1348,7 +1374,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1367,7 +1394,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1386,7 +1414,8 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1405,7 +1434,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1424,7 +1454,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1443,7 +1474,8 @@
         "marking": null,
         "name": "A1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -1462,7 +1494,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       }
     ],
     "supply_system": [

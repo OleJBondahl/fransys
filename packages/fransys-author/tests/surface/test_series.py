@@ -249,3 +249,21 @@ def test_a_series_element_without_ends_or_a_bridge_without_between_cannot_be_mad
         make: Any = broken
         with pytest.raises(TypeError, match=missing):
             make()
+
+
+def test_a_parallel_followed_by_a_parallel_is_a_star_from_the_first_member_of_the_earlier_group(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    s0, a1, a2, b1, b2 = (d.device(t, "TEST-BTN-NO") for t in ("S0", "S1", "S2", "S3", "S4"))
+    d.series(s0.contact, d.parallel(a1.contact, a2.contact), d.parallel(b1.contact, b2.contact), wire=WIRE)
+
+    twin = design(lib, place="C1")
+    t0, t1, t2, t3, t4 = (twin._engine.item("TEST-BTN-NO", tag=t, name=t).fn("contact") for t in ("S0", "S1", "S2", "S3", "S4"))
+    wiring = twin._engine.wiring(colour="BK", gauge="2.5")
+    wiring(t0["14"], t1["13"])
+    wiring(t0["14"], t2["13"])
+    wiring(t1["14"], t2["14"])
+    wiring(t1["14"], t3["13"])
+    wiring(t1["14"], t4["13"])
+    ends = [{frozenset((r.a, r.b)) for r in wire_records(x) if isinstance(r, Conductor)} for x in (d, twin)]
+    assert len(ends[0]) == 5
+    assert ends[0] == ends[1]

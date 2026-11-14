@@ -81,11 +81,11 @@ def test_schema_unsupported_on_library(tmp_path):
     assert "SCHEMA_UNSUPPORTED" not in _codes(_root(tmp_path))
 
 
-def test_schema_1_library_is_part_schema_old_with_the_migrate_command(tmp_path):
+def test_schema_1_library_is_part_schema_old_with_the_hand_rewrite(tmp_path):
     root = _root(tmp_path, library='schema = 1\nname = "l"\nversion = "0.1.0"\ndescription = "d"\n')
     old = [f for f in fransys_parts.lint(root) if f.code == "PART_SCHEMA_OLD"]
     assert old
-    assert "python -m fransys migrate-parts DIR" in old[0].fix
+    assert "schema = 2" in old[0].fix
 
 
 def test_table_unknown(tmp_path):

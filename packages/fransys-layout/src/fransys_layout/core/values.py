@@ -127,14 +127,10 @@ class Pin:
 
 @dataclass(frozen=True, slots=True)
 class BoxSpec:
-    """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins.
-
-    pitch is the symbol's own distance between neighbouring pins of one edge, the one that fits its pin names (0: none read).
-    """
+    """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins."""
 
     order: tuple[str, ...]
     margin: int
-    pitch: int
 
 
 @dataclass(frozen=True, slots=True)

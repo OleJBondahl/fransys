@@ -172,17 +172,3 @@ class PowerSymbol:
     orientation: Orientation
     produced_by: str
     ext: frozendict[str, Value] = frozendict()
-
-
-@value
-class CrossReferencePartner:
-    """One other end of a cross-referenced item, as `CROSS_REFERENCE` label text lists them.
-
-    `port` is the partner end's port, `page` the page that end is placed on, `x` the
-    drawn x of that port on that page (grid units). Stored order is the stage's to set;
-    this value does not sort or canonicalise itself.
-    """
-
-    port: Id[Port]
-    page: Id[Page]
-    x: int

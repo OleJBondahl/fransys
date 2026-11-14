@@ -6,7 +6,6 @@ the layout and the pages that write produced, read back by number from the drawi
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import refuses
 from fransys_model.layout import Page, layout_of
 
 from .draw_layout import draw_set
@@ -44,7 +43,7 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
     Finish them with `draw_layout.finish_drawings` once every set is written.
     """
     where = where or SetPlace()
-    laid, found = write_layout(
+    laid, found, skipped = write_layout(
         model,
         unit,
         layout,
@@ -56,5 +55,4 @@ def write_layout_drawn(  # noqa: PLR0913 - `write_layout`'s inputs [internal bui
     owner = drawing_set(unit, where)
     pages = {p.number: p for p in layout_of(laid, Page).values() if p.drawing_set == owner.id}
     written = Written(model, layout, problem, kit, library, pages, owner, unit)
-    skipped = refuses(found)  # a refused set draws its pages and rows, no markers and no checks (KI-773, R1991, R1996)
     return laid, found, draw_set(written), () if skipped else link_markers(written), skipped

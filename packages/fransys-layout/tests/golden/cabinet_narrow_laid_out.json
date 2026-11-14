@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 31,
+  "schema_version": 32,
   "tables": {
     "aspect_node": [
       {
@@ -3218,6 +3218,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -3237,6 +3238,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -3255,6 +3257,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:a7d7900cfae85c8183e72878ba8cbc52"
       },
       {
@@ -3274,6 +3277,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -3293,6 +3297,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -3311,6 +3316,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:57f6315978d559d784bd7339b841b2d1"
       },
       {
@@ -3329,6 +3335,7 @@
         "marking": null,
         "name": "5",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:f08702f21e1b5d77b3fd8394377ed4d9"
       },
       {
@@ -3347,6 +3354,7 @@
         "marking": null,
         "name": "shield",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:e687926790a75c62a2d7ac66daf9dc0e"
       },
       {
@@ -3365,6 +3373,7 @@
         "marking": null,
         "name": "12",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:7abb15a848685903a81bbbd4e04240e6"
       },
       {
@@ -3383,6 +3392,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:17f69259d8f252a2a72b477deb68fa6a"
       },
       {
@@ -3401,6 +3411,7 @@
         "marking": null,
         "name": "12",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:7abb15a848685903a81bbbd4e04240e6"
       },
       {
@@ -3419,6 +3430,7 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:31763409062f52e281c970e18a62c341"
       },
       {
@@ -3437,6 +3449,7 @@
         "marking": null,
         "name": "22",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:681f708abba650a1880209073057017f"
       },
       {
@@ -3455,6 +3468,7 @@
         "marking": null,
         "name": "11",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:614b7c9db5e951d885e4ce6068a317db"
       },
       {
@@ -3473,6 +3487,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:aced7184b70b5340a19c8e2cbff587d4"
       },
       {
@@ -3491,6 +3506,7 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:e2a178fc796f5a9f94c12465978ae92a"
       },
       {
@@ -3510,6 +3526,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -3529,6 +3546,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -3548,6 +3566,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -3566,6 +3585,7 @@
         "marking": null,
         "name": "A2",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:7d9b3a7c04ac55989e8db3b7fed7026b"
       },
       {
@@ -3584,6 +3604,7 @@
         "marking": null,
         "name": "6",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:ec11e677fb535240867020c3f4972168"
       },
       {
@@ -3602,6 +3623,7 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:dce86ef396fc5564a5f4cfe91dca4e58"
       },
       {
@@ -3620,6 +3642,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:aced7184b70b5340a19c8e2cbff587d4"
       },
       {
@@ -3638,6 +3661,7 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3cde3386516655a1b532457db5b3d341"
       },
       {
@@ -3656,6 +3680,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3cca936e1ff7543698dc73ab59066ab7"
       },
       {
@@ -3674,6 +3699,7 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:fca7f4e2184e50a38ff9134b43de7aa2"
       },
       {
@@ -3692,6 +3718,7 @@
         "marking": null,
         "name": "A1",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:1127c8c73bab500c8a0d2ff45a3f21c3"
       },
       {
@@ -3710,6 +3737,7 @@
         "marking": null,
         "name": "11",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:614b7c9db5e951d885e4ce6068a317db"
       },
       {
@@ -3728,6 +3756,7 @@
         "marking": null,
         "name": "5",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:f08702f21e1b5d77b3fd8394377ed4d9"
       },
       {
@@ -3746,6 +3775,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3cca936e1ff7543698dc73ab59066ab7"
       },
       {
@@ -3764,6 +3794,7 @@
         "marking": null,
         "name": "6",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:ec11e677fb535240867020c3f4972168"
       },
       {
@@ -3782,6 +3813,7 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3cde3386516655a1b532457db5b3d341"
       },
       {
@@ -3800,6 +3832,7 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:fca7f4e2184e50a38ff9134b43de7aa2"
       },
       {
@@ -3818,6 +3851,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:44037f92e4095bacb1d914c0f69edb25"
       },
       {
@@ -3836,6 +3870,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3645ceca945f565b9f350abc0d570c7e"
       },
       {
@@ -3854,6 +3889,7 @@
         "marking": null,
         "name": "A2",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:f5338e4145c453aaaf31d0a29b29a012"
       },
       {
@@ -3872,6 +3908,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:a7d7900cfae85c8183e72878ba8cbc52"
       },
       {
@@ -3890,6 +3927,7 @@
         "marking": null,
         "name": "A1",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:76d34a8b7ca35bc1aeca85713300fd10"
       },
       {
@@ -3909,6 +3947,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -3927,6 +3966,7 @@
         "marking": null,
         "name": "A2",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:f5338e4145c453aaaf31d0a29b29a012"
       },
       {
@@ -3945,6 +3985,7 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:0e66cdb9c9b45959b54ea9b7cded2e69"
       },
       {
@@ -3963,6 +4004,7 @@
         "marking": null,
         "name": "12",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:d61e57e8d52c5e709047b4c8780dfec0"
       },
       {
@@ -3982,6 +4024,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -4000,6 +4043,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:3645ceca945f565b9f350abc0d570c7e"
       },
       {
@@ -4019,6 +4063,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:17f69259d8f252a2a72b477deb68fa6a"
       },
       {
@@ -4038,6 +4083,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -4056,6 +4102,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:1f0372d6e1435e898f51767c24679f73"
       },
       {
@@ -4074,6 +4121,7 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:08b117df8db057c08c1e359583417209"
       },
       {
@@ -4093,6 +4141,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -4112,6 +4161,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -4130,6 +4180,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:6c1dab1836b85be0905fd20c60401b15"
       },
       {
@@ -4149,6 +4200,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -4168,6 +4220,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -4186,6 +4239,7 @@
         "marking": null,
         "name": "A1",
         "pin_role": "COIL",
+        "source_row": null,
         "template": "port_template:76d34a8b7ca35bc1aeca85713300fd10"
       },
       {
@@ -4204,6 +4258,7 @@
         "marking": null,
         "name": "21",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:f42d0870796c599f8b7aab62541d6593"
       },
       {
@@ -4223,6 +4278,7 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
       },
       {
@@ -4241,6 +4297,7 @@
         "marking": null,
         "name": "11",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:a61df70985e0587db18e3dd079e8c18e"
       },
       {
@@ -4259,6 +4316,7 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:31763409062f52e281c970e18a62c341"
       },
       {
@@ -4278,6 +4336,7 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
       },
       {
@@ -4297,6 +4356,7 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:44037f92e4095bacb1d914c0f69edb25"
       },
       {
@@ -4315,6 +4375,7 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
+        "source_row": null,
         "template": "port_template:dce86ef396fc5564a5f4cfe91dca4e58"
       }
     ],
@@ -4336,7 +4397,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4355,7 +4417,8 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4374,7 +4437,8 @@
         "marking": null,
         "name": "A1",
         "pin_role": "COIL",
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4393,7 +4457,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4412,7 +4477,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4431,7 +4497,8 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4450,7 +4517,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4469,7 +4537,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4488,7 +4557,8 @@
         "marking": null,
         "name": "14",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4507,7 +4577,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "external",
@@ -4526,7 +4597,8 @@
         "marking": null,
         "name": "external",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4545,7 +4617,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "internal",
@@ -4564,7 +4637,8 @@
         "marking": null,
         "name": "internal",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4583,7 +4657,8 @@
         "marking": null,
         "name": "11",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4602,7 +4677,8 @@
         "marking": null,
         "name": "22",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4621,7 +4697,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4640,7 +4717,8 @@
         "marking": null,
         "name": "A1",
         "pin_role": "COIL",
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4659,7 +4737,8 @@
         "marking": null,
         "name": "12",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4678,7 +4757,8 @@
         "marking": null,
         "name": "A2",
         "pin_role": "COIL",
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4697,7 +4777,8 @@
         "marking": null,
         "name": "11",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4716,7 +4797,8 @@
         "marking": null,
         "name": "1",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4735,7 +4817,8 @@
         "marking": null,
         "name": "2",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4754,7 +4837,8 @@
         "marking": null,
         "name": "12",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4773,7 +4857,8 @@
         "marking": null,
         "name": "4",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4792,7 +4877,8 @@
         "marking": null,
         "name": "13",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4811,7 +4897,8 @@
         "marking": null,
         "name": "shield",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4830,7 +4917,8 @@
         "marking": null,
         "name": "6",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4849,7 +4937,8 @@
         "marking": null,
         "name": "5",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4868,7 +4957,8 @@
         "marking": null,
         "name": "21",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4887,7 +4977,8 @@
         "marking": null,
         "name": "A2",
         "pin_role": "COIL",
-        "side": null
+        "side": null,
+        "source_row": null
       },
       {
         "boundary": "generic",
@@ -4906,7 +4997,8 @@
         "marking": null,
         "name": "3",
         "pin_role": null,
-        "side": null
+        "side": null,
+        "source_row": null
       }
     ]
   }

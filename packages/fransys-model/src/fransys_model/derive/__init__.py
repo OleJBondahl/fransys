@@ -288,7 +288,6 @@ from .overview_text import (
     overview_field_join_text,
     overview_fold_line_text,
     overview_fold_stub_lines,
-    overview_fold_stub_text,
     overview_lifted_text,
     overview_line_text,
     overview_location_line_text,
@@ -538,7 +537,6 @@ from .sideless_pins import SidelessPins, sideless_pins
 from .stands import drawn_stands, hidden_pins, rail_drawn_by, stands
 from .stub_far import stub_far
 from .stub_text import stub_text_at
-from .supply_share import supply_share
 from .symbol_port_subject import symbol_port_subject
 from .tag_text import item_tag_text, run_point_text, strip_tag_text, tag_text
 from .title_block import document_facts, project_facts
@@ -999,7 +997,6 @@ __all__ = [
     "overview_field_join_text",
     "overview_fold_line_text",
     "overview_fold_stub_lines",
-    "overview_fold_stub_text",
     "overview_graph",
     "overview_lane_nodes",
     "overview_lane_strips",
@@ -1150,7 +1147,6 @@ __all__ = [
     "subject_marks",
     "subject_part_mpn",
     "subtree",
-    "supply_share",
     "supply_systems",
     "symbol_port_subject",
     "system_has_no_top_level_cables",

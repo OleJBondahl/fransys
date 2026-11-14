@@ -1,6 +1,5 @@
 """The symbol, pins, nodes and box spec of one pick (facts 1, 5 and 16), read from the layer."""
 
-from itertools import combinations
 from typing import TYPE_CHECKING
 
 from electrical_symbols import (
@@ -118,5 +117,4 @@ def box_of(pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec | None:
         return None
     order = default_order((p.id for p in edge), kernel_key)
     margin = min(p.dx for p in edge) - shape.body.x
-    pitch = min((abs(a.dx - b.dx) for a, b in combinations(edge, 2) if a.side == b.side and a.dx != b.dx), default=0)
-    return BoxSpec(order, margin, pitch)
+    return BoxSpec(order, margin)

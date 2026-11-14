@@ -18,7 +18,6 @@ exception (DESIGN 4, decision layout-0037) is keyed to the qualified module path
 
 from fransys_model.derive.contact_image import (
     CONTACTS_HEADED,
-    coil_heading,
     contact_marks,
 )
 from fransys_model.derive.designation import connector_designation, port_designation, port_marking
@@ -121,7 +120,6 @@ def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:
 __all__ = [
     "CONTACTS_HEADED",
     "REF_SLOTS",
-    "coil_heading",
     "connector_designation",
     "contact_marks",
     "content_extent",

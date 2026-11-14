@@ -55,7 +55,7 @@ def test_result_port_ends_are_port_ids():
     rows = endpoint_fields(records)
     sites = {site for site, _ in rows}
     assert {"MarkerPair.far", "PowerSymbol.port"} <= sites
-    assert len(rows) == 5, sites
+    assert len(rows) == 4, sites
     assert untyped_endpoints(rows) == []
 
 

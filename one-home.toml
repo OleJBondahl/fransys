@@ -160,7 +160,7 @@
 "fransys_model.derive.overview_stubs::kind" = 13
 "fransys_model.derive.overview_stubs::parent" = 1
 "fransys_model.derive.overview_stubs::unit" = 2
-"fransys_model.derive.overview_text::kind" = 5
+"fransys_model.derive.overview_text::kind" = 4
 "fransys_model.derive.overview_tree::parent" = 6
 "fransys_model.derive.overview_tree::unit" = 5
 "fransys_model.derive.overview_view_fold::kind" = 2
@@ -203,7 +203,7 @@
 "fransys_model.layout.overview_keys::unit" = 1
 "fransys_model.layout.overview_ref::kind" = 9
 "fransys_model.layout.overview_results::unit" = 1
-"fransys_model.layout.tables::unit" = 2
+"fransys_model.layout.tables::unit" = 1
 "fransys_model.vocab.document::unit" = 1
 "fransys_author.instantiate::kind" = 1
 "fransys_author._scope_build::kind" = 1

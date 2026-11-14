@@ -9,7 +9,6 @@ READS = frozenset({"read_text", "read_bytes", "open", "iterdir", "glob", "rglob"
 # `settings.py` reads our packaged TOML files and a consumer's settings file, not a release folder.
 # `_settings_library.py` reads a consumer's font files, named in the settings file.
 # `_help_names.py` reads the packaged guide pages (`help KEY`), not a release folder.
-# `migrate_parts.py` rewrites a consumer's schema 1 part library, not a release folder.
 ALLOWED = {
     "_release_reader.py": READS,
     "documents.py": READS,
@@ -17,7 +16,6 @@ ALLOWED = {
     "settings.py": {"read_text"},
     "_settings_library.py": {"read_bytes", "is_file"},
     "_help_names.py": {"iterdir", "read_text"},
-    "migrate_parts.py": {"read_text", "glob", "rglob"},
 }
 
 

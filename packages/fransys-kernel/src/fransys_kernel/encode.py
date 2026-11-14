@@ -50,7 +50,7 @@ def to_data(model: Model) -> frozendict[str, JsonValue]:
 
 
 def record_data(record: Record) -> frozendict[str, Any]:
-    """Render `record` as a mapping, keys sorted; an `omit_none` field is left out while `None`.
+    """Render `record` as a mapping, keys sorted.
 
     Resolves `record`'s own class fresh; a batch caller shares one memo via `_record_data`.
     """
@@ -59,13 +59,7 @@ def record_data(record: Record) -> frozendict[str, Any]:
 
 def _record_data(record: Record, specs: dict[type, FieldInfo]) -> frozendict[str, Any]:
     info = cached_field_info(type(record), specs)
-    return frozendict(
-        {
-            name: _encode_value(getattr(record, name), info.annotations[name], specs)
-            for name in info.names
-            if not (name in info.omit_none and getattr(record, name) is None)
-        }
-    )
+    return frozendict({name: _encode_value(getattr(record, name), info.annotations[name], specs) for name in info.names})
 
 
 def value_data[T](value: T) -> JsonValue:

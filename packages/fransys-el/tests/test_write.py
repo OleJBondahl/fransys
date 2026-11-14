@@ -27,7 +27,7 @@ from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Finding, PinRef, Size, Wire, solve
-from fransys_model.derive import drawn_designations, net_of, pdf_page, unit_label
+from fransys_model.derive import drawn_designations, net_of, pdf_page, refuses, unit_label
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -65,7 +65,7 @@ class Written:
         self.pages = {p.number: p for p in layout_of(self.out, Page).values()}
         short = solve(replace(self.problem, area=Size(self.problem.area.w, 80)), options(conventions, LIBRARY))  # rows over a page 80 high
         self.short_findings = short.findings
-        self.short_out, _ = write_layout(self.model, None, short, self.problem, self.kit, library=LIBRARY)
+        self.short_out, self.short_found, self.short_skipped = write_layout(self.model, None, short, self.problem, self.kit, library=LIBRARY)
         self.short_pages = {p.number: p for p in layout_of(self.short_out, Page).values()}
 
 
@@ -158,16 +158,13 @@ def test_a_symbol_whose_function_is_not_in_the_kit_is_refused(written: Written) 
         )
 
 
-def test_writing_twice_gives_one_model(written: Written) -> None:
-    again, _ = write_layout(
-        written.model,
-        None,
-        written.layout,
-        written.problem,
-        written.kit,
-        library=LIBRARY,
-    )
+def test_writing_twice_gives_one_model_and_a_refused_set_names_its_skip_once(written: Written) -> None:
+    again, _, _ = write_layout(written.model, None, written.layout, written.problem, written.kit, library=LIBRARY)
     assert again == written.out
+    assert write_layout_drawn(written.model, None, written.layout, written.problem, written.kit, library=LIBRARY)[4] is False
+    assert written.short_skipped
+    assert any(refuses((f,)) for f in written.short_found)
+    assert all(f.message.count("is not drawn, its drawn-page checks did not run") == refuses((f,)) for f in written.short_found)
 
 
 def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: Written) -> None:
@@ -339,14 +336,7 @@ def test_a_page_whose_first_group_holds_a_power_net_is_a_power_page(written: Wri
         ports=every_port,
     )
     model = evolve(written.model, put=(net,), origin=Origin(file="t", line=0, note="t"))
-    out, _ = write_layout(
-        model,
-        None,
-        written.layout,
-        written.problem,
-        written.kit,
-        library=LIBRARY,
-    )
+    out, _, _ = write_layout(model, None, written.layout, written.problem, written.kit, library=LIBRARY)
     grouped = [p for p in layout_of(out, Page).values() if p.groups]
     assert grouped
     assert {p.role for p in grouped} == {PageRole.POWER}

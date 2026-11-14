@@ -1,7 +1,5 @@
 """Vocabulary: instance-level kinds (design/vocabulary.md 6, "Instance level")."""
 
-import dataclasses
-
 from fransys_model.elecdef import PinRole
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
@@ -131,6 +129,5 @@ class Port:
     boundary: PortBoundary
     marking: str | None = None
     pin_role: PinRole | None = None
-    # KI-873: omit_none breaks "canonical JSON writes every value" (BOX-SIDE-OMIT-NONE)
-    source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
+    source_row: WiringRow | None = None
     ext: frozendict[str, Value] = frozendict()

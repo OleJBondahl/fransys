@@ -15,7 +15,6 @@ from .formats import (
 from .house_text import HouseProfile
 from .kinds import DERIVED_KINDS
 from .paper import PaperChoice
-from .results import DrawingSet, Page
 
 
 def layout_of[R](model: Model, record_type: type[R]) -> frozendict[Id[R], R]:
@@ -59,11 +58,6 @@ def house_profile_of(model: Model) -> HouseProfile:
 def tuning_of(model: Model) -> HouseProfile:
     """The layout numbers the drawings use: the `[profile]` record. No unit's profile sets them."""
     return house_profile_of(model)
-
-
-def profile_of_page(model: Model, page: Page) -> Profile:
-    """The profile of the unit `page`'s drawing set belongs to: how that page is drawn."""
-    return profile_of(model, layout_of(model, DrawingSet)[page.drawing_set].unit)
 
 
 def paper_of(model: Model) -> PaperChoice:

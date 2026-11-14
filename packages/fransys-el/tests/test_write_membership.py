@@ -121,7 +121,7 @@ def test_a_rerun_replaces_only_its_own_membership_rows(written: Written) -> None
     conventions = house()
     problem, _ = build(written.model, written.kit, conventions, LIBRARY)
     layout = solve(problem, options(conventions, LIBRARY))
-    again, _ = write_layout(base, None, layout, problem, written.kit, library=LIBRARY)
+    again, _, _ = write_layout(base, None, layout, problem, written.kit, library=LIBRARY)
     rows = layout_of(again, Membership)
     assert rows[foreign.id] == foreign
     assert stale.id not in rows

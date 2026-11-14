@@ -88,7 +88,7 @@ def problem() -> PlacementProblem:
         pins=pins,
         nodes=(("1",), ("2",)),
         views=views_of(BOX, BOX, BOX, pins, ("R0", "R180"), row_footprint=row_footprint),
-        box=BoxSpec(("1", "2"), 8, 16),
+        box=BoxSpec(("1", "2"), 8),
         row_group="RG",
         band=1,
         item="I1",
@@ -97,7 +97,7 @@ def problem() -> PlacementProblem:
         wider=({"": Size(10, 8)},),
         alone={"": Size(40, 8)},
     )
-    box_sym = dataclasses.replace(box_sym, narrow=dataclasses.replace(box_sym, box=BoxSpec(("1", "2"), 8, 8)))
+    box_sym = dataclasses.replace(box_sym, narrow=dataclasses.replace(box_sym, box=BoxSpec(("1", "2"), 8)))
     plain = dataclasses.replace(
         box_sym,
         id="K2",

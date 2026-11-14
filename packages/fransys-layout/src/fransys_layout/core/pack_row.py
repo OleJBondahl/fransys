@@ -77,12 +77,6 @@ def _margin(spec: RowSpec, box: str) -> int:
     return box_spec.margin if box_spec else spec.options.box_margin
 
 
-def _pitch_floor(spec: RowSpec, box: str) -> int:
-    """The least distance between neighbouring pins of a box: the symbol's own pitch, which fits its pin names."""
-    box_spec = spec.syms[box].box
-    return box_spec.pitch if box_spec else 0
-
-
 def _sep(spec: RowSpec, a: str, b: str) -> int:
     return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.in_row, spec.options)
 
@@ -213,7 +207,7 @@ def _one_column(spec: RowSpec, a: str, b: str) -> bool:
 def pin_pitches(spec: RowSpec) -> dict[tuple[str, str, str], int]:
     """(box, pin, next pin) to its pitch: the column's reach plus a grid where one pin holds a column and the other none, else the minimum.
 
-    Never below the symbol's own pin spacing (G05-PIN-LINE). A block's value, so a cut window never changes it.
+    Never below the symbol's own pin spacing (G05-PIN-LINE, KEEP-OUT). A block's value, so a cut window never changes it.
     """
     out: dict[tuple[str, str, str], int] = {}
     for block in spec.blocks:
@@ -222,7 +216,7 @@ def pin_pitches(spec: RowSpec) -> dict[tuple[str, str, str], int]:
         dx = {p.id: p.dx for p in spec.syms[box].pins} if block.anchor else {}
         for edge in ("N", "S"):
             for a, b in pairwise([p for p, e in block.pin_edges if e == edge]):
-                out[box, a, b] = max(_pitch_floor(spec, box), dx[b] - dx[a])
+                out[box, a, b] = dx[b] - dx[a]
                 if (a in held) != (b in held):
                     lo, hi = extent(spec, held[a] if a in held else held[b])
                     out[box, a, b] = max(out[box, a, b], (hi if a in held else -lo) + spec.options.wiring_grid)

@@ -44,8 +44,8 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
     *,
     library: Library,
     where: SetPlace | None = None,
-) -> tuple[Model, tuple[Finding, ...]]:
-    """Write the pages, power symbols, markers and memberships of `layout`; map its findings.
+) -> tuple[Model, tuple[Finding, ...], bool]:
+    """Write the pages, power symbols, markers and memberships of `layout`; map its findings; say whether the output steps were skipped.
 
     A placed function's symbol is `kit[function].key`, the pick made once (el-0003).
     """
@@ -55,10 +55,10 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
     paged = evolve(model, put=(*sets, *pages.values()), remove=own, origin=_ORIGIN)
     found = kernel_findings(paged, layout.findings, symbol_subjects(model, kit), pages)
     if refuses(found):  # no output step runs for this set (KI-773, R1945); the other sets are checked (KI-779, R1978)
-        return paged, tuple(_named_skip(f, export_set_name(model, unit)) for f in found)
+        return paged, tuple(_named_skip(f, export_set_name(model, unit)) for f in found), True
     records = (
         *power_symbols(model, layout, pages, kit, (STAMP, sets[0].number)),
         *link_markers(written),
         *memberships(written),
     )
-    return evolve(paged, put=records, origin=_ORIGIN), found
+    return evolve(paged, put=records, origin=_ORIGIN), found, False

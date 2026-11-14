@@ -69,17 +69,12 @@ def hops(elements: Sequence[object], found: list[list[Ends]]) -> list[Hop]:
     for i in range(len(elements) - 1):
         if isinstance(elements[i], SeriesBridge):
             continue
-        if isinstance(elements[i + 1], SeriesBridge):
-            pairs = pair(
-                found[i][0].load,
-                found[i + 2][0].line,
-                (label_of(elements[i]), label_of(elements[i + 2])),
-            )
-            joins.append(Hop(i, i + 2, pairs, made=False))
-            continue
-        names = (label_of(elements[i]), label_of(elements[i + 1]))
-        pairs = [(x, y) for a in found[i] for b in found[i + 1] for x, y in pair(a.load, b.line, names)]
-        joins.append(Hop(i, i + 1, pairs, made=True))
+        j = i + 2 if isinstance(elements[i + 1], SeriesBridge) else i + 1
+        (first, *rest), later = found[i], found[j]
+        hub = later[0].line if len(later) == 1 else first.load  # C1: a star on the earlier group's first member, never a cycle
+        names = (label_of(elements[i]), label_of(elements[j]))
+        pairs = [xy for b in later for xy in pair(first.load, b.line, names)] + [xy for a in rest for xy in pair(a.load, hub, names)]
+        joins.append(Hop(i, j, pairs, made=j == i + 1))
     return joins
 
 

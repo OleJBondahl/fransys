@@ -187,7 +187,7 @@ _OWN: tuple[CodeInfo, ...] = (
         stage="library load",
         who="part author",
         cause="A part file or `library.toml` is written in schema 1.",
-        fix=("Run `python -m fransys migrate-parts DIR` on the library folder; it rewrites each schema 1 file to schema 2. Write: schema = 2"),
+        fix=("Rewrite each part file and `library.toml` to schema 2 by hand; the guide's parts page lists the schema 2 fields. Write: schema = 2"),
         page="findings-parts",
     ),
     CodeInfo(

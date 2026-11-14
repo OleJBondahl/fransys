@@ -1,13 +1,8 @@
 """`d.detail` holds the detail calls, and the old names on `d` raise (author-0042, A2)."""
 
-import re
-from pathlib import Path
-
 import fransys as fr
 import pytest
 from fransys.colours import BK
-from fransys_author.errors import AuthorAttributeError
-from fransys_author.surface._removed import REMOVED
 
 # The digest of this design built with d.wire, d.net and d.busbar at main 8650e4af9, without the rail_bond call (RAIL-FLAG R900 G3 deleted it).
 # The digest covers the demo part library, so it moved with the library, never with the move:
@@ -83,7 +78,8 @@ from fransys_author.surface._removed import REMOVED
 # BOX-SIDE (model-0449, R2070): SCHEMA_VERSION 28 -> 29 writes box_side always; it moves once more (7062cea82cfc... before).
 # FUSE-TERMINAL (R2084 B1): the demo fused terminal parts drop `symbol` and `symbol_port`: it moves again (70e3b4c02ed6... before).
 # MARKER-ONE-BOX (R2228) and ASPECT-REFDEF (model-0457): SCHEMA_VERSION 31 (7b8d6372f81f... before).
-_DIGEST_BEFORE_THE_MOVE = "fbac771644fccfd27087b6534399e7c75f8b22cb4278c91f8a490e21b91140b9"
+# BOX-SIDE-OMIT-NONE (model-0460): SCHEMA_VERSION 31 -> 32 writes source_row always (fbac77164... before).
+_DIGEST_BEFORE_THE_MOVE = "14b35988499079a5e1389147add311ea4a05e049e5fd3c6e0de709eb59ea97f6"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():
@@ -97,23 +93,12 @@ def test_each_moved_call_builds_the_model_it_built_on_d():
     assert fr.build(d).model.digest == _DIGEST_BEFORE_THE_MOVE
 
 
-_GUIDE = Path(__file__).parents[1] / "src" / "fransys" / "guide" / "moving-to-0.22.md"
-
-
 def _owner(name: str):
     d = fr.design("demo_parts")
     handles = {"fr": fr, "Design": d, "Detail": d.detail, "Layout": d.layout}
     handles["Fn"] = d.device("S1", "DEMO-PB-NC").sw
     handles["Terminal"] = d.terminal_strip("X4", "DEMO-TB-2.5", 2)[1]
     return handles[name]
-
-
-@pytest.mark.parametrize("row", REMOVED, ids=lambda r: f"{r.owner}.{r.name}")
-def test_a_removed_name_raises_its_table_text(row):
-    obj = _owner(row.owner)
-    with pytest.raises(AuthorAttributeError, match=re.escape(f"{row.text}; see moving-to-0.22#{row.anchor}")):
-        getattr(obj, row.name)
-    assert getattr(obj, row.name, None) is None
 
 
 def test_the_moved_busbar_still_lives_on_detail():
@@ -125,9 +110,4 @@ def test_an_unknown_or_private_name_names_no_removal(owner):
     for name in ("no_such_name", "__wrapped__"):
         with pytest.raises(AttributeError) as raised:
             getattr(_owner(owner), name)
-        assert "removed in 0.22" not in str(raised.value)
-
-
-def test_every_table_anchor_is_in_the_moving_to_page():
-    page = _GUIDE.read_text(encoding="utf-8")
-    assert [row for row in REMOVED if f'id="{row.anchor}"' not in page] == []
+        assert f"has no attribute {name!r}" in str(raised.value)

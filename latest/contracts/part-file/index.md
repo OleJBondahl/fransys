@@ -333,4 +333,4 @@ files, no Fransys code inside it.
   today `frozenset({2})`; a `schema = 1` file is `PART_SCHEMA_OLD`. `library.toml` and every part file carry `schema`. A value outside
   `SUPPORTED_SCHEMAS` is the lint finding `SCHEMA_UNSUPPORTED`, naming the file and the value
   found. A part file whose `schema` differs from its `library.toml` is `SCHEMA_MIXED`.
-- `python -m fransys migrate-parts DIR` (decision 0474, dropped in 0.23, MIGRATE-022-DROP) rewrites every schema 1 library under `DIR` to schema 2 (model-0369). A library bumps `schema` for every part file in one commit.
+- There is no converter: a schema 1 library is rewritten by hand (parts-0026). A library bumps `schema` for every part file in one commit.

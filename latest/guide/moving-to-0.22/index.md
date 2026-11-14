@@ -62,7 +62,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 | Mated connector, PCB board document, harness line | Refused with ERROR `MATES_DISABLED` (R1216); draw the connection as a cable or wires |
 | Terminal part with more than two pins | Refused with ERROR `TERMINAL_MORE_THAN_TWO_PINS`; use a two-pin part: `d.terminal_strip("X1", "DEMO-TB-2.5", 2)` |
 | `[colours]`, `[grid]`, `[layout]`, `[profile]`, `[pdf]`, `[look]`, `[lines]`, `[dash]`, `[reference]`, `[frame]`, `[stub]`, `[wire_label]`, `[harness]`, `[title_block]`, `[revision_table]`, `[revision]`, `[designation]` | Removed on purpose: Fransys decides (R1458); a `SettingsError` names the table; delete it |
-| Part schema 1 (`schema = 1`) | `schema = 2`; convert with `python -m fransys migrate-parts DIR` |
+| Part schema 1 (`schema = 1`) | `schema = 2`; rewrite by hand (the `migrate-parts` command was removed in 0.23) |
 | `TERMINAL_POINT_OVERFILLED` (new in 0.22, no 0.21 spelling) | Set `conductors_per_clamp = 2` in the terminal part's `[connection]` table, or use a twin part, or bridge a second terminal |
 
 ## New in 0.23.1
@@ -108,7 +108,7 @@ Each row is a name that 0.22 removed. A removed attribute raises an error that n
 
 ## New in 0.22.1
 
-- `python -m fransys migrate-parts DIR` rewrites a schema 1 parts library to the 0.22 format (decision 0474). `DIR` is the library's folder (the one holding `library.toml` and `parts/`) or a folder above it, never `parts/`.
+- `python -m fransys migrate-parts DIR` was removed in 0.23; rewrite a schema 1 parts library by hand.
 - A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).
 
 ## New in 0.22.3

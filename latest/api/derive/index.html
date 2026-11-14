@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.17/api/derive/">
       
       
       
@@ -4634,17 +4634,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#overview_fold_stub_text" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        overview_fold_stub_text
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#overview_graph" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6288,17 +6277,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         subtree
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supply_share" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        supply_share
       </span>
     </span>
   </a>
@@ -11848,17 +11826,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#overview_fold_stub_text" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        overview_fold_stub_text
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#overview_graph" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -13502,17 +13469,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         subtree
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supply_share" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        supply_share
       </span>
     </span>
   </a>
@@ -17923,10 +17879,6 @@ kind, or when none states one.</p>
 <p>The text lines of a folded stub's box: its far name; a closed fold prints no member list.</p>
 <p>A fold of several members prints its name and count (<code>Field devices (2)</code>); any other stub also
 prints the port tails of its members.</p>
-<h3 id="overview_fold_stub_text">overview_fold_stub_text</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">overview_fold_stub_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">],</span> <span class="n">stub</span><span class="p">:</span> <span class="n">FoldStub</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
-</code></pre></div>
-<p>The text of the line to a folded stub: its carrier relative to <code>unit</code>, else the count.</p>
 <h3 id="overview_graph">overview_graph</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">overview_graph</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OverviewGraph</span>
 </code></pre></div>
@@ -18873,13 +18825,6 @@ cycle-safe.</p>
     Every descendant's id, sorted.</p>
 <p>Raises:
     SchemaError: <code>node</code> is not an aspect node of <code>model</code>.</p>
-<h3 id="supply_share">supply_share</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">supply_share</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Fraction</span>
-</code></pre></div>
-<p>The share of <code>function</code>'s connected pins that carry a supply potential, 0 with none.</p>
-<p>A pin carries a supply when <code>port_potential_rank</code> gives it a rank: a rail, 24 V or GND. It is
-a rank, not a direction, since a potential cannot tell "fed by" from "feeds". Layout calls
-it to split a unit's interfaces between its two edges and never asks again.</p>
 <h3 id="supply_systems">supply_systems</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">supply_systems</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">SupplySystem</span><span class="p">],</span> <span class="n">SupplySystem</span><span class="p">]</span>
 </code></pre></div>
@@ -20360,7 +20305,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.16 documentation
+      Fransys 0.23.17 documentation
     </div>
   
   

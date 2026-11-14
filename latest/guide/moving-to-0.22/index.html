@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.16/guide/moving-to-0.22/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.17/guide/moving-to-0.22/">
       
       
       
@@ -2457,7 +2457,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </tr>
 <tr>
 <td><a id="parts-schema-2"></a>Part schema 1 (<code>schema = 1</code>)</td>
-<td><code>schema = 2</code>; convert with <code>python -m fransys migrate-parts DIR</code></td>
+<td><code>schema = 2</code>; rewrite by hand (the <code>migrate-parts</code> command was removed in 0.23)</td>
 </tr>
 <tr>
 <td><a id="terminal-point-overfilled"></a><code>TERMINAL_POINT_OVERFILLED</code> (new in 0.22, no 0.21 spelling)</td>
@@ -2508,7 +2508,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
 </ul>
 <h2 id="new-in-0221">New in 0.22.1</h2>
 <ul>
-<li><code>python -m fransys migrate-parts DIR</code> rewrites a schema 1 parts library to the 0.22 format (decision 0474). <code>DIR</code> is the library's folder (the one holding <code>library.toml</code> and <code>parts/</code>) or a folder above it, never <code>parts/</code>.</li>
+<li><code>python -m fransys migrate-parts DIR</code> was removed in 0.23; rewrite a schema 1 parts library by hand.</li>
 <li>A removed 0.22 name raises an error that names the new spelling and the row above, from one table that is deleted at the 0.23 tag (decision 0475).</li>
 </ul>
 <h2 id="new-in-0223">New in 0.22.3</h2>
@@ -2556,7 +2556,7 @@ for example <code>fault_time_constant=fr.elecdef.Unit.MS(15)</code>. In a part f
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.16 documentation
+      Fransys 0.23.17 documentation
     </div>
   
   

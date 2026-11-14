@@ -2910,14 +2910,6 @@ The text lines of a folded stub's box: its far name; a closed fold prints no mem
 A fold of several members prints its name and count (`Field devices (2)`); any other stub also
 prints the port tails of its members.
 
-### overview_fold_stub_text
-
-```python
-def overview_fold_stub_text(model: Model, unit: Id[Unit], stub: FoldStub) -> str
-```
-
-The text of the line to a folded stub: its carrier relative to `unit`, else the count.
-
 ### overview_graph
 
 ```python
@@ -4596,18 +4588,6 @@ Returns:
 
 Raises:
     SchemaError: `node` is not an aspect node of `model`.
-
-### supply_share
-
-```python
-def supply_share(model: Model, function: Id[Function]) -> Fraction
-```
-
-The share of `function`'s connected pins that carry a supply potential, 0 with none.
-
-A pin carries a supply when `port_potential_rank` gives it a rank: a rail, 24 V or GND. It is
-a rank, not a direction, since a potential cannot tell "fed by" from "feeds". Layout calls
-it to split a unit's interfaces between its two edges and never asks again.
 
 ### supply_systems
 

@@ -16,6 +16,7 @@ from fransys_model.derive import (
     sheets,
 )
 from fransys_model.kernel import Id, make_id
+from fransys_model.layout import front_pages_records
 from fransys_model.vocab import Document, DocumentPreset, PageKind
 lazy from fransys_model.vocab.core import Unit
 
@@ -48,7 +49,8 @@ def _fixture():
     diagrams = (_diagram(2, _UNIT), _diagram(1, _UNIT), _diagram(1, None))
     plant = Plant()
     plant.add(*_PLANT.records, s1, s2, *pages)
-    plant.add(_document(DocumentPreset.CABINET_SCHEMATIC, _UNIT), _document(DocumentPreset.SYSTEM, None))
+    documents = (_document(DocumentPreset.CABINET_SCHEMATIC, _UNIT), _document(DocumentPreset.SYSTEM, None))
+    plant.add(*documents, *front_pages_records({record.id: 1 for record in documents}))
     return plant.model(), pages, diagrams
 
 

@@ -51,6 +51,7 @@ lazy from fransys_model.vocab import Unit as ModelUnit
 from . import _args, _revision_pins, _subjects
 from ._drawing_library import refuse_authored_library, with_drawing_library
 from ._finding_text import described, fix_lines, headed
+from ._front_pages import with_front_pages
 from ._house import refuse_authored_house, with_house
 from ._layout_need import diagram_sheets_of, lay_out_if_needed, needs_schematic_layout
 from ._paper import unsupported_sheet_findings
@@ -191,6 +192,8 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None, settings:
     model, row_findings = timer.run("wire rows", resolve_wire_rows, model)
     model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
     model, number_findings = timer.run("numbering", _numbered, model, releases)
+    if has_documents(model):
+        model = timer.run("front pages", with_front_pages, model, library, chosen)
     found = timer.run(
         "validators",
         _validated,

@@ -12,6 +12,7 @@ from fransys_model.derive.facts.house_settings import (
     designation_form_of,
     export_form_of,
     frame_form_of,
+    front_count_of,
     harness_text_of,
     lists_of,
     reference_text_of,
@@ -22,18 +23,21 @@ from fransys_model.derive.facts.house_settings import (
     wire_label_text_of,
     word,
 )
-from fransys_model.kernel import Draft, Origin, SchemaError, freeze
+from fransys_model.kernel import Draft, Origin, SchemaError, freeze, make_id
 from fransys_model.layout import (
     HOUSE_TEXT_KINDS,
     LIBRARY_KINDS,
     SheetFormat,
     TitleBlockForm,
+    front_pages_records,
     paper_choice,
     sheet_format_record,
 )
 from fransys_model.layout import (
     house_records as build_records,
 )
+from fransys_model.layout.house_text import FrontPages
+from fransys_model.vocab import Document, DocumentPreset
 
 _ORIGIN = Origin(file="test_house_records.py", line=1, note="fixture")
 ACCESSORS = (
@@ -57,8 +61,8 @@ def _model(records: tuple[Any, ...] = ()):
     return freeze(draft)
 
 
-def test_thirteen_kinds_are_facade_written_library_kinds() -> None:
-    assert len(HOUSE_TEXT_KINDS) == 13
+def test_fourteen_kinds_are_facade_written_library_kinds() -> None:
+    assert len(HOUSE_TEXT_KINDS) == 14
     assert set(HOUSE_TEXT_KINDS) <= set(LIBRARY_KINDS)
 
 
@@ -82,7 +86,7 @@ def test_each_builder_keys_its_record_by_its_table() -> None:
             "designation",
         )
     }
-    assert {type(r) for r in records} == set(HOUSE_TEXT_KINDS)
+    assert {type(r) for r in records} == set(HOUSE_TEXT_KINDS) - {FrontPages}
 
 
 def test_a_mm_key_is_an_exact_decimal_of_the_float_and_a_list_is_a_tuple() -> None:
@@ -155,3 +159,16 @@ def test_the_paper_builders_build_what_the_facade_writes() -> None:
     choice = paper_choice(("t", "p"), default=sheet.id, by_kind={"schematic": sheet.id})
     assert choice.default == sheet.id
     assert choice.by_kind["schematic"] == sheet.id
+
+
+def _document(name: str) -> Document:
+    key = ("document", name)
+    return Document(id=make_id(Document, key), key=key, preset=DocumentPreset.SYSTEM, location=None, item=None, cover="c", notes=None, unit=None)
+
+
+def test_a_documents_front_count_is_its_stored_value_and_a_missing_one_raises_naming_it() -> None:
+    document, other = _document("d1"), _document("d2")
+    model = _model((document, other, *front_pages_records({document.id: 2})))
+    assert front_count_of(model, document.id) == 2
+    with pytest.raises(SchemaError, match=r"no layout.front_pages record for document .*fransys.build"):
+        front_count_of(model, other.id)

@@ -7,18 +7,6 @@ from fransys_model.kernel import CodeInfo, Finding, Id, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
-        code="COVER_OVERFLOW",
-        severity=Severity.ERROR,
-        stage="write, release",
-        who="consumer",
-        cause=(
-            "A document's cover text plus revision table, measured by Typst at write, are taller "
-            "than the content box; the write raises and writes nothing."
-        ),
-        fix=("Shorten the cover file or the revision table of <subject>. Write: fr.document(<preset>, <subject>, cover=<shorter cover file>)"),
-        page="findings-pdf",
-    ),
-    CodeInfo(
         code="DOCUMENT_EMPTY_LIST",
         severity=Severity.INFO,
         stage="pdf",

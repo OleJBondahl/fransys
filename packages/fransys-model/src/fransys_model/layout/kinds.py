@@ -15,6 +15,7 @@ from .house_export import DesignationForm, ExportForm
 from .house_lists import Lists
 from .house_text import (
     FrameForm,
+    FrontPages,
     HarnessText,
     HouseProfile,
     ReferenceText,
@@ -47,6 +48,7 @@ HOUSE_TEXT_KINDS: tuple[type, ...] = (
     DesignationForm,
     ExportForm,
     FrameForm,
+    FrontPages,
     HarnessText,
     HouseProfile,
     Lists,

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import revision_rows
 
-from ._cover_measure import measuring_block
 from ._geometry import document_heading, document_release
 from ._markdown import BulletList, NumberedList, Paragraph, Run, parse, to_typst
 from ._sizes import rule_of
@@ -64,7 +63,7 @@ def cover_page(
     headers: tuple[str, ...],
     description_mm: float,
 ) -> str:
-    """The cover page; Typst measures it and panics on an overlap (`COVER_OVERFLOW`, pdf-0047)."""
+    """The cover page: the heading and text, then the revision table."""
     heading = f"#heading(level: 1, text({literal(document_heading(model, record))}))"
     body = to_typst(_flatten_lists(parse(record.cover)))
     # `align(center, [...])`, the two-argument call, not the `align(center)[...]` trailing-block
@@ -75,15 +74,24 @@ def cover_page(
     # (`[#set align(center) ...]`) also dodges that text but is not equivalent -- it is a new
     # nested container, so the heading's own default spacing no longer collapses against the
     # page top, and it lands about 9 mm lower (confirmed by compiling that too).
-    # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027).
-    parts = [f"#let fr-cover = align(center, [\n{heading}\n{body}\n])", "#fr-cover"]
+    # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027), while it and the text fit one
+    # page; else it follows the text and Typst flows it over the next pages, its header repeated (R2334).
     entries = revision_rows(model, document_release(model, record))
     table = _revision_table(entries, headers, description_mm, rule_of(model))
-    if table:
-        parts.append(f"#let fr-table = {table[1:]}")
-        parts.append("#place(bottom + center, fr-table)")
-    parts.append(measuring_block(has_table=bool(table)))
-    return "\n".join(parts)
+    if not table:
+        return f"#let fr-cover = align(center, [\n{heading}\n{body}\n])\n#fr-cover"
+    return "\n".join(
+        [
+            f"#let fr-cover = align(center, [\n{heading}\n{body}\n])",
+            f"#let fr-table = {table[1:]}",
+            "#context layout(size => {",
+            "  let tall = measure(block(width: size.width, fr-cover)).height + measure(block(width: size.width, fr-table)).height",
+            "  fr-cover",
+            "  v(if tall <= size.height { 1fr } else { 5mm })",
+            "  align(center, fr-table)",
+            "})",
+        ]
+    )
 
 
 def notes_page(notes: str, heading_word: str) -> str:

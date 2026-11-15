@@ -33,7 +33,7 @@ from .hints import (
     PoleGroup,
     SymbolChoice,
 )
-from .house_builders import HOUSE_TABLES, house_records
+from .house_builders import HOUSE_TABLES, front_pages_records, house_records
 from .house_export import CSV_QUOTINGS, DesignationForm, ExportForm
 from .house_lists import Lists
 from .house_text import (
@@ -146,6 +146,7 @@ __all__ = [
     "default_profile",
     "default_sheet_format",
     "derived_layout_ids",
+    "front_pages_records",
     "house_records",
     "layout_of",
     "line_key",

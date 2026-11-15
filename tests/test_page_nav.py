@@ -111,7 +111,7 @@ def _landing(pdf: pypdfium2.PdfDocument, name: str) -> int:
 
 def _written(root: Path, cover_pages: int) -> tuple[fr.BuildResult, pypdfium2.PdfDocument]:
     d, cabinet, rest = _design_and_rest("a-")
-    # A cover taller than its page is COVER_OVERFLOW (pdf-0047): the extra pages are notes pages.
+    # The extra pages are notes pages.
     (root / "c.md").write_text("# c\n", encoding="utf-8")
     if cover_pages:
         notes = "\n\n".join("Notes line. " * 120 for _ in range(cover_pages))

@@ -9,7 +9,6 @@ lazy from pathlib import Path
 
 import fransys_pdf
 import fransys_render
-import typst
 from fransys_kicad import netlist as kicad_netlist
 from fransys_overview import html as overview_html
 from fransys_reports import (
@@ -29,7 +28,6 @@ from fransys_reports import (
 )
 from fransys_wago import modules_xml as modules_xml_of
 
-import electrical_symbols
 from fransys_layout import DiagramLayout
 from fransys_layout.symbols import text_room_on
 from fransys_model.derive import (
@@ -63,8 +61,8 @@ from ._link_boxes import link_boxes, where_links
 from ._release_checks import (
     _changes_since,
 )
-from ._settings_library import font_dirs
 from ._times import TIMES_FILE, Timer
+from ._typst_compile import typst_compiler
 from .documents import engine_subject
 from .errors import FransysError
 from .pipeline import BuildFailedError, BuildResult, _Drawn, _library, _overview, _raw_findings, _Read, _resolved, _result_svgs, _sheets
@@ -142,15 +140,7 @@ def _compile_pdf(drawn: _Drawn, document_id: Id[Any], settings: Settings) -> byt
     date is the source's `#set document(date: ...)` (0030).
     """
     source_text = _pdf_source(drawn, document_id, drawn.page_svgs, settings.pdf)
-    fonts = font_dirs(settings.font)
-    compiler = typst.Compiler(font_paths=list(fonts) or [electrical_symbols.font_dir()], ignore_system_fonts=True)
-    try:
-        compiled = compiler.compile(input=source_text.encode("utf-8"))
-    except typst.TypstError as error:
-        overflow = fransys_pdf.cover_overflow_finding(document_id, str(error))
-        if overflow is None:
-            raise
-        raise BuildFailedError(_resolved((overflow,), drawn.model), model=drawn.model) from error
+    compiled = typst_compiler(settings).compile(input=source_text.encode("utf-8"))
     # typst.Compiler.compile's stub types every call `bytes | list[bytes] | None` because the
     # union also covers `output=<path>` (writes to disk, returns `None`) and multi-file input
     # (returns `list[bytes]`); this call passes neither, so it always returns `bytes` (confirmed

@@ -3,7 +3,7 @@
 A model the facade did not build holds no record: each accessor then raises, naming the table.
 """
 
-from fransys_model.kernel import Model, SchemaError
+from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.layout import (
     DesignationForm,
     ExportForm,
@@ -20,11 +20,14 @@ from fransys_model.layout import (
     layout_of,
 )
 from fransys_model.vocab.tables import kind_of
+lazy from fransys_model.layout.house_text import FrontPages
+lazy from fransys_model.vocab.document import Document
 
 __all__ = [
     "designation_form_of",
     "export_form_of",
     "frame_form_of",
+    "front_count_of",
     "harness_text_of",
     "lists_of",
     "reference_text_of",
@@ -112,3 +115,16 @@ def word(model: Model, key: str) -> str:
         msg = f'[words] has no key "{key}"; known: {", ".join(table)}'
         raise SchemaError(msg, kind=kind_of(Words))
     return table[key]
+
+
+def front_count_of(model: Model, document: Id[Document]) -> int:
+    """The `layout.front_pages` count of `document`; raises naming the document when the facade wrote none."""
+    found = (one.count for one in layout_of(model, FrontPages).values() if one.document == document)
+    count = next(found, None)
+    if count is None:
+        msg = (
+            f"this model carries no layout.front_pages record for document {document}, which has a cover: "
+            "build it through `fransys.build`, which writes one per covered document from Typst's page count"
+        )
+        raise SchemaError(msg, kind="layout.front_pages")
+    return count

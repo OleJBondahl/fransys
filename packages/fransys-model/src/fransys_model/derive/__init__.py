@@ -305,7 +305,7 @@ from .overview_views import signal_lens, unit_matrix
 from .page_destination import ItemPage, cell_destination, item_pages, page_destination, sheet_title_text
 from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
-from .page_reference_text import page_reference_text, pdf_page, position_at
+from .page_reference_text import covered_documents, page_reference_text, pdf_page, position_at
 from .page_references import references_off_document
 from .page_titles import page_title, page_title_forms, short_title
 from .pairing import BoxPair, box_pairs
@@ -818,6 +818,7 @@ __all__ = [
     "core_on_pe_not_gnye",
     "cores_past_product",
     "cores_text",
+    "covered_documents",
     "crosses_unit",
     "csv_dialect",
     "current_chains",

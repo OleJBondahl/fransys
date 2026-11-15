@@ -2,12 +2,17 @@
 The bug (v0.15): the table's last bottom rule lay 0.7 mm inside the title block's top rule, so the two read as one thick line.
 Fixed by pdf-0027, the revision table's bottom rule lies at least 2 mm above the title block's top rule."""
 
-from typing import Any
+from itertools import takewhile
+from typing import Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+import pytest
+from fransys.colours import BK
 from pypdfium2 import raw
+
+from fransys_model.derive import documents, drawn_pages, pdf_page
 
 _GAP_MM = 2
 _POINTS_PER_MM = 72 / 25.4
@@ -64,3 +69,40 @@ def test_the_revision_table_ends_two_millimetres_above_the_title_block(tmp_path:
     assert table
     gap_mm = (min(rule[1] for rule in table) - title_top) / _POINTS_PER_MM
     assert gap_mm >= _GAP_MM, f"the gap is {gap_mm:.2f} mm"
+
+
+class _Io(NamedTuple):
+    M1: fr.Device
+
+
+@pytest.mark.rule("COVER-REVISIONS")
+@pytest.mark.parametrize("rows", [3, 18, 40])
+def test_a_drawing_page_counts_every_cover_page_whatever_the_history_length(tmp_path: Path, rows: int) -> None:
+    """KI-985, R2334: a long cover flows over further pages; the stored front count equals the PDF's cover pages and numbers the drawings."""
+    history = [{"version": 1, "revision": n, "date": "2026-01-01", "text": f"Revision {n}: changed wiring", "created": "AB"} for n in range(1, rows)]
+
+    @fr.unit(
+        "starter", version=1, revision=rows, interface_version=1, date="2026-01-01", text=f"Revision {rows}: changed wiring", by="AB", history=history
+    )
+    def build(d: fr.Design) -> _Io:
+        x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+        ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
+        q0, q1, f1 = d.device("Q0", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
+        x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+        m1, w1 = d.device("M1", "DEMO-MOTOR-4KW"), d.cable("W1", "DEMO-CBL-4G1.5")
+        d.series(ac, q0.element, q1.main, f1.main, x1, w1, m1, wire=(BK, 2.5))
+        return _Io(M1=m1)
+
+    d = fr.design("demo_parts")
+    d.add(build, "U1")
+    cover = tmp_path / "cover.md"
+    cover.write_text("# Motor starter\n\nA starter.\n\n## Notes\n\n" + "- A generic note line.\n" * 18, encoding="utf-8")
+    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "starter", cover=cover))
+    fr.write(result, out_dir=tmp_path / "out")
+    (pdf,) = (tmp_path / "out").glob("*.pdf")
+    (document,) = documents(result.model)
+    first = next(iter(drawn_pages(result.model, document)))
+    texts = [page.get_textpage().get_text_range() for page in pypdfium2.PdfDocument(pdf)]
+    cover_pages = len(list(takewhile(lambda text: "Cover" in text, texts)))
+    assert pdf_page(result.model, first) - 1 == cover_pages
+    assert (cover_pages > 1) == (rows > 17)

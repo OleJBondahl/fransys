@@ -23,8 +23,8 @@ def _headers(output: str) -> list[tuple[str, str]]:
     return headers
 
 
-def test_fransys_pdf_gives_exactly_its_five_surface_names():
-    """`fransys_pdf`'s `__all__` has 5 names; `api()` prints exactly those 5,
+def test_fransys_pdf_gives_exactly_its_four_surface_names():
+    """`fransys_pdf`'s `__all__` has 4 names; `api()` prints exactly those 4,
     including `FINDING_CODES`, a plain data value with no signature.
     """
     import fransys_pdf
@@ -33,7 +33,6 @@ def test_fransys_pdf_gives_exactly_its_five_surface_names():
         "FINDING_CODES",
         "PdfError",
         "check",
-        "cover_overflow_finding",
         "source",
     )
     output = lean_api.api("fransys_pdf")

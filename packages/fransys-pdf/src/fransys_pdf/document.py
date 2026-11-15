@@ -117,6 +117,14 @@ def _page_source(
     return _text_page(kind, doc, texts)
 
 
+def _page_bodies(
+    pages: tuple[PageKind, ...], doc: Doc, texts: _Texts, svgs: Mapping[str, str], links: Mapping[PageId, tuple[ReferenceLink, ...]]
+) -> list[str]:
+    """The Typst body of each page that draws one, with its section prefix unless the page frames itself."""
+    drawn = [(kind, _page_source(kind, doc, texts, svgs, links)) for kind in pages]
+    return [body if page_preset(kind).self_framed else f"{_section_prefix(doc, kind)}\n{body}" for kind, body in drawn if body]
+
+
 def source(  # noqa: PLR0913 -- the document's inputs, the facade's `[pdf]` table and its words [public keyword API kept, decision 0444]
     model: Model,
     document: DocumentId,
@@ -130,35 +138,20 @@ def source(  # noqa: PLR0913 -- the document's inputs, the facade's `[pdf]` tabl
     words: Mapping[str, str],
     revision_headers: tuple[str, ...],
     description_mm: float,
+    front_only: bool = False,
 ) -> str:
     """The complete, self-contained Typst source of one document, pure in its inputs.
 
-    Args:
-        model: A laid-out model.
-        document: Id of the document.
-        svgs: Page key to SVG text, inlined as an `image`.
-        sheets: Page key to its background (``fransys_render.sheets``).
-        bridges: ``fransys_render.bridge_pieces()``; a jumper group without it is a `KeyError`.
-        links: Page id to its reference links; every drawn page is in it.
-        diagrams: Every block diagram sheet the diagram engine placed (`DiagramSheet`).
-        pdf: The `[pdf]` table: `list_share_pct`, `list_gutter_pct`, `page_margin_mm`, `cable_run_header_mm` and `bridge_column_mm`.
-        words: The printed words, by key (`pdf_texts`).
-        revision_headers: The revision table's header cells.
-        description_mm: The revision table's description column width.
+    `svgs`, `sheets`, `bridges` (`fransys_render.bridge_pieces()`; a jumper group without it is a `KeyError`) and `diagrams` are the drawn
+    pages' inputs; `links` has every drawn page; `pdf` is the `[pdf]` table, `words` the printed words; `front_only` keeps the cover (pdf-0057).
     """
     record = document_row(model, document)
     pages = document_page_kinds(model, document)
+    if front_only:
+        pages = tuple(kind for kind in pages if page_preset(kind).form is PageForm.COVER)
     doc = (model, record, pages, document_sheet(model, record.id, pages), sheets, diagrams, pdf)
     cover = partial(cover_page, headers=revision_headers, description_mm=description_mm)
     texts = (cover, words, bridges)
-    page_bodies = []
-    for kind in pages:
-        body = _page_source(kind, doc, texts, svgs, links)
-        if not body:
-            continue
-        if not page_preset(kind).self_framed:
-            body = _section_prefix(doc, kind) + "\n" + body
-        page_bodies.append(body)
     head = document_metadata(model, record) + "\n" + preamble(sizes_of(model), doc[3], font_family(model))
-    body = "\n#pagebreak()\n".join(page_bodies)
+    body = "\n#pagebreak()\n".join(_page_bodies(pages, doc, texts, svgs, links))
     return f"{head}\n{body}\n#metadata(none) <{LAST_PAGE}>\n"

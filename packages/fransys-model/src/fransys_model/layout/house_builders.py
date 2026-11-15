@@ -7,12 +7,14 @@ from decimal import Decimal
 from typing import Any, cast
 lazy from collections.abc import Mapping
 
-from fransys_model.kernel import Record, SchemaError, make_id
+from fransys_model.kernel import Id, Record, SchemaError, make_id
+lazy from fransys_model.vocab.document import Document
 
 from .house_export import DesignationForm, ExportForm
 from .house_lists import Lists
 from .house_text import (
     FrameForm,
+    FrontPages,
     HarnessText,
     HouseProfile,
     ReferenceText,
@@ -24,7 +26,7 @@ from .house_text import (
     Words,
 )
 
-__all__ = ["HOUSE_TABLES", "house_records"]
+__all__ = ["HOUSE_TABLES", "front_pages_records", "house_records"]
 
 # The tables whose keys are the record's fields; `words` and `lists` are built below.
 _FORMS = {
@@ -87,4 +89,12 @@ def house_records(tables: Mapping[str, Mapping[str, object]]) -> tuple[Record, .
         words,
         _lists(cast("Mapping[str, Mapping[str, Any]]", tables["lists"])),
         *(_record(cls, name, tables[name]) for name, cls in _LAST.items()),
+    )
+
+
+def front_pages_records(counts: Mapping[Id[Document], int]) -> tuple[Record, ...]:
+    """One `FrontPages` record per document of `counts` (its Typst page count), in the mapping's order."""
+    return tuple(
+        FrontPages(id=make_id(FrontPages, key := ("build", "front_pages", str(document))), key=key, document=document, count=count)
+        for document, count in counts.items()
     )

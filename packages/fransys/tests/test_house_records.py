@@ -11,6 +11,7 @@ from fransys_model.derive.facts.house_settings import (
 )
 from fransys_model.kernel import Draft, Origin, SchemaError, make_id
 from fransys_model.layout import HOUSE_TABLES, HOUSE_TEXT_KINDS, Words, house_records, layout_of
+from fransys_model.layout.house_text import FrontPages
 
 pytestmark = pytest.mark.wp("facade")
 
@@ -27,8 +28,8 @@ def _file(tmp_path: Path, text: str) -> Path:
 
 def test_a_build_carries_one_record_of_each_house_text_kind() -> None:
     model = _build().model
-    for kind in HOUSE_TEXT_KINDS:
-        assert len(layout_of(model, kind)) == 1, kind.__name__
+    for kind in HOUSE_TEXT_KINDS:  # `FrontPages` is one per covered document: a build with no document has none
+        assert len(layout_of(model, kind)) == (kind is not FrontPages), kind.__name__
 
 
 def test_the_records_hold_the_settings_tables() -> None:

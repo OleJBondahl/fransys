@@ -22,6 +22,7 @@ from fransys_model.layout import (
     PageGroup,
     PageRole,
     SheetFormat,
+    front_pages_records,
     layout_of,
 )
 from fransys_model.refdef import Aspect
@@ -583,6 +584,7 @@ def model(*records):
         {r.release: _RELEASES[r.release] for r in records if isinstance(r, Unit)}.values(),
         origin=_ORIGIN,
     )
+    draft.extend(front_pages_records({r.id: 1 for r in records if isinstance(r, Document)}), origin=_ORIGIN)
     return freeze(draft)
 
 

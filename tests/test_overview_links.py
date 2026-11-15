@@ -23,7 +23,8 @@ from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import documents, unit_release
 from fransys_model.kernel import Origin, evolve, make_id
-from fransys_model.layout import DrawingSet, layout_of
+from fransys_model.layout import DrawingSet, front_pages_records, layout_of
+from fransys_model.layout.house_text import FrontPages
 from fransys_model.vocab import Document, DocumentPreset
 
 _RELATIVE = re.compile(r"^[^:/?#\\]+#nameddest=[^#:/]+$")
@@ -49,9 +50,9 @@ def _with_cabinet_documents(result: Any) -> Any:
         )
         for n, (place, owner) in enumerate([*((p, None) for p in places), *((None, u) for u in owners)])
     ]
+    put = [*docs, *front_pages_records({d.id: 1 for d in docs})]
     origin = Origin(file="tests/test_overview_links.py", line=1, note="invented documents")
-    kept = evolve(model, remove=tuple(documents(model)), put=docs, origin=origin)
-    return replace(result, model=kept)
+    return replace(result, model=evolve(model, remove=(*documents(model), *layout_of(model, FrontPages)), put=put, origin=origin))
 
 
 @cache

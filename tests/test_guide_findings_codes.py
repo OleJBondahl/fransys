@@ -1,7 +1,7 @@
 """Every emitted finding code has one `CodeInfo` (A1), and the guide lists it.
 
 `Finding(code=...)` is constructed three ways, all resolved here with `ast` (no import, no
-execution): a literal kwarg (`Finding(code="COVER_OVERFLOW", ...)`); a module-level string
+execution): a literal kwarg (`Finding(code="DOCUMENT_EMPTY_LIST", ...)`); a module-level string
 """
 
 from __future__ import annotations

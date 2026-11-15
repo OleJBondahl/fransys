@@ -61,6 +61,8 @@ core call can write is a gap in Fransys: report it with its smallest shape.
 Each task has one spelling. `P` is a generated parts module or an MPN string; `BU` and `BN` come
 from `fransys.colours`.
 
+`demo_parts` installs separately, at the same release as `fransys`: `demo-parts @ git+https://github.com/OleJBondahl/fransys@vX.Y.Z#subdirectory=examples/demo-parts`.
+
 | task | its one spelling | where it is taught |
 |---|---|---|
 | load a library, start a design | `d = fr.design("demo_parts")` | parts.md, Loading a library |
@@ -214,7 +216,7 @@ fr.write(result, Path("out"))
 
 ### Moving from an older release
 
-- `moving-to-0.23.md`: what 0.23 adds, what stays refused, and the known issues; no call changes from 0.22.9.
+- `moving-to-0.23.md`: what 0.23 adds, what stays refused, and the known issues, with a section for each release up to 0.23.18 and the breaking changes first.
 - `moving-to-0.22.md`: the elecdef `Rating`, the new `Operating` fields and `Current` from `fr.elecdef`.
 - `moving-to-0.20.md`: the new `fr.rebaseline` call for baselines cut by an older release.
 - `moving-to-0.19.md`: the detail calls that moved to `d.detail`, and the rewrite from `d.wire` to `d.series`.

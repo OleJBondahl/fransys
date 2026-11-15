@@ -1,4 +1,4 @@
-"""The house text records: one per `settings.toml` table, written once by the facade (SO3).
+"""The house text records: one per `settings.toml` table, written once by the facade (SO3), and `FrontPages` (model-0462).
 
 Each is a singleton the facade writes after `freeze()` and before any pass; an input never
 authors one and no pass removes it. Derive reads a record through its one accessor in
@@ -8,9 +8,11 @@ authors one and no pass removes it. Derive reads a record through its one access
 from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
+from fransys_model.vocab.document import Document
 
 __all__ = [
     "FrameForm",
+    "FrontPages",
     "HarnessText",
     "HouseProfile",
     "ReferenceText",
@@ -141,4 +143,18 @@ class HouseProfile:
     marker_padding: int
     route_turn_penalty: int
     route_crossing_penalty: int
+    ext: frozendict[str, Value] = frozendict()
+
+
+@record(kind="layout.front_pages")
+class FrontPages:
+    """The pages the front matter of `document` takes in its PDF: the facade writes it from Typst's own page count.
+
+    One per document with a cover, before any pass reads a page number; a reader never defaults it.
+    """
+
+    id: Id[FrontPages]
+    key: AuthoringKey
+    document: Id[Document]
+    count: int
     ext: frozendict[str, Value] = frozendict()

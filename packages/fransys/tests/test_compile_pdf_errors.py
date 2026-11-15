@@ -1,4 +1,4 @@
-"""`_compile_pdf` turns only the cover measurement's panic into a finding (decision 0211)."""
+"""`_compile_pdf` re-raises a Typst error untouched (decision 0211, amended by COVER-PAGES)."""
 
 import fransys as fr
 import fransys_pdf
@@ -9,7 +9,6 @@ from fransys import _exports, pipeline
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramLayout
 from fransys_model.derive import documents
-from fransys_model.kernel import Severity
 
 
 def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
@@ -28,12 +27,3 @@ def _compile(monkeypatch: pytest.MonkeyPatch, tmp_path, source_text: str):
 def test_another_typst_error_is_re_raised_untouched(monkeypatch, tmp_path):
     with pytest.raises(typst.TypstError, match="boom"):
         _compile(monkeypatch, tmp_path, '#panic("boom")')
-
-
-def test_the_cover_panic_becomes_build_errors_naming_the_heights(monkeypatch, tmp_path):
-    panic = '#panic("COVER_OVERFLOW cover=240.5 table=30 available=257")'
-    with pytest.raises(pipeline.BuildFailedError) as raised:
-        _compile(monkeypatch, tmp_path, panic)
-    (finding,) = raised.value.findings
-    assert (finding.code, finding.severity) == ("COVER_OVERFLOW", Severity.ERROR)
-    assert "240.5 mm" in finding.message

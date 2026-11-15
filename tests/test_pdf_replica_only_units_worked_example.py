@@ -1,7 +1,5 @@
-"""`fransys_pdf`'s replica-only drawing-set skip rule against the units worked example's own
-real, facade-built geometry. The pdf package unit tests prove the predicate's logic directly
-against hand-built `layout.*` records. Since layout-0214 the worked example no longer has that
-shape: a box cell the top does not wire is not drawn, so its set draws nothing; a real
+"""`fransys_pdf`'s replica-only skip rule against the units worked example's real, facade-built geometry.
+Since layout-0214 a box cell the top does not wire is not drawn, so its set draws nothing.
 """
 # CONNECTION_NOT_DRAWN 36 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
@@ -27,6 +25,8 @@ from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_model.derive import SheetKey, document_row, document_sheets_of, documents, unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
+from fransys_model.layout import front_pages_records, layout_of
+from fransys_model.layout.house_text import FrontPages
 from fransys_model.vocab import Document, DocumentPreset, Item, PageKind, PartCategory
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.tables import units as units_table
@@ -95,7 +95,8 @@ def _with_documents(model, *location_ids):
         )
         for index, location_id in enumerate(location_ids)
     ]
-    return evolve(model, remove=tuple(documents(model)), put=docs, origin=_ORIGIN), docs
+    put = [*docs, *front_pages_records({doc.id: 1 for doc in docs})]
+    return evolve(model, remove=(*documents(model), *layout_of(model, FrontPages)), put=put, origin=_ORIGIN), docs
 
 
 def test_the_worked_examples_top_level_sets_draw_nothing_and_report_nothing():
@@ -130,11 +131,7 @@ def test_a_real_rewired_boundary_draws_its_set():
 
 
 def _unit_by_name_and_prefix(model, *, name, prefix):
-    """The one unit of `model` named `name` whose own key starts with `prefix`.
-
-    `_build()` instantiates `demo-pump-cabinet` and, nested in it, `demo-io-board` once per
-    cabinet (`pump1`, `pump2`); both units of one name are real content, so this also proves
-    """
+    """The one unit of `model` named `name` whose own key starts with `prefix`."""
     all_units = units_table(model)
     return next(unit_id for unit_id in sorted(units(model)) if unit_release(model, unit_id).name == name and all_units[unit_id].key[0] == prefix)
 
@@ -157,7 +154,7 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         cover="# Cover",
         notes=None,
     )
-    model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
+    model_with_doc = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
     svg = fransys_render.sheets(document_sheets_of(model_with_doc, ()), LIBRARY)[SheetKey(doc.id, PageKind.COVER, 0)].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert {"demo-pump-cabinet", "1.2", "2026-01-01"} <= set(values)
@@ -183,7 +180,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     """
     model, _c1_id, _c2_id = _build()
     doc = _system_document("system")
-    model = evolve(model, put=[doc], origin=_ORIGIN)
+    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
 
     findings = check(model, {}, diagrams=(), laid=frozendict(), pdf=PDF)
     own_findings = [f for f in findings if doc.id in f.subjects]
@@ -191,12 +188,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     (info,) = [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"]
     assert info.severity is Severity.INFO
 
-    text = source(
-        model,
-        doc.id,
-        {},
-        fransys_render.sheets(document_sheets_of(model, ()), LIBRARY),
-    )
+    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model, ()), LIBRARY))
     assert '#par(text("No drawings."))' not in text
 
 
@@ -243,9 +235,7 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     )
     doc = _system_document("system-with-cable")
     model = evolve(
-        model,
-        put=[extra_cable_part, extra_cable_product, extra_cable, extra_facet, doc],
-        origin=_ORIGIN,
+        model, put=[extra_cable_part, extra_cable_product, extra_cable, extra_facet, doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN
     )
 
     cables = lay_out_cables(model, LIBRARY)  # as the facade does after the schematic layout
@@ -284,7 +274,7 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
         cover="# Cover",
         notes=None,
     )
-    model = evolve(model, put=[doc], origin=_ORIGIN)
+    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
     record = document_row(model, doc.id)
     text = bom_page(model, record)
     assert "demo-io-board" in text

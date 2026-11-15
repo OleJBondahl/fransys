@@ -1,6 +1,6 @@
 """The page fact and the text a page is named by wherever it is printed, one function (render-0018).
 
-A page's number is its place in its PDF, counted from 1 on the cover (pdf-0054, model-0436).
+A page's number is its place in its PDF, counted from 1 on the cover (pdf-0054, model-0436, model-0462).
 """
 
 from fransys_model.layout import Page, sheet_format_of
@@ -15,18 +15,23 @@ lazy from .document_pages import drawn_pages, ordered_pages
 lazy from .document_sets import set_printers
 lazy from .document_subject import scope_path
 lazy from .document_unit import document_unit
-lazy from .facts.house_settings import frame_form_of, reference_text_of
+lazy from .facts.house_settings import frame_form_of, front_count_of, reference_text_of
 lazy from .frame_labels import cell_labels
 lazy from .frame_position import partner_position_text, position_text
 lazy from .page_presets import document_page_kinds
 lazy from .rows_sheet import DiagramSheet
 
-__all__ = ["far_prefix", "front_pages", "page_reference_text", "pdf_page", "position_at"]
+__all__ = ["covered_documents", "far_prefix", "front_pages", "page_reference_text", "pdf_page", "position_at"]
+
+
+def covered_documents(model: Model) -> tuple[Id[Document], ...]:
+    """The documents that keep a cover: the ones whose front matter Typst counts and the facade stores."""
+    return tuple(document for document in documents(model) if PageKind.COVER in document_page_kinds(model, document))
 
 
 def front_pages(model: Model, document: Id[Document]) -> int:
-    """The pages before the drawings in `document`'s PDF: 1 with a cover, else 0 (`COVER_OVERFLOW` keeps it one)."""
-    return int(PageKind.COVER in document_page_kinds(model, document))
+    """The pages before the drawings in `document`'s PDF: Typst's count the facade stored with a cover, else 0."""
+    return front_count_of(model, document) if document in covered_documents(model) else 0
 
 
 def _places(model: Model) -> dict[Id[Page], int]:

@@ -5,7 +5,7 @@ A gap is in grid units `G`; eight `G` make one symbol module.
 
 ## Sheet
 
-A document's sheet is set for the whole build with `fr.settings(paper=...)` and `paper_by_kind` (see settings.md): A3 or A2, landscape. No call of a design or a unit sets or changes a sheet.
+A document's sheet is set for the whole build with `fr.settings(paper=...)` and `paper_by_kind` (see settings.md): A3 or A2; both are landscape by definition. No call of a design or a unit sets or changes a sheet.
 
 ## Profile keywords
 

@@ -1160,9 +1160,10 @@ The paper of every page of `document`: `document_sheet_format` as a `SheetRow`.
 def document_sheet_format(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> SheetFormat
 ```
 
-The paper of every page: the first drawing-set page's format, else the top profile's sheet.
+The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.
 
-A system document has none, so it takes the top profile's sheet, else the house one.
+Before layout there is no drawing-set page, so a document with a SCHEMATIC takes `sheet_for(SCHEMATIC)`, the sheet layout gives its pages.
+An item document draws no schematic, so it takes the cover's sheet.
 
 `document` is the document's id.
 

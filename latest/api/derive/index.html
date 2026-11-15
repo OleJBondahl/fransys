@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.19/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.20/api/derive/">
       
       
       
@@ -16922,8 +16922,9 @@ notes text. <code>fransys_pdf.source</code> assembles exactly these pages.</p>
 <h3 id="document_sheet_format">document_sheet_format</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">document_sheet_format</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">pages</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PageKind</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SheetFormat</span>
 </code></pre></div>
-<p>The paper of every page: the first drawing-set page's format, else the top profile's sheet.</p>
-<p>A system document has none, so it takes the top profile's sheet, else the house one.</p>
+<p>The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.</p>
+<p>Before layout there is no drawing-set page, so a document with a SCHEMATIC takes <code>sheet_for(SCHEMATIC)</code>, the sheet layout gives its pages.
+An item document draws no schematic, so it takes the cover's sheet.</p>
 <p><code>document</code> is the document's id.</p>
 <h3 id="document_sheets">document_sheets</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">document_sheets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">diagrams</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DiagramSheet</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DocumentSheets</span>
@@ -20331,7 +20332,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.19 documentation
+      Fransys 0.23.20 documentation
     </div>
   
   

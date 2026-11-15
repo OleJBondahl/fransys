@@ -2,6 +2,11 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.20
+
+- Page references are right on an A2 cover with a long revision table. 0.23.19 counted its cover pages at A3 and printed every reference one page late.
+- The number of extra cover pages depends on the paper: a long revision table flows over more cover pages at A3 than at A2.
+
 ## New in 0.23.19
 
 - A cover no longer stops a build: COVER_OVERFLOW is gone. 0.23.18 refused a cover whose revision history had grown (KI-985 closed).

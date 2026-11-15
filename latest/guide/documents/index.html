@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.18/guide/documents/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.19/guide/documents/">
       
       
       
@@ -2109,7 +2109,7 @@ means no notes page. <code>logo</code> is an optional path to an SVG for the tit
 default) leaves that cell empty. <code>notice</code> is the text of the title block's IP notice cell, printed
 on every page of that document; <code>""</code> (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives <code>TITLE_BLOCK_NOTICE_OVERFLOW</code>. Customer and Author are narrower than with no notice. A unit released alone
 needs no <code>d.project</code> for either; its Author cell prints <code>created</code> of the unit's current revision, a project document's the project's <code>author</code>. <code>d.project(notice=...)</code> raises: the notice moved here.</p>
-<p>The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover is page 1 and the drawings start on page 2.</p>
+<p>The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover starts on page 1, and the drawings start after its last page: a long revision table continues on further cover pages.</p>
 <table>
 <thead>
 <tr>
@@ -2336,7 +2336,7 @@ document's subject, as the unit example on this page does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.18 documentation
+      Fransys 0.23.19 documentation
     </div>
   
   

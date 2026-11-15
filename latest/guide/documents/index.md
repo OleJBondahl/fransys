@@ -17,7 +17,7 @@ default) leaves that cell empty. `notice` is the text of the title block's IP no
 on every page of that document; `""` (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives `TITLE_BLOCK_NOTICE_OVERFLOW`. Customer and Author are narrower than with no notice. A unit released alone
 needs no `d.project` for either; its Author cell prints `created` of the unit's current revision, a project document's the project's `author`. `d.project(notice=...)` raises: the notice moved here.
 
-The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover is page 1 and the drawings start on page 2.
+The page kinds each preset holds, in the order of the PDF: the cover, the drawings, then the notes, the index and the lists. The cover starts on page 1, and the drawings start after its last page: a long revision table continues on further cover pages.
 
 | page kind | `CABINET_SCHEMATIC` | `SYSTEM` |
 |---|---|---|

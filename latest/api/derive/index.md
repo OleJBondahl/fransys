@@ -900,6 +900,14 @@ def cores_text(core_count: int | None, pairs: int | None) -> str
 
 The cable list's Cores cell: `2x2` for a paired product, the count otherwise.
 
+### covered_documents
+
+```python
+def covered_documents(model: Model) -> tuple[Id[Document], ...]
+```
+
+The documents that keep a cover: the ones whose front matter Typst counts and the facade stores.
+
 ### crosses_unit
 
 ```python

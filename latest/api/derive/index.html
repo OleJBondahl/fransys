@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.18/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.19/api/derive/">
       
       
       
@@ -2658,6 +2658,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         cores_text
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#covered_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        covered_documents
       </span>
     </span>
   </a>
@@ -9857,6 +9868,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#covered_documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        covered_documents
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#crosses_unit" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -16756,6 +16778,10 @@ The author refuses it at the call and the <code>CORE_ON_PE_NOT_GNYE</code> check
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cores_text</span><span class="p">(</span><span class="n">core_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pairs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
 <p>The cable list's Cores cell: <code>2x2</code> for a paired product, the count otherwise.</p>
+<h3 id="covered_documents">covered_documents</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">covered_documents</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+<p>The documents that keep a cover: the ones whose front matter Typst counts and the facade stores.</p>
 <h3 id="crosses_unit">crosses_unit</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">crosses_unit</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">,</span> <span class="n">one</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">],</span> <span class="n">other</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
@@ -20305,7 +20331,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.18 documentation
+      Fransys 0.23.19 documentation
     </div>
   
   

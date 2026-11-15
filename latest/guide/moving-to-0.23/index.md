@@ -1,6 +1,115 @@
 # Moving to 0.23
 
-This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. No call changes from 0.22.9: no name is added to or removed from the API, and no call needs a new spelling.
+This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
+
+## New in 0.23.19
+
+- A cover no longer stops a build: COVER_OVERFLOW is gone. 0.23.18 refused a cover whose revision history had grown (KI-985 closed).
+- The revision table stays at the foot of the cover while it fits. Else it follows the text and continues on further cover pages, its header repeated.
+- Page numbers and page references count the extra cover pages.
+- The notes of 0.23.3 to 0.23.18 are now on this page, one section per release.
+
+## New in 0.23.18
+
+- A join between pins at one level draws as a jog with a dot, not a jumper with no conductor behind it. 0.23.16 and 0.23.17 drew such a join wrongly (KI-737 closed).
+- Known issue: a chain or hub can be drawn as ink with no conductor behind it. No shipped check counts it yet.
+
+## New in 0.23.17
+
+- BREAKING: the schema 1 part-file migration is removed: `migrate-parts` and `fransys_parts.migrate` are gone. Rewrite part files to schema 2 with 0.23.16's `migrate-parts` before you upgrade.
+- BREAKING: a stored model of schema 31 or older is refused; a box side now writes `source_row` as null (schema 32). Rebuild stored releases with `fr.release`.
+- `series(parallel, parallel)` joins the members as a star from the first member of the earlier group, not a cycle. The wire list drops one conductor per latch (KI-976).
+- A refused set is refused once: its output steps do not run and it is not checked a second time (KI-799 closed).
+- A card's pin pitch is its own pin spacing; the pitch floor is gone.
+- Known issue: see 0.23.18 (a chain or hub drawn with no conductor behind it).
+
+## New in 0.23.16
+
+- BREAKING: a protecting device whose conductive link joins pins with no side fails with `PART_POLE_WITHOUT_SIDE` (ERROR). State `side = "line"` or `side = "load"` on each pole pin; for an MCB, pins 1 and 3 are line, 2 and 4 load.
+- BREAKING: a fused terminal part that names `symbol=` is refused. Its protective link chooses the symbol, so delete the line. A terminal with a protective link draws as a fused terminal.
+- BREAKING: a BOM lists a terminal strip once, not each of its terminals. Read the strip, not its terminals, when you build on the BOM rows.
+- BREAKING: a terminal alone in its run, or a gap wider than one pitch from its neighbour, prints its full designation.
+- The aspect is refdef's `Aspect` (stored model schema 31); rebuild stored releases.
+- A fed end always stands at its last stand, so a refused slot no longer drops a conductor and no connection is missing on the drawing.
+- A card keeps only the pieces of a cut column that meet its pins, so no row passes the page. Drawn tags and arrows are the box of their own text.
+- A reference marker whose lead would cross a symbol body is not placed there. `WIDER_THAN_PAGE` now names splitting the device or paper A2 as the fix.
+- A board that shares a unit is refused with a fix text.
+
+## New in 0.23.15
+
+- A lost conductor lays no trunk, so the three pair-return `CONNECTION_NOT_DRAWN` findings of 0.23.14 are gone.
+
+## New in 0.23.14
+
+- A transformer box, or any symbol whose pins share one chain, no longer fails layout with a cycle error (`PLACEMENT_PROBLEM`).
+- Known issue: three pair-return `CONNECTION_NOT_DRAWN` findings are not fixed yet. 0.23.15 fixes them.
+
+## New in 0.23.13
+
+- The by-others frame prints no "by others" text by default. A corner text option comes later.
+
+## New in 0.23.12
+
+- BREAKING: `d.item` and `d.device` refuse a terminal part. The error names `d.terminal_strip`.
+- A part's function may state `box_side = "top"` or `"bottom"`, and every pin of it keeps that side. The stored model schema is 29; rebuild stored releases.
+- A part chooses the transformer-box symbol, a transformer sign in the psu box, through its `symbol`.
+- The fan page draws the wires of an overload's poles; they stay separate drawn nets.
+- Known issue KI-874: a starter's side tap is not fixed yet.
+
+## New in 0.23.11
+
+- BREAKING: a port names its physical connector pin with `connector = "j3.1"` in a part file. The stored model schema is 28; rebuild stored releases.
+- `hide_pe` leaves out every conductor on the PE net, however it is joined. An earth-joined PE strip that is no declared rail no longer raises a false `CONNECTION_NOT_DRAWN` ERROR.
+
+## New in 0.23.10
+
+- BREAKING: a connector facet in a part file takes `poles`, where it took `pincount`. `pincount` is no longer a key and has no alias; repin your part files.
+- A lost link's net keeps one tag lane with a pin on every end, so the layout CoreError that this case raised is gone (KI-777, KI-838 and KI-642 closed).
+- A pole's two pins are consecutive on its lane (KI-837 closed).
+- External roots are framed with the dashed by-others outline.
+
+## New in 0.23.9
+
+- 0.23.9 was tagged but not published. 0.23.10 carries its content: read the 0.23.10 section for the `poles` rename and the layout fixes.
+
+## New in 0.23.8
+
+- A page cut by height gives each lane it holds one head and one foot, which removes a crash in the join step (KI-836).
+- A check now verifies that every drawn reference reads back to its target.
+- A poles link rule from elecdef 0.7.0 applies: a link that joins a line pin and a load pin is a set of poles.
+- Known issue KI-777: still open, see 0.23.7.
+
+## New in 0.23.7
+
+- The 0.23.5 change to page cutting is withdrawn, because it moved the layout error of KI-777 to a later step. Drawings return to their 0.23.4 form.
+- Known issue KI-777: a layout CoreError can occur on the net of a lost link. It is fixed in 0.23.10.
+
+## New in 0.23.6
+
+- With `"ring_out"` in `[export] reports`, `fr.write` writes one ring-out sheet for every PDF document that has drawings, not only for each unit. `ring_out_skip` leaves named document presets without a sheet. See `settings.md`.
+- Known issue KI-777: see 0.23.7.
+
+## New in 0.23.5
+
+- A ring-out core row's mm2 is its cable's gauge, read from the cable list row.
+- A page cut reads the placed row measure. This is withdrawn in 0.23.7.
+- Known issue KI-777: see 0.23.7.
+
+## New in 0.23.4
+
+- BREAKING: `DrawnRow.height_g` and `width_g` are now `height` and `width`; see the section below. Findings print the true G distance, and the guide says to divide by 8 once for millimetres.
+- A set whose layout refused returns its pages and rows, so drawn checks can run on it. `fr.write` still refuses.
+- A new export kind `ring_out` writes a ring-out sheet for each unit document. It is off by default.
+- A page routed again with equal inputs is reused, which speeds up large builds (KI-815 closed).
+- Known issue KI-777: see 0.23.7.
+
+## New in 0.23.3
+
+- A far end whose home set failed layout is judged by its drawn copies, so it no longer raises a false missing connection (KI-812).
+- Two views of one power pin count as one piece, which removes a false `CONNECTION_NOT_DRAWN` on a power net (KI-813).
+- A drawn set is checked exactly when its drawing is complete, so a failed set does not hide findings on the others.
+- `HARNESS_WIRE_MISMATCH` compares each cable block with the harness-wire rows.
+- Known issue KI-777: see 0.23.7.
 
 ## New in 0.23.2
 

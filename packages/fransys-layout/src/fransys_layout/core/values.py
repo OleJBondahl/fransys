@@ -302,6 +302,8 @@ class Options:
     # placement, and the box (by orientation) of a stub with that widest width and that many lines; the ledger's lines pick the box
     stub_lines: Mapping[tuple[PinRef, PinRef], tuple[int, ...]] = field(default_factory=frozendict)
     stub_table: Mapping[tuple[int, int], Mapping[Orientation, Box]] = field(default_factory=frozendict)
+    # PAGE-TITLE: symbols whose group adds no group to a page where they are alone in it; the caller names them
+    untitled: frozenset[str] = frozenset()
     # R377: the views whose box lies above or below its pin, and the one that lies above; el
     # passes them from the marker symbol's facing, so the core names no view
     marker_vertical: frozenset[Orientation] = frozenset()

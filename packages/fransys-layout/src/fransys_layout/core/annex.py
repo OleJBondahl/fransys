@@ -13,7 +13,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 from .annex_values import AnnexBox
-from .clearance import Keep, clear
+from .clearance import Keep, hits
 from .errors import CoreError
 from .geometry import around, inside, overlaps
 from .outputs import Demand
@@ -84,8 +84,8 @@ def _wire_keeps(wires: Sequence[Wire]) -> list[Keep]:
 
 
 def _clear(box: Box, keeps: Sequence[Keep]) -> bool:
-    """Whether no keep shares interior with `box`: the box less its rim is the probe, so a touching edge is clear (`clearance.clear`)."""
-    return not clear(Box(box.x + 1, box.y + 1, box.w - 2, box.h - 2), keeps, {})
+    """Whether no keep shares interior with `box`: the box less its rim is the probe, so a touching edge is clear (`clearance.hits`)."""
+    return not any(hits(Box(box.x + 1, box.y + 1, box.w - 2, box.h - 2), keeps, {}))
 
 
 class Cand(NamedTuple):

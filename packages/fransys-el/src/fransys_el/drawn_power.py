@@ -58,7 +58,9 @@ def _pe_classes(model: Model, keys: dict[str, str], ids: Mapping[str, Id[Port]])
 def port_nets(model: Model, ids: Mapping[str, Id[Port]]) -> dict[str, str]:
     """The physical net of each port, spelled as `Net.id` is (`net_key`), built once; the PE nets of a bonded cabinet are one (R1937)."""
     found = {port: net_of(model, one) for port, one in ids.items()}
-    keys = {port: net_key(model, net.ports) if net else port for port, net in found.items()}
+    nets = {net.ports[0]: net for net in found.values() if net}  # a net by its first port: one spelling per net
+    spelled = {first: net_key(model, net.ports) for first, net in nets.items()}
+    keys = {port: spelled[net.ports[0]] if net else port for port, net in found.items()}
     held = _pe_classes(model, keys, ids)
     return {port: held.get(key, key) for port, key in keys.items()}
 

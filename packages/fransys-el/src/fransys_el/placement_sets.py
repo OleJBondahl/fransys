@@ -34,7 +34,7 @@ from .placement_markers import pin_ports
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping, Sequence
 
-    from fransys_layout.core import Net, Options, PagePlan, PinRef, Size
+    from fransys_layout.core import Net, Options, PinRef, Size
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import AspectNode, Unit
 
@@ -48,7 +48,6 @@ __all__ = [
     "drawing_scopes",
     "frame_titles",
     "restriction",
-    "scope_groups",
 ]
 
 _MIN_ENDS = 2  # a wire needs two ends
@@ -357,13 +356,6 @@ def _scoped(
     nets = tuple(_lined(n, lines or {}) for _, n in cut if n is not None) + tuple(_whole(n, scope, boundary) for n in problem.nets if n.id in joined)
     dropped = frozenset(o.id for o, n in cut if n is None and any(p.sym in scope.symbols for p in o.pins))
     return nets, dropped
-
-
-def scope_groups(pages: tuple[PagePlan, ...], problem: PlacementProblem, scope: DrawingScope) -> tuple[PagePlan, ...]:
-    """`pages` with the groups `write_pages` records (page title, role, key): a group only copies of `scope` carry is off (R734 G6, R747)."""
-    own = {s.group for s in problem.symbols if s.id not in scope.copies}
-    skip = {s.group for s in problem.symbols if s.id in scope.copies} - own
-    return tuple(replace(p, groups=tuple(g for g in p.groups if g not in skip)) for p in pages)
 
 
 def restriction(  # noqa: PLR0913 -- the scope's problem takes the set's cut facts and its options [R1867]

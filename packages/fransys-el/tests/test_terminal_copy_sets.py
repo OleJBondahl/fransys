@@ -1,6 +1,5 @@
 """A terminal wired from two drawing sets of one document is drawn in both (WHERE-WIRED, R652)."""
 
-from dataclasses import replace
 from typing import Any, NamedTuple
 
 import fransys as fr
@@ -10,11 +9,10 @@ from conventions_fixtures import house
 from fransys.colours import BN
 from fransys_el import build, symbol_kit
 from fransys_el.placement_env import make_env
-from fransys_el.placement_sets import drawing_scopes, frame_titles, restriction, scope_groups
+from fransys_el.placement_sets import drawing_scopes, frame_titles, restriction
 from fransys_el.placement_syms import strip_tags
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import PagePlan
 from fransys_model.derive import function_replicas, function_scopes, item_functions
 
 
@@ -161,21 +159,6 @@ def test_a_rail_fed_from_copies_of_top_level_terminals_leaves_no_connection_undr
     """Pump-station shape: a copy keeping its home unit split the L1 rail across two unit lists (KI-178)."""
     missing = [f for f in fr.check(railed) if f.code == "CONNECTION_NOT_DRAWN"]
     assert len(missing) <= 5, "the N wire short of -T1:N and the four cable-core pairs with no wire or stub may stand (KI-132, MC-PROBE-1, R815)"
-
-
-@pytest.mark.rule("PAGE-TITLE")
-def test_a_terminal_copy_adds_no_group_to_a_page_title(drawn) -> None:
-    """R734 G6, R733: a group only a copy carries is no title part of that page; a replica's group is."""
-    model, kit, problem = drawn
-    scopes = drawing_scopes(model, kit)
-    (replicated,) = (s for s in scopes if s.replicas)
-    grouped = replace(problem, symbols=tuple(replace(s, group="HOME") if s.id in replicated.replicas else s for s in problem.symbols))
-    page = PagePlan(1, "", (), groups=("HOME", "V1", "V2"))
-    (kept,) = scope_groups((page,), grouped, replicated)
-    assert kept.groups == ("HOME", "V1", "V2")
-    as_copy = replace(replicated, copies=replicated.replicas, replicas=frozenset())
-    (dropped,) = scope_groups((page,), grouped, as_copy)
-    assert dropped.groups == ("V1", "V2")
 
 
 def test_a_unit_set_frames_its_replicas_and_a_place_set_frames_only_an_external_root(drawn, railed) -> None:

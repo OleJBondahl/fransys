@@ -14,7 +14,7 @@ from .placement_env import make_env
 from .placement_kit import ProblemError, refuse
 from .placement_markers import facing_views, stub_fit
 from .placement_options import options
-from .placement_sets import bare_pins, cut_lines, drawing_scopes, restriction, scope_groups
+from .placement_sets import bare_pins, cut_lines, drawing_scopes, restriction
 from .placement_syms import strip_tags
 from .placement_widest import link_fit
 from .set_findings import set_failure_finding, set_without_page_findings, skipped_ports
@@ -93,9 +93,8 @@ def _one_set(
     fit, lines, table = stub_fit(run.model, run.kit, (scope.of_unit, run.library), pins)
     wide = link_fit(run.model, run.kit, run.library, scope.of_unit)
     turned, above, below = facing_views()
-    base = replace(run.chosen, link_fit=wide, marker_vertical=turned, marker_above=above, marker_below=below)
+    base = replace(run.chosen, link_fit=wide, untitled=scope.copies, marker_vertical=turned, marker_above=above, marker_below=below)
     layout = solve(part, replace(base, marker_fit=fit, stub_lines=lines, stub_table=table))
-    layout = replace(layout, pages=scope_groups(layout.pages, part, scope))
     laid, more, drawn, markers, skipped = write_layout_drawn(
         laid,
         scope.of_unit,

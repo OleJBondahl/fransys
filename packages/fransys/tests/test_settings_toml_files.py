@@ -24,6 +24,7 @@ LEFT_OUT = {
     "marker",
     "outline",
     "marker_fit",
+    "untitled",
     "stub_lines",
     "stub_table",
     "link_fit",

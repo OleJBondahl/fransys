@@ -34,16 +34,17 @@ __all__ = ["document_sheet_format", "document_sheets", "document_sheets_of"]
 
 
 def document_sheet_format(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> SheetFormat:
-    """The paper of every page: the first drawing-set page's format, else the top profile's sheet.
+    """The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.
 
-    A system document has none, so it takes the top profile's sheet, else the house one.
+    Before layout there is no drawing-set page, so a document with a SCHEMATIC takes `sheet_for(SCHEMATIC)`, the sheet layout gives its pages.
+    An item document draws no schematic, so it takes the cover's sheet.
 
     `document` is the document's id.
     """
     found = drawn_pages(model, document) if PageKind.SCHEMATIC in pages else ()
     if found:
         return sheet_format_of(model, found[0].sheet_format)
-    return sheet_for(model, PageKind.COVER)
+    return sheet_for(model, PageKind.SCHEMATIC if PageKind.SCHEMATIC in pages and has_schematic_subject(model, document) else PageKind.COVER)
 
 
 def _fields(

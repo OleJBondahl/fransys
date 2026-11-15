@@ -147,11 +147,10 @@ def source(  # noqa: PLR0913 -- the document's inputs, the facade's `[pdf]` tabl
     """
     record = document_row(model, document)
     pages = document_page_kinds(model, document)
-    if front_only:
-        pages = tuple(kind for kind in pages if page_preset(kind).form is PageForm.COVER)
-    doc = (model, record, pages, document_sheet(model, record.id, pages), sheets, diagrams, pdf)
+    kept = tuple(kind for kind in pages if not front_only or page_preset(kind).form is PageForm.COVER)
+    doc = (model, record, kept, document_sheet(model, record.id, pages), sheets, diagrams, pdf)
     cover = partial(cover_page, headers=revision_headers, description_mm=description_mm)
     texts = (cover, words, bridges)
     head = document_metadata(model, record) + "\n" + preamble(sizes_of(model), doc[3], font_family(model))
-    body = "\n#pagebreak()\n".join(_page_bodies(pages, doc, texts, svgs, links))
+    body = "\n#pagebreak()\n".join(_page_bodies(kept, doc, texts, svgs, links))
     return f"{head}\n{body}\n#metadata(none) <{LAST_PAGE}>\n"

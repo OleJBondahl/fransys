@@ -142,9 +142,14 @@ def _rows_of(seq: Sequence[Item], state: RowState, end: int) -> tuple[RowPlan, .
 
 
 def _drawn_groups(items: Sequence[Item], cut: Cut, env: Env) -> tuple[str, ...]:
-    """The groups of every symbol drawn on a page and of its blocks' own symbols, in the authored order of `env.rank`."""
-    cells = (c.sym for it in items if not it.bare for lane in env.columns[it.column].lanes for c in lane.cells)
-    groups = dict.fromkeys((*(env.syms[s].group for s in cells), *(cut.by_id[it.block].group for it in items)))
+    """The groups of the symbols drawn on a page and of its blocks, in the authored order of `env.rank`.
+
+    A group whose only symbols on the page are in `options.untitled` is left out (PAGE-TITLE).
+    """
+    cells = [c.sym for it in items if not it.bare for lane in env.columns[it.column].lanes for c in lane.cells]
+    shown = dict.fromkeys(env.syms[s].group for s in cells if s not in env.options.untitled)
+    hidden = {env.syms[s].group for s in cells} - shown.keys()
+    groups = dict.fromkeys((*shown, *(g for it in items if (g := cut.by_id[it.block].group) not in hidden)))
     return (*(g for g in env.rank if g in groups), *(g for g in groups if g and g not in env.rank))
 
 

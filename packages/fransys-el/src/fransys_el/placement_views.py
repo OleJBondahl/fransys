@@ -5,6 +5,8 @@ height wide, so markers on neighbouring pins never share a stagger level. A mark
 the flag with horizontal text. Both are measured here once, so every box comes from one place.
 """
 
+from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import TYPE_CHECKING, cast
 
 from electrical_symbols import MARKER_SLOT, MARKER_TURNED
@@ -28,15 +30,29 @@ MARKER_KEYS = frozenset({MARKER, MARKER_TURNED})
 _TURNED = {"R90": "R0", "MR270": "R0", "R270": "R180", "MR90": "R180"}
 
 
-def marker_boxes(library: Library, text: str | None = None) -> Mapping[Orientation, Box]:
-    """The marker's keep-out box at every orientation once its slot holds `text`.
+@dataclass(frozen=True, slots=True)
+class _Held:
+    """A library held by identity: it holds mappings and so has no hash, and a held one keeps its id its own."""
 
-    `None` is the plain marker. A text that fits asks for nothing (D95).
-    """
+    key: int
+    library: Library = field(compare=False)
+
+
+@lru_cache(maxsize=4096)  # the boxes depend on the frozen library and the text alone; an entry holds its library, so its id is never reused
+def _measured(held: _Held, text: str | None) -> Mapping[Orientation, Box]:
+    library = held.library
     flag, turned = library_symbol(library, MARKER), library_symbol(library, MARKER_TURNED)
     if text is None:
         across, along = marker_views(flag, library), marker_views(turned, library)
     else:
         across = fitted_marker_views(flag, MARKER_SLOT, text, library)
         along = fitted_marker_views(turned, MARKER_SLOT, text, library)
-    return {o: along[cast("Orientation", _TURNED[o])] if o in _TURNED else box for o, box in across.items()}
+    return frozendict({o: along[cast("Orientation", _TURNED[o])] if o in _TURNED else box for o, box in across.items()})
+
+
+def marker_boxes(library: Library, text: str | None = None) -> Mapping[Orientation, Box]:
+    """The marker's keep-out box at every orientation once its slot holds `text`, measured once per library and text.
+
+    `None` is the plain marker. A text that fits asks for nothing (D95).
+    """
+    return _measured(_Held(id(library), library), text)

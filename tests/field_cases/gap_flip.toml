@@ -101,5 +101,7 @@
 "test_untagged_unused_device_in_a_holder_is_an_accessory.py::test_no_wire_runs_across_the_box_of_a_reference_marker" = "GAP-FLIP-632"  # KI-632 MARKER-OBSTACLE (R1661): the jog bends over the marker box
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
+"test_a_terminal_of_a_unit_set_cut_across_pages_is_drawn_on_each_page.py::test_a_terminal_wired_to_relays_on_two_pages_is_drawn_on_each" = "GAP-FLIP-647"  # KI-647 TERMINAL-PAGE-COPY (WIRE-29): the terminal is drawn once, the far page carries stubs
+"test_a_two_pole_switch_with_one_pole_in_a_chain_and_one_to_a_terminal_draws_every_connection.py::test_the_terminal_of_the_second_pole_is_reached_inside_its_own_column" = "GAP-FLIP-753"  # KI-753 SHARED-POLE-TURN: pole 2 keeps pole 1's turn, a cross-link reaches its terminal
 
 [raises]

@@ -76,9 +76,9 @@ class _Io(NamedTuple):
 
 
 @pytest.mark.rule("COVER-REVISIONS")
-@pytest.mark.parametrize("rows", [3, 18, 40])
-def test_a_drawing_page_counts_every_cover_page_whatever_the_history_length(tmp_path: Path, rows: int) -> None:
-    """KI-985, R2334: a long cover flows over further pages; the stored front count equals the PDF's cover pages and numbers the drawings."""
+@pytest.mark.parametrize(("rows", "paper"), [(3, "A3"), (18, "A3"), (40, "A3"), (3, "A2"), (18, "A2")])
+def test_a_drawing_page_counts_every_cover_page_whatever_the_history_length(tmp_path: Path, rows: int, paper: str) -> None:
+    """KI-985, R2334: a long cover flows over further pages; the stored front count equals the PDF's cover pages, at the document's paper."""
     history = [{"version": 1, "revision": n, "date": "2026-01-01", "text": f"Revision {n}: changed wiring", "created": "AB"} for n in range(1, rows)]
 
     @fr.unit(
@@ -97,12 +97,12 @@ def test_a_drawing_page_counts_every_cover_page_whatever_the_history_length(tmp_
     d.add(build, "U1")
     cover = tmp_path / "cover.md"
     cover.write_text("# Motor starter\n\nA starter.\n\n## Notes\n\n" + "- A generic note line.\n" * 18, encoding="utf-8")
-    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "starter", cover=cover))
+    document_ = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "starter", cover=cover)
+    result = fr.build(d, document_, settings=fr.settings(paper={fr.PageKind.SCHEMATIC: paper}))
     fr.write(result, out_dir=tmp_path / "out")
     (pdf,) = (tmp_path / "out").glob("*.pdf")
     (document,) = documents(result.model)
     first = next(iter(drawn_pages(result.model, document)))
-    texts = [page.get_textpage().get_text_range() for page in pypdfium2.PdfDocument(pdf)]
-    cover_pages = len(list(takewhile(lambda text: "Cover" in text, texts)))
+    cover_pages = len(list(takewhile(lambda page: "Cover" in page.get_textpage().get_text_range(), pypdfium2.PdfDocument(pdf))))
     assert pdf_page(result.model, first) - 1 == cover_pages
-    assert (cover_pages > 1) == (rows > 17)
+    assert (cover_pages > 1) == (rows > 17 and paper == "A3")

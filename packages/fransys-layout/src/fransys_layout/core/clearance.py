@@ -5,14 +5,13 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
-from .values import Box
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
     from .flow_values import Fan
     from .outputs import Placed
+    from .values import Box
 
 
 class Keep(NamedTuple):
@@ -57,9 +56,27 @@ def _hits(probe: Box, k: Keep, top: int, *, open_: bool) -> bool:
     """Edges closed on both axes: touching counts as a hit, unless `open_`."""
     b = k.box
     (x, w), (y, h) = _shrunk(b.x, b.w, open_=open_), _shrunk(top, b.h, open_=open_)
-    kx, ky = closed_cells(Box(x, y, w, h))
-    px, py = closed_cells(probe)
-    return kx.start < px.stop and px.start < kx.stop and ky.start < py.stop and py.start < ky.stop
+    return x <= probe.x + probe.w and probe.x <= x + w and y <= probe.y + probe.h and probe.y <= y + h
+
+
+def hits(
+    probe: Box,
+    keeps: Sequence[Keep],
+    y: Mapping[str, int],
+    *,
+    edge: Literal["closed", "open", "tags"] = "closed",
+    own: AbstractSet[str] = frozenset(),
+) -> Iterator[Keep]:
+    """The keeps the probe hits, in input order, one at a time; keeps owned by `own` are skipped.
+
+    "open" lets touching edges clear (a thin keep keeps its extent); "tags" does so for a marker box only (layout-0591).
+    """
+    return (
+        k
+        for k in keeps
+        if k.owner not in own
+        and _hits(probe, k, k.box.y + (y[k.node] if k.node else 0), open_=edge == "open" or (edge == "tags" and k.kind == "marker"))
+    )
 
 
 def clear(
@@ -70,16 +87,8 @@ def clear(
     edge: Literal["closed", "open", "tags"] = "closed",
     own: AbstractSet[str] = frozenset(),
 ) -> tuple[Keep, ...]:
-    """The keeps the probe hits, in input order; keeps owned by `own` are skipped.
-
-    "open" lets touching edges clear (a thin keep keeps its extent); "tags" does so for a marker box only (layout-0591).
-    """
-    return tuple(
-        k
-        for k in keeps
-        if k.owner not in own
-        and _hits(probe, k, k.box.y + (y[k.node] if k.node else 0), open_=edge == "open" or (edge == "tags" and k.kind == "marker"))
-    )
+    """The keeps the probe hits, in input order (`hits`, all of them)."""
+    return tuple(hits(probe, keeps, y, edge=edge, own=own))
 
 
 def blocked(box: Box, keeps: Sequence[Keep], own: frozenset[str], origin: tuple[int, int]) -> tuple[Keep, ...]:

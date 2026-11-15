@@ -4,6 +4,7 @@ from itertools import combinations
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import link_groups, port_function
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 
 from .placement_ids import symbol_key
 from .placement_kit import refuse
@@ -17,10 +18,15 @@ if TYPE_CHECKING:
 __all__ = ["link_fact", "refuse_joined"]
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _protected(model: Model) -> frozenset[Id[Function]]:
+    """The functions a protective link joins ports of, grouped once per model."""
+    return frozenset(g.function for g in link_groups(model, lambda role: role.protective))
+
+
 def link_fact(model: Model, function: Function) -> str:
     """`protective` when a protective link joins two of the function's ports (a fuse in the path), else `none`."""
-    found = any(g.function == function.id for g in link_groups(model, lambda role: role.protective))
-    return "protective" if found else "none"
+    return "protective" if function.id in _protected(model) else "none"
 
 
 def refuse_joined(model: Model, function: Id[Function], bound: Mapping[Id[Port], str], groups: frozenset[frozenset[str]]) -> None:

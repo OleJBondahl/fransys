@@ -67,6 +67,8 @@ def _carrier(d: Any) -> _Open:
 
 def _detector_build() -> fr.BuildResult:
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     room = d.location("ROOM", "Equipment room")
     u = d.add(_detector, "U1")
     with d.function("FEED", "Detector feed"):

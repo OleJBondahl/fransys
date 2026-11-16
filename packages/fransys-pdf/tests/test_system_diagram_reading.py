@@ -16,6 +16,8 @@ from fransys_model.vocab import DocumentPreset
 
 def _system(tmp_path: Any) -> Any:
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-10-15", text="First issue", created="XX")
     d.location("L0", "Workshop")
     with d.function("F", "Field"):
         hub = d.device("M0", "DEMO-MOTOR-4KW", place="L0")

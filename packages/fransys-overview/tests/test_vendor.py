@@ -11,6 +11,8 @@ from fransys_overview._vendor_cytoscape import (
     CYTOSCAPE_VERSION,
 )
 
+from fransys_layout import OverviewLayout
+
 PACKAGE = Path(fransys_overview.__file__).resolve().parent
 SCRIPT = PACKAGE.parent.parent / "scripts" / "vendor_cytoscape.py"
 
@@ -45,7 +47,7 @@ def test_the_licence_ships_in_the_package():
 
 
 def test_the_page_carries_the_librarys_licence_banner(demo_cabinet):
-    page = html(demo_cabinet, text_height=8)
+    page = html(demo_cabinet, OverviewLayout(views=()), text_height=8)
     start = page.index("/**")
     banner = page[start : page.index("*/", start)]
     stripped = "\n".join(line.removeprefix(" * ").removeprefix(" *").rstrip() for line in banner.splitlines()[1:])

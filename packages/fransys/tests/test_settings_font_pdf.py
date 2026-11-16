@@ -17,6 +17,8 @@ FONTS = Path(__file__).parent / "fixtures" / "fonts"
 def _pdf(tmp_path: Path, settings: fr.Settings) -> bytes:
     parts = fr.parts("demo_parts")
     design = Design(parts)
+    design.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    design.revision(1, date="2026-01-01", text="first", created="AB")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Demo cabinet\n\nText set in the build's font.\n", encoding="utf-8")
     document = fr.document(DocumentPreset.SYSTEM, None, cover=cover)

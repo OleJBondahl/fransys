@@ -26,16 +26,15 @@ from fransys_model.derive import (
     reference_designation,
 )
 from fransys_model.derive.block_diagram import box_lines, diagram_lines
-from fransys_model.layout import OverviewBox, OverviewLine, OverviewView, layout_of
 
 
 @cache
-def _laid() -> tuple[Any, str]:
+def _laid() -> tuple[Any, str, Any]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
     model = fr.build(parts, design.draft(), system_document()).model
-    out = lay_out_overview(model, LIBRARY)[0]
-    return out, html(out, text_height=8)
+    laid = lay_out_overview(model, LIBRARY)[0]
+    return model, html(model, laid, text_height=8), laid
 
 
 def _data() -> dict[str, Any]:
@@ -46,7 +45,7 @@ def _data() -> dict[str, Any]:
 
 def test_the_page_holds_every_recorded_view() -> None:
     """A4: breaks if a view with records is dropped from the data."""
-    views = layout_of(_laid()[0], OverviewView)
+    views = _laid()[2].views
     assert len(views) > 5
     assert len(_data()["views"]) == len(views)
 
@@ -55,14 +54,13 @@ def test_every_view_the_rows_name_has_records() -> None:
     """The engine and the page read the same rows: breaks if the engine skips a view."""
     out = _laid()[0]
     rows = [r for unit in overview_units(out) for r in overview_view_rows(out, unit)]
-    assert len(rows) == len(layout_of(out, OverviewView))
+    assert len(rows) == len(_laid()[2].views)
 
 
 def test_the_page_holds_each_recorded_position() -> None:
     """A4: breaks if a box, tab or line vertex is moved, dropped or recomputed in the page."""
-    out = _laid()[0]
-    boxes = list(layout_of(out, OverviewBox).values())
-    lines = list(layout_of(out, OverviewLine).values())
+    boxes = [b for v in _laid()[2].views for b in v.boxes]
+    lines = [ln for v in _laid()[2].views for ln in v.lines]
     page_boxes = [b for v in _data()["views"] for b in v["boxes"]]
     page_lines = [ln for v in _data()["views"] for ln in v["lines"]]
     assert sorted((b["x"], b["y"], b["w"], b["h"]) for b in page_boxes) == sorted((b.x, b.y, b.width, b.height) for b in boxes)
@@ -128,7 +126,7 @@ def test_the_parts_tree_prints_the_rows_derive_gives() -> None:
 
 def test_the_features_panel_names_every_switch_and_holds_its_state() -> None:
     """O16: breaks if a switch is missing from the panel or its default is not off."""
-    page = html(_laid()[0], text_height=8)
+    page = _laid()[1]
     assert 'id="feat-body"' in page
     for name in ("Continuous zoom", "Matrix", "Signals lens", "Location fold", "Focus"):
         assert f"'{name}'" in APP_JS
@@ -144,7 +142,7 @@ def test_no_switch_says_next_round() -> None:
 
 def test_continuous_zoom_is_live_and_composes_the_recorded_levels_in_the_page() -> None:
     """O6: breaks if the switch stays disabled, the script is missing, or zoom ships data."""
-    page = html(_laid()[0], text_height=8)
+    page = _laid()[1]
     assert "['zoom', 'Continuous zoom']" in APP_JS
     assert "const zoomUpdate" in page
     assert "childViewOf" in page

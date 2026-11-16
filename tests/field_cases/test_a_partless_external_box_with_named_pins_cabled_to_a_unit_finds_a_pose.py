@@ -27,6 +27,8 @@ def _box(d: Any) -> _Io:
 
 def _design() -> tuple[Any, Any]:
     d = fr.design("demo_parts", "intake_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     room = d.location("ROOM", "Equipment room")
     d.location("CTRL", "Control room")
     u = d.add(_box, "U1", place="ROOM")

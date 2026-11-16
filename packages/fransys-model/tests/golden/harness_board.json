@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 32,
+  "schema_version": 34,
   "tables": {
     "aspect_node": [
       {
@@ -515,6 +515,7 @@
     "item": [
       {
         "description": "Invented container",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:10f5f00634785b748bdb82daccbf9ae4",
@@ -530,6 +531,7 @@
       },
       {
         "description": "Invented SIM-CABLE-4X0.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:2bbec2ebd0cc5a49bf68d6133a098df2",
@@ -545,6 +547,7 @@
       },
       {
         "description": "Invented remote sensor",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:5a2e389c34795543a40792299cde926f",
@@ -560,6 +563,7 @@
       },
       {
         "description": "Invented SIM-CONN-HOUSING-4P",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:5e3b7f81729a566e8b91d9839136319d",
@@ -575,6 +579,7 @@
       },
       {
         "description": "Invented SIM-BOARD-IOEXP",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:ac603be7b7b55cd49200818bbd0ed96d",
@@ -590,6 +595,7 @@
       },
       {
         "description": "Invented SIM-RELAY-SMD-5V",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:cc4324876d665acfbc973199279ae3a3",
@@ -606,6 +612,7 @@
       },
       {
         "description": "Invented remote sensor",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e066458d72965a1bbebec6d4c1d3f86a",
@@ -621,6 +628,7 @@
       },
       {
         "description": "Invented SIM-FUSE-1A-SMD",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e3e553bf47f35a7fae8b017e9bb9d813",
@@ -637,6 +645,7 @@
       },
       {
         "description": "Invented remote sensor",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:fc0f78e344eb5eeb85b80d0a2fff4c69",

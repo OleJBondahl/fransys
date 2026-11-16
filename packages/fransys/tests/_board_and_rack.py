@@ -7,6 +7,7 @@ import fransys as fr
 from _model_build_cover import system_document
 
 from fransys_model.kernel import Draft, Model, Origin, make_id
+from fransys_model.vocab import Project, Revision
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import FunctionKind, PartCategory
 from fransys_model.vocab.facets.pcb import PcbFacet
@@ -86,9 +87,30 @@ def build_board_and_rack_model() -> Model:
         tag="A1",
         description="Invented module",
     )
+    project = Project(
+        id=make_id(Project, ("project",)),
+        key=("project",),
+        title="Demo plant",
+        number="P-1",
+        customer="Demo Co",
+        revision=1,
+        author="d",
+    )
+    revision = Revision(
+        id=make_id(Revision, ("revision", "1", "1")),
+        key=("revision", "1", "1"),
+        release=None,
+        version=1,
+        revision=1,
+        date="2026-09-22",
+        text="First issue",
+        created="XX",
+    )
     draft = Draft()
     draft.extend(
         [
+            project,
+            revision,
             board_part,
             board_pcb,
             board_template,

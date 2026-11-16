@@ -266,8 +266,8 @@ def test_connector_export_is_one_file_and_the_rack_export_is_named_from_its_refe
     result = BuildResult(model=model, findings=())
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
-    assert "connectors.csv" in names
-    assert "wago-R1.xml" in names
+    assert "P-1-v1.1-connectors.csv" in names
+    assert "P-1-v1.1-wago-R1.xml" in names
 
 
 def test_board_netlist_is_written_to_intermediates_named_from_its_reference(tmp_path):

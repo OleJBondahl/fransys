@@ -28,7 +28,6 @@ from .house_text import (
 )
 from .library import DrawingLibrary
 from .membership import Membership
-from .overview_results import OverviewBox, OverviewLine, OverviewView
 from .paper import PaperChoice
 from .results import DrawingSet, LinkMarker, Page, PowerSymbol
 from .sheets import LayoutSheet
@@ -42,7 +41,6 @@ AUTHORED_KINDS: tuple[type, ...] = (
     SymbolChoice,
 )
 DERIVED_KINDS: tuple[type, ...] = (DrawingSet, LinkMarker, Page, PowerSymbol)
-OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)
 # Written once by the facade (the symbol library, the settings tables), never authored, kept.
 HOUSE_TEXT_KINDS: tuple[type, ...] = (
     DesignationForm,

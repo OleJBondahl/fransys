@@ -53,7 +53,7 @@ from ._drawing_library import refuse_authored_library, with_drawing_library
 from ._finding_text import described, fix_lines, headed
 from ._front_pages import with_front_pages
 from ._house import refuse_authored_house, with_house
-from ._layout_need import diagram_sheets_of, lay_out_if_needed, needs_schematic_layout
+from ._layout_need import diagram_sheets_of, lay_out_diagrams_if_needed, lay_out_if_needed, needs_schematic_layout
 from ._paper import unsupported_sheet_findings
 from ._release_checks import (
     _pin_source,
@@ -192,8 +192,6 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None, settings:
     model, row_findings = timer.run("wire rows", resolve_wire_rows, model)
     model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
     model, number_findings = timer.run("numbering", _numbered, model, releases)
-    if has_documents(model):
-        model = timer.run("front pages", with_front_pages, model, library, chosen)
     found = timer.run(
         "validators",
         _validated,
@@ -208,7 +206,9 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None, settings:
             times=timer.times(),
             library=library,
         )
-    (model, layout_findings, drawn, svgs), diagrams = timer.run("schematic layout", lay_out_if_needed, model, library, chosen.layout)
+    placed = timer.run("diagram layout", lay_out_diagrams_if_needed, model, library)
+    model = timer.run("front pages", with_front_pages, model, library, chosen, diagram_sheets_of(placed[0]))
+    (model, layout_findings, drawn, svgs), diagrams = timer.run("schematic layout", lay_out_if_needed, model, library, chosen.layout, placed)
     found = (*found, *layout_findings, *check_unprinted_sets(model))
     return BuildResult(
         model=model,
@@ -307,10 +307,6 @@ def _lay_cables(read: _Read) -> CableLayout:
     return lay_out_cables(read.model, read.library)
 
 
-def _lay_overview(read: _Read) -> tuple[Model, tuple[Finding, ...]]:
-    return lay_out_overview(read.model, read.library)
-
-
 def _draw_svgs(drawn: _Drawn) -> dict[str, str]:
     """Page key to SVG text of the build's core pages, cable blocks and sheets.
 
@@ -338,8 +334,8 @@ _svgs_cache = digest_cached(1)(_draw_svgs)
 
 
 # The overview engine's one pure call, shared by `check` (its findings) and `write` (the page's
-# model), as `_svgs` is (OVERVIEW O25). `build` never runs it: no document, no layout.
-_overview = digest_cached(1)(_lay_overview)
+# layout), as `_svgs` is (OVERVIEW O25). `build` never runs it: no document, no layout.
+_overview = digest_cached(1)(lambda read: lay_out_overview(read.model, read.library))
 
 
 # The cable engine's one pure call, shared by `_draw_svgs` and `check` (its block sizes), as

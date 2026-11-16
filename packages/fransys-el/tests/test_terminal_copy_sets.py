@@ -4,7 +4,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
-from _model_build_cover import unit_document
+from _model_build_cover import system_document, unit_document
 from conventions_fixtures import house
 from fransys.colours import BN
 from fransys_el import build, symbol_kit
@@ -147,12 +147,14 @@ def _rail(u: Any) -> _Mains:
 def railed():
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="OJB")
+    d.revision(1, date="2026-01-01", text="First issue", created="XX")
     cab = d.add(_rail, "U1", place=None)
     x0 = d.terminal_strip("X0", "DEMO-TB-2.5", external=True)
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
     for i, k in enumerate(("L1", "L2", "L3", "N"), 1):
         w1.core(i, x0.run(k, 1)[1], cab[i - 1][1])
-    return fr.build(d, unit_document("demo-rail"))
+    return fr.build(d, unit_document("demo-rail"), system_document())
 
 
 def test_a_rail_fed_from_copies_of_top_level_terminals_leaves_no_connection_undrawn(railed) -> None:

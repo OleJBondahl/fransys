@@ -26,6 +26,8 @@ def _built(external: tuple[str, ...] = ()) -> fr.BuildResult:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Tree\n", encoding="utf-8")
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         _wire(d, external)
         return fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
 

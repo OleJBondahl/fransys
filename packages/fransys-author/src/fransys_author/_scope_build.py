@@ -6,8 +6,21 @@ lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, make_id
 from fransys_model.layout import PoleGroup
-from fransys_model.vocab import CableFacet, Conductor, ConductorKind, FunctionKind, Mate, Net, NetClass, PartBundle, PartCategory, RailGroup
+from fransys_model.vocab import (
+    CableFacet,
+    Conductor,
+    ConductorKind,
+    FunctionKind,
+    HarnessFacet,
+    Mate,
+    Net,
+    NetClass,
+    PartBundle,
+    PartCategory,
+    RailGroup,
+)
 from fransys_model.vocab import Item as ModelItem
+from fransys_model.vocab import Unit as ModelUnit
 
 from ._decimal import as_decimal
 from ._design_support import _as_function, _identity, _stamped, _strip_text
@@ -51,6 +64,7 @@ class BuildScope:
         description: str = "",
         installed: bool = True,
         external: bool = False,
+        drawn_with: Id[ModelUnit] | None = None,
     ) -> Item:
         """One physical thing: a part instance, or part-less with `mpn=None`.
 
@@ -72,6 +86,7 @@ class BuildScope:
                 installed=installed,
                 unit=self._unit,
                 external=external,
+                drawn_with=drawn_with,
             )
             self._design._add(record, origin)
             handle = Item(id=record.id, key=key, functions=())
@@ -85,7 +100,7 @@ class BuildScope:
                 description=description,
                 installed=installed,
             )
-            handle = self._extend_stamped(key, stamped, origin, external=external)
+            handle = self._extend_stamped(key, stamped, origin, external=external, drawn_with=drawn_with)
         self._place_and_group(handle, at=at, group=group, origin=origin)
         return handle
 
@@ -98,13 +113,15 @@ class BuildScope:
             raise AuthorError(msg)
         return bundle
 
-    def _extend_stamped(self: Scope, key: AuthoringKey, stamped: tuple[Record, ...], origin: Origin, *, external: bool) -> Item:
+    def _extend_stamped(
+        self: Scope, key: AuthoringKey, stamped: tuple[Record, ...], origin: Origin, *, external: bool, drawn_with: Id[ModelUnit] | None
+    ) -> Item:
         """Mark `stamped` with this scope's unit, add it to the design and return its item handle."""
-        stamped = _stamped(stamped, unit=self._unit, external=external)
+        stamped = _stamped(stamped, unit=self._unit, external=external, drawn_with=drawn_with)
         self._design._extend(stamped, origin)
         return _item_from_stamped(key, stamped, self._design)
 
-    def strip(
+    def strip(  # noqa: PLR0913 -- had five arguments, gained drawn_with [public keyword API kept, decision 0444]
         self: Scope,
         tag: str | None,
         *,
@@ -112,6 +129,7 @@ class BuildScope:
         at: Location | None = None,
         external: bool = False,
         description: str = "",
+        drawn_with: Id[ModelUnit] | None = None,
     ) -> Strip:
         """A part-less terminal strip.
 
@@ -131,6 +149,7 @@ class BuildScope:
             description=description,
             unit=self._unit,
             external=external,
+            drawn_with=drawn_with,
         )
         self._design._add(record, origin)
         self._place(record.id, key, at=at, default=self._at, origin=origin)
@@ -147,6 +166,7 @@ class BuildScope:
         group: Group | None = None,
         parent: Item | None = None,
         external: bool = False,
+        drawn_with: Id[ModelUnit] | None = None,
     ) -> Cable:
         """A cable item: `cable.core(index, a, b)` reads colour from the part.
 
@@ -159,7 +179,7 @@ class BuildScope:
         bundle = self._design._catalogue.bundle(part)
         parent_id = parent.id if parent is not None else None
         stamped = instantiate(bundle, key, tag=ident.tag, parent=parent_id)
-        handle = self._extend_stamped(key, stamped, origin, external=external)
+        handle = self._extend_stamped(key, stamped, origin, external=external, drawn_with=drawn_with)
         facet_key = scoped(key, "cable_facet")
         facet = CableFacet(id=make_id(CableFacet, facet_key), key=facet_key, subject=handle.id, length_mm=length_mm)
         self._design._add(facet, origin)
@@ -168,14 +188,15 @@ class BuildScope:
         colours = self._design._catalogue.cable_product(part).core_colours
         return Cable(self._design, handle.id, key, colours)
 
-    def harness(
+    def harness(  # noqa: PLR0913 -- the call's own keyword facts, drawn_with the sixth [public keyword API kept, decision 0444]
         self: Scope,
         *,
         name: str | None = None,
-        tag: str,
+        tag: str | None,
         at: Location | None = None,
         group: Group | None = None,
         external: bool = False,
+        drawn_with: Id[ModelUnit] | None = None,
     ) -> Item:
         """A harness item: a part-less `d.item(...)`.
 
@@ -186,7 +207,10 @@ class BuildScope:
         designation, and `derive.item_designation` now refuses to render one of its
         members instead of silently rendering it flat (model-0043's amendment).
         """
-        return self.harness_item(name, tag, at, group, external=external)
+        item = self.item(None, name=name, tag=tag, at=at, group=group, external=external, drawn_with=drawn_with)
+        key = scoped(item.key, "harness_facet")
+        self._design._add(HarnessFacet(id=make_id(HarnessFacet, key), key=key, subject=item.id), caller_origin())
+        return item
 
     def wiring(self: Scope, *, colour: str, gauge: str | Decimal, label: str | None = None) -> Wiring:
         """A wire maker with defaults."""

@@ -1,7 +1,7 @@
 """The words that name a document's subject in a title block (model-0066)."""
 
 from fransys_model.vocab import aspect_nodes
-from fransys_model.vocab.tables import documents
+from fransys_model.vocab.tables import documents, projects
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
 lazy from fransys_model.vocab.core import Unit, UnitRelease
@@ -29,7 +29,7 @@ __all__ = ["scope_path", "subject_label"]
 
 
 def subject_label(model: Model, document: Id[Document]) -> str:
-    """The heading's subject: location, unit or item label; "" for SYSTEM.
+    """The heading's subject: location, unit or item label; the Project's title for SYSTEM ("" with no Project).
 
     `document` is the document's id.
     """
@@ -42,7 +42,7 @@ def subject_label(model: Model, document: Id[Document]) -> str:
         return unit_label(model, unit)
     item_id = record.item
     if item_id is None:
-        return ""
+        return next((project.title for project in projects(model).values()), "")
     return f"{item_designation(model, item_id)} {item_description(model, item_id)}"
 
 

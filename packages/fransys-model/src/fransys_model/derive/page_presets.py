@@ -31,6 +31,7 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
         DocumentPreset.SYSTEM: (
             _K.COVER,
             _K.BLOCK_DIAGRAM,
+            _K.SCHEMATIC,
             _K.HARNESS_DRAWING,
             _K.NOTES,
             _K.SHEET_INDEX,

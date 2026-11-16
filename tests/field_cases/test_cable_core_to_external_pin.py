@@ -2,7 +2,7 @@
 The bug: 0.23.2 (CP-S1) joined PE symbols by cabinet rail only, so each view was a piece: CONNECTION_NOT_DRAWN, drawing unchanged.
 Fixed in join_power: inked power symbols of one model group (conductor, link, header join) are one piece."""
 
-import contextvars
+from contextlib import nullcontext
 from typing import Any, NamedTuple
 
 import fransys as fr
@@ -31,11 +31,8 @@ def _pin_views(u: Any) -> _Io:
 def test_two_views_of_one_pin_each_grounded_by_a_pe_symbol_are_one_piece(salt: str) -> None:
     """The header pin and its coil pin are one pin: no CONNECTION_NOT_DRAWN, and the build holds no ERROR."""
 
-    def built() -> list[str]:
-        if salt != "-":
-            id_namespace(salt)  # a context of its own: the salt never leaks into another test
+    with id_namespace(salt) if salt != "-" else nullcontext():
         d = fr.design("demo_parts")
         d.add(_pin_views, "U1", place=None)
-        return [f.message for f in fr.check(fr.build(d, unit_document("pin-views"))) if f.severity.name == "ERROR"]
-
-    assert contextvars.copy_context().run(built) == []
+        errors = [f.message for f in fr.check(fr.build(d, unit_document("pin-views"))) if f.severity.name == "ERROR"]
+    assert errors == []

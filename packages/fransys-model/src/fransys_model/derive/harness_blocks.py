@@ -1,12 +1,13 @@
 """The cable blocks a harness document draws: its cables, and the block each draws at (pdf-0015)."""
 
-from fransys_model.vocab import DocumentPreset, PageKind
-from fransys_model.vocab.tables import documents, items, parts
+from fransys_model.vocab import PageKind
+from fransys_model.vocab.tables import items, parts
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document, Item
 
 from .cable_drawing import cable_block_key, cable_subject
 from .document_scope import document_scope
+from .facts.system_document import is_system_document
 from .rows_cable_run import CableBlockRef
 from .texts.core_text import cross_section_text
 lazy from .rows import HarnessCable
@@ -43,7 +44,7 @@ def system_has_no_top_level_cables(model: Model, document: Id[Document], cables_
 
     `document` is the document's id.
     """
-    return documents(model)[document].preset is DocumentPreset.SYSTEM and not cables_found
+    return is_system_document(model, document) and not cables_found
 
 
 def _part_line(cable: HarnessCable) -> str:

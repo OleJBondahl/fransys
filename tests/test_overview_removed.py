@@ -47,7 +47,7 @@ def _releases() -> tuple[Any, Any]:
 
 def _page(previous: Any) -> dict[str, Any]:
     model = _releases()[1]
-    shown = html(lay_out_overview(model, LIBRARY)[0], changes=diff(previous, listing(model, None)), text_height=8)
+    shown = html(model, lay_out_overview(model, LIBRARY)[0], changes=diff(previous, listing(model, None)), text_height=8)
     found = re.search(r'id="overview-data">(.*?)</script>', shown, re.DOTALL)
     assert found is not None
     return json.loads(found.group(1))

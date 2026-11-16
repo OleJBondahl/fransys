@@ -195,6 +195,7 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
         "cores": lambda _s: partial(cores_csv, model, unit=unit),
         "overview": lambda _s: partial(
             overview_html,
+            model,
             _overview(_Read(model, job.drawn.library))[0],
             text_height=text_room_on(model, sheet_format_of(model, None), job.drawn.library),
             findings=job.findings,

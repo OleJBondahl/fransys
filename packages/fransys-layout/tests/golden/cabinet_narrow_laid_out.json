@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 32,
+  "schema_version": 34,
   "tables": {
     "aspect_node": [
       {
@@ -1514,6 +1514,7 @@
     "item": [
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:08596b6a3850522a827a7b0a718c8fbf",
@@ -1531,6 +1532,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:0eeff3433851532bb9e528ebf1b0832a",
@@ -1548,6 +1550,7 @@
       },
       {
         "description": "Invented EX-CONTACTOR-3P",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:410e19882f805e86b2e4bc8c01ddad72",
@@ -1564,6 +1567,7 @@
       },
       {
         "description": "Invented terminal strip",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:41212475d416537ab446217a0ff10e5d",
@@ -1580,6 +1584,7 @@
       },
       {
         "description": "Invented EX-BOARD-A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:477d3123035c5901b5ed4425f8870baa",
@@ -1596,6 +1601,7 @@
       },
       {
         "description": "Invented EX-PUSHBUTTON-NC",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:4824fb6337df5254bb6629c9726a70a8",
@@ -1612,6 +1618,7 @@
       },
       {
         "description": "Invented EX-CABLE-2X0.75",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:521c45788155565cbe11d129331d6c9e",
@@ -1628,6 +1635,7 @@
       },
       {
         "description": "Invented terminal strip",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:5c4e08e6fb4754a0b995074b35378089",
@@ -1644,6 +1652,7 @@
       },
       {
         "description": "Invented EX-BREAKER-1P-10A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:5d1cc449d41c5b438ae9873928274cef",
@@ -1660,6 +1669,7 @@
       },
       {
         "description": "Invented terminal strip",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:72d1581b41d95f399b70c94898529fdd",
@@ -1676,6 +1686,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:7457b2bcd42e57f4ba129aabce889f4b",
@@ -1693,6 +1704,7 @@
       },
       {
         "description": "Invented EX-RELAY-1NO",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:74bf501816f5508199909b50297190c2",
@@ -1709,6 +1721,7 @@
       },
       {
         "description": "Invented EX-LAMP-24V",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:8384a959fc3b5abe9dbad70728747bec",
@@ -1725,6 +1738,7 @@
       },
       {
         "description": "Invented terminal strip",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:89cf544349325221ad34943960a7c0c7",
@@ -1741,6 +1755,7 @@
       },
       {
         "description": "Invented EX-BREAKER-1P-10A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:8bc26ef2bce0504aa0ed6394b21144e9",
@@ -1757,6 +1772,7 @@
       },
       {
         "description": "Invented EX-FUSE-2A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:928c6babb6835d52a84e59de661d1b11",
@@ -1773,6 +1789,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:9c9adfe9c888581abe918187cad97802",
@@ -1790,6 +1807,7 @@
       },
       {
         "description": "Invented EX-ESTOP-2NC",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:a575c47fbc5b586f9f8d9d1df4d12f71",
@@ -1806,6 +1824,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:b30a4a7a077b52c3a56e912019721901",
@@ -1823,6 +1842,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:b384f1862a845f16a3692079c24961ab",
@@ -1840,6 +1860,7 @@
       },
       {
         "description": "Invented EX-PUSHBUTTON-NC",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:c9750fe3e838574c98369658ff9b6507",
@@ -1856,6 +1877,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:d168b66c7f3d585fa99ed5ef346a2461",
@@ -1873,6 +1895,7 @@
       },
       {
         "description": "Invented EX-TERMINAL-2.5",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:d2410fad9d3953cb99bb34581c2aaf97",
@@ -1890,6 +1913,7 @@
       },
       {
         "description": "Invented EX-FUSE-2A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:ebec4619a7bb5b8e8898861715637e91",
@@ -1907,6 +1931,7 @@
       },
       {
         "description": "Invented EX-CONTACTOR-3P",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:f8b5e5d4b04b55a2bebdd3a8024f6edf",

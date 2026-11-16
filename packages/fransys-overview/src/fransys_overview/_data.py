@@ -1,4 +1,4 @@
-"""The page's data: every view at its recorded positions with the text its rows print (O22).
+"""The page's data: every view at its placed positions with the text its rows print (O22).
 
 No Id and no record key reaches the output: things are named by their place in a table, and the
 tables follow printed order, so renaming every Id leaves the bytes alone (decision 0136).
@@ -17,7 +17,6 @@ from fransys_model.derive import (
     location_texts,
     node_label,
     overview_graph,
-    overview_placed_views,
     overview_tree,
     overview_units,
     overview_view_rows,
@@ -42,12 +41,10 @@ from ._splits import classes_of
 from ._tabs import tab_texts
 
 if TYPE_CHECKING:
+    from fransys_layout import OverviewLayout, OverviewPlacedBox, OverviewPlacedLine, OverviewPlacedView
     from fransys_model.derive import (
         OverviewNode,
-        PlacedBox,
-        PlacedLine,
-        PlacedView,
-        RefRow,
+        OverviewRef,
         ViewBox,
         ViewLine,
         ViewRows,
@@ -87,7 +84,7 @@ class _Tables:
         """The index of an aspect node, in order of first use."""
         return self.aspect_ix.setdefault(node, len(self.aspect_ix))
 
-    def ref(self, ref: RefRow | None) -> list[Any] | None:
+    def ref(self, ref: OverviewRef | None) -> list[Any] | None:
         """A reference as `[kind, index]`, with the index into its table, or `None`."""
         if ref is None:
             return None
@@ -112,7 +109,7 @@ def _unit_parent(tables: _Tables, unit: Id[Any]) -> int | None:
     return None if parent is None else tables.unit_ix[parent]
 
 
-def _classes(tables: _Tables, ref: RefRow, unit: Id[Any] | None) -> list[str | None]:
+def _classes(tables: _Tables, ref: OverviewRef, unit: Id[Any] | None) -> list[str | None]:
     """The class of a box in each colour split: unit, function group, item kind, location."""
     model = tables.model
     if ref.item is not None:
@@ -138,20 +135,20 @@ def _classes(tables: _Tables, ref: RefRow, unit: Id[Any] | None) -> list[str | N
     return classes_of(unit=owner, group=None, kind=kind, location=place)
 
 
-def _box(tables: _Tables, view: ViewRows, at: tuple[int, ViewBox, PlacedBox], texts: Texts) -> Json:
+def _box(tables: _Tables, view: ViewRows, at: tuple[int, ViewBox, OverviewPlacedBox], texts: Texts) -> Json:
     index, box, placed = at
     held = holds_of(tables, box)
     title = place_title(tables.model, box)
     return {
         **({} if held is None else {"holds": held}),
         **({} if title is None else {"title": title}),
-        "at": tables.ref(placed.at),
-        "cls": _classes(tables, placed.ref, view.unit),
+        "at": tables.ref(box.key.at),
+        "cls": _classes(tables, box.key.ref, view.unit),
         "dashed": box.dashed,
         "h": placed.height,
         "lines": list(box.lines),
-        "members": [{"lines": list(m.lines), "ref": tables.ref(ref), "text": m.text} for m, ref in zip(box.members, placed.members, strict=True)],
-        "ref": tables.ref(placed.ref),
+        "members": [{"lines": list(m.lines), "ref": tables.ref(m.ref), "text": m.text} for m in box.members],
+        "ref": tables.ref(box.key.ref),
         "tabs": [[t.x, t.y, t.text_width, texts.get((index, t.index)), t.width, t.height] for t in placed.tabs],
         "w": placed.width,
         "x": placed.x,
@@ -159,7 +156,7 @@ def _box(tables: _Tables, view: ViewRows, at: tuple[int, ViewBox, PlacedBox], te
     }
 
 
-def _line(line: ViewLine, placed: PlacedLine) -> Json:
+def _line(line: ViewLine, placed: OverviewPlacedLine) -> Json:
     return {
         "a": placed.a,
         "b": placed.b,
@@ -171,19 +168,18 @@ def _line(line: ViewLine, placed: PlacedLine) -> Json:
     }
 
 
-def _view(tables: _Tables, placed: PlacedView) -> Json:
+def _view(tables: _Tables, rows: ViewRows, unit: Id[Any] | None, placed: OverviewPlacedView) -> Json:
     """One view the engine placed."""
-    rows = placed.rows
     texts = tab_texts(rows, placed, tables.text_height)
     return {
         "boxes": [_box(tables, rows, (i, b, placed.boxes[i]), texts) for i, b in enumerate(rows.boxes)],
         "order": reading_order(placed.boxes),
-        "level": tables.ref(placed.level),
+        "level": tables.ref(rows.level),
         "heads": heads_data(tables.model, placed.lane_heads),
         "lines": [_line(ln, rec) for ln, rec in zip(rows.lines, placed.lines, strict=True)],
         "mode": rows.mode.value,
-        "open": tables.ref(placed.open),
-        "unit": None if rows.unit is None else tables.unit_ix[rows.unit],
+        "open": tables.ref(rows.open),
+        "unit": None if unit is None else tables.unit_ix[unit],
     }
 
 
@@ -217,15 +213,16 @@ def _tree(tables: _Tables) -> list[Json]:
     ]
 
 
-def page_data(model: Model, text_height: int, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None) -> Json:
-    """Every view that has records, the tables they name, and the signals for tracing."""
+def page_data(model: Model, layout: OverviewLayout, text_height: int, findings: tuple[Finding, ...] = (), changes: ListingDiff | None = None) -> Json:
+    """Every view `layout` placed, the tables they name, and the signals for tracing."""
     tables = _Tables(model, text_height)
     found = [rows for unit in overview_units(model) for rows in overview_view_rows(model, unit)]
     for rows in found:
         tables.learn(rows)
-    placed = overview_placed_views(model, found)
-    views = [_view(tables, p) for p in placed]
-    drawn = [p.rows for p in placed]
+    laid = layout.by_view()
+    placed = [(rows, key[0], laid[key]) for rows in found if (key := (rows.unit, rows.level, rows.mode, rows.open)) in laid]
+    views = [_view(tables, rows, unit, view) for rows, unit, view in placed]
+    drawn = [rows for rows, _, _ in placed]
     graph = overview_graph(model)
     # A unit with no box in any view (a plant with no system view) prints its parts-tree row text.
     tree_text = {row.unit: row.label for row in overview_tree(model) if row.unit is not None}

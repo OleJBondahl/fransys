@@ -25,6 +25,7 @@ lazy from fransys_model.vocab.document import Document
 
 __all__ = [
     "designation_form_of",
+    "diagram_count_of",
     "export_form_of",
     "frame_form_of",
     "front_count_of",
@@ -117,14 +118,21 @@ def word(model: Model, key: str) -> str:
     return table[key]
 
 
-def front_count_of(model: Model, document: Id[Document]) -> int:
-    """The `layout.front_pages` count of `document`; raises naming the document when the facade wrote none."""
-    found = (one.count for one in layout_of(model, FrontPages).values() if one.document == document)
-    count = next(found, None)
-    if count is None:
-        msg = (
-            f"this model carries no layout.front_pages record for document {document}, which has a cover: "
-            "build it through `fransys.build`, which writes one per covered document from Typst's page count"
-        )
+def _front_record(model: Model, document: Id[Document]) -> FrontPages:
+    """The `layout.front_pages` record of `document`; raises naming the document when the facade wrote none."""
+    found = (one for one in layout_of(model, FrontPages).values() if one.document == document)
+    record = next(found, None)
+    if record is None:
+        msg = f"this model carries no layout.front_pages record for document {document}: build it through `fransys.build`"
         raise SchemaError(msg, kind="layout.front_pages")
-    return count
+    return record
+
+
+def diagram_count_of(model: Model, document: Id[Document]) -> int:
+    """The block diagram sheets `document` prints before its drawn pages."""
+    return _front_record(model, document).diagrams
+
+
+def front_count_of(model: Model, document: Id[Document]) -> int:
+    """The `layout.front_pages` count of `document`, its Typst front pages."""
+    return _front_record(model, document).count

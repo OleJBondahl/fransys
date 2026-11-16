@@ -13,7 +13,14 @@ lazy from .engines.diagram import (
     PlacedSheet,
     lay_out_diagrams,
 )
-lazy from .engines.overview import lay_out_overview
+lazy from .engines.overview import (
+    OverviewLayout,
+    OverviewPlacedBox,
+    OverviewPlacedHead,
+    OverviewPlacedLine,
+    OverviewPlacedView,
+    lay_out_overview,
+)
 lazy from .lint.codes import FINDING_CODES
 
 __all__ = (
@@ -26,6 +33,11 @@ __all__ = (
     "Facing",
     "HintError",
     "LayoutOptions",
+    "OverviewLayout",
+    "OverviewPlacedBox",
+    "OverviewPlacedHead",
+    "OverviewPlacedLine",
+    "OverviewPlacedView",
     "PlacedBlock",
     "PlacedDiagram",
     "PlacedEnd",

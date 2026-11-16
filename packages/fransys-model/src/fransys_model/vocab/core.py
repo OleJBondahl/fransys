@@ -75,8 +75,8 @@ class Item:
     reservations but drops it from the BOM. `unit` is the unit this item belongs to by
     membership, not by key or location; `None` is the integrating
     script's own wiring. `external=True`: someone else supplies and owns it; an item is
-    external if it or any parent-chain ancestor is, see `derive.external`. Guarded by
-    `part_conformance` (when `part` is set) and `validators.structure` (`CONTAINMENT_CYCLE`).
+    external if it or any parent-chain ancestor is, see `derive.external`. `drawn_with`: the unit whose
+    document prints a by-others item. Guarded by `part_conformance` and `validators.structure`.
     """
 
     id: Id[Item]
@@ -89,6 +89,7 @@ class Item:
     installed: bool = True
     unit: Id[Unit] | None = None
     external: bool = False
+    drawn_with: Id[Unit] | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

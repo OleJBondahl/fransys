@@ -1,11 +1,11 @@
-"""The overview engine: one pass from a model to its overview position records."""
+"""The overview engine: one pass from a model to the placed overview."""
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.overview.defaults import ENGINE_NAME, ENGINE_VERSION, PACK_SHAPE
+from fransys_layout.engines.overview.defaults import PACK_SHAPE
 from fransys_layout.engines.overview.place import place_view, view_findings, view_scene
 from fransys_layout.engines.overview.read import read_views
-from fransys_layout.engines.overview.write import view_records, write_overview
+from fransys_layout.engines.overview.read.result import OverviewLayout, OverviewPlacedView, placed_view
 from fransys_layout.fix_text import finding
 from fransys_layout.lint.codes import OVERVIEW_UNPLACED
 
@@ -22,15 +22,14 @@ def _unplaced(first: Id[Any]) -> Finding:
     )
 
 
-def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[Model, tuple[Finding, ...]]:
-    """Return `model` with the records of every overview view, and the lint findings.
+def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[OverviewLayout, tuple[Finding, ...]]:
+    """Return the placed overview of `model` and the lint findings.
 
     Pure. Every level, every opened unit and every open strip is placed with no sheet cut. A view
-    the placer cannot place gets no records and an ERROR finding; the four diagram checks run on
+    the placer cannot place is absent and gets an ERROR finding; the four diagram checks run on
     each placed view and their findings are ERRORs.
     """
-    stamp = f"fransys-layout/{ENGINE_NAME} {ENGINE_VERSION}"
-    records: list[object] = []
+    views: list[OverviewPlacedView] = []
     found: list[Finding] = []
     for facts in read_views(model, library):
         sheet = place_view(facts, PACK_SHAPE)
@@ -39,6 +38,6 @@ def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[Model, tuple
             continue
         scene = view_scene(facts, sheet)
         found.extend(view_findings(scene))
-        records.extend(view_records(facts, sheet, scene, stamp))
+        views.append(placed_view(facts, sheet, scene))
     ordered = tuple(sorted(found, key=lambda x: (x.code, x.subjects)))
-    return write_overview(model, tuple(records)), ordered
+    return OverviewLayout(views=tuple(views)), ordered

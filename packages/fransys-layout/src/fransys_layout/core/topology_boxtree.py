@@ -3,8 +3,7 @@
 `series_tree.tree_lanes` deals the boxes into lanes; the tree's order comes first and each hop of
 a Series must face (N up, S down), else the boxes keep today's flow with a CHAIN_REFUSED. Lane 0
 is a chain lane; every other lane is a member lane beside it, joined by its first hop net to the
-box after it in the lane it joins, level with the first box it stands beside. A member below a
-box is refused for now: its head join would level it with that box, not beside its span. The
+box after it in the lane it joins, level with the first box it stands beside. The
 caller measures each hop once (`HopFacts`).
 """
 
@@ -64,12 +63,9 @@ def tree_column(tree: Series, hops: HopFacts, given: Given) -> Made | str:
     """The lanes of the tree's column and the hop nets they draw, else why it is no column."""
     ends, drawn, _ = given
     lanes = tree_lanes(tree, {b: drawn[b].footprint.h for b in leaves_of(tree)})
-    used = [p for i in range(len(lanes)) for p in _pairs(lanes, i)]
-    reason = _refusal(used, hops) or _below_a_box(lanes)
-    if reason is not None:
+    if (reason := _refusal([p for i in range(len(lanes)) for p in _pairs(lanes, i)], hops)) is not None:
         return reason
-    first = lanes[0].leaves
-    main = BoxChain(first, tuple(hops.nets[p] for p in pairwise(first)))
+    main = BoxChain(lanes[0].leaves, tuple(hops.nets[p] for p in pairwise(lanes[0].leaves)))
     made: list[LaneDraft] = [box_lane(main, ends)]
     gone = {n for hop in main.hops for n in hop}
     for i in range(1, len(lanes)):
@@ -111,14 +107,6 @@ def _refusal(used: Sequence[tuple[str, str]], hops: HopFacts) -> str | None:
     return None
 
 
-def _below_a_box(lanes: Sequence[TreeLane]) -> str | None:
-    """Why a joined lane cannot stand: a box above its span, where its head join would level it."""
-    above = next((lane for i, lane in enumerate(lanes) if i and _around(lanes, i)[0]), None)
-    if above is None:
-        return None
-    return f"{above.leaves[0]}: a box in parallel below another box has no layout yet; drawn unchained"
-
-
 def _member(lanes: Sequence[TreeLane], i: int, at: tuple[HopFacts, Sequence[LaneDraft]], given: Given) -> tuple[MemberDraft, set[str]]:
     """Lane i as a member lane, and the nets it draws: its head, inner and foot hop anchors."""
     hops, made = at
@@ -129,9 +117,8 @@ def _member(lanes: Sequence[TreeLane], i: int, at: tuple[HopFacts, Sequence[Lane
     links = [head, *(hops.nets[p] for p in pairwise(leaves)), foot]
     cells = tuple(Cell(box, "R0", _pin(links[j], box, ends), _pin(links[j + 1], box, ends)) for j, box in enumerate(leaves))
     top = End("join", None, PinRef(lanes[i].head or "", ""))  # level only: no box stands before
-    offset = member_offset(made, cells, drawn, options, 0)
-    draft = MemberDraft(made[0].column, i, list(cells), offset, (top, _join(foot, after, ends)))
-    return draft, {hop[0] for hop in links if hop}
+    draft = MemberDraft(made[0].column, i, list(cells), member_offset(made, cells, drawn, options, 0), (top, _join(foot, after, ends)))
+    return draft, {hop[0] for hop in links[1:] if hop}
 
 
 def _pin(hop: Sequence[str], box: str, ends: Ends) -> str | None:

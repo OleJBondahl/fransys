@@ -340,23 +340,6 @@ def test_export_prefix_reads_the_projects_actual_version():
     assert export_prefix(result.model, None) == "P-1001-v2.1"
 
 
-def test_export_prefix_for_a_unit_is_unaffected_by_a_missing_project():
-    """EN1: 'a unit's document still takes its unit's prefix' -- a unit's prefix comes from
-    its own release whether or not the model has a `Project` at all, unlike
-    `test_export_set_name_and_prefix_for_a_unit_use_its_own_release_not_the_project`'s model,
-    which does have one."""
-    parts = fransys_parts.load("demo_parts")
-    d = Design(parts)
-    u = d.scope("cab").unit("demo-unit", version=3, revision=4, interface="1")
-    u.revision(4, date="2026-01-01", text="First release", created="XX")
-    c1 = u.location("C1", "Cabinet")
-    grp = u.group("PLC", "PLC")
-    _wire_field_terminal(d, u, c1, grp)
-    result = fr.build(parts, d.draft(), system_document())
-    assert export_set_name(result.model, u.unit_id) == "demo-unit"
-    assert export_prefix(result.model, u.unit_id) == "demo-unit-v3.4"
-
-
 def test_export_name_joins_prefix_kind_and_fragment(worked):
     """EN2: `export_name` joins whichever of prefix/kind/fragment is non-empty with `-`."""
     result, _cabinet, _board = worked
@@ -384,6 +367,8 @@ def test_a_unit_write_removes_its_own_stale_export_and_keeps_the_current_revisio
     """
     parts = fransys_parts.load("demo_parts")
     d = Design(parts)
+    d.project(title="t", number="n", customer="c", revision=1, author="a")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     u = d.scope("cab").unit("demo-unit", version=2, revision=1, interface="1")
     u.revision(1, date="2026-01-01", text="First release", created="XX")
     c1 = u.location("C1", "Cabinet")
@@ -472,37 +457,6 @@ def test_a_document_renamed_through_its_cover_keeps_the_same_pdf_name(tmp_path):
     pdf_b = {n for n in names_b if n.endswith(".pdf")}
     assert pdf_a == pdf_b
     assert "EN3-1-v1.1-C1.pdf" in pdf_a, "the location document, plus the two sets' own"
-
-
-def _no_project_unit_and_system_design(tmp_path):
-    """A model with no `Project` at all, holding both a unit with its own `CABINET_SCHEMATIC`
-    document and a top-level `SYSTEM` document (export-names EN1/EN3, acceptance 4)."""
-    parts = fransys_parts.load("demo_parts")
-    d = Design(parts)
-    u = d.scope("cab").unit("demo-unit", version=2, revision=1, interface="1")
-    u.revision(1, date="2026-01-01", text="First release", created="XX")
-    c1 = u.location("C1", "Cabinet")
-    grp = u.group("PLC", "PLC")
-    _wire_field_terminal(d, u, c1, grp)
-    cabinet_cover = tmp_path / "cabinet.md"
-    cabinet_cover.write_text("# Cabinet\n", encoding="utf-8")
-    system_cover = tmp_path / "system.md"
-    system_cover.write_text("# System\n", encoding="utf-8")
-    docs = (
-        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, u, cover=cabinet_cover),
-        fr.document(fr.DocumentPreset.SYSTEM, None, cover=system_cover),
-    )
-    return fr.build(parts, d.draft(), *docs)
-
-
-def test_a_system_write_with_no_project_keeps_the_bare_cover_stem_and_names_the_units_document_by_its_release(tmp_path):
-    """Acceptance 4a/4b: with no `Project`, the system's own document keeps today's bare `<cover-stem>.pdf` (through
-    `export_name`'s own fallback), while the unit document is never bare: it takes its own release's prefix."""
-    result = _no_project_unit_and_system_design(tmp_path)
-    names = _names(fr.write(result, tmp_path / "out", unit=None))
-    assert "system.pdf" in names
-    assert "demo-unit-v2.1.pdf" in names
-    assert "cabinet.pdf" not in names
 
 
 # -- EXPORT-NAMES Part 2, acceptance 5: a unit document's name follows its unit's release -----

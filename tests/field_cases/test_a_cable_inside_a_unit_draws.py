@@ -22,6 +22,8 @@ def _built() -> fr.BuildResult:
         looms_cover = Path(tmp) / "looms.md"
         looms_cover.write_text("# Looms\n", encoding="utf-8")
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         d.location("CAB", "Cabinet")
         d.add(relay_cab, "U1", place="CAB")
         schematic = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=cover)

@@ -10,7 +10,6 @@ from fransys_model.vocab import (
     AspectNode,
     Conductor,
     ConductorKind,
-    HarnessFacet,
     RowSpec,
     WireFacet,
     WireRowHint,
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from .design import Scope
-    from .handles import Group, Item, Location, _Recorder
+    from .handles import _Recorder
 
 _MINIMUM_RUN_POINTS = 2
 
@@ -159,19 +158,3 @@ class LinkScope:
             carrier=None,
         )
         self._design._add(conductor, caller_origin())
-
-    def harness_item(
-        self: Scope,
-        name: str | None,
-        tag: str | None,
-        at: Location | None,
-        group: Group | None,
-        *,
-        external: bool,
-    ) -> Item:
-        """The part-less item of `Scope.harness`, with its `facet.harness` mark."""
-        item = self.item(None, name=name, tag=tag, at=at, group=group, external=external)
-        key = scoped(item.key, "harness_facet")
-        facet = HarnessFacet(id=make_id(HarnessFacet, key), key=key, subject=item.id)
-        self._design._add(facet, caller_origin())
-        return item

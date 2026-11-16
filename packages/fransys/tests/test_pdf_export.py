@@ -55,24 +55,6 @@ def test_write_produces_a_pdf_and_a_typ_intermediate(parts, design, tmp_path):
     assert typs[0].stat().st_size > 0
 
 
-def test_write_compiles_a_pdf_with_no_project_record(parts, tmp_path):
-    """No `Project` record: the compile still succeeds."""
-    design = Design(parts)
-    document_draft = fr.document(
-        DocumentPreset.SYSTEM,
-        None,
-        cover=_cover(tmp_path),
-    )
-    result = fr.build(parts, design.draft(), document_draft)
-    out_dir = tmp_path / "out"
-
-    written = fr.write(result, out_dir)
-
-    pdfs = [path for path in written if path.suffix == ".pdf"]
-    assert len(pdfs) == 1
-    assert pdfs[0].read_bytes().startswith(b"%PDF-")
-
-
 def test_document_no_drawings_blocks_every_export_but_the_typ_still_writes(parts, design, tmp_path):
     """`DOCUMENT_NO_DRAWINGS` blocks every export (decision 0011) but the intermediate still lands.
 

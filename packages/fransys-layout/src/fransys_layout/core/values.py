@@ -254,6 +254,7 @@ class Options:
     margin: Size = field(kw_only=True)
     wiring_grid: int = field(kw_only=True)
     wire_min: int = field(kw_only=True)
+    box_gap: int = field(kw_only=True)
     column_gap_min: int = field(kw_only=True)
     parallel_pitch: int = field(kw_only=True)  # G between the axes of two parallel branches
     row_gap: int = field(kw_only=True)

@@ -1,7 +1,7 @@
 """Field case: a supply terminal chains three phases through a row of starters wider than a page, so the cut falls inside the fan.
 KI-495 (R1553, part 0): every piece joins by a reference pair, so no connection is undrawn and a copy has an end per page beyond the hub's."""
 
-import contextvars
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
@@ -57,7 +57,7 @@ def _built(tmp_path: Path, copied: list[tuple[int, int]], patch: pytest.MonkeyPa
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
     cab = d.add(_cabinet, "U1", place=None)
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", external=True)
+    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
     for core, (outside, inside) in enumerate(zip((x0.run(k, 1) for k in ("L1", "L2", "L3")), cab, strict=True), start=1):
         w1.core(core, outside[1], inside[1])
@@ -78,13 +78,9 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
     """
     copied: list[tuple[int, int]] = []
 
-    def salted() -> list[str]:
-        if salt != "-":
-            id_namespace(salt)  # a context of its own: the salt never leaks into another test
+    with id_namespace(salt) if salt != "-" else nullcontext():
         findings = _built(tmp_path, copied, monkeypatch).findings
-        assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
-        return [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "ANNEX_UNPLACED"}]
-
-    assert contextvars.copy_context().run(salted) == []
+    assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
+    assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "ANNEX_UNPLACED"}] == []
     assert copied
     assert all(ends == pages >= 2 for ends, pages in copied)  # the cut fell inside the fan

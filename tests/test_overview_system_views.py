@@ -14,14 +14,7 @@ from test_units_worked_example import _system_design
 from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import field_devices, field_fold, location_fold, overview_view_rows
-from fransys_model.layout import (
-    OverviewBox,
-    OverviewLine,
-    OverviewMode,
-    OverviewRefKind,
-    OverviewView,
-    layout_of,
-)
+from fransys_model.layout import OverviewMode, OverviewRefKind
 
 
 @cache
@@ -34,17 +27,23 @@ def _laid() -> tuple[Any, Any]:
 
 
 def _views(mode: OverviewMode) -> list[Any]:
-    out = _laid()[1][0]
-    found = (v for v in layout_of(out, OverviewView).values() if v.unit is None and v.mode is mode)
-    return sorted(found, key=lambda v: v.key)
+    """The system-level rows of `mode` the engine placed."""
+    placed = _laid()[1][0].by_view()
+    return [r for r in overview_view_rows(_laid()[0], None) if r.mode is mode and (r.unit, r.level, r.mode, r.open) in placed]
 
 
 def _boxes(view: Any) -> list[Any]:
-    return [b for b in layout_of(_laid()[1][0], OverviewBox).values() if b.view == view.id]
+    """The key of each box of `view`, which holds its reference, as many as the engine placed."""
+    assert len(view.boxes) == len(_placed(view).boxes)
+    return [b.key for b in view.boxes]
+
+
+def _placed(view: Any) -> Any:
+    return _laid()[1][0].by_view()[view.unit, view.level, view.mode, view.open]
 
 
 def _lines(view: Any) -> list[Any]:
-    return [ln for ln in layout_of(_laid()[1][0], OverviewLine).values() if ln.view == view.id]
+    return list(_placed(view).lines)
 
 
 def test_the_system_folds_write_no_finding() -> None:

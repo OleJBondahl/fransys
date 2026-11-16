@@ -12,6 +12,7 @@ from fransys_model.derive import (
     document_scope,
     document_unit,
     harness_cables_for,
+    is_system_document,
     page_preset,
 )
 
@@ -78,9 +79,12 @@ def schematic_yields(
     pages: tuple[PageKind, ...],
     diagrams: tuple[DiagramSheet, ...],
 ) -> bool:
-    """True when the schematic has no drawing set, is not replica-only, and another page stands."""
+    """True when the schematic has no drawing set, is not replica-only, and another page stands or the document is SYSTEM's.
+
+    The system document prints the sets no unit or place prints; with none it has no schematic page (R2368).
+    """
     return (
         not schematic_pages(model, record, pages)
         and not replica_only_sets(model, record, pages)
-        and has_other_content_page(model, record, pages, diagrams)
+        and (is_system_document(model, record.id) or has_other_content_page(model, record, pages, diagrams))
     )

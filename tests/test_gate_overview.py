@@ -56,7 +56,7 @@ def demo_overview():
 
 
 def test_the_overview_page_prints_no_id(demo_overview):
-    out, page = demo_overview
+    out, page, _ = demo_overview
     ids = [render_id(i) for table in out.tables.values() for i in table]
     assert len(ids) > 50, "the model holds few ids"
     assert "C1" in page, "the page holds no designation"

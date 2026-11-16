@@ -21,6 +21,8 @@ def _lines() -> tuple[DiagramLine, ...]:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Cables\n", encoding="utf-8")
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         devices = {n: d.device(f"P{n}", "DEMO-CONN-2P") for n in range(1, 6)}
         for k, (a, b) in enumerate(_EDGES, start=1):
             d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])

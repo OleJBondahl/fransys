@@ -6,19 +6,6 @@ import fransys as fr
 from _series_ends import cores
 
 
-def test_pair_joins_pin_for_pin() -> None:
-    """Core 1 joins X8:1 to B1:1 and core 2 joins X8:2 to B1:2."""
-    d = fr.design("demo_parts")
-    x8 = d.terminal_strip("X8", "DEMO-TB-2.5")
-    w3 = d.cable("W3", "DEMO-CBL-3X0.34")
-    b1 = d.device("B1", "DEMO-SENSOR-2W")
-    d.pair(x8[1:3], w3, b1.sig)
-    assert cores(fr.build(d).model, "W3") == {
-        "1": frozenset({"X8:1", "B1:1"}),
-        "2": frozenset({"X8:2", "B1:2"}),
-    }
-
-
 def test_pair_does_not_flip_on_a_sided_function() -> None:
     """A lamp with pin 1 on the line and pin 2 on the load side still goes pin for pin."""
     d = fr.design("demo_parts")

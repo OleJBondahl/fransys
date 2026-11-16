@@ -584,7 +584,10 @@ def model(*records):
         {r.release: _RELEASES[r.release] for r in records if isinstance(r, Unit)}.values(),
         origin=_ORIGIN,
     )
-    draft.extend(front_pages_records({r.id: 1 for r in records if isinstance(r, Document)}), origin=_ORIGIN)
+    draft.extend(
+        front_pages_records({r.id: 1 for r in records if isinstance(r, Document)}, {r.id: 0 for r in records if isinstance(r, Document)}),
+        origin=_ORIGIN,
+    )
     return freeze(draft)
 
 

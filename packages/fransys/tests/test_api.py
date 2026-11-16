@@ -8,6 +8,7 @@ import fransys
 import fransys.colours as fransys_colours
 import fransys_author.surface as surface_module
 import fransys_author.surface.colours as surface_colours
+import pytest
 from first_party_imports import first_party_violations
 
 from fransys_model import derive as model_derive
@@ -169,6 +170,7 @@ def _docs_markdown_files(root=_REPO_ROOT):
         yield path
 
 
+@pytest.mark.private_input
 def test_examples_and_docs_worked_examples_import_only_fransys():
     violations: dict[str, set[str]] = {}
     for path in (_REPO_ROOT / "examples").rglob("*.py"):
@@ -189,6 +191,7 @@ def test_examples_and_docs_worked_examples_import_only_fransys():
     assert violations == {}
 
 
+@pytest.mark.private_input
 def test_the_docs_scan_excludes_only_the_named_directories(tmp_path):
     """Can-fail twin: a doc under an unlisted docs/ subdirectory is still scanned.
 

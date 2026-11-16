@@ -5,7 +5,7 @@ for every kind here: it may reference `core` and `facet` ids and nothing referen
 back; an authored kind (hint, rule parameter) has no coordinate or page-number field; a
 derived kind (page, placement, route) is written only by a pass and carries
 `produced_by`. A new kind goes into `AUTHORED_KINDS`, `DERIVED_KINDS`,
-`OVERVIEW_KINDS` or `LIBRARY_KINDS`, which is what the tests and
+or `LIBRARY_KINDS`, which is what the tests and
 `derived_layout_ids` go by.
 """
 
@@ -53,14 +53,11 @@ from .kinds import (
     DERIVED_KINDS,
     HOUSE_TEXT_KINDS,
     LIBRARY_KINDS,
-    OVERVIEW_KINDS,
     SHEET_KINDS,
 )
 from .library import DrawingLibrary
 from .membership import FrameCell, Membership
-from .overview_keys import BoxKey, box_key, line_key, ref_token, view_key
-from .overview_ref import OverviewMode, OverviewRef, OverviewRefKind
-from .overview_results import OverviewBox, OverviewLine, OverviewTab, OverviewView
+from .overview_ref import BoxKey, OverviewMode, OverviewRef, OverviewRefKind
 from .page_slices import page_slice
 from .paper import PaperChoice, paper_choice, sheet_format_record
 from .results import (
@@ -90,7 +87,6 @@ __all__ = [
     "HOUSE_TABLES",
     "HOUSE_TEXT_KINDS",
     "LIBRARY_KINDS",
-    "OVERVIEW_KINDS",
     "POWER_SLOT",
     "SHEET_KINDS",
     "BoxKey",
@@ -112,13 +108,9 @@ __all__ = [
     "Membership",
     "OrderHint",
     "Orientation",
-    "OverviewBox",
-    "OverviewLine",
     "OverviewMode",
     "OverviewRef",
     "OverviewRefKind",
-    "OverviewTab",
-    "OverviewView",
     "Page",
     "PageGroup",
     "PageRole",
@@ -142,21 +134,17 @@ __all__ = [
     "WireLabelText",
     "Words",
     "a2_sheet_format",
-    "box_key",
     "default_profile",
     "default_sheet_format",
     "derived_layout_ids",
     "front_pages_records",
     "house_records",
     "layout_of",
-    "line_key",
     "page_slice",
     "paper_choice",
     "profile_of",
-    "ref_token",
     "sheet_for",
     "sheet_format_of",
     "sheet_format_record",
     "tuning_of",
-    "view_key",
 ]

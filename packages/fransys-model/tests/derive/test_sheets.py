@@ -1,5 +1,6 @@
 """`derive.sheets` and the one page number each sheet prints: `pdf_page`, label `p<n>` (PAGES-INDEX P1)."""
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from derive_helpers import numbered_drawing_set
@@ -50,7 +51,7 @@ def _fixture():
     plant = Plant()
     plant.add(*_PLANT.records, s1, s2, *pages)
     documents = (_document(DocumentPreset.CABINET_SCHEMATIC, _UNIT), _document(DocumentPreset.SYSTEM, None))
-    plant.add(*documents, *front_pages_records({record.id: 1 for record in documents}))
+    plant.add(*documents, *front_pages_records({record.id: 1 for record in documents}, {record.id: 0 for record in documents}))
     return plant.model(), pages, diagrams
 
 
@@ -87,3 +88,16 @@ def test_the_index_rows_list_diagram_sheets_first_and_none_for_fewer_than_two_sh
     assert [r.page for r in rows[2:]] == [2, 3, 4]
     system = _document(DocumentPreset.SYSTEM, None)
     assert sheet_index_rows(model, system.id, both, diagrams) == ()  # one diagram sheet, no pages: one sheet
+
+
+def test_a_system_document_numbers_its_cover_then_diagram_sheets_then_schematic_pages() -> None:
+    """Kind order: the cover is p1, the two diagram sheets p2 and p3, the two drawn pages p4 and p5, with no label twice."""
+    top = replace(_set(1), unit=None)
+    pages = (_page(top, 1), _page(top, 2))
+    system = _document(DocumentPreset.SYSTEM, None)
+    plant = Plant()
+    plant.add(top, *pages, system, *front_pages_records({system.id: 1}, {system.id: 2}))
+    model = plant.model()
+    diagrams = (_diagram(1, None), _diagram(2, None))
+    numbers = [pdf_page(model, s) for s in (*diagrams, *pages)]
+    assert numbers == [2, 3, 4, 5]

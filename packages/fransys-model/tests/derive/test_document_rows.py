@@ -17,6 +17,7 @@ def model(tmp_path_factory):
     """One location document with notes and a logo, one system document without, two revisions."""
     root = tmp_path_factory.mktemp("docs")
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=2, author="d")
     c1 = d.location("C1", "Cabinet")
     d.revision(1, date="2026-01-02", text="First issue", created="XX")
     d.revision(2, date="2026-02-03", text="Second", created="YY", checked="ZZ", approved="WW")

@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 32,
+  "schema_version": 34,
   "tables": {
     "aspect_node": [
       {
@@ -1967,6 +1967,7 @@
     "item": [
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:0c9fdf68a1315f5bb4f2bd591f70c39e",
@@ -1983,6 +1984,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:1fe4110a5e2950a48a6981aa2718447a",
@@ -1999,6 +2001,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:315aecc497ac5323b10ac5faa1bd8fed",
@@ -2015,6 +2018,7 @@
       },
       {
         "description": "Invented SIM-PT100-2W",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:3163bfa1f0265644a6cf5c20314b0c60",
@@ -2030,6 +2034,7 @@
       },
       {
         "description": "Invented SIM-DI8-024",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:37a303768cf8581c8714a34e887e0309",
@@ -2046,6 +2051,7 @@
       },
       {
         "description": "Invented SIM-CONTACTOR-9A-1CO",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:55f6816a82305a89bafe71a54158277e",
@@ -2061,6 +2067,7 @@
       },
       {
         "description": "Invented SIM-PSU-24VDC-5A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:5eb4af116e325af8ab5afe5f181c915f",
@@ -2076,6 +2083,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:652ba60e7cf15157a14cdea1fd509b27",
@@ -2092,6 +2100,7 @@
       },
       {
         "description": "Invented SIM-CONTACTOR-9A-1NO",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:8a385e691a525001866928fb478b9041",
@@ -2107,6 +2116,7 @@
       },
       {
         "description": "Invented container",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:8d7a621c976752a2bfb2485af6b45868",
@@ -2122,6 +2132,7 @@
       },
       {
         "description": "Invented SIM-PT-4-20MA",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:96260ab4d3b85721a46d1f1542671586",
@@ -2137,6 +2148,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:97a67505c40451178c459ddf35a13e41",
@@ -2153,6 +2165,7 @@
       },
       {
         "description": "Invented container",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:9e9e33b41a5250df945a9e69e10e7c1b",
@@ -2168,6 +2181,7 @@
       },
       {
         "description": "Invented SIM-RACK-8",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:a73c21270504563bbb908dccd20ee803",
@@ -2183,6 +2197,7 @@
       },
       {
         "description": "Invented SIM-FUSE-2A",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:abe26321bd6f594280d07353604e0219",
@@ -2198,6 +2213,7 @@
       },
       {
         "description": "Invented SIM-CONTACTOR-9A-1NO",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:af3e8c8837ee5ba589e538430381988f",
@@ -2213,6 +2229,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:b127f575292d591ba6e9c39bdb704793",
@@ -2229,6 +2246,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:b2324a45696458d39e31dd2126a36997",
@@ -2245,6 +2263,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:b3d2f3e714295a3ea7208e2e8ad6867a",
@@ -2261,6 +2280,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:bcd7fae55c865654ab2bb673c7f8e865",
@@ -2277,6 +2297,7 @@
       },
       {
         "description": "Invented SIM-PB-NO",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:ce6e69708a6b5207a70a4d265249c4b0",
@@ -2292,6 +2313,7 @@
       },
       {
         "description": "Invented SIM-CABLE-2X0.75-SH",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:cf096609a20e5659ad3c788e993c9723",
@@ -2307,6 +2329,7 @@
       },
       {
         "description": "Invented SIM-RTD4-PT100",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e0536cb76d2d50eea01ad69520a9b95e",
@@ -2323,6 +2346,7 @@
       },
       {
         "description": "Invented SIM-CABLE-2X0.75-SH",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e0e03322af9d504383a70b7d93ffe4c3",
@@ -2338,6 +2362,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e273dfa993d355b4850da7981dc7529b",
@@ -2354,6 +2379,7 @@
       },
       {
         "description": "Invented SIM-TERMINAL-2.5MM",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:e6a8b7e667fe541087f6beb6885ef331",
@@ -2370,6 +2396,7 @@
       },
       {
         "description": "Invented SIM-AI4-020",
+        "drawn_with": null,
         "ext": {},
         "external": false,
         "id": "item:fd3ed35e3ca2514a9322ef019f35c59a",

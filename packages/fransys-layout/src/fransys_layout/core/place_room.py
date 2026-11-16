@@ -7,7 +7,7 @@ levels from `intervals.levels`, in the order stage 6 nests them (E6); the step i
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -64,6 +64,17 @@ def _wires(
             yield (pc.id, 0, i), pc.lanes[0][i], pa.pin, pc.lanes[0][i + 1], pb.pin, net
 
 
+def _head_rooms(env: PageEnv) -> dict[Step, int]:
+    """Room for the head hop of a member lane below a box: one row per wire of the hop and the jog lanes, a cross-link between two rows."""
+    pins, rooms = {n.id: {r.sym for r in n.pins} for n in env.problem.nets}, Counter[Step]()
+    for pc in env.pcs.values():
+        where = {c.sym: (li, i) for li, cells in enumerate(pc.lanes) for i, c in enumerate(cells)}
+        for li, end in enumerate(env.columns[pc.id].heads):
+            lane, k = where[end.pin.sym] if end.pin is not None and not end.pin.pin else (0, 0)
+            rooms[pc.id, lane, k - 1] += k and sum({pc.lanes[li][0].sym, pc.lanes[lane][k - 1].sym} <= syms for syms in pins.values())
+    return {s: env.options.wiring_grid * (n + env.options.jog_lanes) for s, n in rooms.items() if n}
+
+
 def _no_row(env: PageEnv, y: Mapping[str, int], pc: PlacedColumn, end: tuple[int, int, str], target: tuple[tuple[int, int], Cell, str]) -> bool:
     """True when the join's two pins stand level or one grid apart in y, so its stair has room 0."""
     (li, i, pin_a), ((tl, ti), bottom, pin) = end, target
@@ -97,7 +108,7 @@ def _join_wires(
         cell = pc.lanes[li][at]
         pin_a = cell.top_pin if at == 0 else cell.bottom_pin
         pin = end.pin
-        into = where.get(pin.sym) if pin and end.is_join and pin_a else None
+        into = where.get(pin.sym) if pin and pin.pin and end.is_join and pin_a else None
         if into is None or pin is None or pin_a is None:
             continue
         target = pc.lanes[into[0]][into[1]]
@@ -140,7 +151,7 @@ def step_rooms(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int] | None =
     for j in _jogs(env, x, y):
         groups[j.row, j.step[2], j.bottom_x < j.top_x].append(j)
     grid = env.options.wiring_grid
-    rooms: dict[Step, int] = _routed_rooms(env)
+    rooms: dict[Step, int] = _routed_rooms(env) | _head_rooms(env)
     for (_, _, left), group in groups.items():
         ordered = sorted(group, key=lambda j: (j.top_x, j.bottom_x, natural_key(j.net)), reverse=not left)
         spans = [(min(j.top_x, j.bottom_x), max(j.top_x, j.bottom_x)) for j in ordered]

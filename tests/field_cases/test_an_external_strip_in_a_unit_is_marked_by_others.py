@@ -15,7 +15,10 @@ from _drawn_pages import drawn_pages
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
 from fransys_layout.geometry import Box, overlaps, translate
+from fransys_model.derive import function_scopes
+from fransys_model.derive.document_sets import printing_document
 from fransys_model.derive.tag_text import external_note
+from fransys_model.vocab.tables import documents, functions, items
 
 
 class _Open(NamedTuple):
@@ -42,6 +45,8 @@ def _built() -> fr.BuildResult:
     (root / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     (root / "looms.md").write_text("# Looms\n", encoding="utf-8")
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     d.location("CAB", "Cabinet")
     d.add(_ext, "U1", place="CAB")
     schematic = fr.document(
@@ -182,3 +187,41 @@ def test_every_external_outline_run_is_the_dashed_by_others_frame_with_its_label
     assert outlines
     assert {o.key for o in outlines} == {"unit-outline-by-others"}
     assert [o.label for o in outlines] == [None] * len(outlines)
+
+
+class _Skid(NamedTuple):
+    out: fr.TerminalStrip
+
+
+@fr.unit("demo-skid", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
+def _skid(u: Any) -> _Skid:
+    return _Skid(u.terminal_strip("X1", "DEMO-TB-2.5", 3, interface=True))
+
+
+def test_a_by_others_device_drawn_with_a_unit_prints_with_that_unit() -> None:
+    """BY-OTHERS-DRAWN-WITH: M9, supplied by others at IGG and wired to the skid, prints on the skid's document, not the system's."""
+    root = Path(tempfile.mkdtemp())
+    (root / "cover.md").write_text("# Skid\n", encoding="utf-8")
+    d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d.location("IGG", "Other system")
+    skid = d.add(_skid, "SKID")
+    m9 = d.device("M9", None, external=True, pins=("U", "V", "W"), place="IGG", drawn_with=skid)
+    cable = d.cable("W11", "DEMO-CBL-4G1.5", length_m=25)
+    for core, pin in enumerate("UVW", 1):
+        cable.core(core, skid.out[core], getattr(m9, pin))
+    result = fr.build(
+        d,
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, skid, cover=root / "cover.md"),
+        fr.document(fr.DocumentPreset.SYSTEM, None, cover=root / "cover.md"),
+    )
+    model = result.model
+    m9_id = next(i.id for i in items(model).values() if i.tag == "M9")
+    function = next(f.id for f in functions(model).values() if f.item == m9_id)
+    unit, location = function_scopes(model, function)[0]
+    printed = printing_document(model, unit, location)
+    assert printed is not None
+    printer = documents(model)[printed]
+    assert printer.unit is not None
+    assert printer.preset is fr.DocumentPreset.CABINET_SCHEMATIC

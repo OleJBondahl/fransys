@@ -1,6 +1,6 @@
-"""What an overview box or an open thing stands for, and the mode of a view (model-0198).
+"""What an overview box or an open thing stands for, the mode of a view and a box's key (model-0198).
 
-One reference type serves the records and the `derive` fold rows, so they key boxes alike.
+One reference type serves the `derive` fold rows and the overview engine, so they key boxes alike.
 """
 
 from enum import Enum
@@ -68,49 +68,21 @@ class OverviewRef:
             raise SchemaError(msg, kind="layout.overview_box")
 
 
-_PLAIN = OverviewMode.PLAIN
-_MODES = {
-    (False, False): {_PLAIN, OverviewMode.LOCATION, OverviewMode.FIELDS},
-    (True, False): {OverviewMode.GROUPS, OverviewMode.SEE_THROUGH, _PLAIN, OverviewMode.LANES},
-    (True, True): {OverviewMode.SEE_THROUGH},
-}
-_OPEN = {
-    OverviewRefKind.ITEM,
-    OverviewRefKind.UNIT,
-    OverviewRefKind.PLACE,
-    OverviewRefKind.FIELDS,
-}
-_LEVEL = {OverviewRefKind.GROUP, OverviewRefKind.STRIPS}
+def ref_token(ref: OverviewRef) -> str:
+    """A reference as text: its kind and its one id (`-` for none)."""
+    held = ref.unit or ref.item or ref.node
+    return f"{ref.kind.value}:{'-' if held is None else held.value}"
 
 
-def check_view(
-    unit: Id[Unit] | None,
-    level: OverviewRef | None,
-    mode: OverviewMode,
-    open_: OverviewRef | None,
-    open_at: OverviewRef | None = None,
-) -> None:
-    """Refuse a (unit, level, mode) a level cannot have, and a level or open of a wrong kind.
+@value
+class BoxKey:
+    """The identity of a box in a view: what it stands for and, for a stub, the box it hangs on."""
 
-    `open_at` is the inside box an opened stub hangs on; it needs an `open_` that is no strip.
-    """
-    if unit is None and level is not None:
-        msg = "a group or strips level needs its unit"
-        raise SchemaError(msg, kind="layout.overview_view")
-    if level is not None and level.kind not in _LEVEL:
-        msg = f"a view cannot open a {level.kind.value} as its level"
-        raise SchemaError(msg, kind="layout.overview_view")
-    if mode not in _MODES[(unit is not None, level is not None)]:
-        msg = f"a level of unit {unit} opened as {level} has no mode {mode.value}"
-        raise SchemaError(msg, kind="layout.overview_view")
-    if open_ is not None and open_.kind not in _OPEN:
-        msg = f"a view cannot hold a {open_.kind.value} open"
-        raise SchemaError(msg, kind="layout.overview_view")
-    _check_open_at(open_, open_at)
+    ref: OverviewRef
+    at: OverviewRef | None = None
 
-
-def _check_open_at(open_: OverviewRef | None, open_at: OverviewRef | None) -> None:
-    """Refuse an inside box for an open that is no stub."""
-    if open_at is not None and (open_ is None or open_.kind is OverviewRefKind.ITEM):
-        msg = "a view's open box hangs on an inside box only for an opened stub"
-        raise SchemaError(msg, kind="layout.overview_view")
+    @property
+    def token(self) -> str:
+        """The box as text: its reference, then `@` and the reference of the box it hangs on."""
+        base = ref_token(self.ref)
+        return base if self.at is None else f"{base}@{ref_token(self.at)}"

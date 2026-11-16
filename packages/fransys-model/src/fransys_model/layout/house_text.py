@@ -148,13 +148,14 @@ class HouseProfile:
 
 @record(kind="layout.front_pages")
 class FrontPages:
-    """The pages the front matter of `document` takes in its PDF: the facade writes it from Typst's own page count.
+    """The pages before the drawings of `document` in its PDF: the front matter's Typst page count and the block diagram sheets.
 
-    One per document with a cover, before any pass reads a page number; a reader never defaults it.
+    One per document, written by the facade before any pass reads a page number (model-0462, model-0463).
     """
 
     id: Id[FrontPages]
     key: AuthoringKey
     document: Id[Document]
     count: int
+    diagrams: int
     ext: frozendict[str, Value] = frozendict()

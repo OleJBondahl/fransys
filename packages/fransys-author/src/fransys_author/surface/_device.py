@@ -6,6 +6,7 @@ lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._box import check_box, with_box
+from fransys_author.surface._drawn_with import UnitHandle, drawn_with_unit
 from fransys_author.surface._handles import Fn, Pin, attribute_pin, pick
 from fransys_author.surface._tags import bare
 lazy from fransys_author.design import Scope
@@ -251,6 +252,7 @@ class Devices:
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
         contacts: str | Mapping[str, str] | None = None,
     ) -> S: ...
     @overload
@@ -270,6 +272,7 @@ class Devices:
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
         contacts: str | Mapping[str, str] | None = None,
     ) -> D: ...
     @overload
@@ -280,6 +283,7 @@ class Devices:
         *,
         pins: tuple[str, ...],
         external: Literal[True],
+        drawn_with: UnitHandle | None = None,
         place: str | EllipsisType | None = ...,
         parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
@@ -303,6 +307,7 @@ class Devices:
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
         contacts: str | Mapping[str, str] | None = None,
     ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design; a Device return breaks the tuple[Device, ...] flows of the tests
     def device(  # noqa: PLR0913 -- the call's own spec signature [public keyword API kept, decision 0444]
@@ -322,6 +327,7 @@ class Devices:
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
         contacts: str | Mapping[str, str] | None = None,
     ) -> Any:
         """Add device `tag` (printed `-tag`) of `part`, a part class or an MPN string.
@@ -332,6 +338,9 @@ class Devices:
         check_box(part, tag=tag, external=external, pins=pins)
         mpn = _checked_mpn(self, part, tag, name, contacts)
         holder = _parent_handle(self, parent)
+        unit = drawn_with_unit(
+            self._engine, drawn_with, external=external, who=("d.device", name or tag or ""), parent=None if holder is None else holder.id
+        )
         key = self._claim(name or tag or "", per_function=True)
         item = self._engine.item(
             mpn,
@@ -344,6 +353,7 @@ class Devices:
             description=description,
             installed=installed,
             external=external,
+            drawn_with=unit,
         )
         if mpn is None:
             item = with_box(self._engine, item, pins or ())
@@ -355,8 +365,7 @@ class Devices:
             accessory=tag is None and holder is not None,
         )
         _contacts.fit(self, item, contacts)
-        cls = part if isinstance(part, type) else Device
-        made = cls(name or tag or "", item, self._engine, tag)
+        made = (part if isinstance(part, type) else Device)(name or tag or "", item, self._engine, tag)
         if mounted_on is not None:
             mount(self, made, mounted_on)
         fit_leads(self, made, parent, joins)

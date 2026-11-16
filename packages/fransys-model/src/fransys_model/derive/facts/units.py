@@ -1,7 +1,7 @@
 """Unit, board and harness membership (decisions model-0040 and model-0043).
 
 `units`, `unit_subtree`, `unit_items`, `standalone`, `boundary`, `item_chain`,
-`enclosing_boards`, `external`, `unit_own_roots`, `is_sole_unit_root`, `in_reading`,
+`enclosing_boards`, `external`, `drawn_with`, `unit_own_roots`, `is_sole_unit_root`, `in_reading`,
 `cable_children`, `is_harness`, `crosses_unit`, `declared_unit` and `unit_encloses`, plus
 `require`, the identity refusal that `derive.lookups` re-exports. The one home of the
 `Item.unit` and `Item.parent` reads. Every per-unit and per-item fact reads the per-model
@@ -145,6 +145,17 @@ def external(model: Model, item: Id[Item]) -> bool:
     """
     require(items(model).get(item), "item", item)
     return item in unit_index(model).external_root
+
+
+def drawn_with(model: HasTables, item: Id[Item]) -> Id[Unit] | None:
+    """The unit whose document prints the by-others `item`: its own `drawn_with`, else its external root's.
+
+    `None` when none is set (the by-others item prints by its place, FED-SET-TO-SYSTEM).
+    """
+    all_items = items(model)
+    own = all_items[item].drawn_with
+    root = unit_index(model).external_root.get(item)
+    return own if own is not None or root is None else all_items[root].drawn_with
 
 
 def unit_own_roots(model: HasTables, unit: Id[Unit]) -> tuple[Id[Item], ...]:

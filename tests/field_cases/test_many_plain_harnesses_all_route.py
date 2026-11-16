@@ -44,6 +44,8 @@ def _build(title: str, count: int, cover_dir: Path) -> fr.BuildResult:
         return _Open()
 
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     d.add(harnesses, "DEMO")
     cover = cover_dir / "cover.md"
     cover.write_text("# Harnesses\n", encoding="utf-8")

@@ -12,15 +12,7 @@ from fold_builders import CTL_BOX, SUP_BOX, fold_plant
 from electrical_symbols import LIBRARY
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_model.derive import fold_level, overview_levels, overview_view_rows
-from fransys_model.layout import (
-    OverviewBox,
-    OverviewLine,
-    OverviewMode,
-    OverviewRef,
-    OverviewRefKind,
-    OverviewView,
-    layout_of,
-)
+from fransys_model.layout import OverviewMode, OverviewRef, OverviewRefKind
 
 
 @cache
@@ -31,19 +23,16 @@ def _laid() -> tuple[Any, Any, Any]:
 
 
 def _views(**where: Any) -> list[Any]:
-    out = _laid()[2][0]
-    found = layout_of(out, OverviewView).values()
-    return sorted(
-        (v for v in found if all(getattr(v, k) == w for k, w in where.items())),
-        key=lambda v: v.key,
-    )
+    return [v for v in _laid()[2][0].views if all(getattr(v, k) == w for k, w in where.items())]
 
 
 def _parts(view: Any) -> tuple[list[Any], list[Any]]:
-    out = _laid()[2][0]
-    boxes = [b for b in layout_of(out, OverviewBox).values() if b.view == view.id]
-    lines = [ln for ln in layout_of(out, OverviewLine).values() if ln.view == view.id]
-    return boxes, lines
+    """The rows of a placed `view`'s boxes and lines, as many as the engine placed."""
+    (rows,) = (
+        r for r in overview_view_rows(_laid()[0], view.unit) if (r.unit, r.level, r.mode, r.open) == (view.unit, view.level, view.mode, view.open)
+    )
+    assert (len(rows.boxes), len(rows.lines)) == (len(view.boxes), len(view.lines))
+    return list(rows.boxes), list(rows.lines)
 
 
 def test_the_two_group_unit_writes_no_finding_and_every_mode_view() -> None:
@@ -66,7 +55,7 @@ def test_the_groups_view_has_the_fold_boxes_and_one_box_per_far_end() -> None:
     (view,) = _views(unit=unit, mode=OverviewMode.GROUPS, open=None)
     fold = fold_level(model, unit)
     boxes, lines = _parts(view)
-    assert {b.ref for b in boxes if b.ref in {b.key for b in fold.boxes}} == {b.key for b in fold.boxes}
+    assert {b.key.ref for b in boxes if b.key.ref in {b.key for b in fold.boxes}} == {b.key for b in fold.boxes}
     assert len(lines) == len(fold.lines) + len({(s.box, s.end, s.kind, s.via) for s in fold.stubs})
 
 
@@ -98,12 +87,10 @@ def test_a_folded_stub_with_members_is_never_placed_open() -> None:
 
 @pytest.mark.parametrize("mode", [OverviewMode.GROUPS, OverviewMode.SEE_THROUGH])
 def test_no_view_of_the_unit_has_a_line_off_its_boxes(mode: OverviewMode) -> None:
-    """Breaks if a line names a box record that is not in its view."""
+    """Breaks if a line names a box position that is not in its view."""
     _, unit, _ = _laid()
     for view in _views(unit=unit, mode=mode):
-        boxes, lines = _parts(view)
-        ids = {b.id for b in boxes}
-        assert all(ln.a in ids and ln.b in ids for ln in lines)
+        assert all(0 <= end < len(view.boxes) for ln in view.lines for end in (ln.a, ln.b))
 
 
 def test_one_engine_run_derives_each_units_level_once(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -114,7 +101,7 @@ def test_one_engine_run_derives_each_units_level_once(monkeypatch: pytest.Monkey
     monkeypatch.setattr(overview_levels, "_unit_level", lambda m, unit: (calls.append(unit), real(m, unit))[1])
     overview_levels.overview_level.cache_clear()
     out, _ = lay_out_overview(model, LIBRARY)
-    laid = {v.unit for v in layout_of(out, OverviewView).values() if v.unit is not None}
+    laid = {v.unit for v in out.views if v.unit is not None}
     assert len(laid) >= 1
     assert sorted(calls) == sorted(laid)
 

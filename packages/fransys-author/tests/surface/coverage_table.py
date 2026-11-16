@@ -56,7 +56,6 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "BuildScope.mate": surface("Design.mate"),
     "BuildScope.pole_group": surface("Design.poles"),
     "BuildScope.harness": surface("Design.harness"),
-    "LinkScope.harness_item": surface("Design.harness"),
     "Scope.unit": surface("Design.add"),
     "UnitScope.unit_id": surface("Design.add"),
     "UnitScope.boundary": surface("Design.device(interface=)"),

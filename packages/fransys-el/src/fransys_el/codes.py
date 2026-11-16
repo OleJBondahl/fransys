@@ -239,9 +239,8 @@ _CORE: tuple[CodeInfo, ...] = (
         who="note",
         cause=(
             "Boxes wired box to box do not make a chain that draws as one column: a ring, a box "
-            "joined to three boxes, a box also wired by a trunk, or pins that do not face; or a "
-            "box in parallel below another box, which has no layout yet. The message names the "
-            "boxes and the hop that failed; the boxes are drawn unchained."
+            "joined to three boxes, a box also wired by a trunk, or pins that do not face. The "
+            "message names the boxes and the hop that failed; the boxes are drawn unchained."
         ),
         fix="Nothing is wrong; the boxes are drawn unchained (rule CHAIN-COLUMN).",
         page="findings-render",

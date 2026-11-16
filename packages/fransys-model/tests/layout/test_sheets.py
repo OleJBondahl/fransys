@@ -16,7 +16,6 @@ from fransys_model.layout import (
     AUTHORED_KINDS,
     DERIVED_KINDS,
     LIBRARY_KINDS,
-    OVERVIEW_KINDS,
     SHEET_KINDS,
     LayoutSheet,
     SheetKind,
@@ -27,7 +26,6 @@ _ORIGIN = Origin(file="test_sheets.py", line=1, note="fixture")
 _ALL = (
     AUTHORED_KINDS,
     DERIVED_KINDS,
-    OVERVIEW_KINDS,
     LIBRARY_KINDS,
     SHEET_KINDS,
 )

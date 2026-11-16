@@ -83,7 +83,7 @@ def test_a_keep_under_any_one_lane_pushes_the_trunk(monkeypatch: pytest.MonkeyPa
     env, x, y, span, trunk, keep = _page(monkeypatch, side, keep_of)
     fan = next(f for f in env.flow.fans if f.lanes == 3)
     dy = lane_segments(env, x, fan, span.row)[needs[0] if side == "above" else needs[1]][0]
-    assert _pushes(env, x, y, span, {}) == [_expected(side, trunk, keep, (env.options.wire_min, dy))]
+    assert _pushes(env, x, y, span, {}) == [_expected(side, trunk, keep, (env.options.box_gap, dy))]
 
 
 @pytest.mark.parametrize("side", ["above", "below"])
@@ -109,8 +109,8 @@ def test_the_hard_order_decides_the_side_of_the_push_not_the_trunks_side(monkeyp
     dy = next(seg for seg in lane_segments(env, x, fan, span.row) if seg)[0]
     trunk_above = held == "below"
     want = (
-        (trunk, keep.node, env.options.wire_min - keep.box.y + dy)
+        (trunk, keep.node, env.options.box_gap - keep.box.y + dy)
         if trunk_above
-        else (keep.node, trunk, keep.box.y + keep.box.h + env.options.wire_min - dy)
+        else (keep.node, trunk, keep.box.y + keep.box.h + env.options.box_gap - dy)
     )
     assert _pushes(env, x, y, span, hard_order(g, trunk)) == [want]

@@ -44,6 +44,8 @@ def _wide_chain(u: Any) -> _Io:
 def _built(salt: str, *, with_system: bool) -> fr.BuildResult:
     with id_namespace(salt) if salt != "-" else nullcontext():
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         d.add(_wide_chain, "U1", place=None)
         documents = [unit_document("wide-chain"), *([system_document()] if with_system else [])]
         return fr.build(d, *documents)

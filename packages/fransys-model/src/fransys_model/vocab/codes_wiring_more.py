@@ -4,6 +4,15 @@ from fransys_model.kernel import CodeInfo, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
+        code="DRAWN_WITH_UNIT_UNWIRED",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A by-others item is drawn with a unit, but no wire joins it, or an item under its root, to that unit.",
+        fix=('Wire the item to the unit, or remove drawn_with. Write: d.device("M9", None, external=True, pins=("U", "V", "W"))'),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="RATING_BREAKING_NO_DATA",
         severity=Severity.WARNING,
         stage="validators",
@@ -93,6 +102,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A cable screen core is connected to a pin; screen connections are refused for now.",
         fix="Leave the screen unconnected: the cable prints as shielded. Write: w1.core(fr.colours.BN, a, b)",
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="SYSTEM_DOCUMENT_NO_PROJECT",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A design declares a SYSTEM document and no Project title; the document's heading and where-texts name the title.",
+        fix=('Declare the project and its title. Write: d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="OJB")'),
         page="findings-validators",
     ),
 )

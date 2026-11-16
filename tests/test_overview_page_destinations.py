@@ -26,7 +26,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[fr.BuildResult, Any
     design, documents = _canary(root)
     result = fr.build(design, *documents)
     fr.write(result, out_dir=root / "out", intermediates=root / "inter")
-    return result, root / "out", html(lay_out_overview(result.model, LIBRARY)[0], text_height=8)
+    return result, root / "out", html(result.model, lay_out_overview(result.model, LIBRARY)[0], text_height=8)
 
 
 def _links(page: str) -> list[tuple[str, str]]:

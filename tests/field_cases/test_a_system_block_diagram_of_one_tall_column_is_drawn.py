@@ -18,6 +18,8 @@ def test_a_system_block_diagram_of_one_tall_column_is_drawn() -> None:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Station\n", encoding="utf-8")
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         hub = d.device("P0", "DEMO-CONN-2P")
         for k in range(1, _LEAVES + 1):
             leaf = d.device(f"P{k}", "DEMO-CONN-2P")

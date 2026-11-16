@@ -26,6 +26,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | `position` | `None` | The physical order within the parent, such as a PLC module's slot. | `d.device("A2", P.DI8, parent=rack, position=2)` |
 | `installed` | `True` | `False` keeps the device in drawings but drops it from the BOM. | `d.device("Q9", P.Q, installed=False)` |
 | [`external`](authoring.md#name-a-place-and-a-function-block) | `False` | `True` marks the device as supplied by others: no BOM line, and drawings mark it dashed "(by others)". | `d.device("M1", P.MOTOR, external=True)` |
+| [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.device("M9", None, external=True, pins=("U", "V", "W"), place="IGG", drawn_with=skid)` |
 | [`contacts`](harnesses.md#add-crimp-contacts) | `None` | Fits a contact part in every pin of a housing, or a pin-to-part mapping for mixed contacts. | `d.device("P1", P.HSG, parent=w1, contacts="DEMO-CRIMP-M")` |
 
 ## `d.terminal_strip`
@@ -44,6 +45,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | [`bridged`](authoring.md#bridges) | `False` | Bridges plain terminals: `True` bridges all, `(first, last)` a range, a tuple of ranges several. | `d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))` |
 | [`rail`](authoring.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
 | [`external`](authoring.md#name-a-place-and-a-function-block) | `False` | `True` flags the strip and its terminals as by others. | `d.terminal_strip("X9", P.TB, 4, external=True)` |
+| [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.terminal_strip("X9", P.TB, 4, external=True, drawn_with=skid)` |
 
 ## `d.cable`
 
@@ -56,6 +58,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | [`parent`](series.md#cables) | `None` | The harness that holds the cable. | `d.cable("W5", P.CBL, parent=h1)` |
 | `name` | `None` | The key a released number holds to. Needed when `tag=None`. | `d.cable(None, P.CBL, name="motor-cable")` |
 | `external` | `False` | `True` flags the cable as supplied by others; its cores carry no flag. | `d.cable("W1", P.CBL, external=True)` |
+| [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.cable("W1", P.CBL, external=True, drawn_with=skid)` |
 
 ## `d.add`
 
@@ -126,6 +129,7 @@ Refused for 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires
 | `name` | `None` | The key a released number holds to. | `d.harness(None, name="main-loom")` |
 | [`place`](authoring.md#name-a-place-and-a-function-block) | `...` | Where the harness stands. `None` gives it no place. | `d.harness("H1", place=None)` |
 | `external` | `False` | `True` flags the harness as by others. | `d.harness("H1", external=True)` |
+| [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.harness("H1", external=True, drawn_with=skid)` |
 
 ## `d.rack`
 
@@ -135,6 +139,7 @@ Refused for 0.22 (`MATES_DISABLED`, an ERROR): draw the link as a cable or wires
 | `name` | `None` | The key a released number holds to. | `d.rack("U1", name="plc")` |
 | [`place`](authoring.md#name-a-place-and-a-function-block) | `...` | Where the rack stands. `None` gives it no place. | `d.rack("U1", place="HOLD")` |
 | `external` | `False` | `True` flags the rack as by others. | `d.rack("U1", external=True)` |
+| [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.rack("U1", external=True, drawn_with=skid)` |
 
 ## `d.mate`
 

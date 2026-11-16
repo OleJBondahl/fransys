@@ -92,9 +92,15 @@ def house_records(tables: Mapping[str, Mapping[str, object]]) -> tuple[Record, .
     )
 
 
-def front_pages_records(counts: Mapping[Id[Document], int]) -> tuple[Record, ...]:
-    """One `FrontPages` record per document of `counts` (its Typst page count), in the mapping's order."""
+def front_pages_records(counts: Mapping[Id[Document], int], diagrams: Mapping[Id[Document], int]) -> tuple[Record, ...]:
+    """One `FrontPages` record per document of `counts` (its Typst front count) with its `diagrams` sheet count, in the mapping's order."""
     return tuple(
-        FrontPages(id=make_id(FrontPages, key := ("build", "front_pages", str(document))), key=key, document=document, count=count)
+        FrontPages(
+            id=make_id(FrontPages, key := ("build", "front_pages", str(document))),
+            key=key,
+            document=document,
+            count=count,
+            diagrams=diagrams[document],
+        )
         for document, count in counts.items()
     )

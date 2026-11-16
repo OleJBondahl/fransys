@@ -8,6 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._carry import earth_pin, element_name, refuse_carried
 from fransys_author.surface._device import part_mpn
+from fransys_author.surface._drawn_with import UnitHandle, drawn_with_unit
 from fransys_author.surface._pairing import Ends, SeriesBridge, label_of, pair
 from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
@@ -251,6 +252,7 @@ class Cables:
         parent: Device | None = None,
         name: str | None = None,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
     ) -> Cable:
         """Add cable `tag` (printed `-tag`) of `part`; `length_m` is metres, stored as whole mm.
 
@@ -259,6 +261,10 @@ class Cables:
         name = floating_name(tag, name, "cable")
         mm = _length_mm(length_m)
         where = self._place if place is ... else place
+        parent_id = None if parent is None else cable_parent_item(parent)
+        unit = drawn_with_unit(
+            self._engine, drawn_with, external=external, who=("d.cable", name or tag or ""), parent=None if parent_id is None else parent_id.id
+        )
         key = self._claim(name or tag or "", per_function=True)
         engine = self._engine.cable(
             part_mpn(part),
@@ -267,8 +273,9 @@ class Cables:
             length_mm=mm,
             at=self._place_node(where),
             group=self._group,
-            parent=None if parent is None else cable_parent_item(parent),
+            parent=parent_id,
             external=external,
+            drawn_with=unit,
         )
         made = Cable(name or tag or "", engine)
         made._design = self

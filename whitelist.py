@@ -240,7 +240,9 @@ _.DIGITAL_IN  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:111
 _.DIGITAL_OUT  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:112
 _.ANALOGUE_IN  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:113
 _.ANALOGUE_OUT  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:114
-_.lane_heads  # OTHER fransys-overview/src/fransys_overview/_data.py:182
+_.lane_heads  # OTHER fransys-overview/src/fransys_overview/_data.py:178
+_.open  # OTHER fransys-overview/src/fransys_overview/_data.py:181
+_.by_view  # OTHER fransys-overview/src/fransys_overview/_data.py:222
 # `fransys_layout/drawing.py`: `Style`, `Sheet` and `DrawnWire` fields, read by render `draw.svg`
 # (render-0022) or by their tests (DRAWING-VALUE A1/A2; SETTINGS-A2 replaces the Style numbers).
 _.style  # OTHER fransys-render/src/fransys_render/draw.py:143

@@ -4,6 +4,16 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.21
+
+- BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with `fr.release`.
+- By-others sets print on the system drawing with no setting on your side: a by-others device wired to one unit no longer appears on that unit's PDF. The system document now holds a schematic section, and a reference into it reads `<design title> p<n>:<cell>`.
+- Also in 0.23.20: a page title and its title-page index row name only the groups drawn on that page. A group reached only through a copy or stub keeps its own page's title (KI-986).
+- BREAKING: a design that declares a SYSTEM document must set `d.project(...)`, because its heading and the where-texts into it print the project title. 0.23.20 built such a design without a project title; this release refuses it with `SYSTEM_DOCUMENT_NO_PROJECT`.
+- A design with by-others devices needs a SYSTEM document, or its by-others set raises `UNPRINTED_SET`.
+
+- `drawn_with=` on `d.device`, `d.terminal_strip`, `d.cable`, `d.harness` and `d.rack` puts a by-others item, and everything under a by-others root, on a unit's PDF: `d.device("M9", None, external=True, pins=("U", "V", "W"), drawn_with=skid)`. It needs `external=True` and a wire to the unit, or the build reports `DRAWN_WITH_UNIT_UNWIRED`. BREAKING: a stored model of schema 33 or older is refused (schema 34); rebuild stored releases with `fr.release`.
+
 ## New in 0.23.20
 
 - Page references are right on an A2 cover with a long revision table. 0.23.19 counted its cover pages at A3 and printed every reference one page late.

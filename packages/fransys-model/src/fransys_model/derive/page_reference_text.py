@@ -15,7 +15,7 @@ lazy from .document_pages import drawn_pages, ordered_pages
 lazy from .document_sets import set_printers
 lazy from .document_subject import scope_path
 lazy from .document_unit import document_unit
-lazy from .facts.house_settings import frame_form_of, front_count_of, reference_text_of
+lazy from .facts.house_settings import diagram_count_of, frame_form_of, front_count_of, reference_text_of
 lazy from .frame_labels import cell_labels
 lazy from .frame_position import partner_position_text, position_text
 lazy from .page_presets import document_page_kinds
@@ -34,15 +34,26 @@ def front_pages(model: Model, document: Id[Document]) -> int:
     return front_count_of(model, document) if document in covered_documents(model) else 0
 
 
+def _kind_offset(model: Model, document: Id[Document], kind: PageKind) -> int:
+    """The pages before the first page of `kind` in `document`'s PDF: the front pages, then the diagram sheets, in kind order.
+
+    A kind the document does not keep is offset by every page of it.
+    """
+    kinds = document_page_kinds(model, document)
+    before = kinds[: kinds.index(kind)] if kind in kinds else kinds
+    counts = {PageKind.COVER: front_pages(model, document), PageKind.BLOCK_DIAGRAM: diagram_count_of(model, document)}
+    return sum(counts.get(one, 0) for one in before)
+
+
 def _places(model: Model) -> dict[Id[Page], int]:
-    """Each drawn page's number in its PDF: the front pages plus its place among the document's drawn pages.
+    """Each drawn page's number in its PDF: its kind's offset plus its place among the document's drawn pages.
 
     A page no document prints (it already carries a warning) is counted among all pages, with no front.
     """
     found: dict[Id[Page], int] = {}
     for document in documents(model):
-        front = front_pages(model, document)
-        found.update({page.id: front + place for place, page in enumerate(drawn_pages(model, document), 1)})
+        offset = _kind_offset(model, document, PageKind.SCHEMATIC)
+        found.update({page.id: offset + place for place, page in enumerate(drawn_pages(model, document), 1)})
     loose = (page for page in ordered_pages(model) if page.id not in found)
     found.update({page.id: place for place, page in enumerate(loose, 1)})
     return found
@@ -71,7 +82,7 @@ def pdf_page(model: Model, sheet: Page | DiagramSheet) -> int:
     """
     if isinstance(sheet, DiagramSheet):
         document = _diagram_document(model, sheet)
-        return sheet.number if document is None else front_pages(model, document) + sheet.number
+        return sheet.number if document is None else _kind_offset(model, document, PageKind.BLOCK_DIAGRAM) + sheet.number
     return _places_of(model)[sheet.id]
 
 

@@ -82,7 +82,7 @@ def _crossings(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int], span: S
 
     An `above` trunk lies below each earlier row's box a drop passes, a `below` one above a later.
     """
-    trunk, wire, above = trunk_node(span.fan, span.row), env.options.wire_min, span.side == "above"
+    trunk, wire, above = trunk_node(span.fan, span.row), env.options.box_gap, span.side == "above"
     rows = range(span.row) if above else range(span.row + 1, len(env.plan.rows))
     keeps = tuple(_foreign(env, x, span, rows))
     tops = [y[k.node] + k.box.y for k in keeps]
@@ -124,7 +124,7 @@ def _pushes(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int], span: Span
     """(from node, to node, distance) per foreign hard box that a lane of the span's band meets."""
     if span.x0 == span.x1:
         return []
-    trunk, wire = trunk_node(span.fan, span.row), env.options.wire_min
+    trunk, wire = trunk_node(span.fan, span.row), env.options.box_gap
     out = _crossings(env, x, y, span)
     keeps = tuple(_foreign(env, x, span, [span.row]))
     segs = [s for s in lane_segments(env, x, _fan(env, span.fan), span.row) if s]

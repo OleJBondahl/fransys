@@ -5,6 +5,7 @@ lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device
+from fransys_author.surface._drawn_with import UnitHandle, drawn_with_unit
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._tags import bare
 from fransys_author.surface._wire import _port
@@ -54,6 +55,7 @@ class Links:
         name: str | None = None,
         place: str | EllipsisType | None = ...,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
     ) -> Device:
         """Add the part-less harness `tag` (printed `-tag`); `place=None` gives it no place.
 
@@ -64,13 +66,15 @@ class Links:
         elif name is None:
             msg = "give a tag, or name= for a harness with no tag"
             raise AuthorError(msg)
+        unit = drawn_with_unit(self._engine, drawn_with, external=external, who=("d.harness", name or tag or ""))
         key = self._claim(name or tag or "", per_function=True)
-        item = self._engine.harness_item(
-            key,
-            tag,
-            self._place_node(self._place if place is ... else place),
-            self._group,
+        item = self._engine.harness(
+            name=key,
+            tag=tag,
+            at=self._place_node(self._place if place is ... else place),
+            group=self._group,
             external=external,
+            drawn_with=unit,
         )
         return Device(name or tag or "", item, None, tag)
 
@@ -81,6 +85,7 @@ class Links:
         name: str | None = None,
         place: str | EllipsisType | None = ...,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
     ) -> Device:
         """Add the part-less PLC rack `tag` (printed `-tag`); `place=None` gives it no place.
 
@@ -88,6 +93,7 @@ class Links:
         Does not make a harness, so the modules print flat.
         """
         bare(tag, "rack")
+        unit = drawn_with_unit(self._engine, drawn_with, external=external, who=("d.rack", name or tag))
         key = self._claim(name or tag, per_function=True)
         item = self._engine.item(
             None,
@@ -96,5 +102,6 @@ class Links:
             at=self._place_node(self._place if place is ... else place),
             group=self._group,
             external=external,
+            drawn_with=unit,
         )
         return Device(name or tag, item, None, tag)

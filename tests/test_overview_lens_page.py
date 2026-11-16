@@ -18,7 +18,7 @@ from fransys_model.derive import signal_lens
 
 
 def _page_lens(model: Any) -> list[dict[str, Any]]:
-    text = html(lay_out_overview(model, LIBRARY)[0], text_height=8)
+    text = html(model, lay_out_overview(model, LIBRARY)[0], text_height=8)
     found = re.search(r'id="overview-data">(.*?)</script>', text, re.DOTALL)
     assert found is not None
     return json.loads(found.group(1))["lens"]

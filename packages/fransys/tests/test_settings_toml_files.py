@@ -53,6 +53,7 @@ LAYOUT_VALUES = {
     "pad": 2,
     "margin": [16, 16],
     "wire_min": 8,
+    "box_gap": 8,
     "column_gap_min": 8,
     "parallel_pitch": 48,
     "row_gap": 24,
@@ -110,8 +111,7 @@ def test_layout_toml_holds_todays_values() -> None:
 
 def test_layout_toml_keys_are_options_fields() -> None:
     """Every key of `layout.toml` is an `Options` field, and every size field has a key."""
-    path = Path(fransys_layout.__file__).parent / "layout.toml"
-    keys = set(tomllib.loads(path.read_text(encoding="utf-8"))["layout"])
+    keys = set(tomllib.loads((Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8"))["layout"])
     names = {f.name for f in fields(Options)}
     assert keys - names == GENERAL
     keys -= GENERAL

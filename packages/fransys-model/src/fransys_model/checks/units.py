@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
+from fransys_model.derive.facts.closure import port_item
 from fransys_model.derive.facts.cores import is_core
 from fransys_model.derive.facts.mates import unmatched_port_names
 from fransys_model.derive.facts.net_crossings import crossing_functions, earth_carried_functions, net_crossings
@@ -17,7 +18,7 @@ from fransys_model.derive.facts.unit_crossings import (
     open_boundaries,
 )
 from fransys_model.derive.facts.unit_index import boundary_owners, boundary_unit, unit_index
-from fransys_model.derive.facts.units import declared_unit
+from fransys_model.derive.facts.units import declared_unit, drawn_with
 from fransys_model.derive.facts.wired_ports import mated_ports, wired_ports
 from fransys_model.kernel import Finding, natural_join
 from fransys_model.vocab.codes import finding
@@ -35,7 +36,8 @@ from fransys_model.vocab.tables import (
 )
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Id, Model
+    from fransys_model.vocab.core import Item
 
 BOUNDARY_UNCONNECTED: Final[str] = "BOUNDARY_UNCONNECTED"
 NET_ACROSS_UNIT_BOUNDARY_OPEN: Final[str] = "NET_ACROSS_UNIT_BOUNDARY_OPEN"
@@ -48,6 +50,7 @@ BOUNDARY_NOT_IN_UNIT: Final[str] = "BOUNDARY_NOT_IN_UNIT"
 MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
 UNUSED_NOT_BOUNDARY: Final[str] = "UNUSED_NOT_BOUNDARY"
 UNUSED_POINT_WIRED: Final[str] = "UNUSED_POINT_WIRED"
+DRAWN_WITH_UNIT_UNWIRED: Final[str] = "DRAWN_WITH_UNIT_UNWIRED"
 
 
 def _boundary_unconnected(model: Model) -> list[Finding]:
@@ -199,11 +202,32 @@ def _boundary_membership(model: Model) -> list[Finding]:
     return found
 
 
+def _drawn_with_unwired(model: Model) -> list[Finding]:
+    """A by-others root that names a unit with `drawn_with` needs a conductor from it, or an item under it, into that unit."""
+    index = unit_index(model)
+    wired: set[Id[Item]] = set()
+    for conductor in conductors(model).values():
+        ends_ = (port_item(model, conductor.a), port_item(model, conductor.b))
+        for near, far in ((ends_[0], ends_[1]), (ends_[1], ends_[0])):
+            unit = drawn_with(model, near)
+            if unit is not None and far in index.items_of.get(unit, ()):
+                wired.add(index.external_root.get(near, near))
+    return [
+        finding(
+            DRAWN_WITH_UNIT_UNWIRED,
+            (item.id, item.drawn_with),
+            f"{ref(item)} is drawn with {ref(item.drawn_with)} but has no wire to it; wire it to {ref(item.drawn_with)} or remove drawn_with",
+        )
+        for item in items(model).values()
+        if item.drawn_with is not None and item.id not in wired
+    ]
+
+
 def check_units(model: Model) -> tuple[Finding, ...]:
     """Check every unit's boundary and every mate's kind; `UNIT_CYCLE` is `check_structure`'s.
 
-    `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`,
-    `BOUNDARY_NOT_IN_UNIT`, `MATE_NOT_CONNECTOR`, `UNUSED_NOT_BOUNDARY` and `UNUSED_POINT_WIRED`; the others `WARNING`. Sorted by code.
+    `ERROR`: `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`, `BOUNDARY_NOT_IN_UNIT`, `MATE_NOT_CONNECTOR`,
+    `UNUSED_NOT_BOUNDARY`, `UNUSED_POINT_WIRED`, `DRAWN_WITH_UNIT_UNWIRED`; the others `WARNING`. Sorted by code.
     """
     return ordered(
         [
@@ -217,5 +241,6 @@ def check_units(model: Model) -> tuple[Finding, ...]:
             *_carrier_unused(model),
             *_unused_ports_wired(model),
             *_boundary_membership(model),
+            *_drawn_with_unwired(model),
         ]
     )

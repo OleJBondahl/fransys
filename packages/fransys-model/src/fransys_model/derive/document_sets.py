@@ -21,7 +21,7 @@ from .lookups import item_location, unit_chain
 from .memo import Memo
 from .page_presets import document_page_kinds
 
-__all__ = ["printing_document", "set_group", "set_printers", "set_unit"]
+__all__ = ["printing_document", "set_printers", "set_unit"]
 
 
 def set_unit(drawing_set: DrawingSet) -> Id[Unit] | None:
@@ -94,18 +94,6 @@ def printing_document(model: Model, unit: Id[Unit] | None, location: Id[AspectNo
     if unit is not None:
         return _unit_printer(model, unit)
     return by_location.get(location) or fed.get(location) or by_unit.get(None)
-
-
-def set_group(model: Model, unit: Id[Unit] | None, location: Id[AspectNode] | None) -> Id[Document] | Id[Unit] | None:
-    """What a set's rank counts among (R331): the unit document that prints it, else its unit.
-
-    A set a location document prints keeps `None` (the top-level sets count together), so a
-    document prints only sets of one group and no page label repeats in its PDF.
-    """
-    by_unit, by_location, fed = _context_of(model)
-    if unit is not None:
-        return _unit_printer(model, unit) or unit
-    return None if location in by_location else fed.get(location) or by_unit.get(None)
 
 
 def _printers(model: Model) -> dict[Id[DrawingSet], Id[Document]]:

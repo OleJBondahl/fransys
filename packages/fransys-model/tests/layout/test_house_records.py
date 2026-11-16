@@ -10,6 +10,7 @@ from derive_helpers import house_records
 
 from fransys_model.derive.facts.house_settings import (
     designation_form_of,
+    diagram_count_of,
     export_form_of,
     frame_form_of,
     front_count_of,
@@ -168,7 +169,9 @@ def _document(name: str) -> Document:
 
 def test_a_documents_front_count_is_its_stored_value_and_a_missing_one_raises_naming_it() -> None:
     document, other = _document("d1"), _document("d2")
-    model = _model((document, other, *front_pages_records({document.id: 2})))
-    assert front_count_of(model, document.id) == 2
+    model = _model((document, other, *front_pages_records({document.id: 2}, {document.id: 3})))
+    assert (front_count_of(model, document.id), diagram_count_of(model, document.id)) == (2, 3)
     with pytest.raises(SchemaError, match=r"no layout.front_pages record for document .*fransys.build"):
         front_count_of(model, other.id)
+    with pytest.raises(SchemaError, match=r"no layout.front_pages record for document .*fransys.build"):
+        diagram_count_of(model, other.id)

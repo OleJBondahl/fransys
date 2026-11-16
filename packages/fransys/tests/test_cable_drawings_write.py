@@ -87,8 +87,8 @@ def test_write_embeds_the_cable_block_svg_in_the_typst_source(good_written):
     sources = [p.read_text(encoding="utf-8") for p in sorted(inter.glob("*.typ"))]
     assert len(sources) == 1
     assert "#image(bytes(" in sources[0]
-    # The cable block and the SYSTEM block diagram sheet: one SVG each.
-    assert sources[0].count("#image(bytes(") == 2
+    # The cable block, the SYSTEM block diagram sheet and the schematic page of the top-level set (R2368): one SVG each.
+    assert sources[0].count("#image(bytes(") == 3
     assert "-W1, 5000 mm" in sources[0]  # the block's heading, inside the SVG literal
     assert 'strong(text("Core"))' not in sources[0]  # the old core table's header cell
 

@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import combinations, pairwise
-from typing import TYPE_CHECKING, Any
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, Any, cast
 
+import pytest
+
+import fransys_layout.core.place_y as home
 from fransys_layout.core import Box, Facts, Options, PlacementProblem
 from fransys_layout.core.geometry import (
     cell_anchor,
@@ -25,8 +29,6 @@ from .place_fixtures import bundle_fan, card_with_coils, row_group_three
 from .test_place_x import env_of
 
 if TYPE_CHECKING:
-    import pytest
-
     from fransys_layout.core.place_env import PageEnv
     from fransys_layout.core.values import Finding
 
@@ -104,7 +106,7 @@ def _two_heights() -> PlacementProblem:
 
 
 def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> None:
-    """Both coils hang wire_min under the box, so their origins differ; level would break that."""
+    """Both coils hang box_gap under the box, so their origins differ; level would break that."""
     env, y, findings = solved(_two_heights())
     assert [(f.code, f.subject, f.page) for f in findings] == [("ALIGN_DROPPED", "G, row 0", env.plan.page)]
     assert "row group G" in findings[0].text
@@ -113,8 +115,7 @@ def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> N
         pc = env.pcs[col]
         cell = pc.lanes[0][0]
         dy = pin_xy(env.syms[cell.sym], cell, "n")[1]
-        wire = env.options.wire_min
-        assert y[cell_node(col, 0, 0)] + dy == y[box_y_node("A1")] + box.y + box.h + wire
+        assert y[cell_node(col, 0, 0)] + dy == y[box_y_node("A1")] + box.y + box.h + env.options.box_gap
     assert y[cell_node("c:k1", 0, 0)] != y[cell_node("c:k2", 0, 0)]
 
 
@@ -131,25 +132,21 @@ def test_grid_up_rounds_to_the_next_step() -> None:
     assert [grid_up(v, 8) for v in (-9, -8, -1, 0, 1, 8, 9)] == [-8, -8, 0, 0, 8, 8, 16]
 
 
-def test_a_cell_gap_is_wire_min_or_its_footprint_or_keepout_reach_on_the_box_side(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """RL-W2: `_box_gap` is wire_min, or the reach of the folded footprint or keep-out if more."""
-    from types import SimpleNamespace
-
-    from fransys_layout.core import place_y
-    from fransys_layout.core.values import Box
-
-    def gap(foot: Box, keep: Box | None = None, *, above: bool, dy: int = 0) -> int:
-        monkeypatch.setattr(place_y, "_footprint", lambda *_: foot)
-        view = SimpleNamespace(body=Box(0, 0, 0, 0), keepout=keep or Box(0, 0, 0, 0))
-        monkeypatch.setattr(place_y, "view_of", lambda *_: view)
-        env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=8), syms={"T": None})
-        cell: Any = SimpleNamespace(sym="T", orient="R0")
-        return place_y._box_gap(env, cell, above=above, dy=dy)
-
-    assert gap(Box(0, -2, 8, 4), above=True) == 8
-    assert gap(Box(0, -30, 8, 38), above=False) == 30
-    assert gap(Box(0, -4, 8, 40), above=True) == 36
-    assert gap(Box(0, -4, 8, 40 + 18), above=True) == 54
-    assert gap(Box(0, -2, 8, 4), Box(0, -22, 8, 22), above=False) == 22
+@pytest.mark.rule("BOX-GAP-BELOW")
+@pytest.mark.parametrize(
+    ("foot", "keep", "above", "want"),
+    [
+        pytest.param(Box(0, -2, 8, 4), None, True, 8, id="body-only"),
+        pytest.param(Box(0, -2, 8, 4), Box(0, -22, 8, 22), False, 22, id="keepout-wider"),
+        pytest.param(Box(0, -30, 8, 38), None, False, 30, id="footprint-wider-above"),
+        pytest.param(Box(0, -4, 8, 40), None, True, 36, id="footprint-wider-below"),
+        pytest.param(Box(0, -4, 8, 58), None, True, 54, id="hanging-item"),
+        pytest.param(Box(0, -2, 8, 4), None, False, 8, id="flipped-side"),
+    ],
+)
+def test_a_cell_gap_is_box_gap_or_its_footprint_or_keepout_reach_on_the_box_side(monkeypatch, foot, keep, above, want) -> None:
+    """BOX-GAP-BELOW: `_box_gap` is Options.box_gap (not wire_min), or the reach of the footprint or keep-out if more."""
+    monkeypatch.setattr(home, "_footprint", lambda *_: foot)
+    monkeypatch.setattr(home, "view_of", lambda *_: SimpleNamespace(body=Box(0, 0, 0, 0), keepout=keep or Box(0, 0, 0, 0)))
+    env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=4, box_gap=8), syms={"T": None})
+    assert home._box_gap(env, cast("Any", SimpleNamespace(sym="T", orient="R0")), above=above, dy=0) == want

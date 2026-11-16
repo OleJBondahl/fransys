@@ -441,11 +441,11 @@ def test_a_marker_with_two_targets_has_two_links_each_landing_on_its_own_page(mc
     pages = layout_of(model, Page)
     one = next(m for m in markers.values() if m.star is None and markers[m.partner].page != m.page)
     far = markers[one.partner].page
-    other = next(m for m in markers.values() if m.page not in {one.page, far})
-    ends = (markers[one.partner], other)
+    document = next(r.id for r in documents(model).values())
+    inside = {p.id for p in document_pages(model, document)} - {one.page, far}  # the pages whose labels `_landings` reads
+    ends = (markers[one.partner], min((m for m in markers.values() if m.page in inside), key=lambda m: m.id))
     real = page_nav.marker_line_targets
     monkeypatch.setattr(page_nav, "marker_line_targets", lambda model, m: ends if m.id == one.id else real(model, m))
-    document = next(r.id for r in documents(model).values())
     boxes = link_boxes(model, result.drawings, library_of(result.settings))
     bx, by, bw, bh = boxes[one.id]
     cut = [

@@ -1,7 +1,7 @@
-"""The top-level items a unit's interface strips feed: they print on the unit's pages (R316).
+"""The own top-level items a unit's interface strips feed: they print on the unit's pages (R316).
 
-The old engine drew a motor outside the cabinet on the cabinet's pages, the by-others-on-unit-pages
-convention (owner 2026-10-14). `document_sets` reads them to choose each set's one printer.
+A feed never lands on or passes an item by others (owner 2026-11-15, R2368): a by-others set prints on
+the system document. `document_sets` reads these items to choose each set's one printer.
 """
 
 from collections import defaultdict
@@ -11,7 +11,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .facts.unit_index import item_unit
-from .facts.units import item_root
+from .facts.units import external, item_root
 from .lookups import item_of_port, strip_set
 from .memo import Memo
 
@@ -39,7 +39,7 @@ def _fed(model: Model, unit: Id[Unit]) -> frozenset[Id[Item]]:
     todo = [item_root(model, s) for s in strip_set(model) if item_unit(model, s) == unit]
     while todo:
         for near in links.get(todo.pop(), ()):
-            if near not in seen and item_unit(model, near) is None:
+            if near not in seen and item_unit(model, near) is None and not external(model, near):
                 seen.add(near)
                 todo.append(near)
     return frozenset(seen)

@@ -38,7 +38,7 @@ def _previous() -> Any:
 
 
 def _page(change: Any) -> dict[str, Any]:
-    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], changes=change, text_height=8))
+    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], _laid()[2], changes=change, text_height=8))
     assert found is not None
     return json.loads(found.group(1))
 

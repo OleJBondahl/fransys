@@ -3,6 +3,7 @@ step = 8
 pad = 2
 margin = [16, 16]
 wire_min = 8
+box_gap = 8  # clear of a box edge above and below for what hangs from or passes its pins (BOX-GAP-BELOW)
 column_gap_min = 8
 parallel_pitch = 48  # G between the axes of two parallel branches
 row_gap = 24

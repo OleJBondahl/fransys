@@ -18,8 +18,9 @@ _BUILD_STEPS = [
     "wire rows",
     "PLC allocation",
     "numbering",
-    "front pages",
     "validators",
+    "diagram layout",
+    "front pages",
     "schematic layout",
 ]
 

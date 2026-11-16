@@ -8,6 +8,7 @@ lazy from types import EllipsisType
 from fransys_author._partless import check_partless
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
+from fransys_author.surface._drawn_with import UnitHandle, drawn_with_unit
 from fransys_author.surface._fixed import FixedTerminals, span
 from fransys_author.surface._pairing import SeriesElement
 from fransys_author.surface._runs import check_run
@@ -314,6 +315,7 @@ class Strips:
         bridged: Bridged = False,
         rail: bool = False,
         external: bool = False,
+        drawn_with: UnitHandle | None = None,
     ) -> TerminalStrip:
         """Add terminal strip `tag` (printed `-tag`) of terminal `part`, `count` terminals if given.
 
@@ -323,6 +325,7 @@ class Strips:
         """
         if part is None:
             check_partless(tag, external=external, call="d.terminal_strip")
+        unit = drawn_with_unit(self._engine, drawn_with, external=external, who=("d.terminal_strip", name or tag or ""))
         mpn = None if part is None else part_mpn(part)
         pe_mpn = None if pe is None else part_mpn(pe)
         if mpn is not None:
@@ -332,7 +335,7 @@ class Strips:
         name = floating_name(tag, name, "terminal_strip")
         where = self._place if place is ... else place
         self._claim(name or tag or "", per_function=False)
-        strip = self._engine.strip(tag, name=name, at=self._place_node(where), description=description, external=external)
+        strip = self._engine.strip(tag, name=name, at=self._place_node(where), description=description, external=external, drawn_with=unit)
         return TerminalStrip(
             name or tag or "",
             strip,

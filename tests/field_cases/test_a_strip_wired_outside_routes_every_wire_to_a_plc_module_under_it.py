@@ -37,7 +37,7 @@ def _cab(u: Any) -> _Io:
 def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="C1")
     cab = d.add(_cab, "U1")
-    field = d.terminal_strip("X9", "DEMO-TB-2.5", _COUNT, external=True)
+    field = d.terminal_strip("X9", "DEMO-TB-2.5", _COUNT)
     for n in range(1, _COUNT + 1):
         d.series(cab.X[n].outer, field[n].inner, wire=(BU, 0.5))
     return fr.build(d, unit_document("demo-plc-cab"))

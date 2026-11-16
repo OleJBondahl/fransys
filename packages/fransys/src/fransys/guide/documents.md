@@ -140,6 +140,24 @@ assert not [f for f in fr.check(placed_result) if f.severity is fr.Severity.ERRO
 
 A release added more than once resolves by name to no single unit. Name each instance by what `d.add` returned. Each placement writes its own PDF, `<release>-v<V>.<R>-<tag>.pdf`; the unit's own PDF stays `<release>-v<V>.<R>.pdf`.
 
+## Which document prints a set
+
+A drawing set holds the items of one place. A by-others device is one authored with `external=True`. It never prints on a unit's PDF
+because a unit's strips feed it.
+
+A set of by-others items prints on the document for its place. Without one it prints on the system document, which
+is `fr.DocumentPreset.SYSTEM`: a system document takes no subject argument; its heading and the where-texts into it name the project title (d.project).
+Its schematic pages follow its block diagram sheets. A design with a system document and no `d.project` is refused with `SYSTEM_DOCUMENT_NO_PROJECT`.
+
+A set of your own devices outside a unit prints on the unit whose strips feed it. A set that no document prints is `UNPRINTED_SET`.
+
+A by-others item at the place of an own device that a unit feeds stays on that unit's PDF (KI-990).
+
+`drawn_with=<unit>` on a by-others item, or on the root of by-others items, prints it in that unit's set instead.
+That set prints on the unit's document, else the nearest documented unit above it, else the system document. Items under a root follow it, and a child sets none of its own.
+The unit needs a wire to the item, or the build reports `DRAWN_WITH_UNIT_UNWIRED`.
+A reference into the system document names the design's title.
+
 ## List pages
 
 The terminal, PLC, connector, wire-label and designation lists flow in two columns. The cable list and the BOM take the full width. A row never splits. A table that reaches a column foot continues in the next column or page under its heading with " (cont.)". A split leaves at least two rows on each side, else the table moves whole. A long token breaks only at a hyphen or a slash. The cover's revision table stands one padding above the title block.

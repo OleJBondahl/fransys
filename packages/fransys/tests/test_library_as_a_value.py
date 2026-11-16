@@ -37,6 +37,8 @@ def built(tmp_path_factory: pytest.TempPathFactory):
     cover = folder / "cover.md"
     cover.write_text("# C\n", encoding="utf-8")
     d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
     d.add(_unit, "U1")
     result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
     assert LIBRARY.font is not None

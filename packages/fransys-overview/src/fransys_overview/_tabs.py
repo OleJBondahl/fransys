@@ -7,10 +7,11 @@ A line's end point lies on the tab it ends on, so the tab nearest that point is 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fransys_model.derive import PlacedBox, PlacedView, ViewRows
+    from fransys_layout import OverviewPlacedBox, OverviewPlacedView
+    from fransys_model.derive import ViewRows
 
 
-def _nearest(box: PlacedBox, point: tuple[int, int], height: int) -> int | None:
+def _nearest(box: OverviewPlacedBox, point: tuple[int, int], height: int) -> int | None:
     """The `index` of the tab of `box` nearest `point`, taking a tab's centre to be its text's."""
     best: tuple[int, int] | None = None
     for tab in box.tabs:
@@ -20,7 +21,7 @@ def _nearest(box: PlacedBox, point: tuple[int, int], height: int) -> int | None:
     return None if best is None else best[1]
 
 
-def tab_texts(rows: ViewRows, placed: PlacedView, height: int) -> dict[tuple[int, int], str]:
+def tab_texts(rows: ViewRows, placed: OverviewPlacedView, height: int) -> dict[tuple[int, int], str]:
     """The text of each tab, keyed by (box position, tab index), from the lines that end on it."""
     found: dict[tuple[int, int], str] = {}
     for line, record in zip(rows.lines, placed.lines, strict=True):

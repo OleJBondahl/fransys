@@ -93,30 +93,6 @@ _ENUMS = {
 
 _COMMON = {"id", "key", "ext"}
 _FIELDS: dict[type, set[str]] = {
-    layout.OverviewView: {"unit", "strip", "produced_by"},
-    layout.OverviewBox: {
-        "view",
-        "subject",
-        "stub",
-        "dashed",
-        "x",
-        "y",
-        "width",
-        "height",
-        "tabs",
-        "produced_by",
-    },
-    layout.OverviewLine: {
-        "view",
-        "a",
-        "b",
-        "kind",
-        "via",
-        "points",
-        "text_x",
-        "text_y",
-        "produced_by",
-    },
     layout.GroupHint: {"function", "group"},
     layout.OrderHint: {"before", "after"},
     layout.PoleGroup: {"functions", "selector"},

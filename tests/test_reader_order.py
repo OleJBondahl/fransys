@@ -19,7 +19,6 @@ from fransys.colours import BK, GNYE, RD
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_overview
 from fransys_model.derive import signal_lens
-from fransys_model.layout import OverviewBox, OverviewLine, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -406,9 +405,9 @@ def test_a_rename_leaves_each_netlist_identical(first: _Run, second: _Run) -> No
 
 def _overview_shapes(run: _Run) -> tuple[list[str], list[str]]:
     """Every overview box rectangle with its tabs, and every line's points, without any Id."""
-    out = lay_out_overview(run.result.model, LIBRARY)[0]
-    boxes = [(b.x, b.y, b.width, b.height, b.dashed, tuple((t.x, t.y, t.text_width) for t in b.tabs)) for b in layout_of(out, OverviewBox).values()]
-    lines = [(ln.kind, tuple((p.x, p.y) for p in ln.points), ln.text_x, ln.text_y) for ln in layout_of(out, OverviewLine).values()]
+    views = lay_out_overview(run.result.model, LIBRARY)[0].views
+    boxes = [(b.x, b.y, b.width, b.height, tuple((t.x, t.y, t.text_width) for t in b.tabs)) for v in views for b in v.boxes]
+    lines = [(tuple((p.x, p.y) for p in ln.points), ln.text_x, ln.text_y) for v in views for ln in v.lines]
     return sorted(map(repr, boxes)), sorted(map(repr, lines))
 
 

@@ -63,9 +63,12 @@ def _as_function(value: Fn | Item | Terminal) -> Fn:
     raise AuthorError(msg)
 
 
-def _stamped(records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool) -> tuple[Record, ...]:
-    """Stamp `unit` and `external` onto the `Item` record `instantiate()` made."""
-    return tuple(dataclasses.replace(record, unit=unit, external=external) if isinstance(record, ModelItem) else record for record in records)
+def _stamped(records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool, drawn_with: Id[ModelUnit] | None) -> tuple[Record, ...]:
+    """Stamp `unit`, `external` and `drawn_with` onto the `Item` record `instantiate()` made."""
+    return tuple(
+        dataclasses.replace(record, unit=unit, external=external, drawn_with=drawn_with) if isinstance(record, ModelItem) else record
+        for record in records
+    )
 
 
 def _validated_fields(given: dict[str, Any], required: tuple[str, ...], defaults: dict[str, Any], *, what: str) -> dict[str, Any]:

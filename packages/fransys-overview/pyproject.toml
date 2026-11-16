@@ -1,9 +1,12 @@
 [project]
 name = "fransys-overview"
-version = "0.23.20"
+version = "0.23.21"
 description = "Fransys output: interactive system overview HTML."
 requires-python = ">=3.15"
-dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.23.20#subdirectory=packages/fransys-model"]
+dependencies = [
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.23.21#subdirectory=packages/fransys-model",
+    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.23.21#subdirectory=packages/fransys-layout",
+]
 
 [build-system]
 requires = ["hatchling==1.32.4"]

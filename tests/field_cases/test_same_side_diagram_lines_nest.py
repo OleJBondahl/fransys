@@ -27,6 +27,8 @@ def _built(edges: Edges) -> fr.BuildResult:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Nest\n", encoding="utf-8")
         d = fr.design("demo_parts")
+        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+        d.revision(1, date="2026-01-01", text="first", created="AB")
         devices = {tag: d.device(tag, "DEMO-CONN-2P") for tag in tags}
         for n, (a, b) in enumerate(edges, start=1):
             d.cable(f"W{n}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])

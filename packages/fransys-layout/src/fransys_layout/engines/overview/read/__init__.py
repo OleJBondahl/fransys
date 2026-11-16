@@ -1,6 +1,6 @@
 """Overview engine, reading: the model's overview view rows to the facts of every view.
 
-The only place, with `write/`, where the overview engine meets the model vocabulary.
+The only place where the overview engine meets the model vocabulary: the rows it reads and the `OverviewLayout` it returns.
 """
 
 from fransys_layout.engines.overview.read.facts import view_facts

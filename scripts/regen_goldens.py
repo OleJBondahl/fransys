@@ -64,6 +64,7 @@ ADDED_NULL_KEYS = (  # (table, key) each schema added as a nullable field
     ("function_template", "box_side"),  # schema 29 (model-0449)
     ("port", "source_row"),  # schema 32 (model-0460)
     ("port_template", "source_row"),  # schema 32
+    ("item", "drawn_with"),  # schema 34 (model-0464)
 )
 
 

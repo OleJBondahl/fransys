@@ -125,6 +125,7 @@
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w05_turned_marker-IS.7]" = "GAP-FLIP-217"
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[t02_box_device_contact-IS.4]" = "GAP-FLIP-979"  # KI-979
 "tests/test_placement_marker_counts.py::test_every_stub_tag_and_copy_marker_lies_outside_every_footprint[w06_wide_controller_row]" = "GAP-FLIP-980"  # KI-980
+"tests/test_unit_scope_prints_every_set.py::test_ki_990_a_by_others_item_at_the_place_of_an_own_fed_device_prints_on_the_system_document" = "GAP-FLIP-990"  # KI-990
 
 # test_placement_widen_counts: the crossed instances of test_placement_route_counts, widened (R272)
 # OPEN-CROSSING: the n9 riser (a box pin) and the n2 trunk cross once in every y order

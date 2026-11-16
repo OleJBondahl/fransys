@@ -13,7 +13,7 @@ from fransys_model.derive.facts.item_predicates import cable_items, is_cable
 from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
 from fransys_model.derive.facts.rating_index import function_block
 from fransys_model.derive.pole_lists import function_poles
-from fransys_model.layout import OverviewRefKind, profile_of
+from fransys_model.layout import OverviewRef, OverviewRefKind, profile_of
 from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
     AspectNode,
@@ -192,10 +192,11 @@ from .facts.roles import (
 )
 from .facts.strips import strip_of
 from .facts.subjects import is_unit_owned_kind, record_key_text, subject_kind, subject_kind_text
+from .facts.system_document import is_system_document
 from .facts.unit_index import item_unit, unit_index
 from .facts.unit_names import unit_name_unresolved, units_named
 from .facts.unit_reach import nested_boundary_functions, unused_functions, wired_inside_outside
-from .facts.units import crosses_unit
+from .facts.units import crosses_unit, drawn_with
 from .far_pins import far_pins
 from .finding_errors import error_count, errors_of, refuses
 from .finding_marks import finding_marks
@@ -278,7 +279,6 @@ from .overview_lanes import (
 from .overview_levels import open_strips, overview_level, strip_view
 from .overview_location import location_fold, location_place_title, location_texts
 from .overview_marks import diff_marks, diff_rest
-from .overview_placed import overview_placed_views
 from .overview_strip_stubs import strip_stubs
 from .overview_stub_ends import StubBox, StubLine, stub_ends
 from .overview_stubs import overview_stub_west
@@ -475,15 +475,6 @@ from .rows_overview import (
     TerminalStubs,
     TreeRow,
 )
-from .rows_overview_placed import (
-    PlacedBox,
-    PlacedHead,
-    PlacedLine,
-    PlacedPoint,
-    PlacedTab,
-    PlacedView,
-    RefRow,
-)
 from .rows_overview_view import ViewBox, ViewLine, ViewMember, ViewRows
 from .rows_page import ListKey, PageForm, PagePreset
 from .rows_pin_views import PinMate, PinView
@@ -670,6 +661,7 @@ __all__ = [
     "OverviewLinkKind",
     "OverviewNode",
     "OverviewPort",
+    "OverviewRef",
     "OverviewRefKind",
     "OverviewSignal",
     "OverviewStub",
@@ -683,12 +675,6 @@ __all__ = [
     "PinNet",
     "PinPosition",
     "PinView",
-    "PlacedBox",
-    "PlacedHead",
-    "PlacedLine",
-    "PlacedPoint",
-    "PlacedTab",
-    "PlacedView",
     "Placement",
     "PlcChannelRow",
     "PlcRackChannel",
@@ -700,7 +686,6 @@ __all__ = [
     "PortId",
     "PowerKind",
     "ProspectiveFault",
-    "RefRow",
     "ReplicaOnlySet",
     "Required",
     "RevisionRow",
@@ -854,6 +839,7 @@ __all__ = [
     "drawn_pages",
     "drawn_physical_nets",
     "drawn_stands",
+    "drawn_with",
     "draws_as_line",
     "effective_placement",
     "enclosing_boards",
@@ -930,6 +916,7 @@ __all__ = [
     "is_rail_terminal",
     "is_replica_only_undrawn",
     "is_sole_unit_root",
+    "is_system_document",
     "is_unit_owned_kind",
     "item_box_views",
     "item_description",
@@ -1005,7 +992,6 @@ __all__ = [
     "overview_lifted_text",
     "overview_line_text",
     "overview_location_line_text",
-    "overview_placed_views",
     "overview_power_lines",
     "overview_strip_joins",
     "overview_stub_lines",

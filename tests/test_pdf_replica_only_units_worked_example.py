@@ -95,7 +95,7 @@ def _with_documents(model, *location_ids):
         )
         for index, location_id in enumerate(location_ids)
     ]
-    put = [*docs, *front_pages_records({doc.id: 1 for doc in docs})]
+    put = [*docs, *front_pages_records({doc.id: 1 for doc in docs}, {doc.id: 0 for doc in docs})]
     return evolve(model, remove=(*documents(model), *layout_of(model, FrontPages)), put=put, origin=_ORIGIN), docs
 
 
@@ -154,7 +154,7 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         cover="# Cover",
         notes=None,
     )
-    model_with_doc = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
+    model_with_doc = evolve(model, put=[doc, *front_pages_records({doc.id: 1}, {doc.id: 0})], origin=_ORIGIN)
     svg = fransys_render.sheets(document_sheets_of(model_with_doc, ()), LIBRARY)[SheetKey(doc.id, PageKind.COVER, 0)].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert {"demo-pump-cabinet", "1.2", "2026-01-01"} <= set(values)
@@ -180,7 +180,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     """
     model, _c1_id, _c2_id = _build()
     doc = _system_document("system")
-    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
+    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1}, {doc.id: 0})], origin=_ORIGIN)
 
     findings = check(model, {}, diagrams=(), laid=frozendict(), pdf=PDF)
     own_findings = [f for f in findings if doc.id in f.subjects]
@@ -235,7 +235,9 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     )
     doc = _system_document("system-with-cable")
     model = evolve(
-        model, put=[extra_cable_part, extra_cable_product, extra_cable, extra_facet, doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN
+        model,
+        put=[extra_cable_part, extra_cable_product, extra_cable, extra_facet, doc, *front_pages_records({doc.id: 1}, {doc.id: 0})],
+        origin=_ORIGIN,
     )
 
     cables = lay_out_cables(model, LIBRARY)  # as the facade does after the schematic layout
@@ -274,7 +276,7 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
         cover="# Cover",
         notes=None,
     )
-    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1})], origin=_ORIGIN)
+    model = evolve(model, put=[doc, *front_pages_records({doc.id: 1}, {doc.id: 0})], origin=_ORIGIN)
     record = document_row(model, doc.id)
     text = bom_page(model, record)
     assert "demo-io-board" in text

@@ -12,8 +12,9 @@ from fransys_layout.core.series_values import Parallel, Series
 
 from .blocks_fixtures import box_sym
 from .chain_fixtures import facing_chain, link_box, tall_chain
+from .conftest import MARKER
 from .flow_builders import elem, net, problem
-from .pipeline_fixtures import blocks_of, cut_of, flow_of
+from .pipeline_fixtures import blocks_of, cut_of, flow_of, widened_of
 from .test_box_blocks import chain_shape
 
 if TYPE_CHECKING:
@@ -49,7 +50,7 @@ def test_a_chain_is_one_block_that_is_no_card():
 
 @pytest.mark.rule("CHAIN-COLUMN")
 def test_a_tall_chain_folds_into_two_columns_with_a_tag_per_net():
-    result = cut_of(tall_chain())
+    result = _TALL
 
     assert len(result.flow.columns) == 2
     refs = result.spec.reference_plan
@@ -65,6 +66,9 @@ def test_a_tall_chain_folds_into_two_columns_with_a_tag_per_net():
     assert not {f.code for f in result.spec.findings} & NOT_DRAWN_CODES
 
 
+_TALL = cut_of(tall_chain())
+
+
 def _refused(prob: PlacementProblem, reason: str) -> None:
     """Today's flow (no chain column) and one CHAIN_REFUSED naming the boxes and the reason."""
     flow = flow_of(prob)
@@ -74,28 +78,18 @@ def _refused(prob: PlacementProblem, reason: str) -> None:
     assert all(b.id in found.text for b in prob.symbols if b.box is not None)
 
 
-def test_a_ring_of_boxes_is_refused_not_dropped() -> None:
+def test_a_wiring_that_is_no_column_is_refused() -> None:
+    """A ring, a box joined to three boxes, a trunk to a third box (h1k2 reaches B3) and pins that all face south are refused."""
     boxes = [link_box(f"R{i}", 1) for i in (1, 2, 3)]
     nets = [net("a", "R1.o1", "R2.i1"), net("b", "R2.o1", "R3.i1"), net("c", "R3.o1", "R1.i1")]
     _refused(problem(boxes, nets), "ring")
-
-
-def test_a_box_joined_to_three_boxes_is_refused() -> None:
     boxes = [link_box("B1", 1, first=True), link_box("B2", 2)]
     boxes += [link_box("B3", 1, last=True), link_box("B4", 1, last=True)]
     nets = [net("a", "B1.o1", "B2.i1"), net("b", "B2.o1", "B3.i1"), net("c", "B2.o2", "B4.i1")]
     _refused(problem(boxes, nets), "three or more boxes")
-
-
-def test_a_box_with_a_trunk_to_a_third_box_is_refused() -> None:
-    """The net h1k2 reaches B3 too, so B2 is wired by a trunk and is no chain box."""
     prob = facing_chain(3)
     nets = tuple(net("h1k2", "B1.o2", "B2.i2", "B3.i2") if n.id == "h1k2" else n for n in prob.nets)
     _refused(replace(prob, nets=nets), "also wired by net h1k2")
-
-
-def test_boxes_whose_pins_do_not_face_are_refused() -> None:
-    """chain_shape's pins all face south: the wires would run up the box."""
     _refused(chain_shape(), "do not face")
 
 
@@ -153,7 +147,7 @@ def test_a_chain_box_reaches_a_row_inside_its_block_and_no_bare_seat_is_made() -
 
 
 def test_the_fold_falls_between_two_boxes_and_each_tag_ends_on_the_boxes_beside_it() -> None:
-    result = cut_of(tall_chain())
+    result = _TALL
     top, bottom = result.flow.columns
     last, first = top.lanes[0].cells[-1].sym, bottom.lanes[0].cells[0].sym
     assert (len(top.lanes[0].cells) + len(bottom.lanes[0].cells), top.is_chain) == (24, True)
@@ -168,7 +162,7 @@ def test_the_fold_falls_between_two_boxes_and_each_tag_ends_on_the_boxes_beside_
 
 def test_every_net_of_the_fold_hop_is_tagged_and_the_others_are_not() -> None:
     """No Ref is lost: 23 hops of two nets, and only the fold hop's two nets are tags."""
-    result = cut_of(tall_chain())
+    result = _TALL
     top, bottom = result.flow.columns
     crossed = {n for hop in tall_chain().nets for n in [hop.id]} - {n for c in (top, bottom) for hop in c.hops for n in hop}
     assert {r.net for r in result.spec.reference_plan} == crossed
@@ -186,16 +180,9 @@ def _with_series(prob: PlacementProblem, *parts: SeriesPart) -> PlacementProblem
 @pytest.mark.rule("SERIES-PARALLEL")
 def test_a_chain_of_boxes_takes_the_order_of_its_series() -> None:
     """A series in signal order keeps the column; the same boxes reversed face the wrong way."""
-    flow = flow_of(_with_series(facing_chain(3), "B1", "B2", "B3"))
-    assert [c.sym for c in flow.columns[0].lanes[0].cells] == ["B1", "B2", "B3"]
+    for order in (("B1", "B2", "B3"), ("B1", "B3", "B2")):  # the second skips a hop: B1 and B3 share no wire (it raised a KeyError)
+        assert [c.sym for c in flow_of(_with_series(facing_chain(3), *order)).columns[0].lanes[0].cells] == ["B1", "B2", "B3"]
     _refused(_with_series(facing_chain(3), "B3", "B2", "B1"), "do not face")
-
-
-@pytest.mark.rule("SERIES-PARALLEL")
-def test_a_series_run_that_skips_a_hop_leaves_the_chain_in_natural_order() -> None:
-    """Catches a run read as the order though B1 and B3 share no wire (it raised a KeyError)."""
-    flow = flow_of(_with_series(facing_chain(3), "B1", "B3", "B2"))
-    assert [c.sym for c in flow.columns[0].lanes[0].cells] == ["B1", "B2", "B3"]
 
 
 @pytest.mark.rule("SERIES-PARALLEL")
@@ -204,15 +191,23 @@ def test_a_parallel_of_boxes_whose_hop_does_not_face_is_refused() -> None:
     _refused(_with_series(facing_chain(3), Parallel(("B1", "B3")), "B2"), "do not face")
 
 
+def _below_a_box(tail: int = 0) -> PlacementProblem:
+    """B1, Parallel(B2, B3), B4, then `tail` more boxes in series: B3 hangs from B1 beside B2, B4 takes both."""
+    boxes = [link_box(f"B{n}", 1 if n in (2, 3) else 2, first=n == 1, last=n == 4 + tail) for n in range(1, 5 + tail)]
+    nets = [net("a", "B1.o1", "B2.i1"), net("b", "B1.o2", "B3.i1"), net("c", "B2.o1", "B4.i1"), net("d", "B3.o1", "B4.i2")]
+    nets += [net(f"t{n}{k}", f"B{n - 1}.o{k}", f"B{n}.i{k}") for n in range(5, 5 + tail) for k in (1, 2)]
+    return _with_series(problem(boxes, nets), "B1", Parallel(("B2", "B3")), *(f"B{n}" for n in range(4, 5 + tail)))
+
+
 @pytest.mark.rule("SERIES-PARALLEL")
-def test_a_parallel_of_boxes_below_a_box_is_refused_not_levelled_with_it() -> None:
-    """B3's head join names B1, which would stand it level with B1 instead of beside B2."""
-    boxes = [link_box("B1", 2, first=True), link_box("B2", 1), link_box("B3", 1)]
-    boxes.append(link_box("B4", 2, last=True))
-    nets = [net("a", "B1.o1", "B2.i1"), net("b", "B1.o2", "B3.i1")]
-    nets += [net("c", "B2.o1", "B4.i1"), net("d", "B3.o1", "B4.i2")]
-    prob = _with_series(problem(boxes, nets), "B1", Parallel(("B2", "B3")), "B4")
-    _refused(prob, "B3: a box in parallel below another box has no layout yet")
+@pytest.mark.parametrize("tail", [0, 24])
+def test_a_parallel_of_boxes_below_a_box_stands_beside_its_span_and_every_net_is_drawn(tail: int) -> None:
+    """R2399, R5: B3 stands level with B2, no CHAIN_REFUSED; its head net b is a cross-link the router draws, also in a tree the cut folds."""
+    prob = _below_a_box(tail)
+    assert len(flow_of(prob).columns[0].lanes) == 2
+    _, routes, findings = widened_of(prob, replace(core_options(), marker=MARKER))
+    assert not {f.code for f in findings} & {"CONNECTION_NOT_DRAWN", "WIRE_AS_REFERENCE", "CHAIN_REFUSED"}
+    assert {"a", "b", "c", "d"} <= {w.net for p in routes.pages for w in p.wires}, "b, the head net, is a wire of its own"
 
 
 @pytest.mark.rule("SERIES-PARALLEL")

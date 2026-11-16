@@ -47,7 +47,7 @@ ALLOWED: dict[str, frozenset[str]] = {
     "fransys_pdf": frozenset({"fransys_model"}),
     "fransys_kicad": frozenset({"fransys_model"}),
     "fransys_wago": frozenset({"fransys_model"}),
-    "fransys_overview": frozenset({"fransys_model"}),
+    "fransys_overview": frozenset({"fransys_model", "fransys_layout"}),
 }
 ALLOWED["fransys"] = frozenset(ALLOWED)
 

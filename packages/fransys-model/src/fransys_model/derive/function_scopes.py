@@ -1,6 +1,7 @@
 """The drawing sets a function is drawn in: its own, and for a terminal each set its conductors reach.
 
-A set is keyed `(unit, place)`: the unit of the function's item, else the item's place (R652).
+A set is keyed `(unit, place)`: the unit of the function's item, else the unit a by-others item is
+drawn with (BY-OTHERS-DRAWN-WITH), else the item's place (R652).
 A terminal wired to functions of other sets in its own document is drawn in each of them.
 """
 
@@ -12,7 +13,7 @@ from fransys_model.vocab.tables import ports
 from .document_sets import printing_document
 from .facts.roles import function_role
 from .facts.unit_index import boundary_owners, item_unit
-from .facts.units import unit_encloses
+from .facts.units import drawn_with, unit_encloses
 from .far_pins import far_pins
 from .lookups import item_location
 from .placement_reads import function_item, function_ports
@@ -25,7 +26,7 @@ type ScopeKey = tuple[Id[Unit] | None, Id[AspectNode] | None]
 
 def _own(model: Model, function: Id[Function]) -> ScopeKey:
     item = function_item(model, function)
-    unit = item_unit(model, item)
+    unit = item_unit(model, item) or drawn_with(model, item)
     return unit, None if unit is not None else item_location(model, item)
 
 

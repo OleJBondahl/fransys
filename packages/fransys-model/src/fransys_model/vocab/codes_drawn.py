@@ -83,6 +83,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         fix=(
             "Add a document for the set's unit or location, passing its handle as the subject, "
             "or nest the unit in one that has one. "
+            "A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). "
             "Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)"
         ),
         page="findings-render",

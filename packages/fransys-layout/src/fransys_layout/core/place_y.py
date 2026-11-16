@@ -128,7 +128,7 @@ def _row_constraints(g: Graph, r: int, env: PageEnv) -> None:
 
 
 def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], hang: tuple[bool, bool]) -> None:
-    """An attached column hangs wire_min under the box's S edge, or stands over its N edge.
+    """An attached column hangs box_gap under the box's S edge, or stands over its N edge.
 
     `hang` is (above, slack): a `slack` column hangs at least that far, a trunk of a foreign fan runs between it and the box.
     """
@@ -149,12 +149,11 @@ def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int
 
 
 def _box_gap(env: PageEnv, cell: Cell, *, above: bool, dy: int) -> int:
-    """wire_min, or the reach of the cell's keep-out or its footprint, hangings included."""
+    """box_gap, or the reach of the cell's keep-out or its footprint, hangings included."""
     view = view_of(env.syms[cell.sym], cell.orient)
-    side = "below" if above else "above"
-    hard = reach(dy, [Keep("", union(view.body, view.keepout), "keepout", cell.sym)], side, 0)
-    foot = reach(dy, [Keep("", _footprint(env, cell), "footprint", cell.sym)], side, 0)
-    return max(env.options.wire_min, hard, foot)
+    hard = reach(dy, [Keep("", union(view.body, view.keepout), "keepout", cell.sym)], "below" if above else "above", 0)
+    foot = reach(dy, [Keep("", _footprint(env, cell), "footprint", cell.sym)], "below" if above else "above", 0)
+    return max(env.options.box_gap, hard, foot)
 
 
 def _row_graph(g: Graph, r: int, env: PageEnv, rooms: Mapping[Step, int], free: tuple[AbstractSet[str], ...]) -> None:

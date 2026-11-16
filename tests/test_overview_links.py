@@ -50,7 +50,7 @@ def _with_cabinet_documents(result: Any) -> Any:
         )
         for n, (place, owner) in enumerate([*((p, None) for p in places), *((None, u) for u in owners)])
     ]
-    put = [*docs, *front_pages_records({d.id: 1 for d in docs})]
+    put = [*docs, *front_pages_records({d.id: 1 for d in docs}, {d.id: 0 for d in docs})]
     origin = Origin(file="tests/test_overview_links.py", line=1, note="invented documents")
     return replace(result, model=evolve(model, remove=(*documents(model), *layout_of(model, FrontPages)), put=put, origin=origin))
 
@@ -60,7 +60,7 @@ def _built() -> tuple[Any, str]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
     result = _with_cabinet_documents(fr.build(parts, *printed(design.draft())))
-    return result, html(lay_out_overview(result.model, LIBRARY)[0], text_height=8)
+    return result, html(result.model, lay_out_overview(result.model, LIBRARY)[0], text_height=8)
 
 
 def _items() -> list[dict[str, Any]]:
@@ -92,7 +92,8 @@ def test_a_model_with_no_document_has_no_links() -> None:
     """O21: no document, no PDF, no link."""
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    page = html(lay_out_overview(fr.build(parts, design.draft()).model, LIBRARY)[0], text_height=8)
+    model = fr.build(parts, design.draft()).model
+    page = html(model, lay_out_overview(model, LIBRARY)[0], text_height=8)
     assert "nameddest" not in page
 
 

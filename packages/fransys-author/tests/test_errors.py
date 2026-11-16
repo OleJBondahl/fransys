@@ -1,11 +1,14 @@
 """Every `AuthorError` case: a failing test and a passing twin."""
 
 from decimal import Decimal
-from typing import Any
+from typing import Any, NamedTuple
 
 import pytest
 from fransys_author import AuthorError
 from fransys_author.design import Design
+from fransys_author.surface import Design as SurfaceDesign
+from fransys_author.surface import design as surface_design
+from fransys_author.surface import unit as fr_unit
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Revision, UnitRelease, UnusedBoundary
@@ -499,3 +502,55 @@ def test_profile_with_an_unknown_number_is_refused(parts):
     d = Design(parts)
     with pytest.raises(AuthorError, match="does not have"):
         d.profile(wobble_factor=9)
+
+
+class _Skid(NamedTuple):
+    pass
+
+
+@fr_unit("demo-skid", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
+def _skid(_d: SurfaceDesign) -> _Skid:
+    return _Skid()
+
+
+_BY_OTHERS_CALLS = {
+    "d.device": lambda d, **kw: d.device("M9", "TEST-RLY-2CO", **kw),
+    "d.terminal_strip": lambda d, **kw: d.terminal_strip("X90", "TEST-TB", 2, **kw),
+    "d.cable": lambda d, **kw: d.cable("W9", "TEST-CBL-2", **kw),
+    "d.harness": lambda d, **kw: d.harness("H9", **kw),
+    "d.rack": lambda d, **kw: d.rack("A9", **kw),
+}
+
+
+def _skid_design(parts):
+    d = surface_design(parts, place="C1")
+    return d, d.add(_skid, "SKID")
+
+
+@pytest.mark.parametrize("call", _BY_OTHERS_CALLS)
+def test_drawn_with_without_external_is_refused_and_with_it_is_not(parts, call):
+    d, skid = _skid_design(parts)
+    with pytest.raises(AuthorError, match=rf"{call}: drawn_with is for items supplied by others; remove it or add external=True"):
+        _BY_OTHERS_CALLS[call](d, drawn_with=skid)
+    _BY_OTHERS_CALLS[call](d, external=True, drawn_with=skid)
+
+
+@pytest.mark.parametrize("call", _BY_OTHERS_CALLS)
+def test_drawn_with_that_is_no_unit_is_refused(parts, call):
+    d, _skid_handle = _skid_design(parts)
+    with pytest.raises(
+        AuthorError, match=rf"{call}: drawn_with takes what d.add\(\.\.\.\) returned for the unit, got str; pass that unit or remove drawn_with"
+    ):
+        _BY_OTHERS_CALLS[call](d, external=True, drawn_with="SKID")
+
+
+@pytest.mark.parametrize(("other", "fix"), [(True, "or set it on -X90"), (False, "; -X90 already sets it")])
+def test_a_child_under_a_root_that_sets_drawn_with_is_refused(parts, other, fix):
+    d, skid = _skid_design(parts)
+    second = d.add(_skid, "SK2")
+    rack = d.rack("X90", external=True, drawn_with=skid)
+    with pytest.raises(
+        AuthorError, match=rf"d.device: -M9 is under -X90, which is drawn with demo-skid; remove drawn_with from -M9.*{fix.replace('.', r'\.')}"
+    ):
+        d.device("M9", None, pins=("U",), external=True, parent=rack, drawn_with=second if other else skid)
+    d.device("M9", None, pins=("U",), external=True, parent=rack)

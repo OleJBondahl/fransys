@@ -25,7 +25,7 @@ def _finding(severity: Severity, *subjects: Any) -> Finding:
 
 
 def _page(*findings: Finding) -> dict[str, Any]:
-    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], findings=findings, text_height=8))
+    found = re.search(r'id="overview-data">(.*?)</script>', html(_laid()[0], _laid()[2], findings=findings, text_height=8))
     assert found is not None
     return json.loads(found.group(1))
 
@@ -134,7 +134,7 @@ def test_a_large_count_is_printed_in_full() -> None:
 
 def test_the_badge_is_a_pill_that_grows_with_its_label() -> None:
     """Breaks if the badge goes back to a fixed-size ellipse or the count gets a cap."""
-    text = html(_laid()[0], findings=(_finding(Severity.ERROR, overview_graph(_laid()[0]).nodes[0].item),), text_height=8)
+    text = html(_laid()[0], _laid()[2], findings=(_finding(Severity.ERROR, overview_graph(_laid()[0]).nodes[0].item),), text_height=8)
     rule = re.search(r"selector: 'node\[role=\"badge\"\]', style: \{(.*?)\} \}", text, re.DOTALL)
     assert rule is not None
     assert "'round-rectangle'" in rule.group(1)

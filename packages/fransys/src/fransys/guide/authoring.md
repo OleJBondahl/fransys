@@ -49,7 +49,7 @@ Pass `name=`, the identity a released number holds to; a floating call with no `
 An accessory takes its holder's designation, no number of its own.
 
 `external=True` marks an item supplied by others. Every call that makes an item takes it: `d.device`,
-`d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
+`d.terminal_strip`, `d.cable` and `d.harness`. `drawn_with=` names the unit whose PDF prints it (`documents.md`). The item has no BOM line. A strip's terminals are external
 with it; a cable's conductors carry no flag. Every drawing marks it: dashed boxes with "(by others)", dashed outlines round schematic symbols.
 
 An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag. A part-less device names its pins with `pins=`. A part-less strip offers only `.outer`: see `detail.md`, "Equipment others supply".

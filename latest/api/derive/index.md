@@ -1288,7 +1288,7 @@ def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]
 The nets a drawing draws wires for: `drawn_groups` less the conductive links, so a bridge joins nothing.
 
 A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
-A terminal's link stays: its ports draw as one node.
+A terminal function's link stays, a strip terminal or a panel receptacle: its ports draw as one node.
 
 ### drawn_stands
 

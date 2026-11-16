@@ -2,6 +2,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.23
+
+- A busbar (`d.detail.busbar`) between a unit's boundary receptacle and a fuse draws its wire; before, the drawing set was refused with LANE_WIRE_DROPPED (KI-1067 closed).
+
 ## New in 0.23.22
 
 - A position in another PDF leads with that document's short code: `-A2 p7:6C` for a unit document (the unit's designation), `SYS p7:6C` for the system document. The code of the system document is the `[words]` key `system_document_code` (default `SYS`). Another document keeps its scope path. No call gains a keyword.

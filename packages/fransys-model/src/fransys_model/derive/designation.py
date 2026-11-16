@@ -207,6 +207,12 @@ def port_marking(model: HasTables, port: Id[Port], *, list_end: bool = False) ->
     return text if text and _marking_counts(cast("Model", model))[prefix, text] == 1 else (record.name if named is None else named)
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _port_designations(_model: Model) -> dict[tuple[Id[Port], Id[Unit] | None], str]:
+    """The port designations printed so far, filled lazily by `port_designation` with pure results of this model; a raise is never stored."""
+    return {}
+
+
 def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = None) -> str:
     """Render `port` as its item's designation and its name (`-K1:13`), always dash-prefixed.
 
@@ -221,6 +227,11 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
     Raises:
         SchemaError: `port` is not of `model`, or its item (a terminal's parent too) has none.
     """
+    memo = _port_designations(model)
+    return memo[port, unit] if (port, unit) in memo else memo.setdefault((port, unit), _port_designation(model, port, unit))
+
+
+def _port_designation(model: Model, port: Id[Port], unit: Id[Unit] | None) -> str:
     record = ports(model).get(port)
     if record is None:
         msg = "the id is not a port of the model"

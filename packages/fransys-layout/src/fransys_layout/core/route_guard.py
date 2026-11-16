@@ -172,16 +172,29 @@ def _retree(env: RouteEnv, grid: Occupancy, drawn: Drawn, i: int) -> tuple[Wire,
     return tuple(replace(w, net=trunk.net) for w in found)
 
 
+def _pins(env: RouteEnv, drawn: Drawn, i: int) -> tuple[tuple[PinRef, ...], tuple[int, ...], tuple[Rise, ...]]:
+    """The pins at the ends and taps of the trunk wire `i`, with the taps and rises it took over: the one read of what a trunk joins."""
+    wire = drawn.wires[i]
+    taps, aimed = _taps(drawn, wire)
+    at = (wire.points[0], wire.points[-1], *(drawn.wires[j].points[0] for j in taps))
+    pins = tuple(q for q in (*(_pin_at(env, p, wire.net) for p in at), *(r.pin for r in aimed)) if q is not None)
+    return pins, taps, aimed
+
+
 def _hand(env: RouteEnv, drawn: Drawn, i: int) -> _Tree | None:
     """A wire still meeting with no way keeps no wire: the pins of its ends and taps are one Refused for the reference loop.
 
     None when it has no pin: the wire is then warned, never kept silently.
     """
-    wire = drawn.wires[i]
-    taps, aimed = _taps(drawn, wire)
-    at = (wire.points[0], wire.points[-1], *(drawn.wires[j].points[0] for j in taps))
-    pins = tuple(q for q in (*(_pin_at(env, p, wire.net) for p in at), *(r.pin for r in aimed)) if q is not None)
-    return _Tree((), (Refused(net_of_key(wire.net), pins),), taps, aimed) if pins else None
+    pins, taps, aimed = _pins(env, drawn, i)
+    return _Tree((), (Refused(net_of_key(drawn.wires[i].net), pins),), taps, aimed) if pins else None
+
+
+def hand_rise(env: RouteEnv, drawn: Drawn, rise: Rise) -> Refused:
+    """A rise no path was found for hands the trunk it aims at (layout-0610); its own pin when it aims at none."""
+    i = next((i for i, w in enumerate(drawn.wires) if w.kind == "trunk" and w.net == rise.net and _on_line(w, rise.target)), None)
+    pins = _pins(env, drawn, i)[0] if i is not None else ()
+    return Refused(rise.net, pins or (rise.pin,))
 
 
 def _settled(env: RouteEnv, grid: Occupancy, drawn: Drawn, hard: tuple[Keep, ...]) -> tuple[dict[int, tuple[Wire, ...]], list[int]]:

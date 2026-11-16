@@ -124,8 +124,8 @@ def lane_ends(
         )
         raise ReferenceLaneError(msg)
     maps = (page_of, row_of)
-    runs = [ln for ln in crossing if ln is not lane and all(_runs(ln, q, cut, page_of) for q, _ in ats)]
-    return tuple(bundled(_near(lane, q, c, cut, maps), [p for ln in runs if (p := _near(ln, q, c, cut, maps).pin)]) for q, c in ats)
+    runs = [ln for ln in crossing if ln is not lane and all(_runs(ln, q, cut, page_of) for q in needed)]
+    return tuple(bundled(_near(lane, q, c, cut, maps), [p for ln in runs if q in needed and (p := _near(ln, q, c, cut, maps).pin)]) for q, c in ats)
 
 
 def link_over_pinless(refs: Sequence[Ref]) -> list[Ref]:

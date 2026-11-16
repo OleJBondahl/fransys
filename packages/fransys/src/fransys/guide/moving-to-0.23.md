@@ -4,6 +4,16 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.22
+
+- A position in another PDF leads with that document's short code: `-A2 p7:6C` for a unit document (the unit's designation), `SYS p7:6C` for the system document. The code of the system document is the `[words]` key `system_document_code` (default `SYS`). Another document keeps its scope path. No call gains a keyword.
+- With `hide_pe` set, two terminal annexes on a by-others system-document page are no longer left out (KI-1010 closed).
+- A shared pole turns once, so the second lane's wired pin no longer faces away from its symbol (KI-753 closed). A fan tap whose rise finds no path is refused alone: the trunk and the other taps stay drawn (KI-991 closed). A crossing lane is no longer dropped from both ends of an arrow at a row cut (KI-992 closed).
+- A card box clears the end cell of every lane of its attached column, so it no longer draws inside a longer lane.
+- A page holds more cards: the cut forecasts only the flags that stack, so columns that fit the page are no longer folded onto the next (KI-973 closed). A bank of 16 relays takes one page, not two.
+- A fallback reference pair stands with the room it asked for (KI-1004 closed).
+- A position switch's tag slot stands above its roller and adds no left reach.
+
 ## New in 0.23.21
 
 - BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with `fr.release`.

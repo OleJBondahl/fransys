@@ -49,8 +49,6 @@ def _first_row(fan: Fan, plan: PagePlan) -> int | None:
 
 def _arrow_ends(ref: Ref, fan: Fan, page: int, row: int) -> list[CutEnd]:
     """The ends of an arrow of `fan` at (page, row): `ends[0]` stands right, `ends[1]` left."""
-    if kind_of(ref) is not RefKind.ARROW or ref.net != fan.id:
-        return []
     return [
         CutEnd((e.pin, str(RefKind.ARROW)), e, i == 0, frozenset(pole_of(fan, p) for p in (e.pin, *e.also)), pole_of(fan, e.pin))
         for i, e in enumerate(ref.ends[:2])
@@ -58,11 +56,8 @@ def _arrow_ends(ref: Ref, fan: Fan, page: int, row: int) -> list[CutEnd]:
     ]
 
 
-def _stub_ends(ref: Ref, fan: Fan, page: int) -> list[CutEnd]:
+def _stub_ends(ref: Ref, fan: Fan, kind: RefKind, page: int) -> list[CutEnd]:
     """The end of a bundle's stub, or of a single-lane copy, standing at the trunk end on `page`: one for every pole it stands for (CL2b, KI-757)."""
-    kind = kind_of(ref)
-    if kind is not (RefKind.STUB if laned_stub(fan) else RefKind.COPY) or ref.net not in fan.nets:
-        return []
     return [
         CutEnd((e.pin, str(kind)), e, right=True, poles=frozenset(pole_of(fan, p) for p in (e.pin, *e.also)), lead=pole_of(fan, e.pin))
         for e in ref.ends
@@ -75,12 +70,18 @@ def cut_ends(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], row: int)
 
     The one place that says which end is a cut end; every site that sizes, steps out or stands one reads it.
     """
-    refs = tuple(refs)
+    by_kind: dict[RefKind, list[Ref]] = {}
+    for ref in refs:
+        by_kind.setdefault(kind_of(ref), []).append(ref)
+    arrows: dict[str, list[Ref]] = {}
+    for ref in by_kind.get(RefKind.ARROW, ()):
+        arrows.setdefault(ref.net, []).append(ref)
     out: list[CutEnd] = []
     for fan in fans:
-        out += (c for r in refs for c in _arrow_ends(r, fan, plan.page, row))
+        out += (c for r in arrows.get(fan.id, ()) for c in _arrow_ends(r, fan, plan.page, row))
         if _first_row(fan, plan) == row:
-            out += (c for r in refs for c in _stub_ends(r, fan, plan.page))
+            kind = RefKind.STUB if laned_stub(fan) else RefKind.COPY
+            out += (c for r in by_kind.get(kind, ()) if r.net in fan.nets for c in _stub_ends(r, fan, kind, plan.page))
     return tuple(out)
 
 

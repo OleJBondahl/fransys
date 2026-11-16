@@ -47,31 +47,10 @@ def _feed(d: fr.Design, groups: list[str], *, coils: list[int], pin: str = "A1")
     return opened
 
 
-def _one_relay(d: fr.Design, g: list[str]) -> None:
-    _feed(d, g, coils=[1])
-
-
-def _one_relay_fed_at_a2(d: fr.Design, g: list[str]) -> None:
-    """The same relay fed at its other coil pin: the layout stands the coil unturned."""
-    _feed(d, g, coils=[1], pin="A2")
-
-
-def _two_relays_one_group(d: fr.Design, g: list[str]) -> None:
-    _feed(d, g, coils=[1, 1])
-
-
-def _two_relays_two_groups(d: fr.Design, g: list[str]) -> None:
-    _feed(d, g, coils=[1, 2])
-
-
-def _own_group(d: fr.Design, g: list[str]) -> None:
-    _feed(d, g, coils=[0, 0])
-
-
-def _built(plant) -> Any:
+def _built(coils: list[int], pin: str = "A1") -> Any:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    plant(d, [f"G{i}" for i in range(3)])
+    _feed(d, [f"G{i}" for i in range(3)], coils=coils, pin=pin)
     doc = unit_document(cab)
     return fr.build(d, doc).model
 
@@ -122,16 +101,16 @@ def _assert_replica_beyond_pin(drawing, terminals, coil) -> None:
 
 @pytest.mark.rule("PORT-LINE")
 @pytest.mark.parametrize(
-    ("plant", "orient"),
-    [(_one_relay, "R180"), (_one_relay_fed_at_a2, "R0")],
+    ("pin", "orient"),
+    [("A1", "R180"), ("A2", "R0")],
     ids=["turned", "unturned"],
 )
-def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin(plant, orient) -> None:
+def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin(pin, orient) -> None:
     """PORT-LINE (R467 Q33): the replica stands beyond the pin, outside the body, turned or not.
 
     Fed at A1 the coil stands turned (R180, pin below); fed at A2 it stands unturned (R0).
     """
-    model = _built(plant)
+    model = _built([1], pin)
     ((page, coil),) = _symbols(model, "operating-device")
     assert coil.orient == orient
     on_page = [t for p, t in _symbols(model, "terminal") if p == page]
@@ -140,16 +119,16 @@ def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin(plant, 
 
 
 def test_two_relays_of_one_group_have_the_terminal_at_each_relays_pin() -> None:
-    model = _built(_two_relays_one_group)
+    model = _built([1, 1])
     _assert_drawn_at_each_relays_pin(model, 2)
 
 
 def test_two_relays_of_two_groups_on_one_page_have_the_terminal_at_each_relays_pin() -> None:
-    model = _built(_two_relays_two_groups)
+    model = _built([1, 2])
     _assert_drawn_at_each_relays_pin(model, 2)
 
 
 def test_two_relays_in_the_terminals_own_group_have_the_terminal_over_the_first_pin() -> None:
-    model = _built(_own_group)
+    model = _built([0, 0])
     ((page, coil),) = (p for p in _drawn(model, "coil", "K1") if p[1].key == "operating-device")
     _assert_terminal_over_pin(_drawn(model, "terminal"), page, coil)

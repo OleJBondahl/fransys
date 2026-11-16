@@ -54,7 +54,7 @@ stock = 15
 total = 40  # 38 + the two PLR0913 above (R2369, R2420)
 
 [escape_hatches_codes]
-# 30 -> 32: Scope.strip and Scope.harness gain drawn_with, a sixth keyword of a public call (R2369, R2420)
+# 30 -> 32: Scope.strip and Scope.harness gain drawn_with, a sixth keyword of a public call (R2369, R2420); stock 32 stays: the scope methods' arguments carry no unit; option (C) does not exist (R2420, R2431)
 PLR0913 = 32
 ANN401 = 1
 ty-invalid-method-override = 5
@@ -108,7 +108,7 @@ skid = 0
 # R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
 distribution_board = 5  # R1957 falls, KI-636: was 6 (R1715: was 7)
 machine_panel = 0
-mcc = 6  # R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
+mcc = 8  # R2408 shared pole turn, KI-1003: two wires over markers, was 6; R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
 remote_io = 0  # R2101 REF-OFF-OWN-WIRE-A (KI-900): the checker counts the pin's own wire through its marker box, was 2; ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0

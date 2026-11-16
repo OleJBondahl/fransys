@@ -5,12 +5,13 @@ from __future__ import annotations
 from dataclasses import replace
 from itertools import combinations, pairwise
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 import fransys_layout.core.place_y as home
 from fransys_layout.core import Box, Facts, Options, PlacementProblem
+from fransys_layout.core.constraints import Graph
 from fransys_layout.core.geometry import (
     cell_anchor,
     cell_footprint,
@@ -144,9 +145,24 @@ def test_grid_up_rounds_to_the_next_step() -> None:
         pytest.param(Box(0, -2, 8, 4), None, False, 8, id="flipped-side"),
     ],
 )
-def test_a_cell_gap_is_box_gap_or_its_footprint_or_keepout_reach_on_the_box_side(monkeypatch, foot, keep, above, want) -> None:
-    """BOX-GAP-BELOW: `_box_gap` is Options.box_gap (not wire_min), or the reach of the footprint or keep-out if more."""
+def test_a_card_box_clears_every_lane_end_by_box_gap_or_the_footprint_or_keepout_reach(monkeypatch, foot, keep, above, want) -> None:
+    """BOX-GAP-BELOW: lane 1 runs past lane 0 (a longer stack); the box clears both ends, held to the one that reaches it first."""
     monkeypatch.setattr(home, "_footprint", lambda *_: foot)
     monkeypatch.setattr(home, "view_of", lambda *_: SimpleNamespace(body=Box(0, 0, 0, 0), keepout=keep or Box(0, 0, 0, 0)))
-    env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=4, box_gap=8), syms={"T": None})
-    assert home._box_gap(env, cast("Any", SimpleNamespace(sym="T", orient="R0")), above=above, dy=0) == want
+    monkeypatch.setattr(home, "_pin_y", lambda _env, cell, _pin: cell.dy)
+    cells = [SimpleNamespace(sym=n, orient="R0", top_pin=None, bottom_pin=None, hold=0, dy=dy) for n, dy in (("A", 0), ("B", 0), ("C", 0))]
+    card = SimpleNamespace(body=Box(0, 0, 40, 10), footprint=Box(0, 0, 40, 10))
+    syms = {"BOX": card, **{c.sym: None for c in cells}}
+    env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=4, box_gap=8, wiring_grid=1), syms=syms, attach={"c": ("BOX",)}, in_row=())
+    pc: Any = SimpleNamespace(id="c", lanes=[[cells[0]], [cells[1], cells[2]] if above else [cells[1]]])
+    g = Graph()
+    home.stack_constraints(g, pc, env, {}, rigid=above)
+    home._attach_y(g, pc, env, {}, (above, False))
+    y = g.solve() or {}
+    ends = [(li, len(lane) - 1 if above else 0) for li, lane in enumerate(pc.lanes)]
+    top, bottom = y[box_y_node("BOX")], y[box_y_node("BOX")] + card.footprint.h
+    clear = [
+        (top - y[cell_node("c", li, i)] - pc.lanes[li][i].dy) if above else (y[cell_node("c", li, i)] + pc.lanes[li][i].dy - bottom) for li, i in ends
+    ]
+    assert min(clear) == want
+    assert clear[1] == want  # the longer lane reaches the box first and holds it

@@ -3,6 +3,8 @@
 A page's number is its place in its PDF, counted from 1 on the cover (pdf-0054, model-0436, model-0462).
 """
 
+lazy from collections.abc import Collection
+
 from fransys_model.layout import Page, sheet_format_of
 from fransys_model.vocab import DocumentPreset, PageKind
 from fransys_model.vocab.tables import documents
@@ -13,15 +15,17 @@ from .memo import Memo
 lazy from .diagram_sheet_order import diagram_unit
 lazy from .document_pages import drawn_pages, ordered_pages
 lazy from .document_sets import set_printers
-lazy from .document_subject import scope_path
+lazy from .document_subject import scope_path, unit_label
 lazy from .document_unit import document_unit
-lazy from .facts.house_settings import diagram_count_of, frame_form_of, front_count_of, reference_text_of
+lazy from .facts.house_settings import diagram_count_of, frame_form_of, front_count_of, reference_text_of, word
 lazy from .frame_labels import cell_labels
-lazy from .frame_position import partner_position_text, position_text
+lazy from .frame_position import partner_position_text, position_text, row_letter
+lazy from .instance_tag import unit_system_designation
+lazy from .order import widest_text
 lazy from .page_presets import document_page_kinds
 lazy from .rows_sheet import DiagramSheet
 
-__all__ = ["covered_documents", "far_prefix", "front_pages", "page_reference_text", "pdf_page", "position_at"]
+__all__ = ["covered_documents", "far_prefix", "front_pages", "page_reference_text", "pdf_page", "position_at", "position_room"]
 
 
 def covered_documents(model: Model) -> tuple[Id[Document], ...]:
@@ -91,11 +95,26 @@ def page_reference_text(model: Model, page: Page | DiagramSheet) -> str:
     return position_text(reference_text_of(model), pdf_page(model, page), None)
 
 
+def document_prefix(model: Model, document: Id[Document]) -> str:
+    """The code that leads a position in `document`, read from another PDF: the one home of that prefix.
+
+    A unit document's code is its unit's designation (`-A2`, nested `-R1-A2`; the unit's title when it is untagged),
+    the system document's is the `[words]` entry `system_document_code`, any other document's is its `scope_path`.
+    """
+    record = documents(model)[document]
+    unit = document_unit(model, document)
+    if unit is not None:
+        return unit_system_designation(model, unit) or unit_label(model, unit)
+    if record.location is None and record.item is None:
+        return word(model, "system_document_code")
+    return scope_path(model, document)
+
+
 def far_prefix(model: Model, own: Page, partner: Page) -> str:
-    """The `scope_path` of the document printing `partner`, `""` when it is the one printing `own` (or none prints it)."""
+    """The `document_prefix` of the document printing `partner`, `""` when it is the one printing `own` (or none prints it)."""
     printers = set_printers(model)
     far = printers.get(partner.drawing_set)
-    return "" if far is None or far == printers.get(own.drawing_set) else scope_path(model, far)
+    return "" if far is None or far == printers.get(own.drawing_set) else document_prefix(model, far)
 
 
 def position_at(model: Model, own_page: Page, partner_page: Page, column: int, row: str) -> str:
@@ -110,3 +129,16 @@ def position_at(model: Model, own_page: Page, partner_page: Page, column: int, r
     labels = cell_labels(frame_form_of(model), rows, column, row)
     pages = (pdf_page(model, own_page), pdf_page(model, partner_page))
     return partner_position_text(reference_text_of(model), *pages, labels, far_prefix(model, own_page, partner_page))
+
+
+def position_room(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str:
+    """The widest text `position_at` can print before the pages exist: `digits` page digits and the highest `frame` cell, every one `digit`.
+
+    `far` holds the documents that may print a placement in another PDF; empty is the same-PDF text.
+    It builds through `partner_position_text` and `document_prefix`, as `position_at` does. Layout sizes a where-text with it.
+    """
+    columns, rows = frame
+    labels = cell_labels(frame_form_of(model), rows, int(digit * len(str(columns))), row_letter(rows - 1))
+    refs = reference_text_of(model)
+    page = int(digit * digits)
+    return widest_text(partner_position_text(refs, 0, page, labels, prefix) for prefix in [document_prefix(model, d) for d in far] or [""])

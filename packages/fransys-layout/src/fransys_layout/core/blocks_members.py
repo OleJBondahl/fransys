@@ -200,7 +200,8 @@ def height_est(block: Block, env: Env) -> int:
         for c in block.columns:
             edge = edge_of.get(box_pin(env.columns[c]) or "", "S")
             tall[edge] = max(tall.get(edge, 0), lowered(env.columns[c].height, [env.columns[c]], o))
-        return env.syms[block.anchor].body.h + sum(h + o.wire_min for h in tall.values()) + stack_extra(env.syms[block.anchor], o)
+        wired = {box_pin(env.columns[c]) for c in block.columns}
+        return env.syms[block.anchor].body.h + sum(h + o.wire_min for h in tall.values()) + stack_extra(env.syms[block.anchor], o, wired)
     fan = next((f for f in env.flow.fans if f.id == block.fan), None)
     tallest = max(lowered(env.columns[c].height, [env.columns[c]], o) for c in block.columns)
     return tallest + (sum(trunk_room(fan.lanes, o.wiring_grid)) if fan else 0)

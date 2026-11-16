@@ -18,6 +18,6 @@ elements = [
 ]
 
 [slots]
-tag           = { at = [-4, 0], side = "W", box = [6, 1] }
+tag           = { at = [-1.75, -1], side = "N", box = [3.5, 1] }
 "marking.in"  = "contact.marking.in"
 "marking.out" = "contact.marking.out"

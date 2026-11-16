@@ -14,9 +14,10 @@ from fransys_el.drawing_invariants import page_overlaps
 from fransys_model.layout import Page, layout_of
 
 
-def test_sixteen_relays_fed_from_one_controller_build_and_take_several_pages() -> None:
+# Twenty, not sixteen: STACK-EXTRA-BOUND's truer forecast packs sixteen onto one page (R2489); the guard needs a bank wider than a page.
+def test_twenty_relays_fed_from_one_controller_build_and_take_several_pages() -> None:
     """The build returns, the bank takes more than one page, and it raises no ERROR finding."""
-    built = built_bank(16)
+    built = built_bank(20)
     assert len(layout_of(built.model, Page)) > 1
     assert [f for f in fr.check(built) if f.severity.name == "ERROR"] == []
 

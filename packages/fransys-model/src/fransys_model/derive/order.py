@@ -108,12 +108,23 @@ def function_order_text(model: Model, function: Id[Function]) -> str:
     return f"{item_designation(model, record.item)} {contact} {record.name} {'/'.join(record.key)}"
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _function_keys(_model: Model) -> dict[Id[Function], NaturalKey]:
+    """The `natural_key` of each function's order text read so far, filled lazily by `_function_key` with pure results of this model."""
+    return {}
+
+
+def _function_key(model: Model, function: Id[Function]) -> NaturalKey:
+    memo = _function_keys(model)
+    return memo[function] if function in memo else memo.setdefault(function, natural_key(function_order_text(model, function)))
+
+
 def _function_rank(model: Model, key: Id[Function] | Id[Port]) -> tuple[NaturalKey, NaturalKey, Id[Any]]:
     as_function = cast("Id[Function]", key)
     if has_function(model, as_function):
-        return natural_key(function_order_text(model, as_function)), (), key
+        return _function_key(model, as_function), (), key
     port = cast("Id[Port]", key)
-    return natural_key(function_order_text(model, cast("Id[Function]", port_function(model, port)))), natural_key(port_name(model, port)), key
+    return _function_key(model, cast("Id[Function]", port_function(model, port))), natural_key(port_name(model, port)), key
 
 
 def functions_in_order(model: Model, keys: Iterable[Id[Function] | Id[Port]]) -> tuple[Id[Function] | Id[Port], ...]:

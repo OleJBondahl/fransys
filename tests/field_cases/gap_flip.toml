@@ -46,8 +46,8 @@
 "test_contact_at_far_pin.py::test_channel_pins_stand_one_and_a_half_pole_pitches_apart_and_their_texts_keep_the_gap" = "GAP-FLIP-1"
 "test_contact_at_far_pin.py::test_each_moved_contact_references_its_coil_and_the_coil_lists_it" = "GAP-FLIP-413"
 "test_contacts_of_one_row_print_one_back_reference.py::test_three_poles_in_one_row_print_one_back_reference" = "GAP-FLIP-87"
-"test_feeder_with_hidden_unused_ports_stands_over_its_box.py::test_five_pin_output_with_two_wired_stands_over_the_module" = "GAP-FLIP-414"
-"test_feeder_with_hidden_unused_ports_stands_over_its_box.py::test_two_pin_output_stands_over_the_module" = "GAP-FLIP-414"
+"test_feeder_with_hidden_unused_ports_stands_over_its_box.py::test_output_stands_over_the_module[DEMO-PSU-24-5OUT-+1--1]" = "GAP-FLIP-414"  # KI-144 (XF-FEEDER-STAND)
+"test_feeder_with_hidden_unused_ports_stands_over_its_box.py::test_output_stands_over_the_module[DEMO-PSU-24-+--]" = "GAP-FLIP-414"  # KI-144 (XF-FEEDER-STAND)
 "test_feeders_over_a_narrow_box_do_not_overlap.py::test_each_feeder_stands_over_its_own_group[long-tags]" = "GAP-FLIP-414"
 "test_feeders_over_a_narrow_box_do_not_overlap.py::test_each_feeder_stands_over_its_own_group[short]" = "GAP-FLIP-414"
 "test_hide_unused_pins_keeps_an_unwired_interface_device.py::test_an_unwired_redundancy_interface_builds" = "GAP-FLIP-10"  # KI-035: premise lost, the fixture draws no markers or references; piece XF-FORCING-FIXTURE builds one that does
@@ -102,6 +102,5 @@
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 "test_a_terminal_of_a_unit_set_cut_across_pages_is_drawn_on_each_page.py::test_a_terminal_wired_to_relays_on_two_pages_is_drawn_on_each" = "GAP-FLIP-647"  # KI-647 TERMINAL-PAGE-COPY (WIRE-29): the terminal is drawn once, the far page carries stubs
-"test_a_two_pole_switch_with_one_pole_in_a_chain_and_one_to_a_terminal_draws_every_connection.py::test_the_terminal_of_the_second_pole_is_reached_inside_its_own_column" = "GAP-FLIP-753"  # KI-753 SHARED-POLE-TURN: pole 2 keeps pole 1's turn, a cross-link reaches its terminal
 
 [raises]

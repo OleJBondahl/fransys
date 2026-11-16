@@ -81,7 +81,8 @@ from fransys.colours import BK
 # BOX-SIDE-OMIT-NONE (model-0460): SCHEMA_VERSION 31 -> 32 writes source_row always (fbac77164... before).
 # FRONT-PAGES-DIAGRAMS (model-0463): SCHEMA_VERSION 32 -> 33 adds FrontPages.diagrams (14b359884990... before).
 # BY-OTHERS-DRAWN-WITH (model-0464): SCHEMA_VERSION 33 -> 34 adds Item.drawn_with (45c5b94bac22... before).
-_DIGEST_BEFORE_THE_MOVE = "cc7411c1bbfc378d66e86ede799eaef2d605a5630f8381e280c258e1c9e7c4b4"
+# DOC-SHORT-CODE (model-0466, R2448) adds `system_document_code` to [words]: it moves again (cc7411c1bbfc... before; R2489).
+_DIGEST_BEFORE_THE_MOVE = "814aa464916615a8c8d9a537fd43aa8d67b040a9dc73e12abe913655c8beaa31"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

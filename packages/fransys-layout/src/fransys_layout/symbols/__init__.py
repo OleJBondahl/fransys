@@ -5,7 +5,7 @@ values and does no arithmetic of its own. The placement core stays on integers.
 """
 
 from .frame import frame_cell, frame_extent
-from .markers import fitted_marker, fitted_marker_views, marker_rule, marker_views, with_marker
+from .markers import fitted_marker, fitted_marker_views, marker_rule, marker_views
 from .outline import outline_room
 from .shape import LibrarySymbol, Shape, SymbolLibrary, library_symbol, ports_at_one_node, stretched_body, symbol_shape
 from .slots import ink_boxes, measured_slots
@@ -38,5 +38,4 @@ __all__ = (
     "text_room_on",
     "text_width_g",
     "turned_view",
-    "with_marker",
 )

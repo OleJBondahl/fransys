@@ -1,5 +1,6 @@
 """Field case TBOX-CYCLE: a unit of two transformer-box parts wired by cable cores and a 2-pole breaker builds with no PLACEMENT_PROBLEM.
-The bug (0.23.12): a chain walked T1 twice (T1, K1, T1), a CycleCutError. Fixed: a chain visits each symbol once (layout-0576)."""
+The bug (0.23.12): a chain walked T1 twice (T1, K1, T1), a CycleCutError. Fixed: a chain visits each symbol once (layout-0576).
+Field case TBOX-TRAFO (KI-991): a coil above a transformer box whose rise has no path is drawn with a reference pair, never a half wire."""
 
 import re
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -51,3 +52,22 @@ def test_the_unit_builds_with_no_placement_error(tmp_path: Path) -> None:
         for t in re.findall(r">([^<>]*)</text>", (tmp_path / "inter" / f"layout.page-{p.id.value}.svg").read_text("utf-8"))
     ]
     assert (texts.count("-T1"), texts.count("-T2")) == (1, 1)  # each transformer body is drawn once
+
+
+@fr.unit("tbox-above", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _above(u: Any) -> _Open:
+    x1, t1 = u.terminal_strip("X1", "DEMO-TB-2.5", 2), u.device("T1", "TBOX-TRAFO")
+    k, w1, w2 = u.device("K1", "DEMO-RLY-2CO-24"), u.cable("W1", "DEMO-CBL-3X0.34", length_m=1), u.cable("W2", "DEMO-CBL-3X0.34", length_m=1)
+    w2.core(1, k.coil["A2"], t1.primary["1U"])
+    w2.core(2, k.coil["A1"], t1.primary["1V"])
+    w1.core(1, t1.secondary["2U"], x1[1].inner)
+    w1.core(2, t1.secondary["2V"], x1[2].inner)
+    return _Open()
+
+
+def test_a_coil_above_a_transformer_box_whose_rise_has_no_path_draws_every_connection() -> None:
+    d = fr.design("demo_parts", "tbox_parts", place="CAB")
+    result = fr.build(d, unit_document(d.location("CAB", "Cabinet")), unit_document(d.add(_above, "U1")))
+    errors = [f for f in result.findings if f.severity == Severity.ERROR]
+    assert not errors, [(f.code, str(f.message)[:120]) for f in errors]
+    assert not [f for f in result.findings if f.code == "WIRE_AS_REFERENCE"]  # the pair is not drawn, so no INFO says it is

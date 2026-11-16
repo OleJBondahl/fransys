@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
 from options_fixtures import core_options
 
+from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.blocks_members import column_group
 from fransys_layout.core.flow_values import BlockList, Cell, FlowGraph, Lane
+from fransys_layout.core.hang_build import stack_extra
+from fransys_layout.core.hang_levels import FLAGS
 from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.rowspec import one_row
-from fransys_layout.core.values import Hints
+from fransys_layout.core.values import Box, Hints, Options, PinRef
 
 from .blocks_fixtures import (
     AREA,
@@ -135,3 +139,21 @@ def test_estimates_short_and_keep_whole() -> None:
     two = replace(cols[0], lanes=(cols[0].lanes[0], Lane((Cell("s2", "R0", None, None),), 40)))
     assert flat(build(syms, [two, cols[1]]))[0].keep_whole  # a multi-lane column is kept whole
     assert not flat(build(syms, cols))[0].keep_whole
+
+
+def _fitted(pins: set[str]) -> Options:
+    """The options of the DI16 case: every flag kind fitted at each of `pins` of the card, a box deeper than the plain marker."""
+    fit = {(PinRef("A1", p), k): {o: Box(-8, 4, 16, 40) for o in ("R0", "R90", "R180", "R270")} for p in pins for k in sorted(FLAGS)}
+    return replace(core_options(), marker_fit=fit)
+
+
+@pytest.mark.parametrize("n", [4, 11, 32])
+def test_a_card_whose_pins_hang_no_marker_forecasts_no_stack(n: int) -> None:
+    syms, cols = box_case(n, 64, north=n // 2)
+    pins = {p.id for p in syms[0].pins}
+    options = _fitted(pins)
+    assert stack_extra(syms[0], options, set()) > 0  # the table alone stacks: the defect's input
+    assert stack_extra(syms[0], options, pins) == 0
+    flow, problem = FlowGraph(tuple(cols), (), (), (), ()), problem_of(syms)
+    heights = [next(b for b in assign_blocks(flow, problem, o)[0].blocks if b.is_card).height_est for o in (options, core_options())]
+    assert heights[0] == heights[1]

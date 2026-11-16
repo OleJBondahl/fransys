@@ -2,23 +2,15 @@
 The bug: the box stood the bus driver and a leg on one node, so the build raised BundleError "a driver and a leg on one node".
 Fixed by layout-0341 (BUNDLE), a column that puts a bundle's driver and leg on one node leaves that box pin as a cross-link wire."""
 
-import tempfile
 from contextlib import nullcontext
-from pathlib import Path
 
 import fransys as fr
 import pytest
-from _model_build_cover import error_messages
+from _model_build_cover import cabinet_document, error_messages
 
 from fransys_model.kernel import id_namespace
 
 POWER = 2.5
-
-
-def _cover() -> Path:
-    path = Path(tempfile.mkdtemp()) / "cover.md"
-    path.write_text("# Bus\n", encoding="utf-8")
-    return path
 
 
 def _design() -> tuple[fr.Design, fr.Draft]:
@@ -51,7 +43,7 @@ def _design() -> tuple[fr.Design, fr.Draft]:
             f, q = d.device(f"F{k}1", "DEMO-MCB-3P"), d.device(f"Q{k}1", "DEMO-CTR-3P-NC")
             x = d.terminal_strip(f"X{k}", "DEMO-TB-2.5", 3, pe="DEMO-TB-PE-2.5")
             d.series(bus, f.element, q.main, x, wire=POWER)
-    return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=_cover())
+    return d, cabinet_document(cab)
 
 
 def test_the_build_has_no_error_finding() -> None:

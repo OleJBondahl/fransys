@@ -22,7 +22,7 @@ from .outputs import PageRoutes, Refused, Routes, Wire
 from .route_counts import counts, demand
 from .route_env import Drawn, body_hit, hard_keeps, lost_key, pin_point, route_envs, withheld
 from .route_fixed import Fixed, Laid, fixed_page, fixed_wires
-from .route_guard import guard
+from .route_guard import guard, hand_rise
 from .route_labels import page_labels
 from .route_leads import lead_wires
 from .route_negotiate import Negotiated, negotiate
@@ -178,9 +178,9 @@ def _bare_routes(env: RouteEnv, todo: Sequence[CrossLink]) -> dict[str, tuple[Wi
     return out
 
 
-def _lost(todo: Sequence[CrossLink], nego: Negotiated) -> list[Refused]:
-    """A `Refused` for each rise and link no legal route was found for."""
-    rises = [Refused(r.net, (r.pin,)) for r in nego.lost]
+def _lost(env: RouteEnv, drawn: Drawn, todo: Sequence[CrossLink], nego: Negotiated) -> list[Refused]:
+    """A `Refused` for each rise and link no legal route was found for: a rise hands the pins of its trunk."""
+    rises = [hand_rise(env, drawn, r) for r in nego.lost]
     links = [Refused(ln.net, tuple(a.pin for a in ln.ends)) for ln in todo if ln.net in nego.failed]
     return [*rises, *links]
 
@@ -215,7 +215,7 @@ def route_page(env: RouteEnv, fixed: Fixed | None = None) -> PageResult:
     for link in todo:
         mark_anchors(env, grid, link)
     nego = negotiate(env, grid, todo, drawn.rises)
-    lost = {lost_key(r.net, r.ends or ()): r for r in (*drawn.lost, *split, *_lost(todo, nego))}
+    lost = {lost_key(r.net, r.ends or ()): r for r in (*drawn.lost, *split, *_lost(env, drawn, todo, nego))}
     wires = drawn.wires + nego.risen + tuple(w for ws in nego.routed.values() for w in ws)
     bare = _bare_routes(env, todo)
     wanted = drawn.wires + nego.risen + tuple(w for ws in bare.values() for w in ws)

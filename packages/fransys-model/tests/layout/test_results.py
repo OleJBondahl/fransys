@@ -2,9 +2,7 @@
 
 import pytest
 from layout_examples import (
-    drawn_function,
     function_id,
-    group_node,
 )
 
 from fransys_model.kernel import (
@@ -75,10 +73,6 @@ def _other_group() -> AspectNode:
         label="PUMP2",
         description="Invented pump 2",
     )
-
-
-def _engineering() -> tuple[Record, ...]:
-    return (*drawn_function(), *_ports(), _conductor(), group_node(), _other_group())
 
 
 def _pole_group(*functions: str) -> PoleGroup:

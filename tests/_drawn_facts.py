@@ -34,6 +34,7 @@ __all__ = [
     "marker_symbols",
     "pin_turn",
     "pin_turns",
+    "pin_x",
     "symbol_boxes",
     "symbol_subjects",
     "text_subjects",
@@ -136,6 +137,10 @@ def marker_symbols(model: Model) -> list[Placed]:
 def wire_nets(model: Model) -> list[tuple[Id[Any], DrawnWire]]:
     """Each drawn wire with the page it is on; its `net` is the port value of its net."""
     return [(page, w) for page, d in drawn_pages(model).items() for w in d.wires]
+
+
+def pin_x(box: Placed, name: str) -> float:
+    return float(box.x + dict(box.offsets)[name])
 
 
 def item_box(model: Model, tag: str) -> Placed:

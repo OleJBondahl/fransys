@@ -68,6 +68,7 @@ def _load_unit(key: str, groups_n: int) -> Any:
 _LOADS = {20: _load_unit("sup-load", _GROUPS), 16: _load_unit("sup-load16", 4)}
 
 
+@cache
 def _build(salt: str, relays: int) -> fr.BuildResult:
     with id_namespace(salt) if salt != "-" else nullcontext():
         d = fr.design("demo_parts", place="PLANT")
@@ -80,25 +81,9 @@ def _build(salt: str, relays: int) -> fr.BuildResult:
         return fr.build(d, unit_document("sup-src"), unit_document("sup-load" if relays == 20 else "sup-load16"))
 
 
-@cache
-def _built(salt: str) -> fr.BuildResult:
-    return _build(salt, 20)
-
-
-@cache
-def _built_sixteen(salt: str) -> fr.BuildResult:
-    return _build(salt, 16)
-
-
+@pytest.mark.parametrize("relays", [20, 16])
 @pytest.mark.parametrize("salt", SALTS)
-def test_every_connection_and_marker_is_drawn(salt: str) -> None:
-    """Two unit documents: no CND, MARKER_UNPLACED, DANGLING_WIRE_END, RAIL_IDENTITY_SHARED or DRAWING_SHORTS_NETS."""
-    codes = {f.code for f in fr.check(_built(salt))}
-    assert codes & {"CONNECTION_NOT_DRAWN", "MARKER_UNPLACED", "DANGLING_WIRE_END", "RAIL_IDENTITY_SHARED", "DRAWING_SHORTS_NETS"} == set()
-
-
-@pytest.mark.parametrize("salt", SALTS)
-def test_sixteen_relays_stay_clean(salt: str) -> None:
-    """The 4x4 fan that always fitted keeps no CND, MARKER_UNPLACED, DANGLING_WIRE_END, RAIL_IDENTITY_SHARED or DRAWING_SHORTS_NETS."""
-    codes = {f.code for f in fr.check(_built_sixteen(salt))}
+def test_every_connection_and_marker_is_drawn(salt: str, relays: int) -> None:
+    """Two unit documents, at 20 relays or 16: no CND, MARKER_UNPLACED, DANGLING_WIRE_END, RAIL_IDENTITY_SHARED or DRAWING_SHORTS_NETS."""
+    codes = {f.code for f in fr.check(_build(salt, relays))}
     assert codes & {"CONNECTION_NOT_DRAWN", "MARKER_UNPLACED", "DANGLING_WIRE_END", "RAIL_IDENTITY_SHARED", "DRAWING_SHORTS_NETS"} == set()

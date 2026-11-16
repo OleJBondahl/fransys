@@ -2,33 +2,13 @@
 The bug: lines of two different cables ran along the same coordinate over a stretch, so the drawing showed one line where there were two.
 Fixed by layout-0199 (LEGACY-B3 L12), the lines take separate tracks; lint/diagram.py reports DIAGRAM_LINES_SHARE_TRACK otherwise."""
 
-import tempfile
-from functools import cache
 from itertools import combinations
-from pathlib import Path
 
-import fransys as fr
+from _field_shared import cable_lines
 
-from electrical_symbols import LIBRARY
-from fransys_layout import DiagramLine, lay_out_diagrams
+lazy from fransys_layout import DiagramLine
 
 _EDGES = ((4, 1), (2, 3), (2, 1), (5, 4), (2, 4), (1, 4))
-
-
-@cache
-def _lines() -> tuple[DiagramLine, ...]:
-    with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Cables\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-        d.revision(1, date="2026-01-01", text="first", created="AB")
-        devices = {n: d.device(f"P{n}", "DEMO-CONN-2P") for n in range(1, 6)}
-        for k, (a, b) in enumerate(_EDGES, start=1):
-            d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])
-        result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
-    diagrams, _ = lay_out_diagrams(result.model, LIBRARY)
-    return tuple(line for d in diagrams.diagrams for sheet in d.sheets for line in sheet.lines)
 
 
 def _runs(line: DiagramLine) -> list[tuple[int, int, int, int]]:
@@ -45,7 +25,7 @@ def _shared(one: tuple[int, int, int, int], other: tuple[int, int, int, int]) ->
 
 
 def test_no_two_cables_share_a_track() -> None:
-    lines = _lines()
+    lines = cable_lines(5, _EDGES)
     assert len(lines) == len(_EDGES)
     shared = [
         (one.cable, other.cable)

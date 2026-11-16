@@ -30,9 +30,11 @@ def fallback(cut: CutResult, placement: Placement, lost: Iterable[Refused]) -> t
     return tuple(out)
 
 
-def handed(cut: CutResult, placement: Placement, problem: PlacementProblem) -> tuple[Ref, ...]:
-    """The fallback references of the links `widen` handed to the cut (`Net.tagged`): announced like the loop's own."""
-    return fallback(cut, placement, (Refused(n.id, t) for n in problem.nets for t in n.tagged))
+def handed(cut: CutResult, placement: Placement, problem: PlacementProblem, drawn: Iterable[Ref]) -> tuple[Ref, ...]:
+    """The fallback references of the links `widen` handed to the cut (`Net.tagged`) that a ref of `drawn` stands for: announced like the loop's."""
+    shown = {(r.net, frozenset(e.pin for e in r.ends)) for r in drawn}
+    refs = fallback(cut, placement, (Refused(n.id, t) for n in problem.nets for t in n.tagged))
+    return tuple(r for r in refs if (r.net, frozenset(e.pin for e in r.ends)) in shown)
 
 
 def announced(refs: Iterable[Ref]) -> tuple[Finding, ...]:

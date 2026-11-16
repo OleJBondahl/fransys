@@ -6,7 +6,6 @@ from decimal import Decimal
 import pytest
 import symdef
 from diagram_models import station
-from options_fixtures import core_options
 from symdef import ReferenceCellError
 
 from electrical_symbols import LIBRARY
@@ -28,7 +27,6 @@ from fransys_layout.symbols import (
     symbol_shape,
     symbol_views,
     text_room_on,
-    with_marker,
 )
 from fransys_model.layout import default_sheet_format
 
@@ -42,7 +40,6 @@ def test_the_marker_box_is_measured_at_all_eight_orientations() -> None:
     assert views["R0"] == Box(0, -8, 48, 16)
     assert len(views) == 8
     assert views["R90"] != views["R0"]
-    assert with_marker(core_options(), library_symbol(LIBRARY, "reference-marker"), LIBRARY).marker == views
 
 
 @pytest.mark.parametrize("key", ["marker-arrow", "marker-arrow-turned", "marker-box"])

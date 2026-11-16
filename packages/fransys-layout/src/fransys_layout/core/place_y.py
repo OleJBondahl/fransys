@@ -128,24 +128,32 @@ def _row_constraints(g: Graph, r: int, env: PageEnv) -> None:
 
 
 def _attach_y(g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], hang: tuple[bool, bool]) -> None:
-    """An attached column hangs box_gap under the box's S edge, or stands over its N edge.
+    """An attached column hangs box_gap under the box's S edge, or stands over its N edge: every lane's end cell clears the box.
 
     `hang` is (above, slack): a `slack` column hangs at least that far, a trunk of a foreign fan runs between it and the box.
+    The box is held to the lane whose end cell reaches it first (lane 0 when the lanes end on one cell); the others keep at least their gap.
     """
     above, slack = hang
     box = env.attach[pc.id][0]
-    body, cells = env.syms[box].body, pc.lanes[0]
-    if above:
-        dy = _pin_y(env, cells[-1], cells[-1].bottom_pin)
-        wire = _box_gap(env, cells[-1], above=True, dy=dy) + body.y - env.syms[box].footprint.y
-        g.equal(box_y_node(box), cell_node(pc.id, 0, len(cells) - 1), body.y - wire - dy)
-    else:
-        dy = _pin_y(env, cells[0], cells[0].top_pin)
-        fp = env.syms[box].footprint
-        room = max((rooms.get((pc.id, li, -1), 0) for li in range(len(pc.lanes))), default=0)  # a join on the head's top pin bends in this gap
-        wire = grid_up(max(_box_gap(env, cells[0], above=False, dy=dy) + fp.y + fp.h - body.y - body.h, room), env.options.wiring_grid)
-        at = box_y_node(box), cell_node(pc.id, 0, 0), body.y + body.h + wire - dy
-        g.after(*at) if slack else g.equal(*at)
+    body, fp = env.syms[box].body, env.syms[box].footprint
+    room = max((rooms.get((pc.id, li, -1), 0) for li in range(len(pc.lanes))), default=0)  # a join on the head's top pin bends in this gap
+    shifts = [
+        fp.y - gap - dy if above else body.y + body.h + grid_up(max(gap + fp.y + fp.h - body.y - body.h, room), env.options.wiring_grid) - dy
+        for lane in pc.lanes
+        for c in (lane[-1 if above else 0],)
+        for dy in (_pin_y(env, c, c.bottom_pin if above else c.top_pin),)
+        for gap in (_box_gap(env, c, above=above, dy=dy),)
+    ]
+    nodes = [cell_node(pc.id, li, len(lane) - 1 if above else 0) for li, lane in enumerate(pc.lanes)]
+    alone = Graph()
+    stack_constraints(alone, pc, env, rooms, rigid=above)
+    y = alone.solve() or {}
+    edge = (max if above else min)(range(len(nodes)), key=lambda li: y.get(nodes[li], 0) - shifts[li])
+    for li, (node, shift) in enumerate(zip(nodes, shifts, strict=True)):
+        if li == edge and (above or not slack):
+            g.equal(box_y_node(box), node, shift)
+        else:
+            g.after(*((node, box_y_node(box), -shift) if above else (box_y_node(box), node, shift)))
 
 
 def _box_gap(env: PageEnv, cell: Cell, *, above: bool, dy: int) -> int:

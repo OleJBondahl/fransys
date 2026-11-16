@@ -5,7 +5,7 @@ Fixed by layout-0122 (amending layout-0107 How 3): a feeder at the bottom of its
 from typing import Any
 
 import fransys as fr
-from _drawn_facts import symbol_subjects
+from _drawn_facts import pin_x, symbol_subjects
 from _model_build_cover import unit_document
 from fransys.colours import BN, BU
 
@@ -46,10 +46,6 @@ def _held_by(model, held: set[Any]) -> list[tuple[object, Any]]:
     return [(one.page, one) for one in symbol_subjects(model) if one.owner in held]
 
 
-def _pin_x(box, name: str) -> Any:
-    return box.x + dict(box.offsets)[name]
-
-
 def test_supplies_fed_from_terminals_stand_over_the_module_pin_over_pin() -> None:
     """No marker to the module, output pins over input pins, strip terminals on the same page."""
     model = _built()
@@ -62,7 +58,7 @@ def test_supplies_fed_from_terminals_stand_over_the_module_pin_over_pin() -> Non
     assert not wires, "a wire between a supply and the module is a link marker"
     for n, (_, psu) in psus.items():
         for out in ("+", "-"):
-            assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"in_{n}.{n}{out}")
+            assert pin_x(psu, f"output.{out}") == pin_x(module, f"in_{n}.{n}{out}")
     strip = {i for i, one in items(model).items() if one.key[0] == "X1" and len(one.key) == 4}
     held = {f.id.value for f in functions(model).values() if f.item in strip}
     terminals = _held_by(model, held)

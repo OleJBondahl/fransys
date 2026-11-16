@@ -395,7 +395,8 @@ def widen(
         rose, risen = now > risen, now
         asked, roomed_for = _asked((d for p in rnd.routes.pages for d in p.needs), roomed_for)
         problem2 = roomed(tagged_by(problem, rnd.lost), asked)
-        marker_only = problem2 is problem and not rose and not _grew(placement, rnd.routes)  # a marker's ask is the last resort (layout-0559)
+        # a marker's ask is the last resort, tried before a quiet pass settles the loop (layout-0559, KI-1004)
+        marker_only = problem2 is problem and not rose and (i > 0 or not _grew(placement, rnd.routes))
         if marker_only:
             asked, roomed_for = _asked(rnd.asks, roomed_for)
             problem2 = roomed(problem, asked)

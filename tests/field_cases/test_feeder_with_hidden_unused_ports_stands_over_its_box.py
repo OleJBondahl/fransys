@@ -2,10 +2,9 @@
 The bug: pairing counted every port of a function, drawn or not, so a five-pin output never matched a two-pin group.
 Fixed by layout-0128 (amending layout-0122), pairing counts the ports each side draws."""
 
-from typing import Any
-
 import fransys as fr
-from _drawn_facts import item_box
+import pytest
+from _drawn_facts import item_box, pin_x
 from _model_build_cover import unit_document
 from fransys.colours import BN, BU
 
@@ -37,10 +36,6 @@ def _built(mpn: str, plus: str, minus: str):
     return fr.build(d, doc).model
 
 
-def _pin_x(box, name: str) -> Any:
-    return box.x + dict(box.offsets)[name]
-
-
 def _check(model, plus: str, minus: str) -> None:
     """No marker to the module, the drawn output pins over the input pins, one page."""
     module = item_box(model, "M1")
@@ -50,18 +45,12 @@ def _check(model, plus: str, minus: str) -> None:
     wires = [m for m in layout_of(model, LinkMarker).values() if fn_of[m.port].item in boxed and fn_of[m.port].key[-1] != "out"]
     assert not wires, "a wire between a supply and the module is a link marker"
     for n, psu in psus.items():
-        assert _pin_x(psu, f"output.{plus}") == _pin_x(module, f"in_{n}.{n}+")
-        assert _pin_x(psu, f"output.{minus}") == _pin_x(module, f"in_{n}.{n}-")
+        assert pin_x(psu, f"output.{plus}") == pin_x(module, f"in_{n}.{n}+")
+        assert pin_x(psu, f"output.{minus}") == pin_x(module, f"in_{n}.{n}-")
     assert {module.page, *(psu.page for psu in psus.values())} == {module.page}
 
 
-def test_two_pin_output_stands_over_the_module() -> None:
-    """The control: a two-pin output pairs today."""
-    model = _built("DEMO-PSU-24", "+", "-")
-    _check(model, "+", "-")
-
-
-def test_five_pin_output_with_two_wired_stands_over_the_module() -> None:
-    """The three unwired pins are hidden, so the output draws two pins and pairs."""
-    model = _built("DEMO-PSU-24-5OUT", "+1", "-1")
-    _check(model, "+1", "-1")
+@pytest.mark.parametrize(("mpn", "plus", "minus"), [("DEMO-PSU-24", "+", "-"), ("DEMO-PSU-24-5OUT", "+1", "-1")])
+def test_output_stands_over_the_module(mpn: str, plus: str, minus: str) -> None:
+    """The control two-pin output pairs today; the five-pin one with three unwired pins hidden draws two and pairs."""
+    _check(_built(mpn, plus, minus), plus, minus)

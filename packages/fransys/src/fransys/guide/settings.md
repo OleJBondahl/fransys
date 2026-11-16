@@ -111,7 +111,7 @@ assert fr.settings().paper_by_kind[fr.PageKind.BLOCK_DIAGRAM] == "A2"
 
 ## The words
 
-`[words]` holds the words the drawings and lists print, such as `side_a`, `pin`, `spare`, `no` and `nc`, and the page headings. The PLC list prints the signal words `signal_di`, `signal_do`, `signal_ai_ma`, `signal_ai_v`, `signal_ao_ma`, `signal_ao_v`, `signal_rtd` and `signal_relay_do`. Each word has one key. A key you leave out keeps our word.
+`[words]` holds the words the drawings and lists print, such as `side_a`, `pin`, `spare`, `no` and `nc`, and the page headings. The PLC list prints the signal words `signal_di`, `signal_do`, `signal_ai_ma`, `signal_ai_v`, `signal_ao_ma`, `signal_ao_v`, `signal_rtd` and `signal_relay_do`. Each word has one key. A key you leave out keeps our word. `system_document_code` (default `SYS`) leads a position in the system document that another PDF prints, as in `SYS p7:6C`. A unit document leads with its unit's designation.
 
 ```toml
 [words]

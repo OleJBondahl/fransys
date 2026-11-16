@@ -24,6 +24,12 @@ def _protected(model: Model) -> frozenset[Id[Function]]:
     return frozenset(g.function for g in link_groups(model, lambda role: role.protective))
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _joined(model: Model) -> frozenset[frozenset[Id[Port]]]:
+    """The port pairs a conductive link joins, grouped once per model."""
+    return frozenset(frozenset((g.ports[0], other)) for g in link_groups(model, lambda role: role.joins_net) for other in g.ports[1:])
+
+
 def link_fact(model: Model, function: Function) -> str:
     """`protective` when a protective link joins two of the function's ports (a fuse in the path), else `none`."""
     return "protective" if function.id in _protected(model) else "none"
@@ -32,9 +38,8 @@ def link_fact(model: Model, function: Function) -> str:
 def refuse_joined(model: Model, function: Id[Function], bound: Mapping[Id[Port], str], groups: frozenset[frozenset[str]]) -> None:
     """ERROR when the symbol draws two ports of the part at one node and no conductive link of the part joins them (R2089)."""
     here = [pid for pid in bound if port_function(model, pid) == function]
-    joined = {frozenset((g.ports[0], other)) for g in link_groups(model, lambda role: role.joins_net) for other in g.ports[1:]}
     for a, b in combinations(here, 2):  # in binding order
-        if any({bound[a], bound[b]} <= group for group in groups) and frozenset((a, b)) not in joined:
+        if any({bound[a], bound[b]} <= group for group in groups) and frozenset((a, b)) not in _joined(model):
             refuse(
                 f"function {function}",
                 f"the symbol draws ports {bound[a]} and {bound[b]} at one point, but no conductive link of the part joins them: "

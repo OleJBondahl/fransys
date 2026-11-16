@@ -5,6 +5,7 @@ Closed by R868: the core hub turn places both contacts."""
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
+import pytest
 from fransys.colours import WH
 
 if TYPE_CHECKING:
@@ -48,13 +49,10 @@ def _codes(count: int, root: Path, *, reverse: bool = False) -> set[str]:
     return {f.code for f in fr.build(d, document).findings}
 
 
-def test_one_contact_with_its_common_unwired_is_placed(tmp_path: Path) -> None:
+@pytest.mark.parametrize("count", [1, 2])
+def test_one_or_two_contacts_with_their_commons_unwired_are_placed(count: int, tmp_path: Path) -> None:
     """Control: one contact reaches no PLACEMENT_PROBLEM (it has a conductor with no path today)."""
-    assert "PLACEMENT_PROBLEM" not in _codes(1, tmp_path)
-
-
-def test_two_contacts_with_their_commons_unwired_are_placed(tmp_path: Path) -> None:
-    assert "PLACEMENT_PROBLEM" not in _codes(2, tmp_path)
+    assert "PLACEMENT_PROBLEM" not in _codes(count, tmp_path)
 
 
 def test_two_contacts_declared_in_reverse_are_placed(tmp_path: Path) -> None:

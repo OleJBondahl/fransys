@@ -11,24 +11,29 @@ from fransys.colours import BU
 __all__ = ["card_case_drafts", "coil_wires_straight", "lamps_drafts", "page_count"]
 
 
-def card_case_drafts(channels: int = 32) -> tuple[Any, ...]:
+def card_case_drafts(channels: int = 32, cards: int = 1) -> tuple[Any, ...]:
     """The design and cabinet document of one output card with a coil on every channel.
 
-    The card is one external box with `channels` pins in one group; the coils stand in a second
-    group, coil i wired from pin i. Nothing else is drawn: no feeder, strip or lamp.
+    The card is one external box with `channels` pins (`cards` boxes of 11, 11, 10 ... pins when above 1); coil i
+    stands in a second group, wired from pin i. Nothing else is drawn: no feeder, strip or lamp.
     """
     pins = tuple(f"CH{j:02d}-" for j in range(1, channels + 1))
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    with d.function("PLC", "Card"):
-        card = d.device("A1", None, pins=pins, external=True)
+    size = -(-channels // cards)
+    chunks = [pins[i : i + size] for i in range(0, channels, size)]
+    boxes: dict[str, Any] = {}
+    for n, chunk in enumerate(chunks, 1):
+        with d.function(f"PLC{n}" if cards > 1 else "PLC", "Card"):
+            card = d.device(f"A{n}", None, pins=chunk, external=True)
+        boxes.update(dict.fromkeys(chunk, card))
     zero = d.terminal_strip("X0", "DEMO-TB-2.5", channels, bridged=True, rail=True)  # a point takes one conductor (R1266)
     rail = d.terminal_strip("X24", "DEMO-TB-2.5", 1)
     d.dc_supply("S", plus=rail[1], minus=zero[1], voltage=24)
     with d.function("B", "Relays"):
         for i, pin in enumerate(pins):
             relay = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
-            d.series(card[pin], relay.coil["A1"], wire=(BU, 0.5))
+            d.series(boxes[pin][pin], relay.coil["A1"], wire=(BU, 0.5))
             d.series(relay.coil["A2"], zero[i + 1].outer, wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")

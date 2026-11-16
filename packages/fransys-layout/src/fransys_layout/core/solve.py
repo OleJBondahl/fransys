@@ -85,7 +85,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         *routes.findings,
         *over,
         *missed,
-        *announced((*handed(cut, placement, problem), *rnd.refs)),
+        *announced((*handed(cut, placement, problem, (*cut.spec.reference_plan, *rnd.refs)), *rnd.refs)),
     )
     layout = CoreLayout(
         problem.area,

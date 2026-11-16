@@ -3,10 +3,11 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.overview.defaults import PACK_SHAPE
-from fransys_layout.engines.overview.place import place_view, view_findings, view_scene
+from fransys_layout.engines.overview.place import place_view, view_scene
 from fransys_layout.engines.overview.read import read_views
 from fransys_layout.engines.overview.read.result import OverviewLayout, OverviewPlacedView, placed_view
 from fransys_layout.fix_text import finding
+from fransys_layout.lint import lint_diagram
 from fransys_layout.lint.codes import OVERVIEW_UNPLACED
 
 if TYPE_CHECKING:
@@ -37,7 +38,7 @@ def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[OverviewLayo
             found.append(_unplaced(facts.boxes[0].box))
             continue
         scene = view_scene(facts, sheet)
-        found.extend(view_findings(scene))
+        found.extend(lint_diagram(scene))
         views.append(placed_view(facts, sheet, scene))
     ordered = tuple(sorted(found, key=lambda x: (x.code, x.subjects)))
     return OverviewLayout(views=tuple(views)), ordered

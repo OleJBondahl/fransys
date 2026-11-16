@@ -5,7 +5,7 @@ Fixed by layout-0107, a box fed by one box over a whole pin group is placed so p
 from typing import Any
 
 import fransys as fr
-from _drawn_facts import symbol_subjects
+from _drawn_facts import pin_x, symbol_subjects
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BU
@@ -44,10 +44,6 @@ def _box(model, tag: str):
     return found[0]
 
 
-def _pin_x(box, name: str) -> Any:
-    return box.x + dict(box.offsets)[name]
-
-
 def _overlap(a, b) -> Any:
     """Two boxes of one page whose pin spans meet in x and stand at one y (the body is symdef's)."""
 
@@ -67,8 +63,8 @@ def _check(order: tuple[str, str]) -> None:
     for tag, group, number in pairs:
         psu = _box(model, tag)
         for out, pin in (("+", "+"), ("-", "-")):
-            outs_x.add(_pin_x(psu, f"output.{out}"))
-            assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"{group}.{number}{pin}")
+            outs_x.add(pin_x(psu, f"output.{out}"))
+            assert pin_x(psu, f"output.{out}") == pin_x(module, f"{group}.{number}{pin}")
     wires = [
         w
         for page, drawing in drawn_pages(model).items()

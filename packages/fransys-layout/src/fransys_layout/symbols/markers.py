@@ -1,6 +1,5 @@
 """The marker symbol's keep-out box at each orientation, set once on the core's options."""
 
-from dataclasses import replace
 from typing import TYPE_CHECKING, Literal
 
 from symdef import fitted_symbol, measure
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
 
     from symdef import Library
 
-    from fransys_layout.core.values import Box, Options, Orientation
+    from fransys_layout.core.values import Box, Orientation
 
     from .shape import LibrarySymbol
 
@@ -22,18 +21,12 @@ __all__ = (
     "fitted_marker_views",
     "marker_rule",
     "marker_views",
-    "with_marker",
 )
 
 
 def marker_views(symbol: LibrarySymbol, library: Library) -> Mapping[Orientation, Box]:
     """`symbol`'s keep-out box at each of the eight orientations (SB4, layout-0305)."""
     return {o: to_box(measure(symbol, symdef_orientation(o), library).keepout) for o in ORIENTATIONS}
-
-
-def with_marker(options: Options, symbol: LibrarySymbol, library: Library) -> Options:
-    """`options` with `Options.marker` read from the marker `symbol`."""
-    return replace(options, marker=marker_views(symbol, library))
 
 
 def fitted_marker_views(symbol: LibrarySymbol, slot: str, text: str, library: Library) -> Mapping[Orientation, Box]:

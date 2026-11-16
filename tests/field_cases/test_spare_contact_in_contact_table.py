@@ -6,6 +6,7 @@ import functools
 from typing import Any
 
 import fransys as fr
+import pytest
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BU
@@ -54,30 +55,19 @@ def _placed(model, pin: str) -> list[Any]:
     ]
 
 
-def test_the_unwired_contact_is_on_no_page_with_the_switch_on() -> None:
-    """The NC auxiliary (pin 21) has no symbol; the NO auxiliary (pin 13) has one."""
-    model = _built(hide=True).model
-    assert _placed(model, "21") == []
-    assert _placed(model, "13")
-
-
-def test_the_unwired_contact_is_on_no_page_with_the_switch_off() -> None:
-    """The switch does not matter: the pin 21 contact has no symbol, the pin 13 one has."""
+@pytest.mark.parametrize("hide", [True, False])
+def test_the_unwired_contact_is_on_no_page(*, hide: bool) -> None:
+    """The NC auxiliary (pin 21) has no symbol; the NO auxiliary (pin 13) has one, switch on or off."""
     # UNDO: layout, draw a contact without a conductor again (the unused-contact filter removed)
-    model = _built(hide=False).model
+    model = _built(hide=hide).model
     assert _placed(model, "21") == []
     assert _placed(model, "13")
 
 
-def test_no_lone_cell_with_the_switch_on() -> None:
-    """The unwired contact is not drawn, so it is no lone cell."""
+@pytest.mark.parametrize("hide", [True, False])
+def test_no_lone_cell(*, hide: bool) -> None:
+    """The unwired contact is not drawn, so it is no lone cell, switch on or off."""
     # UNDO: read/unused.py:without_unused, the spare branch removed (the spare comes back as a cell)
-    on = [f for f in _built(hide=True).findings if f.code == "LONE_CELL"]
-    assert on == []
-
-
-def test_no_lone_cell_with_the_switch_off() -> None:
-    """With the switch off the unwired contact is still not drawn, so it is no lone cell."""
     # UNDO: layout, draw a contact without a conductor again (the unused-contact filter removed)
-    off = [f for f in _built(hide=False).findings if f.code == "LONE_CELL"]
-    assert off == []
+    found = [f for f in _built(hide=hide).findings if f.code == "LONE_CELL"]
+    assert found == []

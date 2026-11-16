@@ -18,15 +18,10 @@ from .codes import (
 )
 
 
-def _error(code: str, subjects: tuple[Ident, ...], message: str) -> Finding:
-    """The code's finding (layout-0252: an unclearable defect is INFO in its `CodeInfo`)."""
-    return finding(code, subjects, message)
-
-
 def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:
     """Two boxes share interior, or a tab of one overlaps another box's rectangle or tab."""
     return tuple(
-        _error(DIAGRAM_BOX_OVERLAP, (one.box, two.box), "Two boxes overlap.")
+        finding(DIAGRAM_BOX_OVERLAP, (one.box, two.box), "Two boxes overlap.")
         for one, two in combinations(scene.boxes, 2)
         if any(overlaps(a, b) for a in shapes(one) for b in shapes(two))
     )
@@ -35,12 +30,12 @@ def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:
 def check_text_overlap(scene: Scene) -> tuple[Finding, ...]:
     """Two printed texts share interior area, or a line label shares it with a box or a tab."""
     texts = tuple(
-        _error(DIAGRAM_TEXT_OVERLAP, (one.owner, two.owner), "Two texts overlap.")
+        finding(DIAGRAM_TEXT_OVERLAP, (one.owner, two.owner), "Two texts overlap.")
         for one, two in combinations(scene.texts, 2)
         if overlaps(one.rect, two.rect)
     )
     on_box = tuple(
-        _error(DIAGRAM_TEXT_OVERLAP, (label.owner, one.box), "A label overlaps a box.")
+        finding(DIAGRAM_TEXT_OVERLAP, (label.owner, one.box), "A label overlaps a box.")
         for label in scene.labels
         for one in scene.boxes
         if any(overlaps(label.rect, shape) for shape in shapes(one))
@@ -56,7 +51,7 @@ def _passes_through(line: SceneLine, one: SceneBox) -> bool:
 def check_line_through_box(scene: Scene) -> tuple[Finding, ...]:
     """A line passes through the interior of a box or tab other than its own two."""
     return tuple(
-        _error(DIAGRAM_LINE_THROUGH_BOX, (line.cable, one.box), "A line crosses a third box.")
+        finding(DIAGRAM_LINE_THROUGH_BOX, (line.cable, one.box), "A line crosses a third box.")
         for line in scene.lines
         for one in scene.boxes
         if one.box not in (line.start, line.stop) and _passes_through(line, one)
@@ -88,7 +83,7 @@ def _off_ends(line: SceneLine, scene: Scene) -> list[tuple[Ident, Ident]]:
 def check_line_off_box(scene: Scene) -> tuple[Finding, ...]:
     """A line end is not on the outline of its box or a tab of it, or of a marker."""
     return tuple(
-        _error(DIAGRAM_LINE_OFF_BOX, subjects, "A line end is off its box outline.") for line in scene.lines for subjects in _off_ends(line, scene)
+        finding(DIAGRAM_LINE_OFF_BOX, subjects, "A line end is off its box outline.") for line in scene.lines for subjects in _off_ends(line, scene)
     )
 
 
@@ -99,7 +94,7 @@ def _runs(line: SceneLine) -> list[Run]:
 def check_label_struck(scene: Scene) -> tuple[Finding, ...]:
     """A line passes through the interior of a line label: a label never lies under a line."""
     return tuple(
-        _error(DIAGRAM_LABEL_STRUCK, (label.owner, line.cable), "A line strikes a label.")
+        finding(DIAGRAM_LABEL_STRUCK, (label.owner, line.cable), "A line strikes a label.")
         for label in scene.labels
         for line in scene.lines
         if any(crosses(label.rect, run) for run in _runs(line))
@@ -118,7 +113,7 @@ def _shared(one: Run, other: Run) -> bool:
 def check_collinear_overlap(scene: Scene) -> tuple[Finding, ...]:
     """Two lines of different cables share a track segment of positive length."""
     return tuple(
-        _error(DIAGRAM_LINES_SHARE_TRACK, (one.cable, other.cable), "Two cables share a track.")
+        finding(DIAGRAM_LINES_SHARE_TRACK, (one.cable, other.cable), "Two cables share a track.")
         for one, other in combinations(scene.lines, 2)
         if one.cable != other.cable and any(_shared(r, s) for r in _runs(one) for s in _runs(other))
     )

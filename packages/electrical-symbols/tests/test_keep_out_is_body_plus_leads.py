@@ -42,3 +42,15 @@ def test_a_slot_beyond_the_leads_does_not_enlarge_the_keep_out():
     keep = keepout_box(coil, LIBRARY.font)
     assert reach.min.x < keep.min.x
     assert keep == _expected(coil)
+
+
+@pytest.mark.rule("TAG-CORNERS")
+@pytest.mark.parametrize("key", ["position-switch-make", "position-switch-break"])
+def test_a_position_switch_tag_slot_adds_no_reach_beyond_the_roller_body(key):
+    """The tag stands above the roller: its slot spans no more than the body, so the footprint gains no left reach (R2451)."""
+    symbol = LIBRARY.get(key)
+    tag = slot_box(next(s for s in symbol.slots if s.id == "tag"))
+    body = body_box(symbol, LIBRARY.font)
+    assert body.min.x < 0
+    assert (tag.min.x, tag.max.x) == (body.min.x, 0)
+    assert tag.max.y <= body.min.y + 1

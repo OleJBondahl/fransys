@@ -3,11 +3,10 @@ The bug: the box widened its pitch for contacts under its pins but not its feede
 Fixed by layout-0124 (amending layout-0107), a feeder's keep-out under its attach pin counts in the box's pin pitch."""
 
 import itertools
-from typing import Any
 
 import fransys as fr
 import pytest
-from _drawn_facts import box_boxes, item_box, symbol_boxes
+from _drawn_facts import box_boxes, item_box, pin_x, symbol_boxes
 from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BN, BU
@@ -35,10 +34,6 @@ def _built(name: str = "T") -> fr.BuildResult:
     d.series(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
     doc = unit_document(cab)
     return fr.build(d, doc)
-
-
-def _pin_x(box, name: str) -> Any:
-    return box.x + dict(box.offsets)[name]
 
 
 def _keepout(one):
@@ -78,4 +73,4 @@ def test_each_feeder_stands_over_its_own_group(name: str) -> None:
     for n in (1, 2):
         psu = item_box(model, f"{name}{n}")
         for out in ("+", "-"):
-            assert _pin_x(psu, f"output.{out}") == _pin_x(module, f"in_{n}.{n}{out}")
+            assert pin_x(psu, f"output.{out}") == pin_x(module, f"in_{n}.{n}{out}")

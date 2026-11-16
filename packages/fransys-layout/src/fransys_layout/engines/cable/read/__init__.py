@@ -5,8 +5,8 @@ is the one test of what the engine draws; `facts.py` reads the widths and flags.
 """
 
 from fransys_layout.engines.cable.read.facts import block_facts
-from fransys_layout.engines.cable.read.subjects import block_pairs, drawable
-from fransys_model.derive.cable_drawing import cable_block_key
+from fransys_layout.engines.cable.read.subjects import drawable
+from fransys_model.derive.cable_drawing import cable_block_key, drawn_blocks
 lazy from fransys_layout.engines.cable.values import BlockFacts, PlacedBlock
 lazy from fransys_layout.symbols import SymbolLibrary
 lazy from fransys_model.kernel import Model
@@ -19,7 +19,7 @@ def read_blocks(model: Model, library: SymbolLibrary) -> tuple[BlockFacts, ...]:
 
     Absolute readings first, then each unit's; an undrawable block gets no facts and no finding.
     """
-    return tuple(block_facts(model, subject, unit, library) for unit, subject in block_pairs(model) if drawable(model, subject, unit))
+    return tuple(block_facts(model, subject, unit, library) for unit, subject in drawn_blocks(model) if drawable(model, subject, unit))
 
 
 def block_key(block: PlacedBlock) -> str:

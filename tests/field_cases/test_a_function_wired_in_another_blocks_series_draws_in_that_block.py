@@ -124,20 +124,10 @@ def test_contacts_of_relays_from_two_blocks_stand_in_the_third_blocks_series(
     assert _page(result, "K5", "co_1") == page
 
 
-def test_a_contact_in_two_blocks_series_stays_in_its_device_block(
-    tmp_path: Path,
-) -> None:
-    result = _build("both", tmp_path)
-    contact = _fn(result, "K4", "co_1")
-    assert contact not in function_moves(result.model)
-
-
-def test_a_one_function_device_wired_in_another_blocks_series_stays_in_its_block(
-    tmp_path: Path,
-) -> None:
-    result = _build("single", tmp_path)
-    fuse = _fn(result, "F2", "element")
-    assert fuse not in function_moves(result.model)
+@pytest.mark.parametrize(("shape", "device", "name"), [("both", "K4", "co_1"), ("single", "F2", "element")])
+def test_a_function_wired_in_another_blocks_series_stays_in_its_block(shape: str, device: str, name: str, tmp_path: Path) -> None:
+    result = _build(shape, tmp_path)
+    assert _fn(result, device, name) not in function_moves(result.model)
 
 
 def test_the_contact_keeps_its_device_and_designation(tmp_path: Path) -> None:

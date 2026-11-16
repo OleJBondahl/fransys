@@ -8,6 +8,7 @@ import fransys as fr
 import pytest
 from test_block_diagram_facade import _built, _system
 
+from fransys_layout.fix_text import finding
 from fransys_layout.lint import diagram
 from fransys_layout.lint.codes import DIAGRAM_LABEL_STRUCK, DIAGRAM_LINES_SHARE_TRACK
 from fransys_model.kernel import Severity
@@ -21,7 +22,7 @@ _CASES = [
 @pytest.mark.parametrize(("code", "check"), _CASES)
 def test_the_code_is_info_and_a_build_carrying_it_still_writes(monkeypatch, tmp_path, code, check):
     """Probe: turn `DIAGRAM_LABEL_STRUCK` back to ERROR and this fails."""
-    monkeypatch.setattr(diagram, check, lambda _scene: (diagram._error(code, (), "seeded"),))
+    monkeypatch.setattr(diagram, check, lambda _scene: (finding(code, (), "seeded"),))
     result = _built(3, _system())
     seeded = [f for f in fr.check(result) if f.code == code]
     assert seeded

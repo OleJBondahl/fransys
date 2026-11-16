@@ -8,7 +8,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 from _drawn_pages import drawn_pages
-from _model_build_cover import unit_document
+from _model_build_cover import system_document, unit_document
 from board_cab import Open
 
 from electrical_symbols import LIBRARY
@@ -65,6 +65,18 @@ def crossed(p: Point, q: Point, r: Point, s: Point) -> bool:
 def diagram_lines(result: fr.BuildResult) -> tuple[DiagramLine, ...]:
     diagrams, _ = lay_out_diagrams(result.model, LIBRARY)
     return tuple(line for d in diagrams.diagrams for sheet in d.sheets for line in sheet.lines)
+
+
+@cache
+def cable_lines(plugs: int, edges: tuple[tuple[int, int], ...]) -> tuple[DiagramLine, ...]:
+    """The diagram lines of one-core cables joining `plugs` connector devices along `edges`."""
+    d = fr.design("demo_parts")
+    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
+    devices = {n: d.device(f"P{n}", "DEMO-CONN-2P") for n in range(1, plugs + 1)}
+    for k, (a, b) in enumerate(edges, start=1):
+        d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, devices[a][1], devices[b][1])
+    return diagram_lines(fr.build(d, system_document()))
 
 
 def crossings(result: fr.BuildResult) -> int:

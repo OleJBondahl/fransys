@@ -1,6 +1,5 @@
 """`fr.settings` merges a consumer's TOML file over our defaults, key by key (SETTINGS ST2, ST7)."""
 
-from typing import cast
 lazy from pathlib import Path
 
 import fransys as fr
@@ -9,10 +8,6 @@ import pytest
 pytestmark = pytest.mark.wp("facade")
 
 BLOCK = fr.PageKind.BLOCK_DIAGRAM
-
-
-def _formats(s: fr.Settings) -> dict[str, dict[str, object]]:
-    return cast("dict[str, dict[str, object]]", s.paper["formats"])
 
 
 def _file(tmp_path: Path, text: str) -> Path:

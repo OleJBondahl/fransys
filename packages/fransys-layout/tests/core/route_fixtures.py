@@ -95,19 +95,6 @@ def pin_reached(routes: Routes, placement: Placement, problem: PlacementProblem)
     return reached
 
 
-def own_crossings(routes: Routes) -> int:
-    """Points where a horizontal run strictly crosses a vertical one, whatever their nets."""
-    runs = segments(routes)
-    points = set()
-    for a, b in (s for s in runs if s[0][1] == s[1][1]):
-        x0, x1 = sorted((a[0], b[0]))
-        for c, d in (s for s in runs if s[0][0] == s[1][0]):
-            y0, y1 = sorted((c[1], d[1]))
-            if x0 < c[0] < x1 and y0 < a[1] < y1:
-                points.add((c[0], a[1]))
-    return len(points)
-
-
 def overlaps(routes: Routes) -> list[tuple[tuple[XY, XY], tuple[XY, XY]]]:
     """Pairs of collinear runs that share more than a point."""
     bad = []
@@ -121,11 +108,6 @@ def overlaps(routes: Routes) -> list[tuple[tuple[XY, XY], tuple[XY, XY]]]:
         if lo < hi:
             bad.append(((a, b), (c, d)))
     return bad
-
-
-def inherent(xs: Sequence[int], perm: Sequence[int]) -> int:
-    """Pairs of lanes whose order in x differs between where they leave and where they land."""
-    return sum((xs[a] - xs[b]) * (xs[perm[a]] - xs[perm[b]]) < 0 for a, b in combinations(range(len(perm)), 2))
 
 
 def envs_of(prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None) -> tuple[RouteEnv, ...]:

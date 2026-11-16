@@ -120,3 +120,12 @@ def test_no_designation_text_is_measured_into_a_footprint(monkeypatch: pytest.Mo
     monkeypatch.setattr("fransys_el.placement_syms.symbol_views", spy)
     _build()
     assert any(asked)
+
+
+def test_three_cards_of_one_wide_card_forecast_the_placed_height_so_two_share_a_row() -> None:
+    """KI-973: the 32 pins as cards of 11, 11, 10 hang no marker, so the cut counts no flag stack: cards 1 and 2 stand side by side on page 1."""
+    result = fr.build(*card_case_drafts(32, cards=3))
+    boxes = [{s.sides[0][0]: s.y for s in drawing.symbols if s.key == "generic-box"} for drawing in drawn_pages(result.model).values()]
+    assert sorted(map(sorted, boxes)) == [["CH01-", "CH12-"], ["CH23-"]]  # cards 1 and 2 on one page, card 3 on the next
+    row = next(b for b in boxes if len(b) == 2)
+    assert row["CH01-"] == row["CH12-"]

@@ -8,7 +8,7 @@ of the formats and a page number of `digits` digits (KI-541).
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import function_abroad, function_role, function_scopes, printing_document, widest_position_text
+from fransys_model.derive import function_abroad, function_role, function_scopes, position_room, printing_document
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import PageKind
 
@@ -33,5 +33,5 @@ def where_room(env: Env, function: Id[Function], digits: int = 1) -> str:
     abroad = function_abroad(env.model, function)
     documents = (printing_document(env.model, *scope) for scope in function_scopes(env.model, function))
     far = [d for d in documents if d] if abroad else []  # a line may name any scope's document: each viewer sees the others as far
-    sample = len(widest_position_text(env.model, digits, frame, "1", far=far))
-    return ("\n" + widest_position_text(env.model, digits, frame, widest_digit(env.library, sample), far=far)) * others
+    sample = len(position_room(env.model, digits, frame, "1", far=far))
+    return ("\n" + position_room(env.model, digits, frame, widest_digit(env.library, sample), far=far)) * others

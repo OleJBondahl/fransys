@@ -9,6 +9,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import fransys_parts
+import pytest
 from _connector_parts import LIBRARY
 from _drawn_pages import drawn_pages
 
@@ -124,16 +125,10 @@ def test_one_contactor_builds() -> None:
     assert _outlines(_built(1)) == 4  # one frame per wired terminal of the nested unit
 
 
-def test_t_c_a_page_that_still_overflows_keeps_its_ink_in_the_page_and_builds() -> None:
-    built = _built(2, 6)
-    assert _errors(built) == []
-    assert "OUT_OF_PAGE" not in {f.code for f in built.findings}
-    assert _outlines(built) == 8
-
-
-def test_t_c_a_line_end_below_the_box_of_a_page_no_cut_helps_still_routes() -> None:
+@pytest.mark.parametrize("deep", [6, 8])
+def test_an_overfull_page_keeps_its_ink_in_the_page_and_builds(deep: int) -> None:
     """layout-0166's extent, moved here by layout-0167: an upper band taller than a page."""
-    built = _built(2, 8)
+    built = _built(2, deep)
     assert _errors(built) == []
     assert "OUT_OF_PAGE" not in {f.code for f in built.findings}
     assert _outlines(built) == 8

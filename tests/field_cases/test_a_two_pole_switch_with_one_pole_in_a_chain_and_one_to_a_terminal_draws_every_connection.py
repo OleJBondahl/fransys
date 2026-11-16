@@ -37,12 +37,11 @@ def test_a_two_pole_switch_with_one_pole_in_a_chain_and_one_to_a_terminal_draws_
 
 
 def test_the_terminal_of_the_second_pole_is_reached_inside_its_own_column() -> None:
-    """The wire from terminal X1:2 to pole 2 of S1 needs no cross-link: it stays within one column."""
+    """The wires on terminal X1:2's x, the pin lead included, span no column: pole 2 needs no cross-link."""
     d = fr.design("demo_parts")
     d.add(_unit, "U1")
     model = fr.build(d, unit_document("bars")).model
     terminal = next(s for s in symbol_subjects(model) if s.tag == "U1-2")
     wires = [w for _, w in wire_nets(model) if any(x == terminal.x for x, _ in w.points)]
-    assert len(wires) == 1
-    xs = [x for x, _ in wires[0].points]
+    xs = [x for w in wires for x, _ in w.points]
     assert max(xs) - min(xs) <= _COLUMN

@@ -5,7 +5,7 @@ Each reader is the table row of `vocab/roles.py`, refined by the facets the one 
 """
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, cast
 
 from fransys_model.derive.accessory_blocks import operating_item
 from fransys_model.derive.facts.figures import breaking
@@ -92,12 +92,23 @@ def function_role(model: Model, function: Id[Function]) -> FunctionRole:
     return _function_roles(model)[function]
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _link_roles(_model: Model) -> dict[Id[InternalLink], LinkRole]:
+    """The link roles read so far, filled lazily by `link_role` with pure results; a view with no digest gets a fresh dict."""
+    return {}
+
+
 def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     """The role of an internal link: its kind's row, with the pole and rest the function adds.
 
     A conductive link between a line and a load pin is a pole; a switched link rests as declared,
     else as its function's kind implies.
     """
+    memo = _link_roles(cast("Model", model))
+    return memo[link] if link in memo else memo.setdefault(link, _link_role(model, link))
+
+
+def _link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     record = internal_links(model)[link]
     role = LINK_ROLES[record.kind]
     ends = {end: port_templates(model)[end] for end in (record.a, record.b)}
@@ -105,8 +116,7 @@ def link_role(model: HasTables, link: Id[InternalLink]) -> LinkRole:
     role = replace(role, pole=bool(poles_by_links([record], ends)))
     if record.kind is not LinkKind.SWITCHED:
         return role
-    declared = record.closed_at_rest
-    return replace(role, closed_at_rest=function_role_of(kind).closed_at_rest if declared is None else declared)
+    return replace(role, closed_at_rest=function_role_of(kind).closed_at_rest if record.closed_at_rest is None else record.closed_at_rest)
 
 
 def link_rest(model: Model, link: Id[InternalLink]) -> bool | None:

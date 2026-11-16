@@ -11,8 +11,7 @@ from typing import Any
 import pytest
 from cable_models import MODELS
 
-from fransys_layout.engines.cable.read.subjects import block_pairs
-from fransys_model.derive.cable_drawing import cable_block_key
+from fransys_model.derive.cable_drawing import cable_block_key, drawn_blocks
 from fransys_model.kernel import Id, Model
 lazy from fransys_layout import CableLayout
 
@@ -64,7 +63,7 @@ def _block_lines(model: Model, block: Any) -> list[str]:
 def _dump(model: Model, laid: CableLayout) -> list[str]:
     blocks = laid.blocks
     lines: list[str] = []
-    for unit, subject in block_pairs(model):
+    for unit, subject in drawn_blocks(model):
         where = "absolute" if unit is None else "unit " + _name(model, unit)
         lines.append(f"{_name(model, subject)} [{where}]")
         block = blocks.get(cable_block_key(unit, subject))

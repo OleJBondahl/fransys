@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from dataclasses import fields
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 from options_fixtures import core_options
 
-from fransys_layout.core import Facts, Options, PlacementProblem
 from fransys_layout.core.flow_values import Lane
 from fransys_layout.core.geometry import column_extent
 from fransys_layout.core.node_names import HIGH, LOW, box_node, col_node, pin_node
@@ -16,9 +16,12 @@ from fransys_layout.core.place_env import PageEnv, page_envs
 from fransys_layout.core.place_x import place_x, row_specs
 
 from .conftest import MARKER
-from .cut_fixtures import AREA, elem, net
+from .cut_fixtures import AREA
 from .pipeline_fixtures import cut_of
 from .place_fixtures import card_with_coils, two_edge_card, wide_row
+
+if TYPE_CHECKING:
+    from fransys_layout.core import Options, PlacementProblem
 
 
 def env_of(prob: PlacementProblem, options: Options | None = None) -> PageEnv:
@@ -77,12 +80,6 @@ def _reach(spec: RowSpec, x: dict[str, int]) -> int:
         lanes = tuple(Lane(cells, off) for cells, off in zip(pc.lanes, pc.offsets, strict=True))
         best = max(best, x[col_node(col)] + column_extent(spec.syms, lanes, spec.in_row)[1])
     return best
-
-
-def _four_columns() -> PlacementProblem:
-    syms = [elem(f"{k}{i}", 100) for i in range(4) for k in "ab"]
-    nets = [net(f"n{i}", f"a{i}.s", f"b{i}.n") for i in range(4)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
 
 
 def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:

@@ -62,11 +62,11 @@ def lanes_of(
 
 
 def _claim(slot: Slot, lane: LaneDraft, first: Node, last: Node) -> None:
-    """A lane's head and foot take the net ends on their pins; a pin the held turn put on the far side is no lane end: a cross-link reaches it."""
-    if lane.cells[0].top_pin == first.top:
-        slot[(first.elem, first.top or "")] = (lane, "head")
-    if lane.cells[-1].bottom_pin == last.bottom:
-        slot[(last.elem, last.bottom or "")] = (lane, "foot")
+    """A lane's head and foot take the net ends on the pins that stand there; a lone cell's end is either of its pins."""
+    for node, pin, where in ((first, lane.cells[0].top_pin, "head"), (last, lane.cells[-1].bottom_pin, "foot")):
+        pins = {node.top, node.bottom} if first is last else {node.top if where == "head" else node.bottom}
+        if pin in pins and (pin is not None or first is not last):
+            slot[(node.elem, pin or "")] = (lane, where)
 
 
 def _dealt(path: tuple[Node, ...], elems: Mapping[str, Elem], hubs: Mapping[PinRef, set[str]]) -> set[str]:

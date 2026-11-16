@@ -39,14 +39,9 @@ def test_the_core_runs_from_the_strips_pe_terminal_to_the_motors_pe_pin() -> Non
     assert _pe_core(_build()[0]) == [("-M1:PE", "-X1:4", "")]
 
 
-def test_a_strip_without_a_pe_part_earths_the_cores_near_end() -> None:
-    d, *_ = _build(strip="plain")
-    assert _pe_core(d) == [("-M1:PE", "", "")]
-    assert not [f for f in fr.check(fr.build(d)) if "PE" in f.code or f.severity.name == "ERROR"]
-
-
-def test_a_path_with_no_strip_earths_the_cores_near_end() -> None:
-    d, *_ = _build(strip=None)
+@pytest.mark.parametrize("strip", ["plain", None])
+def test_a_path_without_a_pe_part_earths_the_cores_near_end(strip: str | None) -> None:
+    d, *_ = _build(strip=strip)
     assert _pe_core(d) == [("-M1:PE", "", "")]
     assert not [f for f in fr.check(fr.build(d)) if "PE" in f.code or f.severity.name == "ERROR"]
 

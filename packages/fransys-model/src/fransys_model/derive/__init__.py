@@ -223,6 +223,7 @@ from .ids import (
     UnitReleaseId,
 )
 from .indexes import Indexes, build_indexes
+from .instance_tag import unit_system_designation
 from .item_boxes import box_port_text, item_box_views
 from .item_installed import item_installed
 from .jumper_lanes import (
@@ -254,7 +255,7 @@ from .lookups import (
     unit_chain,
 )
 from .loose import function_is_loose
-from .marker_targets import widest_position_text, widest_target_line
+from .marker_targets import widest_target_line
 from .marker_text import reference_targets
 from .mate_rows import mates
 from .netlist_pins import board_pins, pin_text
@@ -298,14 +299,13 @@ from .overview_tree import (
     overview_tree,
     own_drawing_line,
     unit_own_drawing,
-    unit_system_designation,
 )
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
 from .page_destination import ItemPage, cell_destination, item_pages, page_destination, sheet_title_text
 from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
-from .page_reference_text import covered_documents, page_reference_text, pdf_page, position_at
+from .page_reference_text import covered_documents, page_reference_text, pdf_page, position_at, position_room
 from .page_references import references_off_document
 from .page_titles import page_title, page_title_forms, short_title
 from .pairing import BoxPair, box_pairs
@@ -1052,6 +1052,7 @@ __all__ = [
     "port_templates",
     "ports",
     "position_at",
+    "position_room",
     "power_kind",
     "power_text",
     "preset_headings",
@@ -1176,7 +1177,6 @@ __all__ = [
     "unused_functions",
     "unused_terminals",
     "view_lookup",
-    "widest_position_text",
     "widest_target_line",
     "wire_rows",
     "wired_inside_outside",

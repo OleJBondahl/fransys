@@ -2,20 +2,11 @@
 The bug: the control breaker's poles were dealt into two fans, so one symbol stood in two columns and was drawn twice.
 Fixed by BUNDLE (R283), a through element takes its symbol's own column, and a symbol in two columns is a named error."""
 
-import tempfile
-from pathlib import Path
-
 import fransys as fr
-from _model_build_cover import error_messages
+from _model_build_cover import cabinet_document, error_messages
 from fransys.colours import BK, BN, BU, GY
 
 WIRE = 1.5
-
-
-def _cover() -> Path:
-    path = Path(tempfile.mkdtemp()) / "cover.md"
-    path.write_text("# Rail\n", encoding="utf-8")
-    return path
 
 
 def _design() -> tuple[fr.Design, fr.Draft]:
@@ -49,7 +40,7 @@ def _design() -> tuple[fr.Design, fr.Draft]:
                 d.series(rails[i][2 + k].inner, f.element[("1", "3", "5")[i]], wire=(colour, WIRE))
                 d.series(f.element[("2", "4", "6")[i]], q.main[("1", "3", "5")[i]], wire=(colour, WIRE))
                 d.series(q.main[("2", "4", "6")[i]], xm[i + 1].inner, wire=(colour, WIRE))
-    return d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=_cover())
+    return d, cabinet_document(cab)
 
 
 def test_the_build_has_no_error_finding() -> None:

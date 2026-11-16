@@ -117,15 +117,17 @@ def _lead_box(side: Side, options: Options) -> Box:
     return Box(min(0, x), min(0, y), abs(x), abs(y))
 
 
-def stack_extra(sym: Sym, options: Options) -> int:
-    """The G the fitted flags at the pins of `sym` stack beyond one level, the deepest view's (the cut's bound)."""
-    fits = [k for k in options.marker_fit if k[0].sym == sym.id]
+def stack_extra(sym: Sym, options: Options, wired: Container[str]) -> int:
+    """The G the fitted flags at the pins of `sym` stack beyond one level, the deepest view's (the cut's bound).
+
+    A pin in `wired` (a column stands on it) hangs no marker: its fits stack nothing.
+    """
+    fits = [k for k in options.marker_fit if k[0].sym == sym.id and k[0].pin not in wired]
     best = 0
     for view in sym.views.values():
         items = []
         for pin, kind in fits:
-            idx = next(i for i, p in enumerate(sym.pins) if p.id == pin.pin)
-            turn = view.pins[idx]
+            turn = view.pins[next(i for i, p in enumerate(sym.pins) if p.id == pin.pin)]
             if (rel := _marker_rel(options, turn.side, pin, kind)) is not None:
                 items.append((turn.dx, Hanging(pin, turn.side, rel, kind)))
         best = max(best, extra(items))

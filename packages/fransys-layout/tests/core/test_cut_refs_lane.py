@@ -167,3 +167,20 @@ def test_a_copied_fan_has_no_arrow_whose_end_lies_on_another_page(lanes: tuple[s
     )
     refs = references(cut, plan, {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3}, copy, {"f:x": tuple(map(_lane, lanes))})
     assert [(r.cut, tuple(e.pin.sym for e in r.ends if e.pin)) for r in refs if r.kind is RefKind.ARROW] == arrows
+
+
+@pytest.mark.parametrize("first", ["row", "page"])
+def test_a_lane_running_to_the_end_that_names_a_pin_is_bundled_at_both_ends(first: str) -> None:
+    """KI-992: a row cut whose far side holds no pin of any crossing lane still bundles lane B with lane A, on both plans."""
+    row0 = SimpleNamespace(prev=None, start=0)
+    plan: Any = (
+        [(0, 1, SimpleNamespace(prev=row0, start=1)), (2, 2, STATE)]
+        if first == "row"
+        else [(0, 0, STATE), (1, 2, SimpleNamespace(prev=row0, start=2))]
+    )
+    cut: Any = SimpleNamespace(
+        bounds=[SimpleNamespace(fans=("f:x",), nets=()) for _ in range(2)], seq=[SimpleNamespace(column=f"c{i}") for i in range(3)]
+    )
+    page = {0: 1, 1: 1, 2: 2} if first == "row" else {0: 1, 1: 2, 2: 2}
+    (arrow,) = references(cut, plan, page, frozenset(), {"f:x": tuple(map(_lane, ("A0 A2", "B0 B2")))})
+    assert [tuple(p.sym for p in e.also) for e in arrow.ends] == [("B0",), ("B2",)]

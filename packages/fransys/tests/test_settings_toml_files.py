@@ -38,11 +38,6 @@ GENERAL = {"step", "pad"}
 SHEET_DROPPED = {"id", "key", "module_mm", "ext"}
 
 
-def _toml_value(value: object) -> object:
-    """A tuple as the list TOML reads it back as; every other value as it is."""
-    return list(value) if isinstance(value, tuple) else value
-
-
 def _sheet_table(sheet: SheetFormat) -> dict[str, object]:
     """A sheet's fields as the settings file keeps them."""
     return {f.name: getattr(sheet, f.name) for f in fields(sheet) if f.name not in SHEET_DROPPED}
@@ -255,6 +250,7 @@ def test_words_toml_holds_todays_values() -> None:
         "signal_relay_do": "DO (relay)",
         "no": "NO",
         "nc": "NC",
+        "system_document_code": "SYS",
         "title": "Title",
         "number": "Number",
         "revision": "Revision",

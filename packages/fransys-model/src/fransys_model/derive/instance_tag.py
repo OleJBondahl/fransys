@@ -61,6 +61,12 @@ def instance_tags(model: Model, item_unit: Id[Unit], view: Id[Unit] | None) -> t
     return tuple(tag for tag in tags if tag is not None)
 
 
+def unit_system_designation(model: Model, unit: Id[Unit]) -> str | None:
+    """The unit named from the system level, tags joined (`-R1-A2`); `None` when untagged."""
+    tags = instance_tags(model, unit, None)
+    return instance_name(tags) if tags else None
+
+
 def stands_for_instance(model: Model, item: Id[Item]) -> bool:
     """Whether `item` is the sole board root of its unit: the instance tag names it."""
     return is_sole_unit_root(model, item) and item in enclosing_boards(model, item)

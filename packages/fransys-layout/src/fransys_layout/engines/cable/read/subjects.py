@@ -2,13 +2,8 @@
 
 from typing import Any
 
-from fransys_model.derive.cable_drawing import block_drawn, drawn_blocks
+from fransys_model.derive.cable_drawing import block_drawn
 lazy from fransys_model.kernel import Id, Model
-
-
-def block_pairs(model: Model) -> tuple[tuple[Id[Any] | None, Id[Any]], ...]:
-    """Every drawn (unit, subject) of the model once, in print order: `drawn_blocks`' own."""
-    return drawn_blocks(model)
 
 
 def drawable(model: Model, subject: Id[Any], unit: Id[Any] | None) -> bool:

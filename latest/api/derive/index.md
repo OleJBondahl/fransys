@@ -3693,6 +3693,17 @@ first across PDFs. It is the one place a partner's position is printed; a refere
 copied terminal's where-text both call it. Compare a drawn text with this value by recomputing it,
 never by parsing the printed text.
 
+### position_room
+
+```python
+def position_room(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str
+```
+
+The widest text `position_at` can print before the pages exist: `digits` page digits and the highest `frame` cell, every one `digit`.
+
+`far` holds the documents that may print a placement in another PDF; empty is the same-PDF text.
+It builds through `partner_position_text` and `document_prefix`, as `position_at` does. Layout sizes a where-text with it.
+
 ### power_kind
 
 ```python
@@ -5106,17 +5117,6 @@ def view_lookup(model: Model, rows: ViewRows) -> dict[RefKey, int]
 ```
 
 Each drawn box's index by its reference; a place box also by each member it holds.
-
-### widest_position_text
-
-```python
-def widest_position_text(model: Model, digits: int, frame: tuple[int, int], digit: str, *, far: Collection[Id[Document]]) -> str
-```
-
-The position text of a placement: a page number of `digits` digits and the cell at the highest `frame` (columns, rows), every one `digit`.
-
-`far` holds the documents that may print a placement in another PDF (the widest `scope_path` leads the text); empty is the same-PDF text.
-Layout sizes a terminal's where-text with it before the pages exist.
 
 ### widest_target_line
 

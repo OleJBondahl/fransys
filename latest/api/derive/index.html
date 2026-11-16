@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.21/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.22/api/derive/">
       
       
       
@@ -5404,6 +5404,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#position_room" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        position_room
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#power_kind" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6761,17 +6772,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         view_lookup
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#widest_position_text" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        widest_position_text
       </span>
     </span>
   </a>
@@ -12552,6 +12552,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#position_room" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        position_room
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#power_kind" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -13909,17 +13920,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         view_lookup
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#widest_position_text" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        widest_position_text
       </span>
     </span>
   </a>
@@ -18236,6 +18236,12 @@ once: <code>rail_pairs</code>. Cached on <code>model.digest</code>.</p>
 first across PDFs. It is the one place a partner's position is printed; a reference marker and a
 copied terminal's where-text both call it. Compare a drawn text with this value by recomputing it,
 never by parsing the printed text.</p>
+<h3 id="position_room">position_room</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">position_room</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">far</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>The widest text <code>position_at</code> can print before the pages exist: <code>digits</code> page digits and the highest <code>frame</code> cell, every one <code>digit</code>.</p>
+<p><code>far</code> holds the documents that may print a placement in another PDF; empty is the same-PDF text.
+It builds through <code>partner_position_text</code> and <code>document_prefix</code>, as <code>position_at</code> does. Layout sizes a where-text with it.</p>
 <h3 id="power_kind">power_kind</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_kind</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">net</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Net</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PowerKind</span>
 </code></pre></div>
@@ -19029,12 +19035,6 @@ instance of each: <code>units_named(model, "relay-board")</code> returns both id
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">view_lookup</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">ViewRows</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">RefKey</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 </code></pre></div>
 <p>Each drawn box's index by its reference; a place box also by each member it holds.</p>
-<h3 id="widest_position_text">widest_position_text</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widest_position_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">digits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">far</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
-</code></pre></div>
-<p>The position text of a placement: a page number of <code>digits</code> digits and the cell at the highest <code>frame</code> (columns, rows), every one <code>digit</code>.</p>
-<p><code>far</code> holds the documents that may print a placement in another PDF (the widest <code>scope_path</code> leads the text); empty is the same-PDF text.
-Layout sizes a terminal's where-text with it before the pages exist.</p>
 <h3 id="widest_target_line">widest_target_line</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">widest_target_line</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">digit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -20202,7 +20202,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.21 documentation
+      Fransys 0.23.22 documentation
     </div>
   
   

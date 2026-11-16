@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.20/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.21/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02321" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.21
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02320" class="md-nav__link">
@@ -2239,6 +2250,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02321" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.21
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02320" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2558,6 +2580,19 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02321">New in 0.23.21</h2>
+<ul>
+<li>BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with <code>fr.release</code>.</li>
+<li>By-others sets print on the system drawing with no setting on your side: a by-others device wired to one unit no longer appears on that unit's PDF. The system document now holds a schematic section, and a reference into it reads <code>&lt;design title&gt; p&lt;n&gt;:&lt;cell&gt;</code>.</li>
+<li>Also in 0.23.20: a page title and its title-page index row name only the groups drawn on that page. A group reached only through a copy or stub keeps its own page's title (KI-986).</li>
+<li>BREAKING: a design that declares a SYSTEM document must set <code>d.project(...)</code>, because its heading and the where-texts into it print the project title. 0.23.20 built such a design without a project title; this release refuses it with <code>SYSTEM_DOCUMENT_NO_PROJECT</code>.</li>
+<li>
+<p>A design with by-others devices needs a SYSTEM document, or its by-others set raises <code>UNPRINTED_SET</code>.</p>
+</li>
+<li>
+<p><code>drawn_with=</code> on <code>d.device</code>, <code>d.terminal_strip</code>, <code>d.cable</code>, <code>d.harness</code> and <code>d.rack</code> puts a by-others item, and everything under a by-others root, on a unit's PDF: <code>d.device("M9", None, external=True, pins=("U", "V", "W"), drawn_with=skid)</code>. It needs <code>external=True</code> and a wire to the unit, or the build reports <code>DRAWN_WITH_UNIT_UNWIRED</code>. BREAKING: a stored model of schema 33 or older is refused (schema 34); rebuild stored releases with <code>fr.release</code>.</p>
+</li>
+</ul>
 <h2 id="new-in-02320">New in 0.23.20</h2>
 <ul>
 <li>Page references are right on an A2 cover with a long revision table. 0.23.19 counted its cover pages at A3 and printed every reference one page late.</li>
@@ -2757,7 +2792,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.20 documentation
+      Fransys 0.23.21 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.20/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.21/guide/findings-validators/">
       
       
       
@@ -2023,6 +2023,14 @@
 <td>Document each placement with what <code>d.add</code> returned; the unit's own PDF comes from its release write. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, placed, cover=Path("cover.md"))</td>
 </tr>
 <tr>
+<td><a id="drawn_with_unit_unwired"></a>DRAWN_WITH_UNIT_UNWIRED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A by-others item is drawn with a unit, but no wire joins it, or an item under its root, to that unit.</td>
+<td>Wire the item to the unit, or remove drawn_with. Write: d.device("M9", None, external=True, pins=("U", "V", "W"))</td>
+</tr>
+<tr>
 <td><a id="function_half_connected"></a>FUNCTION_HALF_CONNECTED</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2375,6 +2383,14 @@
 <td>Declare each supply name once, or twice with identical values. Write: d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))</td>
 </tr>
 <tr>
+<td><a id="system_document_no_project"></a>SYSTEM_DOCUMENT_NO_PROJECT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A design declares a SYSTEM document and no Project title; the document's heading and where-texts name the title.</td>
+<td>Declare the project and its title. Write: d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="OJB")</td>
+</tr>
+<tr>
 <td><a id="terminal_more_than_two_pins"></a>TERMINAL_MORE_THAN_TWO_PINS</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2483,7 +2499,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.20 documentation
+      Fransys 0.23.21 documentation
     </div>
   
   

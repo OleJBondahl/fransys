@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.20/guide/keywords-design/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.21/guide/keywords-design/">
       
       
       
@@ -2525,6 +2525,12 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.device("M1", P.MOTOR, external=True)</code></td>
 </tr>
 <tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>drawn_with</code></a></td>
+<td><code>None</code></td>
+<td>Prints this by-others item, and every item under a by-others root, on that unit's document; needs <code>external=True</code>. The unit is what <code>d.add</code> returned.</td>
+<td><code>d.device("M9", None, external=True, pins=("U", "V", "W"), place="IGG", drawn_with=skid)</code></td>
+</tr>
+<tr>
 <td><a href="../harnesses/#add-crimp-contacts"><code>contacts</code></a></td>
 <td><code>None</code></td>
 <td>Fits a contact part in every pin of a housing, or a pin-to-part mapping for mixed contacts.</td>
@@ -2615,6 +2621,12 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>True</code> flags the strip and its terminals as by others.</td>
 <td><code>d.terminal_strip("X9", P.TB, 4, external=True)</code></td>
 </tr>
+<tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>drawn_with</code></a></td>
+<td><code>None</code></td>
+<td>Prints this by-others item, and every item under a by-others root, on that unit's document; needs <code>external=True</code>. The unit is what <code>d.add</code> returned.</td>
+<td><code>d.terminal_strip("X9", P.TB, 4, external=True, drawn_with=skid)</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="dcable"><code>d.cable</code></h2>
@@ -2669,6 +2681,12 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>False</code></td>
 <td><code>True</code> flags the cable as supplied by others; its cores carry no flag.</td>
 <td><code>d.cable("W1", P.CBL, external=True)</code></td>
+</tr>
+<tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>drawn_with</code></a></td>
+<td><code>None</code></td>
+<td>Prints this by-others item, and every item under a by-others root, on that unit's document; needs <code>external=True</code>. The unit is what <code>d.add</code> returned.</td>
+<td><code>d.cable("W1", P.CBL, external=True, drawn_with=skid)</code></td>
 </tr>
 </tbody>
 </table>
@@ -2901,6 +2919,12 @@ listed twice are refused; see <code>units.md</code>, which holds the worked exam
 <td><code>True</code> flags the harness as by others.</td>
 <td><code>d.harness("H1", external=True)</code></td>
 </tr>
+<tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>drawn_with</code></a></td>
+<td><code>None</code></td>
+<td>Prints this by-others item, and every item under a by-others root, on that unit's document; needs <code>external=True</code>. The unit is what <code>d.add</code> returned.</td>
+<td><code>d.harness("H1", external=True, drawn_with=skid)</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="drack"><code>d.rack</code></h2>
@@ -2937,6 +2961,12 @@ listed twice are refused; see <code>units.md</code>, which holds the worked exam
 <td><code>False</code></td>
 <td><code>True</code> flags the rack as by others.</td>
 <td><code>d.rack("U1", external=True)</code></td>
+</tr>
+<tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>drawn_with</code></a></td>
+<td><code>None</code></td>
+<td>Prints this by-others item, and every item under a by-others root, on that unit's document; needs <code>external=True</code>. The unit is what <code>d.add</code> returned.</td>
+<td><code>d.rack("U1", external=True, drawn_with=skid)</code></td>
 </tr>
 </tbody>
 </table>
@@ -3213,7 +3243,7 @@ listed twice are refused; see <code>units.md</code>, which holds the worked exam
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.20 documentation
+      Fransys 0.23.21 documentation
     </div>
   
   

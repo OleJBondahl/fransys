@@ -1300,6 +1300,16 @@ def drawn_stands(model: Model) -> frozendict[Id[Port], PowerKind]
 
 `stands` itself stays whole for ratings, rail reach and series-parallel, which are not drawings.
 
+### drawn_with
+
+```python
+def drawn_with(model: HasTables, item: Id[Item]) -> Id[Unit] | None
+```
+
+The unit whose document prints the by-others `item`: its own `drawn_with`, else its external root's.
+
+`None` when none is set (the by-others item prints by its place, FED-SET-TO-SYSTEM).
+
 ### draws_as_line
 
 ```python
@@ -2167,6 +2177,14 @@ this answers "is that board a whole unit on its own, or merely furniture inside 
 Raises:
     SchemaError: `item` is not an item of `model`.
 
+### is_system_document
+
+```python
+def is_system_document(model: Model, document: Id[Document]) -> bool
+```
+
+Whether the document, by id, has the `SYSTEM` preset (the one home of that question).
+
 ### is_unit_owned_kind
 
 ```python
@@ -2995,16 +3013,6 @@ def overview_location_line_text(model: Model, line: LocationLine) -> str
 ```
 
 The text of a location line: its cables as `overview_lifted_text` prints them.
-
-### overview_placed_views
-
-```python
-def overview_placed_views(model: Model, found: Iterable[ViewRows] | None=None) -> tuple[PlacedView, ...]
-```
-
-The views the engine placed, in the order of `overview_view_rows`; one it did not is absent.
-
-`found` are the rows to join, when the caller already holds them; else every unit's views.
 
 ### overview_power_lines
 
@@ -4554,7 +4562,7 @@ The kind text of `subject`'s handle (`"net"`, `"item"`, ...), as an error names 
 def subject_label(model: Model, document: Id[Document]) -> str
 ```
 
-The heading's subject: location, unit or item label; "" for SYSTEM.
+The heading's subject: location, unit or item label; the Project's title for SYSTEM ("" with no Project).
 
 `document` is the document's id.
 
@@ -5921,8 +5929,8 @@ lives in `facet.assigned_designation`, never here. `installed=False` keeps it in
 reservations but drops it from the BOM. `unit` is the unit this item belongs to by
 membership, not by key or location; `None` is the integrating
 script's own wiring. `external=True`: someone else supplies and owns it; an item is
-external if it or any parent-chain ancestor is, see `derive.external`. Guarded by
-`part_conformance` (when `part` is set) and `validators.structure` (`CONTAINMENT_CYCLE`).
+external if it or any parent-chain ancestor is, see `derive.external`. `drawn_with`: the unit whose
+document prints a by-others item. Guarded by `part_conformance` and `validators.structure`.
 
 ### ItemBoxView
 
@@ -6285,6 +6293,17 @@ class OverviewPort
 
 One port of a signal: its item, the port and its marking (the port's name).
 
+### OverviewRef
+
+```python
+class OverviewRef
+```
+
+A unit, an item, a function group, the strips box, a place or a unit's field devices.
+
+`unit` is set for `UNIT` and `FIELDS`, `item` for `ITEM`, `node` for `GROUP` and `PLACE`;
+`STRIPS` holds none. A `PLACE` with no `node` stands for the boxes in no place.
+
 ### OverviewRefKind
 
 ```python
@@ -6400,58 +6419,6 @@ One pin of a connector function, drawn as a view of its own.
 
 `gender`: the connector facet's, `""` without one. `mate`: the equal-named pin of the mated
 connector, `None` without. `drawn`: the pin is kept.
-
-### PlacedBox
-
-```python
-class PlacedBox
-```
-
-A box of the view at `x`, `y` (its top-left corner), with its tabs in `index` order.
-
-`ref` and `at` are the box key's two references; `members` the refs of its fold's members.
-
-### PlacedHead
-
-```python
-class PlacedHead
-```
-
-The corner `x`, `y` of the text of the lane of the group `node`.
-
-### PlacedLine
-
-```python
-class PlacedLine
-```
-
-A line of the view: `a`, `b` the positions of its end boxes in the view's boxes.
-
-### PlacedPoint
-
-```python
-class PlacedPoint
-```
-
-One vertex of a placed line.
-
-### PlacedTab
-
-```python
-class PlacedTab
-```
-
-One tab outside a box edge: `x`, `y` its corner, `text_width` its text's, then its size.
-
-### PlacedView
-
-```python
-class PlacedView
-```
-
-A view the engine placed: its rows, its boxes and lines in the rows' order, its lane heads.
-
-`lane_heads` is a `PlacedHead` per lane that prints a text; empty for any other view.
 
 ### Placement
 
@@ -6571,14 +6538,6 @@ Cable resistance is ignored and parallel runs add, so it errs high; an undeclare
 as no source. `time_constant_ms` is the largest DC time constant of the sources counted, over
 the states: `None` for AC, or when a counted source states none. `functions` are the
 source functions counted, sorted.
-
-### RefRow
-
-```python
-class RefRow
-```
-
-What a box or an open thing stands for: its `kind` and the one id the kind names.
 
 ### ReplicaOnlySet
 

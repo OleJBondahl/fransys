@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.20/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.21/guide/authoring/">
       
       
       
@@ -2369,7 +2369,7 @@ Floating tags: every item call takes <code>None</code> for the tag and numbers t
 Pass <code>name=</code>, the identity a released number holds to; a floating call with no <code>name=</code> raises.
 An accessory takes its holder's designation, no number of its own.</p>
 <p><code>external=True</code> marks an item supplied by others. Every call that makes an item takes it: <code>d.device</code>,
-<code>d.terminal_strip</code>, <code>d.cable</code> and <code>d.harness</code>. The item has no BOM line. A strip's terminals are external
+<code>d.terminal_strip</code>, <code>d.cable</code> and <code>d.harness</code>. <code>drawn_with=</code> names the unit whose PDF prints it (<code>documents.md</code>). The item has no BOM line. A strip's terminals are external
 with it; a cable's conductors carry no flag. Every drawing marks it: dashed boxes with "(by others)", dashed outlines round schematic symbols.</p>
 <p>An external device or strip may take <code>None</code> for its part, when only its terminal names are known. It needs a tag. A part-less device names its pins with <code>pins=</code>. A part-less strip offers only <code>.outer</code>: see <code>detail.md</code>, "Equipment others supply".</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># easy: function block</span>
@@ -2620,7 +2620,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.20 documentation
+      Fransys 0.23.21 documentation
     </div>
   
   

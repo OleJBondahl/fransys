@@ -6,20 +6,21 @@ from plant import Plant
 
 from fransys_model.derive.facts import closure as vocab_closure
 from fransys_model.elecdef import LinkKind
+from fransys_model.vocab import FunctionKind
 lazy from fransys_model.vocab.core import Port
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
 
 
-def _fuse(kind: LinkKind, *names: str) -> tuple[Plant, dict[str, tuple[Id[Port], Id[Port]]]]:
+def _fuse(kind: LinkKind, *names: str, function_kind: FunctionKind = FunctionKind.GENERIC) -> tuple[Plant, dict[str, tuple[Id[Port], Id[Port]]]]:
     """A part whose two pins are linked as `kind`, and one instance of it per name."""
     plant = Plant()
     part, template, first, second = plant.relay_part()
     plant.link(first, second, kind)
     ports = {}
     for name in names:
-        function = plant.function(plant.item(name, part=part.id), "fn", template=template.id)
+        function = plant.function(plant.item(name, part=part.id), "fn", template=template.id, kind=function_kind)
         ports[name] = (
             plant.port(function, "1", template=first.id),
             plant.port(function, "2", template=second.id),
@@ -140,3 +141,15 @@ def test_a_sole_root_boards_declared_net_is_required_but_not_a_declared_net_off_
     loose, three, four = _board_with_two_parts(sole_root=False)
     loose.net("sig", (three, four))
     assert derive.required_groups(loose.model()) == ()
+
+
+def test_a_terminal_functions_conductive_link_joins_its_ports_in_the_drawn_net_and_a_poles_does_not() -> None:
+    """KI-1067: a panel receptacle's terminal function draws as one node, so a wire at one port is a wire at both."""
+    from fransys_model import derive
+
+    for kind, joined in ((FunctionKind.TERMINAL, True), (FunctionKind.GENERIC, False)):
+        plant, ports = _fuse(LinkKind.CONDUCTIVE, "g1", function_kind=kind)
+        plant.wire(ports["g1"][0], plant.pin("plug", "J1", "1"), key="w1")
+        model = plant.model()
+        first, second = (derive.drawn_net_of(model, p) for p in ports["g1"])
+        assert (first == second) is joined, kind

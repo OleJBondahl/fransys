@@ -1,0 +1,4 @@
+schema = 2
+name = "busbar-parts"
+version = "0.1.0"
+description = "Invented parts for the busbar-receptacle field case."

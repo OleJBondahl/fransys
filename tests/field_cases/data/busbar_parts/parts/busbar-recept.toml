@@ -1,0 +1,22 @@
+schema = 2
+
+[part]
+mpn = "BUSBAR-RECEPT"
+manufacturer = "Demo Maker"
+description = "Demo 1-pole panel receptacle"
+category = "connector"
+class_code = "X"
+
+[[function]]
+name = "main"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", side = "load", symbol_port = "n" },
+    { name = "external", role = "external", side = "line", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+[function.rating]
+voltage = [{ nom = "1000 V", at = ["DC"] }]
+current = [{ nom = "100 A", at = ["DC"] }]

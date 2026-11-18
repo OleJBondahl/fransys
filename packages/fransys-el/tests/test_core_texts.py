@@ -299,7 +299,15 @@ def _row_band(page, sym):
     return next(b for b in page.bands if b[0] <= at < b[1])
 
 
-@pytest.mark.parametrize(("kind", "generic", "size"), [("arrow", False, 0), ("tag", True, 23), ("tag", True, 32)])
+@pytest.mark.parametrize(
+    ("kind", "generic", "size"),
+    [
+        ("arrow", False, 0),
+        ("tag", True, 23),
+        # KI-1087: 97 s alone, >180 s under xdist load (decision 0222); plan SPEED-TAG-BUILD at CLEANUP-ROUND-0.23
+        pytest.param("tag", True, 32, marks=pytest.mark.timeout(600)),
+    ],
+)
 def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) -> None:
     """R377: the stagger and the clearing step a flag only inside the room its row was given."""
     model = _fan_out().model if kind == "arrow" else channels_model(size)

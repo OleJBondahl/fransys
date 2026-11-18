@@ -106,7 +106,8 @@ def _ends(ctx: _Ctx, marker: Marker) -> tuple[tuple[Id[Port], Id[Port], Id[Item]
     """The `(port, far, carrier)` of every conductor the marker ends: each far pin in `marker.far`, read at its pin or one it also stands for."""
     near = [ctx.pin_ports.get(pin, ()) for pin in (marker.end, *marker.also)]
     if not marker.far:
-        return (far_port(ctx.model, near[0]),)
+        # a stub with no named far stands for every conductor that leaves its pin
+        return tuple(stub_far(ctx.model, near[0])) or (far_port(ctx.model, near[0]),)
     found: list[tuple[Id[Port], Id[Port], Id[Item] | None]] = []
     for far in marker.far:
         ends = next((e for ports in near if (e := stub_far(ctx.model, ports, ctx.pin_ports.get(far, ())))), ())

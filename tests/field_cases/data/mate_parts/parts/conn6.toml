@@ -1,0 +1,25 @@
+schema = 2
+
+[part]
+mpn = "MATE-CONN-6"
+manufacturer = "Demo"
+description = "Connector, 6 poles, female"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+]
+
+[function.connector]
+style = "header-4p"
+poles = 6
+gender = "female"

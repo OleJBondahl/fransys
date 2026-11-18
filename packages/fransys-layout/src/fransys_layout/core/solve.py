@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from .anchors import anchor_misses, reserved
 from .blocks import assign_blocks
 from .cut import cut_pages
-from .fallback import announced, handed
+from .fallback import announced, handed, with_refs
 from .order import order_blocks
 from .outline import framed
 from .outputs import CoreLayout
@@ -85,7 +85,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         *routes.findings,
         *over,
         *missed,
-        *announced((*handed(cut, placement, problem, (*cut.spec.reference_plan, *rnd.refs)), *rnd.refs)),
+        *announced((*handed(cut, placement, problem, with_refs(cut.spec.reference_plan, rnd.refs)), *rnd.refs)),
     )
     layout = CoreLayout(
         problem.area,
@@ -93,7 +93,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         placement,
         routes,
         notes,
-        (*cut.spec.reference_plan, *rnd.refs),
+        with_refs(cut.spec.reference_plan, rnd.refs),
         _wired(problem),
         None,
         found,

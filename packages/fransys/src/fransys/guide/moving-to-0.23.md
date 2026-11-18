@@ -4,6 +4,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.24
+
+- Mated plugs wired to shared device pins draw every conductor. A failed route at a pin that already stands a stub adds its far ends to that stub, so no connection is lost (KI-1069 closed).
+
 ## New in 0.23.23
 
 - A busbar (`d.detail.busbar`) between a unit's boundary receptacle and a fuse draws its wire; before, the drawing set was refused with LANE_WIRE_DROPPED (KI-1067 closed).

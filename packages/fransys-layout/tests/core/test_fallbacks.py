@@ -134,3 +134,17 @@ def test_a_lone_rest_end_of_a_split_net_keeps_its_wire_to_one_lost_end() -> None
     problem: Any = SimpleNamespace(nets=(SimpleNamespace(id="n", tagged=((b, c),)),))
     out = _tagged((link,), problem)
     assert [(ln.tagged, [x.pin for x in ln.ends]) for ln in out] == [(False, [b, c]), (False, [a, b])]
+
+
+def test_a_lost_link_whose_pins_both_stand_stubs_naming_each_other_keeps_its_tag_pair() -> None:
+    """R2542: the stubs already name the far ends, so the pair is no stub merge and keeps its page citation; an unnamed far end joins the stub."""
+    fallback: Any = importlib.import_module("fransys_layout.core.fallback").fallback
+    a, b, c = PinRef("a", "o"), PinRef("b", "o"), PinRef("c", "o")
+    stub = lambda pin, far: SimpleNamespace(kind=RefKind.STUB, ends=(SimpleNamespace(pin=pin, also=(), far=far),))  # noqa: E731 test stand-in
+    placement = SimpleNamespace(pages=[SimpleNamespace(page=1, placed=[SimpleNamespace(sym=p.sym) for p in (a, b, c)])])
+    cut = lambda *plan: SimpleNamespace(spec=SimpleNamespace(reference_plan=plan), flow=SimpleNamespace(columns=()))  # noqa: E731 test stand-in
+    (tag,) = fallback(cut(stub(a, (b,)), stub(b, (a,))), placement, [Refused("n", (a, b))])
+    assert tag.kind is RefKind.TAG
+    assert [e.pin for e in tag.ends] == [a, b]
+    merged = fallback(cut(stub(a, (b,)), stub(b, (c,))), placement, [Refused("n", (a, b))])
+    assert [r.kind for r in merged] == [RefKind.STUB] * 2

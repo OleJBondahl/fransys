@@ -1,0 +1,32 @@
+schema = 2
+
+[part]
+mpn = "MATE-MULTI"
+manufacturer = "Demo"
+description = "Device with three two-pin functions"
+category = "electromechanical"
+class_code = "U"
+
+[[function]]
+name = "a"
+kind = "generic"
+ports = [
+    { name = "A1", role = "generic" },
+    { name = "A2", role = "generic" },
+]
+
+[[function]]
+name = "b"
+kind = "generic"
+ports = [
+    { name = "B1", role = "generic" },
+    { name = "B2", role = "generic" },
+]
+
+[[function]]
+name = "c"
+kind = "generic"
+ports = [
+    { name = "C1", role = "generic" },
+    { name = "C2", role = "generic" },
+]

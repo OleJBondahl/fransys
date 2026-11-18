@@ -17,7 +17,7 @@ from .cut import cut_pages
 from .cut_costs import with_wires
 from .cut_measured import Measured, placed_rows
 from .errors import CoreError
-from .fallback import fallback
+from .fallback import fallback, with_refs
 from .geometry import union
 from .order import order_blocks
 from .outputs import Demand, Placement, Refused, Routes
@@ -267,7 +267,7 @@ def _stand(
     fixed = {
         pg: f._replace(labels=tuple(a for a in labels if a.page == pg)) for pg, f in fixed_wires(placement, cut, problem, options, lost=keys).items()
     }
-    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*cut.spec.reference_plan, *refs)))
+    planned = replace(cut, spec=replace(cut.spec, reference_plan=with_refs(cut.spec.reference_plan, refs)))
     markers, missed, asks = placed_marks(planned, placement, problem, options, fixed)
     return Round(
         markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys, memo)), refs, tuple(lost.values()), asks, memo

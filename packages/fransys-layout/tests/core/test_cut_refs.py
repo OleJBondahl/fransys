@@ -29,12 +29,12 @@ from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_bundle import leg_stubs
 from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
-from fransys_layout.core.cut_ledger import account
+from fransys_layout.core.cut_ledger import account, restood, whole
 from fransys_layout.core.cut_refs import _column_pin, across
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
 from fransys_layout.core.geometry import marker_box_at
-from fransys_layout.core.outputs import Trunk
+from fransys_layout.core.outputs import Refused, Trunk
 from fransys_layout.core.text_ends import MarkEnv, pinned_stand
 from fransys_layout.core.unionfind import UnionFind
 from fransys_layout.core.values import CutEnd, PagePlan, Ref, RefEnd, RefKind, RowPlan, StandClass
@@ -759,3 +759,12 @@ def test_a_bundled_stub_whose_pole_has_no_lane_end_raises_naming_the_stub_and_th
     env, ref, ends = _stub_env(((498, 498), None))
     with pytest.raises(CoreError, match=r"pole 1 of the bundle has no lane end for the stub at s1.p"):
         pinned_stand(env, replace(ref, net="n1"), ends[1])
+
+
+def test_a_loss_marks_both_sides_and_a_stub_at_a_withheld_pin_stands_where_the_remaining_ink_says() -> None:
+    """KI-1069 (R2578): `whole` adds the far pin of each drawn conductor; `restood` asks `stand_class` from the ink less the losses."""
+    a, b, c, d, e = (PinRef(s, "p") for s in "abcde")
+    assert whole([Refused("n", (a,))], {(a, b), (a, c)}, {(a, b)}) == (Refused("n", (a, b)),)
+    stub = Ref("n", RefKind.STUB, (RefEnd(1, "col", a, 3, StandClass.LEG), RefEnd(1, "col", c, 3, StandClass.TRUNK_END)))
+    (got,) = restood([stub], [Refused("n", (a, b)), Refused("n", (c,))], {(a, b), (c, d), (c, e)})
+    assert [(e.column, e.row, e.stand) for e in got.ends] == [(None, None, StandClass.PIN), ("col", 3, StandClass.TRUNK_END)]

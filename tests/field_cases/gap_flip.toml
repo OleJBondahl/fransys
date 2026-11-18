@@ -102,6 +102,5 @@
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 "test_a_terminal_of_a_unit_set_cut_across_pages_is_drawn_on_each_page.py::test_a_terminal_wired_to_relays_on_two_pages_is_drawn_on_each" = "GAP-FLIP-647"  # KI-647 TERMINAL-PAGE-COPY (WIRE-29): the terminal is drawn once, the far page carries stubs
-"test_two_mated_plugs_wired_to_one_device_draw_every_end.py::test_two_mated_plugs_wired_to_the_same_three_pins_of_one_device_draw_every_end" = "GAP-FLIP-1069"  # KI-1069 MATE-CND (R2570): mated plugs on shared device pins leave CONNECTION_NOT_DRAWN; the MATE-CND fix is reverted
 
 [raises]

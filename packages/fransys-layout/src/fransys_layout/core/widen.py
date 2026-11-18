@@ -15,6 +15,7 @@ from .arrow_reserve import block_reserves, keep_legs
 from .blocks import assign_blocks
 from .cut import cut_pages
 from .cut_costs import with_wires
+from .cut_ledger import restood, whole
 from .cut_measured import Measured, placed_rows
 from .errors import CoreError
 from .fallback import fallback
@@ -263,11 +264,12 @@ def _stand(
     `held` is what the rounds before left: the conductors lost, the labels, which do not move, and the page routes already made.
     """
     lost, labels, memo = held
-    keys, refs = frozenset(lost), fallback(cut, placement, (*lost.values(), *(Refused(n, pair) for n, pair in cut.spec.unjoined)))
+    groups = whole(lost.values(), problem.facts.far_ends, cut.spec.drawn)
+    keys, refs = frozenset(lost), fallback(cut, placement, (*groups, *(Refused(n, pair) for n, pair in cut.spec.unjoined)))
     fixed = {
         pg: f._replace(labels=tuple(a for a in labels if a.page == pg)) for pg, f in fixed_wires(placement, cut, problem, options, lost=keys).items()
     }
-    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*cut.spec.reference_plan, *refs)))
+    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*restood(cut.spec.reference_plan, lost.values(), cut.spec.drawn), *refs)))
     markers, missed, asks = placed_marks(planned, placement, problem, options, fixed)
     return Round(
         markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys, memo)), refs, tuple(lost.values()), asks, memo

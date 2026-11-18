@@ -20,14 +20,15 @@ from .net_keys import is_lone_cut
 from .values import PinRef, Ref, RefEnd, RefKind, StandClass
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Hashable, Mapping, Sequence
+    from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
     from .flow_values import Fan, FlowGraph
+    from .outputs import Refused
     from .unionfind import UnionFind
     from .values import PagePlan, PlacementProblem
 
-__all__ = ("Account", "account", "copies")
+__all__ = ("Account", "account", "copies", "restood", "whole")
 
 type Pair = tuple[PinRef, PinRef]
 _PAIR = 2
@@ -370,3 +371,28 @@ def _merged(kept: Sequence[Ref]) -> list[Ref]:
         else rs[0]
         for n, rs in by.items()
     ]
+
+
+def whole(lost: Iterable[Refused], far_ends: Iterable[Pair], ink: Collection[Pair]) -> tuple[Refused, ...]:
+    """Each loss with the far pin of every drawn conductor that leaves one of its pins: a lone lost drop is a group, so both sides are marked."""
+    drawn: dict[PinRef, list[PinRef]] = {}
+    for near, far in far_ends:
+        if (near, far) in ink:
+            drawn.setdefault(near, []).append(far)
+    return tuple(replace(r, ends=tuple(dict.fromkeys((*r.ends, *(far for p in r.ends for far in drawn.get(p, ())))))) if r.ends else r for r in lost)
+
+
+def _again(end: RefEnd, kept: Mapping[PinRef, int], gone: AbstractSet[PinRef]) -> RefEnd:
+    """`end` asked again where it stands, from the ink its pin keeps; a pin-stood end holds no column or row."""
+    if end.pin is None or end.pin not in gone or end.stand is StandClass.PIN:
+        return end
+    stand = stand_class(kept[end.pin])
+    return replace(end, column=None, row=None, stand=stand) if stand is StandClass.PIN else replace(end, stand=stand)
+
+
+def restood(plan: Iterable[Ref], lost: Iterable[Refused], ink: Collection[Pair]) -> tuple[Ref, ...]:
+    """`plan` with each stub, copy or star end at a pin the loop withholds asked again where it stands, from the ink less the losses (CL2)."""
+    gone = {p for r in lost for p in r.ends or ()}
+    kept = Counter(near for near, far in ink if not (near in gone and far in gone))
+    kinds = (RefKind.STUB, RefKind.COPY, RefKind.STAR)
+    return tuple(replace(r, ends=tuple(_again(e, kept, gone) for e in r.ends)) if r.kind in kinds else r for r in plan)

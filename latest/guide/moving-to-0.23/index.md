@@ -2,6 +2,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.25
+
+- The 0.23.24 change for mated plugs on shared device pins is reverted. Builds that stopped with PLACEMENT_PROBLEM build again. Two such shapes still miss a connection until the next release (KI-1069 open).
+
 ## New in 0.23.24
 
 - Mated plugs wired to shared device pins draw every conductor. A failed route at a pin that already stands a stub adds its far ends to that stub, so no connection is lost (KI-1069 closed).

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.30/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02331" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.31
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02330" class="md-nav__link">
@@ -2327,6 +2338,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02331" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.31
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02330" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2734,6 +2756,12 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02331">New in 0.23.31</h2>
+<ul>
+<li>A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.</li>
+<li>Such a wire now falls back to a reference pair where no other path exists.</li>
+<li>No call changes.</li>
+</ul>
 <h2 id="new-in-02330">New in 0.23.30</h2>
 <ul>
 <li>A released unit placed under a function scope no longer fails <code>fr.release</code> with a false BASELINE_DIFFERS on boundary.</li>
@@ -2985,7 +3013,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.30 documentation
+      Fransys 0.23.31 documentation
     </div>
   
   

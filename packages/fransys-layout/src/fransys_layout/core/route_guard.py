@@ -27,12 +27,13 @@ if TYPE_CHECKING:
 
 
 def _in_hard(env: RouteEnv, wire: Wire, net: str, keeps: Sequence[Keep]) -> tuple[Keep, ...]:
-    """The hard keeps a run of the wire shares interior area with, its own symbols' excepted."""
+    """The hard keeps a run of the wire shares interior with; its own symbols are excepted, an anchor never is (its text, R2608)."""
     own = own_syms(env, net, wire.net)
     return tuple(
         k
         for (ax, ay), (bx, by) in pairwise(wire.points)
-        for k in clear(Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)), keeps, {}, edge="open", own=own)
+        for k in clear(Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)), keeps, {}, edge="open")
+        if k.kind == "anchor" or k.owner not in own
     )
 
 
@@ -103,11 +104,11 @@ def _meets(
 ) -> bool:
     """Whether a wire meets a foreign net or a hard keep, a lane of the same fan included (KI-919).
 
-    A fixed wire is never rerouted for a marker or hanging keep (R535 R-B): el still counts it.
+    A fixed wire is never rerouted for a marker or hanging keep (R535 R-B): el still counts it. A body and an anchor (its text too) it is.
     """
     hits = _in_hard(env, wire, net, hard)
     if wire.kind != "routed":
-        hits = tuple(k for k in hits if k.kind == "body")
+        hits = tuple(k for k in hits if k.kind in ("body", "anchor"))
     return bool(grid.conflicts(net, wire.points)) or bool(hits)
 
 

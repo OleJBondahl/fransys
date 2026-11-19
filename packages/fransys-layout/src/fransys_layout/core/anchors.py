@@ -76,6 +76,7 @@ def page_keeps(
     return (*_marker_keeps(page.page, markers, options), *_anchor_keeps(page.page, anchored, net_of), *hung_keeps(page.hangings))
 
 
+# KI-1099: the first clear pose can sit in a neighbour pin's lane; POWER-POSE poses it clear of the lane.
 def _fit(
     poses: Sequence[Pose],
     pin: tuple[int, int],

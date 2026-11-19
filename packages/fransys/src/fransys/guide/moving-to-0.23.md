@@ -4,6 +4,12 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.31
+
+- A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.
+- Such a wire now falls back to a reference pair where no other path exists.
+- No call changes.
+
 ## New in 0.23.30
 
 - A released unit placed under a function scope no longer fails `fr.release` with a false BASELINE_DIFFERS on boundary.

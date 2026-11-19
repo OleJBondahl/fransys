@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.26/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.29/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02329" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.29
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02326" class="md-nav__link">
@@ -2305,6 +2316,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02329" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.29
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02326" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2690,6 +2712,13 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02329">New in 0.23.29</h2>
+<ul>
+<li>A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).</li>
+<li>Mated plugs wired to shared device pins now draw every end in larger cabinets too; 0.23.26 could miss a connection there (KI-1069).</li>
+<li>Builds with many such plugs take longer, up to about 80% more CPU; a later release brings it down (KI-1096).</li>
+<li>No call changes.</li>
+</ul>
 <h2 id="new-in-02326">New in 0.23.26</h2>
 <ul>
 <li>Mated plugs wired to shared device pins now draw every end; the two shapes that missed a connection in 0.23.25 are fixed (KI-1069). No call changes.</li>
@@ -2886,7 +2915,7 @@
 </ul>
 <h2 id="a-supply-net-behind-a-fuse-prints-the-fuse">A supply net behind a fuse prints the fuse</h2>
 <ul>
-<li>A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as <code>24V -F2</code>. The net at the supply keeps <code>24V</code>. Two nets that share one name, with no unique protective device between them, raise <code>RAIL_IDENTITY_SHARED</code>: put a fuse or breaker between them.</li>
+<li>A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as <code>24V -F2</code>. The net at the supply keeps <code>24V</code>. Two nets that share one name, with no unique protective device between them, raise <code>RAIL_IDENTITY_SHARED</code>: put a fuse or breaker between them. Where a cabinet receives one potential from two or more unbonded supplies, each power symbol, ground too, prints the potential and its declaring unit's tag, such as <code>0V -U1</code>. <code>fransys.derive.rail_source_unit</code> names that unit.</li>
 </ul>
 <h2 id="drawnrowheight_g-and-width_g-are-now-height-and-width"><code>DrawnRow.height_g</code> and <code>width_g</code> are now <code>height</code> and <code>width</code></h2>
 <ul>
@@ -2928,7 +2957,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.26 documentation
+      Fransys 0.23.29 documentation
     </div>
   
   

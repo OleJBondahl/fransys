@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.26/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.29/guide/reading/">
       
       
       
@@ -2200,6 +2200,7 @@ of the unit's current revision. Any other document's are the project's.</p>
 <code>frozenset[str]</code> of potential names: empty for a port that carries none, or is not in
 <code>model</code>. A rail only exists once some <code>SupplySystem</code> declares the potential and some <code>Net</code>
 carries it; wiring alone declares no rail.</p>
+<p><code>fransys.derive.rail_source_unit(model, port)</code> names the unit declaring the supply a port's potential comes from, where its cabinet has two or more unbonded supplies of it; else <code>None</code>.</p>
 <p><code>fransys.derive.port_potential_rank(model, port)</code> is the rank of the potential a pin carries, or <code>None</code>.
 A smaller rank is drawn higher up. It reads the supply's facts, never a rail's name. The order is AC phases,
 DC above 0 V, AC at 0 V, DC at 0 V, DC below 0 V, then PE. A pin behind a switch keeps its
@@ -2462,7 +2463,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.26 documentation
+      Fransys 0.23.29 documentation
     </div>
   
   

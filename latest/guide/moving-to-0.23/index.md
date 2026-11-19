@@ -2,6 +2,13 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.29
+
+- A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).
+- Mated plugs wired to shared device pins now draw every end in larger cabinets too; 0.23.26 could miss a connection there (KI-1069).
+- Builds with many such plugs take longer, up to about 80% more CPU; a later release brings it down (KI-1096).
+- No call changes.
+
 ## New in 0.23.26
 
 - Mated plugs wired to shared device pins now draw every end; the two shapes that missed a connection in 0.23.25 are fixed (KI-1069). No call changes.
@@ -195,7 +202,7 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 
 ## A supply net behind a fuse prints the fuse
 
-- A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them.
+- A supply net behind a fuse or breaker prints its supply name and the tag of the nearest protective device, such as `24V -F2`. The net at the supply keeps `24V`. Two nets that share one name, with no unique protective device between them, raise `RAIL_IDENTITY_SHARED`: put a fuse or breaker between them. Where a cabinet receives one potential from two or more unbonded supplies, each power symbol, ground too, prints the potential and its declaring unit's tag, such as `0V -U1`. `fransys.derive.rail_source_unit` names that unit.
 
 ## `DrawnRow.height_g` and `width_g` are now `height` and `width`
 

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.26/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.29/api/derive/">
       
       
       
@@ -5595,6 +5595,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         rail_scope
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rail_source_unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rail_source_unit
       </span>
     </span>
   </a>
@@ -12750,6 +12761,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rail_source_unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rail_source_unit
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reading_cables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -18199,7 +18221,7 @@ Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
 <h3 id="port_power_text">port_power_text</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_power_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
-<p>The text the power symbol at <code>port</code> prints: <code>power_text</code> of its physical net, else <code>None</code>.</p>
+<p>The text the power symbol at <code>port</code> prints: the text of its physical net as <code>power_text</code> prints it at <code>port</code>, else <code>None</code>.</p>
 <p>A load pin wired to a 24 V terminal prints that net's text. Cost: O(1) once per model digest.</p>
 <h3 id="port_rails">port_rails</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_rails</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -18259,9 +18281,10 @@ A DC supply that declares no 0 V rail leaves its 0 V net <code>NONE</code>: decl
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">net</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Net</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
 <p>The text a power symbol of declared <code>net</code> prints, or <code>None</code> when it prints none.</p>
-<p>Only <code>SUPPLY</code> prints: <code>Net.name</code>, else <code>Net.potential</code> (which carries the sign of a negative
-rail, <code>-15V</code>). A net behind a protective device adds the tag of the nearest one, <code>24V -F2</code>
-(<code>protected_by</code>, G08-POWER). <code>GROUND</code>, <code>PE</code> and <code>NONE</code> print none.</p>
+<p><code>SUPPLY</code> prints <code>Net.name</code>, else <code>Net.potential</code>, with the nearest protective device's tag (<code>24V -F2</code>).
+Where the cabinet of the net's first port is fed that potential by two or more unbonded supplies, the
+symbol adds the tag of the declaring unit (<code>24V -U1</code>), and <code>GROUND</code> prints it too (<code>GND -U1</code>, R2589).
+Otherwise <code>GROUND</code>, <code>PE</code> and <code>NONE</code> print none.</p>
 <h3 id="preset_headings">preset_headings</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">preset_headings</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">DocumentPreset</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
@@ -18361,6 +18384,13 @@ calls this before it builds the record. A <code>phase</code> of the wrong type g
 </code></pre></div>
 <p>The flagged rail group of each (unit, potential), the first in <code>rail_groups</code> order; a group with no potential is skipped.</p>
 <p>New because <code>rails_by_potential</code> is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.</p>
+<h3 id="rail_source_unit">rail_source_unit</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_source_unit</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+<p>The unit declaring the supply <code>port</code>'s potential comes from, where its cabinet is fed it by two or more unbonded supplies, else <code>None</code>.</p>
+<p>Two supplies are bonded when their pins' physical nets are one. A port that two supplies reach has no one source: <code>None</code>.
+The text a power symbol prints (<code>power_text</code>) and the join class of a ground symbol both read it, never a printed text.
+Cost: O(1) once per model digest.</p>
 <h3 id="reading_cables">reading_cables</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reading_cables</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">HarnessCable</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
@@ -20202,7 +20232,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.26 documentation
+      Fransys 0.23.29 documentation
     </div>
   
   

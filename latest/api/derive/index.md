@@ -3632,7 +3632,7 @@ Cost: O(1) once per model digest, like `port_rails`.
 def port_power_text(model: Model, port: Id[Port]) -> str | None
 ```
 
-The text the power symbol at `port` prints: `power_text` of its physical net, else `None`.
+The text the power symbol at `port` prints: the text of its physical net as `power_text` prints it at `port`, else `None`.
 
 A load pin wired to a 24 V terminal prints that net's text. Cost: O(1) once per model digest.
 
@@ -3731,9 +3731,10 @@ def power_text(model: Model, net: Id[Net]) -> str | None
 
 The text a power symbol of declared `net` prints, or `None` when it prints none.
 
-Only `SUPPLY` prints: `Net.name`, else `Net.potential` (which carries the sign of a negative
-rail, `-15V`). A net behind a protective device adds the tag of the nearest one, `24V -F2`
-(`protected_by`, G08-POWER). `GROUND`, `PE` and `NONE` print none.
+`SUPPLY` prints `Net.name`, else `Net.potential`, with the nearest protective device's tag (`24V -F2`).
+Where the cabinet of the net's first port is fed that potential by two or more unbonded supplies, the
+symbol adds the tag of the declaring unit (`24V -U1`), and `GROUND` prints it too (`GND -U1`, R2589).
+Otherwise `GROUND`, `PE` and `NONE` print none.
 
 ### preset_headings
 
@@ -3907,6 +3908,18 @@ def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailG
 The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
 
 New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
+
+### rail_source_unit
+
+```python
+def rail_source_unit(model: Model, port: Id[Port]) -> Id[Unit] | None
+```
+
+The unit declaring the supply `port`'s potential comes from, where its cabinet is fed it by two or more unbonded supplies, else `None`.
+
+Two supplies are bonded when their pins' physical nets are one. A port that two supplies reach has no one source: `None`.
+The text a power symbol prints (`power_text`) and the join class of a ground symbol both read it, never a printed text.
+Cost: O(1) once per model digest.
 
 ### reading_cables
 

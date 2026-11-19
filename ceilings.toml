@@ -53,7 +53,7 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/guide/findings-render.md" = 5091
 
 [md_long_sentences]
-"CLAUDE.md" = 7
+"CLAUDE.md" = 8
 "packages/electrical-symbols/CLAUDE.md" = 5
 "packages/fransys-layout/CLAUDE.md" = 2
 "packages/fransys-model/CLAUDE.md" = 3

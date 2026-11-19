@@ -14,6 +14,7 @@ from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
+lazy from fransys_model.vocab.core import Unit
 
 
 def require_reading(model: Model, ctx: PrintContext) -> None:
@@ -46,17 +47,29 @@ def common_location(model: Model, ctx: PrintContext) -> Id[AspectNode] | None:
     return common_node([list(chain_up(nodes, leaf))[::-1] for leaf in leaves])
 
 
+def _authored_in(model: Model, chain: tuple[Id[AspectNode], ...], unit: Id[Unit]) -> tuple[Id[AspectNode], ...]:
+    """The nodes of `chain` whose authoring key sits under `unit`'s scope: the unit's own function blocks.
+
+    A function block the placement sits in is authored outside the unit (R2613), so it is not unit-local.
+    """
+    scope = units(model)[unit].key[:-1]
+    nodes = aspect_nodes(model)
+    return tuple(node for node in chain if nodes[node].key[: len(scope)] == scope)
+
+
 def kept_nodes(model: Model, chain: tuple[Id[AspectNode], ...], aspect: Aspect, ctx: PrintContext) -> tuple[Id[AspectNode], ...]:
     """`chain` (root first) without the nodes `ctx` drops from a segment of `aspect`.
 
-    `UNIT_OWN` keeps the unit's own nodes; `BELOW_COMMON` cuts the location at the unit's
-    common one, never the function; `WHOLE` drops the nodes at or above `ctx.location`.
+    `UNIT_OWN` keeps the unit's own nodes; `BELOW_COMMON` cuts the location at the unit's common one and
+    keeps the unit's own function blocks; `WHOLE` drops the nodes at or above `ctx.location`.
     """
     if ctx.scope is Scope.UNIT_OWN and ctx.reading is not None:
         own = own_nodes(model, ctx.reading)
         return tuple(node for node in chain if node in own)
     if ctx.scope is Scope.BELOW_COMMON:
-        return chain if aspect is not Aspect.LOCATION else tuple(below(chain, common_location(model, ctx)))
+        if aspect is Aspect.LOCATION:
+            return tuple(below(chain, common_location(model, ctx)))
+        return chain if ctx.reading is None else _authored_in(model, chain, ctx.reading)
     if ctx.location is None:
         return chain
     dropped = frozenset(chain_up(aspect_nodes(model), ctx.location))

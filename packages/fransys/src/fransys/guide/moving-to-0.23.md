@@ -4,6 +4,12 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.30
+
+- A released unit placed under a function scope no longer fails `fr.release` with a false BASELINE_DIFFERS on boundary.
+- A unit's baseline compares only what the unit itself authored; the placement's function scope never enters it.
+- No call changes.
+
 ## New in 0.23.29
 
 - A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).

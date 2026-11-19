@@ -1,0 +1,22 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P03"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "connector"
+ports = [
+    { name = "internal", role = "internal" },
+    { name = "external", role = "external", marking = "1" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+[function.connector]
+style = "style-1"
+poles = 2
+

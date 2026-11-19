@@ -1,0 +1,28 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P20"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "receptacle"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+]
+
+[function.connector]
+style = "style-4"
+poles = 6
+gender = "female"
+
+[function.rating]
+voltage = [{ nom = "250 V", at = ["AC"] }, { nom = "176 V", at = ["DC"] }]

@@ -1,0 +1,46 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P07"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "connector"
+class_code = "X"
+
+[[function]]
+name = "side_a"
+kind = "connector"
+ports = [
+    { name = "side_a_1", role = "generic" },
+    { name = "side_a_2", role = "generic" },
+    { name = "side_a_3", role = "generic" },
+    { name = "side_a_4", role = "generic" },
+    { name = "side_a_5", role = "generic" },
+    { name = "side_a_6", role = "generic" },
+    { name = "side_a_7", role = "generic" },
+    { name = "side_a_8", role = "generic" },
+]
+
+[function.connector]
+style = "style-3"
+poles = 8
+gender = "female"
+
+[[function]]
+name = "side_b"
+kind = "connector"
+ports = [
+    { name = "side_b_1", role = "generic" },
+    { name = "side_b_2", role = "generic" },
+    { name = "side_b_3", role = "generic" },
+    { name = "side_b_4", role = "generic" },
+    { name = "side_b_5", role = "generic" },
+    { name = "side_b_6", role = "generic" },
+    { name = "side_b_7", role = "generic" },
+    { name = "side_b_8", role = "generic" },
+]
+
+[function.connector]
+style = "style-3"
+poles = 8
+gender = "female"

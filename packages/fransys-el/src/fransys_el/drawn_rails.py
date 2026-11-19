@@ -7,6 +7,7 @@ cabinet's flagged rail, or with none flagged the cabinet plus the printed potent
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
+from electrical_symbols import power_symbol_key
 from fransys_model.derive import unit_label
 
 from .drawn_finding import drawn_finding
@@ -21,9 +22,13 @@ if TYPE_CHECKING:
 
 __all__ = ["rail_findings"]
 
+_GROUND = power_symbol_key("ground")
+_FUSE = "no unique protective device lies between them to name the second: put a fuse or breaker between them"
+_BOND = "bond the nets, or declare each supply in its own unit so each prints its declaring unit's tag"
+
 
 def rail_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:
-    """RAIL_IDENTITY_SHARED per identity (class in one cabinet) that two unbonded nets print; the fix names both remedies."""
+    """RAIL_IDENTITY_SHARED per identity (class in one cabinet) that two unbonded nets print; the message names its remedy."""
     nets: dict[RailClass, dict[str, Id[Port]]] = defaultdict(dict)
     for port, joined, inked in symbol_classes(net, model):
         if inked:
@@ -32,8 +37,7 @@ def rail_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:
         drawn_finding(
             "RAIL_IDENTITY_SHARED",
             tuple(held.values()),
-            f"{unit_label(model, joined[0])} prints one rail identity for {len(held)} unbonded nets: "
-            "no unique protective device lies between them to name the second: put a fuse or breaker between them",
+            f"{unit_label(model, joined[0])} prints one rail identity for {len(held)} unbonded nets: {_BOND if joined[1] == _GROUND else _FUSE}",
         )
         for joined, held in nets.items()
         if len(held) > 1

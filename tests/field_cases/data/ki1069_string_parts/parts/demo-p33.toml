@@ -1,0 +1,8 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P33"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "plc_module"
+class_code = "K"

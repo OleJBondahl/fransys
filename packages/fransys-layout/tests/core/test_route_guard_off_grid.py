@@ -84,3 +84,11 @@ def test_a_wire_end_inside_a_body_and_at_no_pin_is_a_core_error_and_a_free_end_i
     with pytest.raises(CoreError, match=r"inside the body of B"):
         _reach(env, (X, 112), (X, 168))
     assert _reach(env, (X, 60), (X, 168)) is None
+
+
+def test_a_wire_end_in_a_widened_room_is_no_body_end() -> None:
+    """R2602: the footprint of a fallback tag's soft room is not the drawn body; an end there is free."""
+    env, _, (box_fp, _) = _env_and_grid()
+    wide = replace(box_fp, y=box_fp.y - 16, h=box_fp.h + 16)
+    placed = {**env.placed, "B": replace(env.placed["B"], footprint=wide)}
+    assert _reach(replace(env, placed=placed), (X, 88), (X, 168)) is None

@@ -1,0 +1,282 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P39"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "generic"
+class_code = "K"
+
+
+
+
+[[function]]
+name = "supply_control"
+kind = "load"
+ports = [
+    { name = "S24V", role = "generic" },
+    { name = "SGND", role = "generic" },
+]
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ min = "9 V", max = "32 V" }]
+
+[[function]]
+name = "supply_pro"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "F24V", role = "generic" },
+    { name = "FGND", role = "generic" },
+]
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+current = [{ nom = "4 A", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ min = "9 V", max = "32 V" }]
+
+
+[[function]]
+name = "relay_1"
+kind = "plc_channel"
+ports = [{ name = "OUT1-", role = "generic" }, { name = "OUT1+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 1
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "relay_2"
+kind = "plc_channel"
+ports = [{ name = "OUT2-", role = "generic" }, { name = "OUT2+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 2
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "relay_3"
+kind = "plc_channel"
+ports = [{ name = "OUT3-", role = "generic" }, { name = "OUT3+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 3
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "relay_4"
+kind = "plc_channel"
+ports = [{ name = "OUT4-", role = "generic" }, { name = "OUT4+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 4
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "relay_5"
+kind = "plc_channel"
+ports = [{ name = "OUT5-", role = "generic" }, { name = "OUT5+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 5
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "relay_6"
+kind = "plc_channel"
+ports = [{ name = "OUT6-", role = "generic" }, { name = "OUT6+", role = "generic" }]
+
+[function.plc_channel]
+signal = "relay"
+channel = 6
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "gpo_9"
+kind = "plc_channel"
+ports = [{ name = "OUT9+", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 9
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "gpo_10"
+kind = "plc_channel"
+ports = [{ name = "OUT10+", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 10
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+
+[[function]]
+name = "J5"
+kind = "connector"
+ports = [{ name = "Comm+", role = "generic" }, { name = "Comm-", role = "generic" }]
+
+[function.connector]
+style = "style-4"
+poles = 2
+mates = ["DEMO-P18"]
+
+
+[[function]]
+name = "dci_1"
+kind = "plc_channel"
+ports = [{ name = "IN1A", role = "generic" }, { name = "IN1B", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[function.rating]
+voltage = [{ nom = "5 V", at = ["DC"] }]
+
+[[function]]
+name = "dci_2"
+kind = "plc_channel"
+ports = [{ name = "IN2A", role = "generic" }, { name = "IN2B", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[function.rating]
+voltage = [{ nom = "5 V", at = ["DC"] }]
+
+[[function]]
+name = "dci_3"
+kind = "plc_channel"
+ports = [{ name = "IN3A", role = "generic" }, { name = "IN3B", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[function.rating]
+voltage = [{ nom = "5 V", at = ["DC"] }]
+
+
+[[function]]
+name = "ai_6"
+kind = "plc_channel"
+ports = [{ name = "IN6", role = "generic" }, { name = "GND678", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 6
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_7"
+kind = "plc_channel"
+ports = [{ name = "IN7", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 7
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_8"
+kind = "plc_channel"
+ports = [{ name = "IN8", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_voltage"
+channel = 8
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "temp_1"
+kind = "plc_channel"
+ports = [{ name = "TEMP1A", role = "generic" }, { name = "TEMP1B", role = "generic" }]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 1
+
+[[function]]
+name = "temp_2"
+kind = "plc_channel"
+ports = [{ name = "TEMP2A", role = "generic" }, { name = "TEMP2B", role = "generic" }]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 2
+
+[[function]]
+name = "temp_3"
+kind = "plc_channel"
+ports = [{ name = "TEMP3A", role = "generic" }, { name = "TEMP3B", role = "generic" }]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 3
+
+[[function]]
+name = "current_sensor_1"
+kind = "sensor"
+ports = [
+    { name = "CS1A", role = "generic" },
+    { name = "CS1B", role = "generic" },
+    { name = "CS1GND", role = "generic" },
+    { name = "CS1_5V", role = "generic" },
+]
+
+[function.rating]
+voltage = [{ nom = "5 V", at = ["DC"] }]
+
+
+[[function]]
+name = "can1"
+kind = "generic"
+ports = [
+    { name = "CAN1H", role = "generic" },
+    { name = "CAN1L", role = "generic" },
+    { name = "CAN1GND", role = "generic" },
+]
+
+[[function]]
+name = "can2"
+kind = "generic"
+ports = [
+    { name = "CAN2H", role = "generic" },
+    { name = "CAN2L", role = "generic" },
+    { name = "CAN2GND", role = "generic" },
+]

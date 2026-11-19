@@ -1,0 +1,58 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P17"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L", role = "generic" },
+    { name = "N", role = "generic" },
+    { name = "PE", role = "pe" },
+]
+
+[function.rating]
+voltage = [{ nom = "264 V", at = ["AC"] }, { nom = "373 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ max = "264 V" }]
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "24V1", role = "generic" },
+    { name = "24V2", role = "generic" },
+    { name = "GND1", role = "generic" },
+    { name = "GND2", role = "generic" },
+    { name = "GND3", role = "generic" },
+]
+
+[function.rating]
+voltage = [{ nom = "28 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", max = "28 V" }]
+max_current = [{ max = "10 A", at = ["DC"] }]
+
+[[function]]
+name = "di"
+kind = "generic"
+ports = [
+    { name = "DI-", role = "generic" },
+    { name = "DI+", role = "generic" },
+]
+
+[[function]]
+name = "do"
+kind = "generic"
+ports = [
+    { name = "DO-", role = "generic" },
+    { name = "DO+", role = "generic" },
+]

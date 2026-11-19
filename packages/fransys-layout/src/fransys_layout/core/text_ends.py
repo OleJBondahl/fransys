@@ -177,6 +177,7 @@ def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
 
     A mixed pin on a free-sided symbol stands at the pin `env.stands` names for its orientation: the end stays `pin`.
     """
+    # KI-1098: at mated plug pins the tag box and the stub box print over each other (TEXT-KEEPS)
     xy = stood_at(env, pin)
     if (xy.sym, xy.pin) not in env.pins:
         msg = f"marks: {who(ref)} has no placed pin {xy.sym}.{xy.pin}"

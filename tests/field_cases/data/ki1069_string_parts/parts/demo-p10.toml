@@ -1,0 +1,36 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P10"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "connector"
+class_code = "X"
+
+[[function]]
+name = "main"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", side = "load", symbol_port = "n" },
+    { name = "external", role = "external", side = "line", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+[function.rating]
+voltage = [{ nom = "1500 V", at = ["DC"] }]
+current = [{ nom = "300 A", at = ["DC"] }]
+
+[[function]]
+name = "hvil"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "hvil_internal", role = "internal", side = "load", symbol_port = "n" },
+    { name = "hvil_external", role = "external", side = "line", symbol_port = "s" },
+]
+links = [{ a = "hvil_internal", b = "hvil_external", kind = "conductive" }]
+
+[function.rating]
+voltage = [{ nom = "60 V", at = ["DC"] }]
+current = [{ nom = "5 A", at = ["DC"] }]

@@ -182,6 +182,7 @@ from .facts.part import (
 )
 from .facts.plc_wiring import channel_takes
 from .facts.rail_reach import rail_scope
+from .facts.rail_source import rail_source_unit
 from .facts.roles import (
     changeover_functions,
     conductor_role,
@@ -1070,6 +1071,7 @@ __all__ = [
     "rail_phase_problem",
     "rail_row",
     "rail_scope",
+    "rail_source_unit",
     "reading_cables",
     "rebaseline_subjects",
     "record_key_text",

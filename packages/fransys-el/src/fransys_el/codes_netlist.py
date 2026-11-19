@@ -123,8 +123,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "so the page would join nets the model keeps apart."
         ),
         fix=(
-            "No call clears this: two nets print one supply name with no protective device (fuse, breaker) between them, "
-            "or the nearest device is not unique: put a fuse or breaker between them."
+            "No call clears this: two nets of one supply print one name in a cabinet. For a supply name with no unique protective device "
+            "between them: put a fuse or breaker between them. For a ground: bond the nets, or declare each supply in its own unit, "
+            "so each prints its declaring unit's tag."
         ),
         page="findings-render",
     ),

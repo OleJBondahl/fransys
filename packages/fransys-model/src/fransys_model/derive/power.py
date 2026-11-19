@@ -3,6 +3,7 @@
 from fransys_model.derive.facts.closure import net_of, physical_nets
 from fransys_model.derive.facts.potentials import pe_firsts, physical_potentials
 from fransys_model.derive.facts.protected import protected_by
+from fransys_model.derive.facts.rail_source import rail_source_unit
 from fransys_model.derive.facts.unit_index import item_unit
 from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
@@ -10,6 +11,7 @@ from fransys_model.vocab import Item, Net, Port, PowerKind
 from fransys_model.vocab.tables import nets, rail_groups, supply_of_potential
 
 from .facts.net_facts import net_potential
+from .instance_tag import unit_system_designation
 from .lookups import item_of_port
 from .order import NaturalKey, natural_key
 from .tag_text import item_tag_text
@@ -72,20 +74,46 @@ def power_kind(model: Model, net: Id[Net]) -> PowerKind:
     return kinds.pop() if len(kinds) == 1 else PowerKind.NONE
 
 
-def power_text(model: Model, net: Id[Net]) -> str | None:
-    """The text a power symbol of declared `net` prints, or `None` when it prints none.
+def _base_text(model: Model, net: Id[Net]) -> str | None:
+    """The name a supply or ground net prints before any source tag; `None` for `PE` and `NONE`.
 
-    Only `SUPPLY` prints: `Net.name`, else `Net.potential` (which carries the sign of a negative
-    rail, `-15V`). A net behind a protective device adds the tag of the nearest one, `24V -F2`
-    (`protected_by`, G08-POWER). `GROUND`, `PE` and `NONE` print none.
+    `Net.name`, else `Net.potential` (which carries the sign of a negative rail, `-15V`). A supply net
+    behind a protective device adds the tag of the nearest one, `24V -F2` (`protected_by`, G08-POWER).
     """
-    if power_kind(model, net) is not PowerKind.SUPPLY:
+    kind = power_kind(model, net)
+    if kind not in {PowerKind.SUPPLY, PowerKind.GROUND}:
         return None
     declared = nets(model)[net]
     name = declared.name if declared.name is not None else net_potential(model, net)
     physical = net_of(model, declared.ports[0])
-    device = None if name is None or physical is None else protected_by(model).get(physical.ports[0])
+    device = None if kind is PowerKind.GROUND or name is None or physical is None else protected_by(model).get(physical.ports[0])
     return name if device is None else f"{name} {item_tag_text(model, device, unit=item_unit(model, device))}"
+
+
+def _printed(model: Model, text: str | None, kind: PowerKind, port: Id[Port]) -> str | None:
+    """`text` as the symbol at `port` prints it: behind the declaring unit's tag where `rail_source_unit` names one (R2589).
+
+    A ground symbol prints only then.
+    """
+    unit = rail_source_unit(model, port)
+    tag = None if unit is None else unit_system_designation(model, unit)
+    if text is None:
+        return None
+    if tag is None:
+        return text if kind is PowerKind.SUPPLY else None
+    return f"{text} {tag}"
+
+
+def power_text(model: Model, net: Id[Net]) -> str | None:
+    """The text a power symbol of declared `net` prints, or `None` when it prints none.
+
+    `SUPPLY` prints `Net.name`, else `Net.potential`, with the nearest protective device's tag (`24V -F2`).
+    Where the cabinet of the net's first port is fed that potential by two or more unbonded supplies, the
+    symbol adds the tag of the declaring unit (`24V -U1`), and `GROUND` prints it too (`GND -U1`, R2589).
+    Otherwise `GROUND`, `PE` and `NONE` print none.
+    """
+    text = _base_text(model, net)
+    return None if text is None else _printed(model, text, power_kind(model, net), nets(model)[net].ports[0])
 
 
 def _text_order(model: Model, net: Net) -> tuple[NaturalKey, Id[Net]]:
@@ -95,24 +123,24 @@ def _text_order(model: Model, net: Net) -> tuple[NaturalKey, Id[Net]]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _texts(model: Model) -> frozendict[Id[Port], str | None]:
-    """Each power physical net's text by its first port: the first declared net's, by net id."""
+    """Each power physical net's base text by its first port: the first declared net's, by net id."""
     texts: dict[Id[Port], str | None] = {}
     for net in sorted(nets(model).values(), key=lambda n: _text_order(model, n)):
         if power_kind(model, net.id) is PowerKind.NONE:
             continue
         for port in net.ports:
             if (physical := net_of(model, port)) is not None:
-                texts.setdefault(physical.ports[0], power_text(model, net.id))
+                texts.setdefault(physical.ports[0], _base_text(model, net.id))
     return frozendict(texts)
 
 
 def port_power_text(model: Model, port: Id[Port]) -> str | None:
-    """The text the power symbol at `port` prints: `power_text` of its physical net, else `None`.
+    """The text the power symbol at `port` prints: the text of its physical net as `power_text` prints it at `port`, else `None`.
 
     A load pin wired to a 24 V terminal prints that net's text. Cost: O(1) once per model digest.
     """
     physical = net_of(model, port)
-    return None if physical is None else _texts(model).get(physical.ports[0])
+    return None if physical is None else _printed(model, _texts(model).get(physical.ports[0]), port_power_kind(model, port), port)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

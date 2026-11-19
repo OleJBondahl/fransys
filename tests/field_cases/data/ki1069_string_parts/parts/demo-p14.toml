@@ -1,0 +1,27 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P14"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+
+[[function]]
+name = "no"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [{ name = "13", role = "generic", symbol_port = "in" }, { name = "14", role = "generic", symbol_port = "out" }]
+links = [{ a = "13", b = "14", kind = "switched" }]
+
+[function.rating]
+voltage = [{ nom = "250 V", at = ["AC"] }, { nom = "30 V", at = ["DC"] }]

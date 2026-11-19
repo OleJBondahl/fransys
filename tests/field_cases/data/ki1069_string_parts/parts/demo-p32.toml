@@ -1,0 +1,38 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P32"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "rtd_1"
+kind = "plc_channel"
+box_side = "bottom"
+ports = [
+    { name = "1", role = "generic", marking = "+R1", side = "load" },
+    { name = "2", role = "generic", marking = "RL1", side = "load" },
+    { name = "3", role = "generic", marking = "-R1", side = "load" },
+    { name = "4", role = "generic", side = "load" },
+]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 1
+
+[[function]]
+name = "rtd_2"
+kind = "plc_channel"
+box_side = "bottom"
+ports = [
+    { name = "5", role = "generic", marking = "+R2", side = "load" },
+    { name = "6", role = "generic", marking = "RL2", side = "load" },
+    { name = "7", role = "generic", marking = "-R2", side = "load" },
+    { name = "8", role = "generic", side = "load" },
+]
+
+[function.plc_channel]
+signal = "rtd"
+channel = 2

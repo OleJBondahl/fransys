@@ -1,0 +1,4 @@
+schema = 2
+name = "demo-parts"
+version = "0.1.0"
+description = "Generic demo parts"

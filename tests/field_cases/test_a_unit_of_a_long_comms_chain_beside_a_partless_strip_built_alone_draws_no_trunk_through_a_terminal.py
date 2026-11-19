@@ -44,7 +44,7 @@ def _unit(d: Any) -> _Io:
     return _Io()
 
 
-@pytest.mark.timeout(600)  # the unit builds in about 150 s (KI-702); one salt, the fix is salt-independent
+@pytest.mark.timeout(600)  # KI-1097: the unit builds in about 375 s alone (KI-702); one salt, the fix is salt-independent
 @pytest.mark.parametrize("salt", ["-"])
 def test_the_unit_built_alone_draws_no_trunk_through_a_terminal_and_none_over_another_net(salt: str) -> None:
     d = fr.design("demo_parts", "chain_parts")

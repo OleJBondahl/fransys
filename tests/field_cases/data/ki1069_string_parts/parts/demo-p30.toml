@@ -1,0 +1,223 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P30"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "24V", role = "generic", side = "line", conductor = "L+" },
+    { name = "0V", role = "generic", side = "load", conductor = "L-" },
+]
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+
+
+[[function]]
+name = "di_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_2"
+kind = "plc_channel"
+ports = [{ name = "2", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_3"
+kind = "plc_channel"
+ports = [{ name = "3", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_4"
+kind = "plc_channel"
+ports = [{ name = "4", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 4
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_5"
+kind = "plc_channel"
+ports = [{ name = "5", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 5
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_6"
+kind = "plc_channel"
+ports = [{ name = "6", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 6
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_7"
+kind = "plc_channel"
+ports = [{ name = "7", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 7
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "di_8"
+kind = "plc_channel"
+ports = [{ name = "8", role = "generic", side = "line" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 8
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+
+[[function]]
+name = "do_1"
+kind = "plc_channel"
+ports = [{ name = "9", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_2"
+kind = "plc_channel"
+ports = [{ name = "10", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 2
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_3"
+kind = "plc_channel"
+ports = [{ name = "11", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 3
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_4"
+kind = "plc_channel"
+ports = [{ name = "12", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 4
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_5"
+kind = "plc_channel"
+ports = [{ name = "13", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 5
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_6"
+kind = "plc_channel"
+ports = [{ name = "14", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 6
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_7"
+kind = "plc_channel"
+ports = [{ name = "15", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 7
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[[function]]
+name = "do_8"
+kind = "plc_channel"
+ports = [{ name = "16", role = "generic", side = "load" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 8
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]

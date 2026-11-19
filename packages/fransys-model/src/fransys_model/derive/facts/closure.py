@@ -274,6 +274,17 @@ def _rail_sources(model: Model) -> dict[str, set[Id[Port]]]:
     return sources
 
 
+def rail_reach(adjacent: dict[Id[Port], set[Id[Port]]], declared: frozenset[Id[Port]], own: frozenset[Id[Port]]) -> frozenset[Id[Port]]:
+    """The ports a rail whose own ports are `own` reaches through `adjacent`, never entering another rail's `declared` ports."""
+    reached, todo = set(own), list(own)
+    while todo:
+        for neighbour in adjacent.get(todo.pop(), ()):
+            if neighbour not in reached and not _blocks(own, declared, neighbour):
+                reached.add(neighbour)
+                todo.append(neighbour)
+    return frozenset(reached)
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def _rails(model: Model) -> frozendict[Id[Port], frozenset[str]]:
     sources = _rail_sources(model)
@@ -281,15 +292,7 @@ def _rails(model: Model) -> frozendict[Id[Port], frozenset[str]]:
     adjacent = _adjacency(model)
     carried: dict[Id[Port], set[str]] = {}
     for rail, start in sources.items():
-        own = frozenset(start)
-        reached = set(own)
-        todo = list(own)
-        while todo:
-            for neighbour in adjacent.get(todo.pop(), ()):
-                if neighbour not in reached and not _blocks(own, declared, neighbour):
-                    reached.add(neighbour)
-                    todo.append(neighbour)
-        for port in reached:
+        for port in rail_reach(adjacent, declared, frozenset(start)):
             carried.setdefault(port, set()).add(rail)
     return frozendict({port: frozenset(rails) for port, rails in carried.items()})
 

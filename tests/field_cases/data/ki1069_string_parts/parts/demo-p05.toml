@@ -1,0 +1,97 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P05"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "main"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic", joins = "insulation.Chassis" },
+    { name = "6", role = "generic", joins = "supply.LV_Vcc" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic", joins = "supply.GND" },
+]
+
+[function.connector]
+style = "style-2"
+poles = 9
+marking = "Main"
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "LV_Vcc", role = "generic" },
+    { name = "GND", role = "generic" },
+]
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", min = "18 V", max = "32 V" }]
+
+[[function]]
+name = "insulation"
+kind = "sensor"
+ports = [{ name = "Chassis", role = "generic" }]
+
+[[function]]
+name = "voltage"
+kind = "sensor"
+ports = [
+    { name = "SNS_HVBattery", role = "generic" },
+    { name = "SNS_VoltageLinkPlus", role = "generic" },
+    { name = "SNS_VoltageLinkMinus", role = "generic" },
+    { name = "SNS_VoltageLinkPreCharge", role = "generic" },
+    { name = "SNS_VoltagePackPlus", role = "generic" },
+    { name = "SNS_VoltagePackMinus", role = "generic" },
+]
+
+[[function]]
+name = "voltage_1"
+kind = "connector"
+ports = [
+    { name = "V1_1", role = "generic", marking = "1", joins = "voltage.SNS_HVBattery" },
+    { name = "V1_6", role = "generic", marking = "6", joins = "voltage.SNS_VoltageLinkPlus" },
+    { name = "V1_11", role = "generic", marking = "11", joins = "voltage.SNS_VoltageLinkMinus" },
+]
+
+[function.connector]
+style = "style-2"
+poles = 11
+marking = "Voltage 1"
+
+[[function]]
+name = "voltage_2"
+kind = "connector"
+ports = [
+    { name = "V2_1", role = "generic", marking = "1", joins = "voltage.SNS_VoltageLinkPreCharge" },
+    { name = "V2_6", role = "generic", marking = "6", joins = "voltage.SNS_VoltagePackPlus" },
+    { name = "V2_11", role = "generic", marking = "11", joins = "voltage.SNS_VoltagePackMinus" },
+]
+
+[function.connector]
+style = "style-2"
+poles = 11
+marking = "Voltage 2"
+
+[[function]]
+name = "current_path"
+kind = "sensor"
+symbol = "resistor"
+ports = [
+    { name = "HIGH", role = "generic", side = "line", symbol_port = "in" },
+    { name = "LOW", role = "generic", side = "load", symbol_port = "out" },
+]
+links = [{ a = "HIGH", b = "LOW", kind = "conductive" }]
+

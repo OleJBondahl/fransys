@@ -1,0 +1,37 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P27"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "header"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic" },
+    { name = "10", role = "generic" },
+    { name = "11", role = "generic" },
+    { name = "12", role = "generic" },
+    { name = "13", role = "generic" },
+    { name = "14", role = "generic" },
+]
+
+[function.connector]
+style = "style-4"
+poles = 14
+gender = "male"
+
+[function.rating]
+voltage = [{ nom = "250 V", at = ["AC"] }, { nom = "176 V", at = ["DC"] }]
+

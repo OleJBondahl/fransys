@@ -1,0 +1,80 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P34"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "supply_system"
+kind = "load"
+ports = [
+    { name = "S24V", role = "generic", side = "line" },
+    { name = "SGND", role = "generic", side = "load" },
+]
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", min = "18 V", max = "31.2 V" }]
+
+[[function]]
+name = "supply_field"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "F24V1", role = "generic", side = "load" },
+    { name = "FGND1", role = "generic", side = "line" },
+    { name = "PE1", role = "pe" },
+    { name = "F24V2", role = "generic", side = "load" },
+    { name = "FGND2", role = "generic", side = "line" },
+    { name = "PE2", role = "pe" },
+]
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+current = [{ nom = "10 A", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", min = "18 V", max = "31.2 V" }]
+
+[[function]]
+name = "X1"
+kind = "connector"
+ports = [{ name = "X1", role = "generic" }]
+
+[function.connector]
+style = "style-5"
+poles = 8
+
+[[function]]
+name = "X2"
+kind = "connector"
+ports = [{ name = "X2", role = "generic" }]
+
+[function.connector]
+style = "style-5"
+poles = 8
+
+[[function]]
+name = "X4"
+kind = "connector"
+ports = [
+    { name = "X4_1", role = "generic", side = "line" },
+    { name = "X4_2", role = "generic", side = "line" },
+    { name = "X4_3", role = "generic", side = "line" },
+    { name = "X4_4", role = "generic", side = "line" },
+    { name = "X4_5", role = "generic", side = "line" },
+    { name = "X4_6", role = "generic", side = "line" },
+    { name = "X4_7", role = "generic", side = "line" },
+    { name = "X4_8", role = "generic", side = "line" },
+    { name = "9", role = "generic", side = "line" },
+]
+
+[function.connector]
+style = "style-6"
+poles = 9
+gender = "male"

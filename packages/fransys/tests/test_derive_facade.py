@@ -149,6 +149,7 @@ RULED = frozenset(
         "power_text",
         "printed_designation",
         "prospective_fault",
+        "rail_source_unit",
         "reading_cables",
         "reference_designation",
         "reference_targets",

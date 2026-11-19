@@ -1,0 +1,70 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P31"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "24V", role = "generic", conductor = "L+" },
+    { name = "0V", role = "generic", conductor = "L-" },
+]
+
+[function.rating]
+voltage = [{ nom = "31.2 V", at = ["DC"] }]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_current_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic" }, { name = "2", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 1
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_current_2"
+kind = "plc_channel"
+ports = [{ name = "5", role = "generic" }, { name = "6", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 2
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_current_3"
+kind = "plc_channel"
+ports = [{ name = "3", role = "generic" }, { name = "4", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 3
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]
+
+[[function]]
+name = "ai_current_4"
+kind = "plc_channel"
+ports = [{ name = "7", role = "generic" }, { name = "8", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 4
+
+[function.rating]
+voltage = [{ nom = "32 V", at = ["DC"] }]

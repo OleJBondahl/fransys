@@ -163,8 +163,8 @@ def test_an_end_that_carries_an_arrow_gets_no_stub() -> None:
     assert {e.pin for r in arrows for e in r.ends} >= {PinRef("x", "e"), PinRef("z", "e")}
 
 
-def test_a_copied_hub_end_on_a_page_cut_gets_no_stub_at_the_copied_end() -> None:
-    """The copy of t0 on page 2 names k2.n, a boundary pin too: it carries the copy, no stub."""
+def test_a_copied_hub_end_on_a_page_cut_keeps_the_stub_for_its_conductor_out_of_the_set() -> None:
+    """The copy of t0 on page 2 names k2.n, wired out: the copy carries the net, the stub still names k2.n's conductor (KI1069-B)."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
     out = tuple((PinRef(k, "n"), PinRef("out", k)) for k in ("k2", "k3"))
     facts = _wired(*out, units=(Unit("U1", None, tuple(a for a, _ in out)),))
@@ -173,7 +173,7 @@ def test_a_copied_hub_end_on_a_page_cut_gets_no_stub_at_the_copied_end() -> None
     (copy,) = refs_of(result, "copy")
     assert copy.ends == (RefEnd(2, "c:k1", PinRef("k2", "n")),)
     (stub,) = refs_of(result, "stub")
-    assert [e.pin for e in stub.ends] == [PinRef("k3", "n")]  # k2.n is the copied end: no stub
+    assert [(e.pin, e.also) for e in stub.ends] == [(PinRef("k2", "n"), (PinRef("k3", "n"),))]  # one bundled end at k2.n stubs both conductors
 
 
 def test_a_hub_with_boundary_pins_on_both_sides_is_cut_by_an_arrow_pair_not_copied() -> None:
@@ -399,6 +399,17 @@ def test_a_stub_end_names_the_far_pin_of_every_undrawn_conductor_at_its_pin() ->
     (ref,) = got.refs
     (end,) = ref.ends
     assert (end.pin, end.far) == (x, outs)
+
+
+@pytest.mark.parametrize("kind", [RefKind.TAG, RefKind.ARROW, RefKind.COPY])
+def test_a_reference_end_at_a_wired_out_pin_still_plans_the_stub_naming_both_far_pins(kind: RefKind) -> None:
+    """KI1069-B: a planned reference at x.e does not hold back the stub for x's conductors out of the set."""
+    syms = [side("x", 300, 300), side("y", 300, 300)]
+    x = PinRef("x", "e")
+    outs = (PinRef("out", "e"), PinRef("out", "f"))
+    ref = Ref("m", kind, (RefEnd(1, None, x),))
+    got = _account(syms, [net("m", "x.e", "y.e", crosses_unit=True)], _wired((x, outs[0]), (x, outs[1])), (ref,))
+    assert [(e.pin, e.far) for r in got.refs if r.kind is RefKind.STUB for e in r.ends] == [(x, outs)]
 
 
 def test_an_arrow_end_carries_its_pin_and_the_other_end_stubs() -> None:

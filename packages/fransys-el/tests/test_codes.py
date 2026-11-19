@@ -98,10 +98,9 @@ def test_a_card_spill_is_an_info_because_tag_pairs_join_it() -> None:
     assert info.severity is Severity.INFO
 
 
-def test_a_shared_supply_name_fix_names_only_the_protective_device():
-    """R1976: RAIL_IDENTITY_SHARED names the refused case and its one remedy, a protective device; the bond is withdrawn."""
+def test_a_shared_name_fix_names_the_fuse_for_a_supply_and_the_bond_or_the_units_for_a_ground():
+    """R1976, R2589: RAIL_IDENTITY_SHARED names a protective device for a supply name, and for a ground a bond or the declaring units."""
     fix = next(i for i in FINDING_CODES if i.code == "RAIL_IDENTITY_SHARED").fix
-    assert "no protective device" in fix
     assert fix.startswith("No call clears this:")
     assert "put a fuse or breaker between them" in fix
-    assert "bond" not in fix.split(":", 1)[1]
+    assert "For a ground: bond the nets, or declare each supply in its own unit" in fix

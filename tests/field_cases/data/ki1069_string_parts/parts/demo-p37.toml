@@ -1,0 +1,9 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P37"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "electromechanical"
+class_code = "S"
+operated_by = "mushroom"

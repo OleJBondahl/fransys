@@ -57,9 +57,9 @@ def _reach(env: RouteEnv, end: XY, toward: XY) -> tuple[XY, ...] | None:
         return (end, snapped)
     hit = next(((p, q.pin) for p in env.placed.values() for q in p.pin_xy if (q.x, q.y) == end), None)
     if hit is None:
-        body = next((p for p in env.placed.values() if _inside(p.footprint, end)), None)
+        body = next((p for p in env.placed.values() if _inside(p.body, end)), None)
         if body is not None:
-            msg = f"a wire end at {end} is inside the body of {body.sym} at none of its pins; end it at a pin or outside its footprint"
+            msg = f"a wire end at {end} is inside the body of {body.sym} at none of its pins; end it at a pin or outside its body"
             raise CoreError(msg)
         return None
     out = anchor(end, hit[0].footprint, step, pin_side(env, hit[0].sym, hit[1]))

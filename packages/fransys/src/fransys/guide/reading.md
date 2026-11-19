@@ -52,6 +52,8 @@ of the unit's current revision. Any other document's are the project's.
 `model`. A rail only exists once some `SupplySystem` declares the potential and some `Net`
 carries it; wiring alone declares no rail.
 
+`fransys.derive.rail_source_unit(model, port)` names the unit declaring the supply a port's potential comes from, where its cabinet has two or more unbonded supplies of it; else `None`.
+
 `fransys.derive.port_potential_rank(model, port)` is the rank of the potential a pin carries, or `None`.
 A smaller rank is drawn higher up. It reads the supply's facts, never a rail's name. The order is AC phases,
 DC above 0 V, AC at 0 V, DC at 0 V, DC below 0 V, then PE. A pin behind a switch keeps its

@@ -1,0 +1,26 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P38"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "electromechanical"
+class_code = "S"
+
+[[function]]
+name = "nc_1"
+kind = "switch"
+ports = [
+    { name = "11", role = "generic" },
+    { name = "12", role = "generic" },
+]
+links = [{ a = "11", b = "12", kind = "switched", rest = "closed" }]
+
+[[function]]
+name = "nc_2"
+kind = "switch"
+ports = [
+    { name = "21", role = "generic" },
+    { name = "22", role = "generic" },
+]
+links = [{ a = "21", b = "22", kind = "switched", rest = "closed" }]

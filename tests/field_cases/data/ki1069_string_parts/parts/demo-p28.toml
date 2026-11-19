@@ -1,0 +1,21 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P28"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "fuse"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }]
+
+[function.block]
+type = "fuse"

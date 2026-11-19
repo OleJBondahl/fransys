@@ -1,0 +1,11 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P35"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "board"
+class_code = "U"
+
+[pcb]
+revision = "proto v0.1"

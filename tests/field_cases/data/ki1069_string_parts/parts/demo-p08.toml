@@ -1,0 +1,16 @@
+schema = 2
+
+[part]
+mpn = "DEMO-P08"
+manufacturer = "Demo Maker"
+description = "Demo part"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "ntc"
+kind = "sensor"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+]

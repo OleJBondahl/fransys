@@ -546,6 +546,8 @@ def _powered(
     monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
     monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
     monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
+    monkeypatch.setattr(drawn_power, "item_of_port", lambda _m, port: port.value)
+    monkeypatch.setattr(drawn_power, "is_rail_terminal", lambda _m, _item: False)
     monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
     parts = {Id[Page](kind="page", value=v[3]): pages[Id[Page](kind="page", value=v[3])] for v in stands.values()}
     return Netlist(parts, drawn_netlist_module._join(parts), drawn_netlist_module._placed(parts), ids, {}, {}, nets=nets or {})
@@ -609,11 +611,30 @@ def test_with_no_flagged_rail_two_unbonded_nets_of_one_cabinet_share_an_identity
     found = rail_findings(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
     if shared:
         expect_codes(SimpleNamespace(findings=found), "RAIL_IDENTITY_SHARED")
-        assert "put a fuse or breaker between them" in found[0].message
+        assert ("bond the nets" in found[0].message) is (kind == "ground")
     else:
         assert found == ()
     join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
     assert not _same_piece(net, "a", "b")
+
+
+@pytest.mark.rule("READ-RAILS")
+def test_a_ground_identity_carries_its_source_and_a_flag_joins_only_the_flagged_strips_class(monkeypatch: pytest.MonkeyPatch):
+    """R2590: two unbonded sources in a flagged cabinet are two ground classes; only the class the flagged strip stands in joins by ink."""
+    rails = frozenset({"0V"})
+    ident = {"a": (rails, "U1"), "b": (rails, "U1"), "c": (rails, "U2"), "d": (rails, "U2")}
+    net = _powered(monkeypatch, {p: ("ground", None, "A", f"p{p}") for p in ident})
+    monkeypatch.setattr(drawn_power, "_identity", lambda _m, port, _key, _text: ident[port.value])
+    monkeypatch.setattr(drawn_power, "is_rail_terminal", lambda _m, item: item == "a")  # the flagged strip stands at port a: source U1
+    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
+    assert _same_piece(net, "a", "b")
+    assert not _same_piece(net, "c", "d")
+    monkeypatch.undo()
+    monkeypatch.setattr(drawn_power, "port_rails", lambda _m, _port: rails)
+    monkeypatch.setattr(drawn_power, "rail_source_unit", lambda _m, port: port)
+    ground = power_symbol_key("ground")
+    assert drawn_power._identity(None, "U1", ground, None) == (rails, "U1")  # ty: ignore[invalid-argument-type] patched reads
+    assert drawn_power._identity(None, "U1", power_symbol_key("pe"), None) == "PE"
 
 
 @pytest.mark.rule("READ-POWER-INK")

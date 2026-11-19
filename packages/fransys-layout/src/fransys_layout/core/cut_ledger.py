@@ -168,7 +168,9 @@ def _net_of(problem: PlacementProblem) -> dict[PinRef, str]:
     return net_of | {p: by_sym[p.sym] for g in problem.facts.groups for p in g if p not in net_of and p.sym in by_sym}
 
 
-def _crossing(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int], held: AbstractSet[PinRef]) -> list[Ref]:
+def _crossing(
+    problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int], held: AbstractSet[PinRef], carried: AbstractSet[PinRef]
+) -> list[Ref]:
     """One stub per crossing net at its boundary pins, its page-alone ends in units without one and every pin wired out of the set, not in `held`.
 
     A pin wired to a far pin that stands in no page of this set has an undrawn conductor whatever its page holds (layout-0338, S4).
@@ -185,7 +187,8 @@ def _crossing(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, in
         ends = tuple(
             RefEnd(where[p.sym], None, p, stand=stand_class(on[p][where[p.sym]] if p in on else 0))
             for p in placed
-            if p not in held and (p in boundary or p in wired_out or (pages.count(where[p.sym]) == 1 and unit_of[p.sym] not in in_units))
+            if (p in wired_out and p not in carried)
+            or (p not in held and (p in boundary or (pages.count(where[p.sym]) == 1 and unit_of[p.sym] not in in_units)))
         )
         if ends:
             out.append(Ref(net.id, RefKind.STUB, ends))
@@ -272,7 +275,8 @@ def _made(
     far_ends = problem.facts.far_ends
     net_of = _net_of(problem)
     covered = _covered(problem, planned, (laned, joins))
-    made = _crossing(problem, leads[1], where, covered | _drawn(far_ends, ink))
+    drawn = _drawn(far_ends, ink)
+    made = _crossing(problem, leads[1], where, covered | drawn, _covered(problem, (), (laned, joins)) | drawn)
     made += _lead_stubs(leads[0], where, net_of, covered | {e.pin for r in made for e in r.ends if e.pin})
     wired = joined([*ink, *pairs(planned, net_of), *trunked(leads[1], where, net_of), *(pair for j in joins for pair in permutations(j, 2))])
     seen = _Held(problem, where, piece, net_of, laned, joins, set(far_ends))

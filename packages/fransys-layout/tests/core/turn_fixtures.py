@@ -50,6 +50,7 @@ def turned(  # noqa: PLR0913, PLR0917 -- the R0 symbol's parts and the orient, a
         turn_box(footprint, orient),
         tuple(turn_pin(p, orient) for p in pins),
         None if row_footprint is None else turn_box(row_footprint, orient),
+        turn_box(keepout, orient),
     )
 
 

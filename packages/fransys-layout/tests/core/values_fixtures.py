@@ -161,7 +161,7 @@ def layout() -> CoreLayout:
             (
                 PagePlacement(
                     1,
-                    (Placed("K1", 1, 8, 8, "R0", BOX, BOX, (PinXY("1", 16, 8),)),),
+                    (Placed("K1", 1, 8, 8, "R0", BOX, BOX, (PinXY("1", 16, 8),), BOX),),
                     (Gap("g1", 1, "C1", "C2", 0, 8, 2, 0, 64),),
                     (Trunk("F1", 1, 24, 0, 64, 2, 0, ((0, 64), (0, 64)), ((True, True), (True, False)), (8, 24)),),
                     ((0, 64),),

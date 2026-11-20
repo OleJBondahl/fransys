@@ -11,7 +11,7 @@ from _model_build_cover import unit_document
 from fransys_model.kernel import id_namespace
 
 # KI-278: the W06 build has 2 conductors with no path
-# KI-467: ANNEX_UNPLACED at salts b to e in the bridged-strip build (TRACE-ROOTS-U-2)
+# KI-467: LABEL_NO_ROOM at salts b to e in the bridged-strip build (TRACE-ROOTS-U-2)
 _SIGNALS, _GROUPS, _CHAINS = 10, 20, 15
 
 

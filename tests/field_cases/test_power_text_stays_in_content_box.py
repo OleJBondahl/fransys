@@ -106,7 +106,7 @@ def _t1(model):
 def test_a_supply_text_has_room_past_its_bar_and_stays_clear_of_the_frame() -> None:
     built = _build()
     box, text, drawing = _t1(built.model)
-    assert [f for f in built.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f for f in built.findings if f.code == "LABEL_NO_ROOM"] == []
     assert text[0] > 0
     assert text[2] < drawing.area.w
     assert not overlaps(text, box)

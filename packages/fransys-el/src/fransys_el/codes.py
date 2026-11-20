@@ -69,15 +69,15 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="ANNEX_UNPLACED",
-        severity=Severity.WARNING,
+        code="LABEL_NO_ROOM",
+        severity=Severity.ERROR,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
-            "A tag, marking or table beside a symbol found no spot free of every outline, wire "
-            "and text; it stands at its first spot, over what blocks it."
+            "A tag, marking or table found no spot free of every outline, wire and text, and the recuts "
+            "that asked for room beside its symbol did not free one; the message names the label and the room it needs."
         ),
-        fix=("No call clears this: shorten the tag of <subject>, or move the symbols around it to leave a corner free."),
+        fix="No call clears this: send the smallest model that shows the label of <subject>.",
         page="findings-render",
     ),
     CodeInfo(

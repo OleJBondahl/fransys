@@ -36,6 +36,8 @@ recut_rounds = 3
 where_digit_rounds = 2
 # standing labels a blocked label may move to their next free candidates before the recut (R1479)
 label_moves = 2
+# recuts a blocked label asks for before the loop stops asking: the worst need measured was 5 passes (R1967); past it the label is LABEL_NO_ROOM
+label_recut_limit = 5
 route_fallback_rounds = 10
 solve_rounds = 3
 # widen passes before it raises: grants only grow, so a pass past this is a loop (R1981)

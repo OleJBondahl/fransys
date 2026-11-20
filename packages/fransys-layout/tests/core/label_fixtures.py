@@ -7,7 +7,7 @@ A body is 16 by 32 with its origin at the centre top, a label is 16 by 8 and the
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from options_fixtures import core_options
 from turn_fixtures import views_of
@@ -23,8 +23,9 @@ from fransys_layout.core import (
     Size,
     Sym,
 )
+from fransys_layout.core.anchors import HELD, ROUTED, Stood, page_keeps
 from fransys_layout.core.annex import place_labels
-from fransys_layout.core.geometry import marker_drawn_box
+from fransys_layout.core.clearance import Keep
 from fransys_layout.core.outputs import (
     Anchored,
     Counts,
@@ -39,6 +40,9 @@ from fransys_layout.core.values import Finding, RefKind
 
 from .conftest import MARKER
 from .pipeline_fixtures import with_annexes
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,10 +60,15 @@ class LabelCase:
         opts = options or bl_first_options()
         problem = with_annexes(self.problem, opts)
         wires = tuple(w for r in self.routes.pages for w in r.wires)
-        solids = [marker_drawn_box(m, opts) for m in self.markers] + [a.outline for a in self.anchored]
-        placed_by = {p.sym: p for p in self.placement.pages[0].placed}
-        labels, found, _ = place_labels(problem.annexes, placed_by, (wires, solids), (1, problem.area, opts.label_gap, opts.label_moves))
+        page = self.placement.pages[0]
+        keeps = page_keeps(page, Stood(self.markers, self.anchored, wires=wires), problem, opts, (*HELD, *ROUTED, "wire"))
+        labels, found, _ = place_labels(problem.annexes, {p.sym: p for p in page.placed}, keeps, (1, problem.area, opts.label_gap, opts.label_moves))
         return tuple(labels), tuple(found)
+
+
+def keeps_of(placed: Mapping[str, Placed], boxes: Sequence[Box] = ()) -> list[Keep]:
+    """The ledger of a hand-built page: each placed body and each `boxes` solid, as `page_keeps` gives them."""
+    return [*(Keep("", p.body, "body", p.sym) for p in placed.values()), *(Keep("", b, "text", "") for b in boxes)]
 
 
 def house_options(*, label_gap: int = 8, **fields: Any) -> Options:

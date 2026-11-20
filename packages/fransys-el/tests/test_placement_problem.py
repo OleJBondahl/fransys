@@ -9,7 +9,7 @@ import fransys as fr
 import pytest
 from conventions_fixtures import house
 from fransys.colours import BU
-from fransys_el import ProblemError, build, placement_syms
+from fransys_el import ProblemError, build, placement_syms, placement_where
 from fransys_el.kit_keys import PickKey, function_of
 from fransys_el.placement_annexes import label_annexes
 from fransys_el.placement_env import make_env
@@ -22,9 +22,11 @@ from symdef import from_divisions, text_footprint
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PlacementProblem, Size, from_plain, to_plain
-from fransys_model.derive import function_role, function_scopes, port_designation, run_point_text, tag_text
+from fransys_layout.symbols import text_width_g
+from fransys_model.derive import function_role, function_scopes, port_designation, position_room, run_point_text, tag_text
 from fransys_model.derive.order import functions_in_order
-from fransys_model.vocab import ports
+from fransys_model.layout import sheet_for
+from fransys_model.vocab import PageKind, ports
 lazy from fransys_model.kernel import Model
 
 
@@ -227,3 +229,24 @@ def test_a_strip_named_like_a_symbol_is_refused_naming_the_strip(planted: tuple[
     sym = planted[1].symbols[0]
     with pytest.raises(ProblemError, match=sym.id):
         label_annexes((dataclasses.replace(sym, row_group=sym.id),), house().options, "", {sym.id: {"": Size(8, 8)}})
+
+
+def test_a_where_line_is_never_wider_than_its_reserve(planted: tuple[Model, PlacementProblem]) -> None:
+    """TP5: the reserve line is at least the widest position text any frame cell and digit prints, measured as the drawing measures it."""
+    model, _ = planted
+    env = make_env(model, kit_for(model), house(), LIBRARY)
+    reserve = where_room(env, function_of(model, _pin_of(model))).splitlines()[1]
+    sheets = [sheet_for(model, kind) for kind in PageKind]
+    columns, rows = max(s.frame_columns for s in sheets), max(s.frame_rows for s in sheets)
+    width = lambda text: text_width_g(LIBRARY.font, text, height=house().text_height)  # noqa: E731 -- one measure, both sides
+    printed = (position_room(model, 1, (columns, r), d, far=[]) for r in range(1, rows + 1) for d in "123456789")
+    assert width(reserve) >= max(map(width, printed))
+
+
+def test_the_where_reserve_picks_the_widest_row_and_far_document_by_text_width_not_character_count(planted, monkeypatch: pytest.MonkeyPatch) -> None:
+    """TP7: of candidates "iiiiiii" (7 characters) and "WWW" (3), the reserve is "WWW": the wider print wins."""
+    env = make_env(planted[0], kit_for(planted[0]), house(), LIBRARY)
+    texts = {((), 1): "iiiiii", ((), 2): "WWW", ((), 3): "iiiiiii", (("d1",), 1): "iiiiiiii", (("d2",), 1): "WWW"}
+    monkeypatch.setattr(placement_where, "position_room", lambda _m, _n, frame, _d, *, far: texts[tuple(far), frame[1]])
+    assert placement_where._widest_line(env, 1, (5, 3), "1", []) == "WWW"
+    assert placement_where._widest_line(env, 1, (5, 1), "1", ["d1", "d2"]) == "WWW"  # ty: ignore[invalid-argument-type] - document ids as plain strings

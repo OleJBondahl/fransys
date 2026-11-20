@@ -287,7 +287,7 @@ def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_cl
     assert len(boundaries(result.model)) == 6
 
 
-_ANNEX_UNPLACED_STOCK = 0  # R420: only falls; the text stage (TS) places all six
+_LABEL_NO_ROOM_STOCK = 0  # R420: only falls; the text stage (TS) places all six
 
 
 def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
@@ -299,7 +299,7 @@ def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
     result, _, _ = _build_system()
     codes = _codes(result)
     # R420: a falling stock; on the text-stage tip every annex finds a free spot.
-    assert codes.count("ANNEX_UNPLACED") == _ANNEX_UNPLACED_STOCK
+    assert codes.count("LABEL_NO_ROOM") == _LABEL_NO_ROOM_STOCK
     assert codes.count("WIRE_OVER_LABEL") == 0
 
 

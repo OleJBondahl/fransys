@@ -42,7 +42,7 @@ def _framed(content: Sequence[Box], room: OutlineRoom) -> Box:
     return Box(hull.x, hull.y, max(hull.w, room.label.x + room.label.w, room.least.w), max(hull.h, room.least.h))
 
 
-def _grow(box: Box | None, room: OutlineRoom) -> Box | None:
+def grown(box: Box | None, room: OutlineRoom) -> Box | None:
     """`box` with the margin on every side and the label room above."""
     top = room.label.y + room.label.h
     return box and Box(box.x - room.margin, box.y - top, box.w + 2 * room.margin, box.h + top + room.margin)
@@ -58,7 +58,7 @@ def framed(problem: PlacementProblem, options: Options) -> PlacementProblem:
         return problem
     members = frozenset().union(*(m for _, m in problem.hints.frames))
     fits = {
-        s.id: {o: replace(v, footprint=_grow(v.footprint, room), row_footprint=_grow(v.row_footprint, room)) for o, v in s.views.items()}
+        s.id: {o: replace(v, footprint=grown(v.footprint, room), row_footprint=grown(v.row_footprint, room)) for o, v in s.views.items()}
         for s in problem.symbols
         if s.id in members
     }

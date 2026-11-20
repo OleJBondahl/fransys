@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 
 
 def _flagged(findings: Sequence[Finding], page: int) -> set[str]:
-    """The owners the stages reported as ANNEX_UNPLACED on the page."""
-    return {f.subject for f in findings if f.code == "ANNEX_UNPLACED" and f.page == page and f.subject}
+    """The owners the stages reported as LABEL_NO_ROOM on the page."""
+    return {f.subject for f in findings if f.code == "LABEL_NO_ROOM" and f.page == page and f.subject}
 
 
 def _solids(page: PagePlacement, markers: Sequence[Marker], options: Options) -> list[Box]:

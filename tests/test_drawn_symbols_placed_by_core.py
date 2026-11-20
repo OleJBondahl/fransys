@@ -54,10 +54,8 @@ POWER_KEYS = {power_symbol_key(kind) for kind in ("supply", "ground", "pe")}
 # 160 -> 170. The rise comes from UNIT-SCOPE's stub marker-arrows, a hanging kind (H1); a stub per
 # line (R467). Covered by: PIN-HANGINGS - layout anchors (R496 bar, R514).
 # MF-WO2: a pin drawn to its far end carries no stub: machine_panel 309 -> 222, panel_di16p
-# 307 -> 219, remote_io 118 -> 85, mcc 170 -> 140. ANNEX_UNPLACED: machine_panel 43 -> 10,
-# panel_di16p 33 -> 11, remote_io 4 -> 1, mcc 11 -> 10.
+# 307 -> 219, remote_io 118 -> 85, mcc 170 -> 140.
 # PE-COPY-INLINE (R793): mcc 136 -> 144, the eight PE copies' home stubs (marker-arrow, reference-marker, dot). Covered by: PIN-HANGINGS (R514), R793.
-# PE-COPY-INLINE (R793): ANNEX_UNPLACED mcc 10 -> 11. Covered by: MF-WO4-TEXT (R793 Q3).
 # KI-178 (R706): machine_panel 183 -> 188, panel_di16p 180 -> 190 after the P4C union (R720, R721); Covered by: PIN-HANGINGS
 # R825/R829: machine_panel 188 -> 193, panel_di16p 190 -> 195: one drawn reference-marker per mixed-pin stub (R804),
 # `R825_STUBS`; tests/test_rule_marker_free_side.py pins that count to the stubs the core emits (precedent P4C e69d8b583).
@@ -73,10 +71,10 @@ r308_unplaced_symbols = {
     "distribution_board": 0,
 }
 
-# Per case: the ANNEX_UNPLACED findings of the build (layout-0395). Equality, so a fall lowers the
+# Per case: the LABEL_NO_ROOM findings of the build (layout-0395). Equality, so a fall lowers the
 # stock. Measured at the base (after UNIT-SCOPE and TRUNK-CLEAR A). No pump-station key (K3).
 # Targets for PIN-HANGINGS P4d: machine_panel 22, mcc 10, remote_io 1. Covered by: PIN-HANGINGS P4d.
-annex_unplaced = {
+label_no_room = {
     "skid": 0,  # R1006: slack 32
     "machine_panel": 0,  # R985 class (1): exact ink
     "panel_di16p": 0,  # R985 class (1): exact ink (was 13)
@@ -197,9 +195,9 @@ def test_every_drawn_route_point_is_a_core_route_point_but_a_falling_stock(case)
 
 
 @pytest.mark.parametrize("name", CASE_PARAMS)
-def test_annex_unplaced_findings_are_a_falling_stock(name):
-    findings = [f for f in _built_with_unlaid(name)[0].findings if f.code == "ANNEX_UNPLACED"]
-    assert len(findings) == annex_unplaced[name]  # equal: a lower count lowers the stock
+def test_label_no_room_findings_are_a_falling_stock(name):
+    findings = [f for f in _built_with_unlaid(name)[0].findings if f.code == "LABEL_NO_ROOM"]
+    assert len(findings) == label_no_room[name]  # equal: a lower count lowers the stock
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

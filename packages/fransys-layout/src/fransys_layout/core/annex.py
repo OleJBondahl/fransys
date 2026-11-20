@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import replace
-from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 from .annex_values import AnnexBox
 from .clearance import Keep, hits
 from .errors import CoreError
-from .geometry import around, inside, overlaps
+from .geometry import around, inside, overlaps, union
+from .outline import grown
 from .outputs import Demand
 from .values import Box, Finding
 
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
     from .annex_values import Annex, Spot
-    from .outputs import Placed, Wire
-    from .values import Size
+    from .outputs import Placed
+    from .values import OutlineRoom, Size
 
 
 def _wire_x(placed: Placed, spot: Spot) -> int | None:
@@ -74,13 +74,6 @@ def _candidates(annexes: Sequence[Annex], owners: Mapping[str, Placed]) -> list[
         for k, u in zip(keys, used, strict=True):
             held[k] = u + annex.size.h
     return out
-
-
-def _wire_keeps(wires: Sequence[Wire]) -> list[Keep]:
-    """One keep per wire segment, its true extent."""
-    return [
-        Keep("", Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)), "wire", w.net) for w in wires for (ax, ay), (bx, by) in pairwise(w.points)
-    ]
 
 
 def _clear(box: Box, keeps: Sequence[Keep]) -> bool:
@@ -177,40 +170,79 @@ def _greedy(
     return labels, blocked
 
 
-def _unplaced(annex: Annex, page: int, candidates: int) -> Finding:
-    text = f"annex of {annex.owner} on page {page} is blocked at all {candidates} candidates: widen the gap beside it or shorten its text"
-    return Finding("ANNEX_UNPLACED", text, page, annex.owner)
+def _unplaced(annex: Annex, page: int, ask: Demand) -> Finding:
+    text = (
+        f"label of {annex.owner} on page {page} found no room: it needs {ask.box} free beside its owner and no recut gave it; "
+        "this is a Fransys defect, report it: no setting changes the layout"
+    )
+    return Finding("LABEL_NO_ROOM", text, page, annex.owner)
 
 
 def _asks(annex: Annex, placed: Placed, first: Box) -> Demand:
-    """What frees the annex's first rung: that rung's box, relative to the owner's origin, for the owner's footprint to hold (R1831)."""
+    """What frees the annex's least-cost rung: that rung's box, relative to the owner's origin, for the owner's footprint to hold (R1831)."""
     return Demand("", 0, owner=annex.owner, box=Box(first.x - placed.x, first.y - placed.y, first.w, first.h))
+
+
+def _probe(box: Box) -> Box:
+    """The box less its rim: a keep touching its edge does not hit it (`_clear`)."""
+    return Box(box.x + 1, box.y + 1, box.w - 2, box.h - 2)
+
+
+def _reach(box: Box, room: OutlineRoom | None) -> Box:
+    """The box the owner's frame must hold for `box`: `box` with the frame's margin and title room."""
+    return (grown(box, room) if room else None) or box
+
+
+def _frees(box: Box, keeps: Sequence[Keep], owner: str, room: OutlineRoom | None) -> bool:
+    """Whether growing the owner's frame to hold `box` frees it: only frame edges cross it and the grown frame meets no keep but the owner's."""
+    reach = _reach(box, room)
+    return all(k.kind == "outline" for k in hits(_probe(box), keeps, {})) and all(
+        k.kind == "outline" or k.owner == owner for k in hits(_probe(reach), keeps, {})
+    )
+
+
+def _cost(box: Box, foot: Box, room: OutlineRoom | None) -> int:
+    """The area the owner's footprint `foot` takes once it holds `box` and the frame room around it."""
+    u = union(foot, _reach(box, room))
+    return u.w * u.h
+
+
+def _rung(spots: Cands, ink: Ink, area: Size | None, framed: tuple[str, OutlineRoom | None], foot: Box) -> Box:
+    """The rung a blocked label asks its owner to free: the first inside the content box that growing the owner's frame (`framed`: owner, room) frees.
+
+    A rung another keep blocks stays blocked however the frame grows; with none freed, the first inside the content box.
+    """
+    held = [c.box for c in spots if area is None or inside(c.box, area)]
+    freed = [b for b in held if _frees(b, [*ink[0], *ink[1]], *framed)]
+    return min(freed, key=lambda b: _cost(b, foot, framed[1]), default=None) or next(iter(held), spots[0].box)
 
 
 def place_labels(
     annexes: Sequence[Annex],
     placed: Mapping[str, Placed],
-    ink: tuple[Sequence[Wire], Sequence[Box]],
-    on: tuple[int, Size | None, int, int],
+    keeps: Sequence[Keep],
+    on: tuple[int, Size | None, int, int] | tuple[int, Size | None, int, int, OutlineRoom | None],
     prior: Sequence[AnnexBox] = (),
 ) -> tuple[list[AnnexBox], list[Finding], dict[int, Demand]]:
-    """Each annex at its first free candidate; `ink` is the page's wires and solid boxes, `on` its page, content box, wire gap and MOVES (R1479).
+    """Each annex at its first free candidate; `keeps` is the page's ledger and wires, `on` its page, content box, wire gap, MOVES (R1479), room.
 
     A label with none free makes room once, by moving the labels in its way; one still blocked stands at its first
-    candidate inside the content box with ANNEX_UNPLACED and holds no room; its Demand, by index, is the first rung it needs freed.
+    candidate in the content box, holds no room, is a LABEL_NO_ROOM finding; its Demand is the least-cost rung growing the owner's frame frees.
     """
-    (wires, boxes), (page, area, gap, moves) = ink, on
-    keeps: Ink = ([_solid(b) for b in (*(p.body for p in placed.values()), *boxes)], _wire_keeps(wires))
+    # KI-1123: a label can still sit on the dashed unit-box edge or between the dashed and the solid box line (TEXT-KEEPS-BOX-EDGE)
+    page, area, gap, moves, *rest = on
+    room = rest[0] if rest else None
+    ink: Ink = ([k for k in keeps if k.kind != "wire"], [k for k in keeps if k.kind == "wire"])
     cands = _candidates(annexes, placed)
-    labels, blocked = _greedy(annexes, cands, keeps, on[:3], prior)
+    labels, blocked = _greedy(annexes, cands, ink, on[:3], prior)
     for i in list(blocked):
-        roomed = _make_room(i, cands, labels, (keeps, blocked), (area, gap, moves))
+        roomed = _make_room(i, cands, labels, (ink, blocked), (area, gap, moves))
         if roomed is not None:
             labels = roomed
             blocked.remove(i)
-    rung = {i: next((c.box for c in cands[i] if area is None or inside(c.box, area)), cands[i][0].box) for i in blocked}
+    rung = {i: _rung(cands[i], ink, area, (annexes[i].owner, room), placed[annexes[i].owner].footprint) for i in blocked}
     asks = {i: _asks(annexes[i], placed[annexes[i].owner], rung[i]) for i in blocked}
-    return labels, [_unplaced(annexes[i], page, len(cands[i])) for i in blocked], asks
+    return labels, [_unplaced(annexes[i], page, asks[i]) for i in blocked], asks
 
 
 def text_keeps(labels: Iterable[AnnexBox]) -> tuple[Keep, ...]:

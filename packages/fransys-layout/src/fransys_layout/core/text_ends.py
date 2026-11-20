@@ -8,7 +8,6 @@ page. A tag end that names a column stands at the net's pin nearest that column 
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
@@ -31,7 +30,6 @@ if TYPE_CHECKING:
     from .arrow_reserve import ArrowEnds
     from .flow_values import CutResult, Fan
     from .outputs import Placed, Placement, Trunk
-    from .route_fixed import Fixed
     from .values import XY, Options, Orientation, PlacementProblem, Ref, RefEnd, Side, Size
 
 Key = tuple[tuple[int, int | str], ...]
@@ -135,17 +133,6 @@ def pin_keeps(env: MarkEnv) -> dict[int, list[Keep]]:
             )
         else:
             out.setdefault(page, []).extend(footprint_keeps([("", net)], Box(x, y, 0, 0)))
-    return out
-
-
-def wire_keeps(fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:
-    """By page, a Keep for each segment of a fixed wire, owned by its net (R872, R1007)."""
-    out: dict[int, list[Keep]] = {}
-    for page, pair in fixed.items():
-        for w in pair.trunks.wires:
-            for (x0, y0), (x1, y1) in pairwise(w.points):
-                box = Box(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
-                out.setdefault(page, []).append(Keep("", box, "wire", w.net, None, None, (w.points[0], w.points[-1])))
     return out
 
 

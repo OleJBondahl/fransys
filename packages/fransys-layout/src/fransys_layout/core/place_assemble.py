@@ -45,11 +45,12 @@ if TYPE_CHECKING:
 def _placed_cell(env: PageEnv, cell: Cell, ox: int, oy: int) -> Placed:
     """A cell's symbol with its origin at (ox, oy): body, footprint and pins all absolute."""
     sym = env.syms[cell.sym]
-    body = shift(view_of(sym, cell.orient).body, ox, oy)
+    view = view_of(sym, cell.orient)
+    body = shift(view.body, ox, oy)
     fp = shift(cell_footprint(sym, cell, in_row=cell.sym in env.in_row), ox, oy)
     offsets = {p.id: pin_xy(sym, cell, p.id) for p in sym.pins}
     pins = tuple(PinXY(pin, ox + dx, oy + dy) for pin, (dx, dy) in offsets.items())
-    return Placed(sym.id, env.plan.page, ox, oy, cell.orient, body, fp, pins)
+    return Placed(sym.id, env.plan.page, ox, oy, cell.orient, body, fp, pins, shift(view.ink or view.keepout, ox, oy))
 
 
 def _cells(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str, Placed]:
@@ -81,7 +82,9 @@ def _placed_box(env: PageEnv, box: str, edges: Mapping[str, str], x: Mapping[str
     fp = sym.footprint
     grown = Box(left - lead, oy + fp.y, right - left + lead + tail, fp.h)
     pins = _box_pins(env, box, edges, x, oy)
-    return Placed(box, env.plan.page, left - sym.body.x, oy, "R0", body, grown, pins)
+    ink = sym.r0.ink or sym.keepout
+    keepout = Box(left + ink.x - sym.body.x, oy + ink.y, right - left + ink.w - sym.body.w, ink.h)
+    return Placed(box, env.plan.page, left - sym.body.x, oy, "R0", body, grown, pins, keepout)
 
 
 def _boxes(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str, Placed]:

@@ -183,7 +183,6 @@ def test_layout_and_render_never_import_fransys_el():
     for core in ("fransys_layout", "fransys_render"):
         assert "fransys_el" not in ALLOWED[core]
         assert violations(core, "import fransys_el") == {"fransys_el"}
-    assert violations("fransys_el", "from fransys_layout import LayoutOptions") == set()
 
 
 CORE_DIR = PACKAGES_ROOT / "fransys-layout" / "src" / "fransys_layout" / "core"

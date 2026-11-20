@@ -227,6 +227,6 @@ invalid-ignore-comment = "error"
 # member of the public data model.
 ignore_names = [
     "R0", "R90", "R180", "R270", "MR0", "MR90", "MR180", "MR270", "USER", "PIN", "POWER",
-    "ELECTROMECHANICAL", "CONTACT_IMAGE",
+    "ELECTROMECHANICAL",
 ]
 ignore_decorators = ["@fact"]

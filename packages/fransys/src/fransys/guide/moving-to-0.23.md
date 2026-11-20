@@ -4,10 +4,16 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.33
+
+- A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.
+- Texts and tags keep clear of the unit boxes, so some pages repack and the pump-station example drawings move.
+- No call changes.
+
 ## New in 0.23.32
 
 - A wire and the reference markers of its round now come from one routing plan, so a pin whose route is lost never leaves a dangling wire end.
-- INK_WITHOUT_CONDUCTOR (WARNING) names ink drawn between pins that the model joins by no conductor; its finding text names the fix.
+- INK_WITHOUT_CONDUCTOR (WARNING) names ink drawn between pins that the model joins by no conductor. It names no fix: no call clears it, so send the smallest model that shows it.
 - A part whose cable gauge is unknown now reads None, reports one INFO (`GAUGE_UNKNOWN`) per part, and the cable rows print the text it gives.
 - The cable list's gauge column field is now `cross_section`, the gauge text; the part facet's `gauge_mm2` is `Decimal | None`.
 

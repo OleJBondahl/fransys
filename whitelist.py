@@ -288,13 +288,9 @@ _.port_pairs  # OTHER fransys-model/src/fransys_model/derive/pairing.py:28
 _.beside  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.port_map  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.steps  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
-_.mirror  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.priority  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.route_turn_penalty  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:180
 _.route_crossing_penalty  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:181
-_.MARKING  # OTHER fransys-el/src/fransys_el/texts.py:33
-_.CROSS_REFERENCE  # OTHER fransys-el/src/fransys_el/texts.py:41
-_.HARNESS_LINE  # OTHER fransys-el/src/fransys_el/texts.py:53
 # used by PIN-HANGINGS P2 (layout-0395); remove when P2 calls it
 # used by PIN-HANGINGS P3 (layout-0395); remove when P3 reads it
 # PageRoutes.dots (layout-0395 P3c): written by route_page, read by el's junction_dots

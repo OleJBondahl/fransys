@@ -72,6 +72,22 @@ def outside(drawing: Drawing) -> list[str]:
     return found + texts
 
 
+def where_far(drawing: Drawing) -> list[str]:
+    """The where-texts that stand off their stack: none within the TP6 stack distance (layout-0623) of the line before it.
+
+    `write_tables.line_box` stacks line i one `line_pitch` after the tag; the drawn boxes carry no pitch, so the distance is
+    the previous text's extent along the stack plus one text height (its own extent), which a pitch never exceeds.
+    """
+    texts = [t for t in drawing.texts if getattr(t, "kind", "") in {"TAG", "WHERE"}]
+    found = []
+    for t in texts:
+        start = t.box.x if t.turned else t.box.y
+        gaps = [start - (p.box.x if p.turned else p.box.y) for p in texts if p.owner == t.owner and p is not t]
+        if getattr(t, "kind", "") == "WHERE" and not any(0 < g <= 2 * (t.box.w if t.turned else t.box.h) for g in gaps):
+            found.append(f"text at {_at(t.box)}")
+    return found
+
+
 def _findings(code: str, page: Id[Page], members: list[str]) -> list[Finding]:
     """One finding per member, so a finding count is a member count; the message names the member."""
     return [_INFO[code].finding((page,), member) for member in members]
@@ -84,14 +100,16 @@ def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:
     marked = over_markers(part)
     out = [*outside(drawing), *stray(part, box)]
     bent = crooked(part)
+    far = where_far(drawing)
     return [
         *_findings("OVERLAP", page, over),
         *_findings("WIRE_OVER_MARKER", page, marked),
         *_findings("OUT_OF_PAGE", page, out),
         *_findings("WIRE_NOT_ORTHOGONAL", page, bent),
+        *_findings("WHERE_TEXT_FAR", page, far),
     ]
 
 
 def drawing_invariant_findings(net: Netlist) -> tuple[Finding, ...]:
-    """The four invariant codes for each page of `net` that has any."""
+    """The invariant codes for each page of `net` that has any."""
     return tuple(f for page, part in net.pages.items() for f in _page_findings(page, part))

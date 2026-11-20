@@ -181,7 +181,7 @@ def test_no_connection_is_undrawn_and_the_build_has_no_error(main) -> None:
     result = main
     assert error_codes(result) == set()
     assert "CONNECTION_NOT_DRAWN" not in _codes(result)
-    assert not {"ANNEX_UNPLACED"} & set(_codes(result))
+    assert not {"LABEL_NO_ROOM"} & set(_codes(result))
 
 
 def test_every_symbol_covers_its_pin_so_no_connection_is_undrawn(main) -> None:
@@ -401,7 +401,7 @@ def test_a_supply_bars_text_sits_past_its_bar_and_crosses_no_lead(tmp_path) -> N
     places = _symbols(model)
     texts = _power_texts(model)
     assert len(texts) == 5  # the four pins and the PSU`s +
-    assert not {"ANNEX_UNPLACED"} & set(_codes(result))
+    assert not {"LABEL_NO_ROOM"} & set(_codes(result))
     for text in texts:
         box = _text_box(text)
         for other in places:

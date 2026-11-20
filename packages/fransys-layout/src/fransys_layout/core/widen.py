@@ -10,7 +10,7 @@ from dataclasses import replace
 from itertools import count
 from typing import TYPE_CHECKING, NamedTuple
 
-from .anchors import anchor_leads, anchor_pages, page_keeps
+from .anchors import Stood, anchor_leads, anchor_pages, page_keeps
 from .arrow_reserve import block_reserves, keep_legs
 from .blocks import assign_blocks
 from .cut import cut_pages
@@ -32,7 +32,7 @@ from .row_names import row_where
 from .text_markers import placed_marks
 from .topology import build_flow
 from .values import Finding, g_text
-from .widen_rounds import settled
+from .widen_rounds import settled, unspent
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -225,10 +225,16 @@ def routed(
     anchored, found = anchor_pages(placement, problem, options)
     parts = []
     for page in placement.pages:
-        keeps = page_keeps(page, standing.markers, anchored, problem, options)
+        keeps = page_keeps(page, Stood(standing.markers, anchored), problem, options)
         leads = anchor_leads(anchored)
         parts.append(
-            route_pages(Placement((page,)), cut, problem, options, Laid(keeps, standing.fixed, standing.lost, standing.markers, leads, standing.memo))
+            route_pages(
+                Placement((page,), outlines=placement.outlines),
+                cut,
+                problem,
+                options,
+                Laid(keeps, standing.fixed, standing.lost, standing.markers, leads, standing.memo),
+            )
         )
     return Routes(
         tuple(p for r in parts for p in r.pages),
@@ -342,7 +348,7 @@ def _widened(
 ) -> tuple[CutResult, Placement, tuple[Finding, ...]]:
     """The re-cut, a blocked label's gap widened first (T6); a page that then no longer fits, or a row no pitch can hold, is cut without it.
 
-    The label then stays ANNEX_UNPLACED, a finding naming it: a label never costs the page its fit.
+    The label then stays blocked, a LABEL_NO_ROOM finding naming it: a label never costs the page its fit.
     """
     problem, options, _ = env
     if any(p.needs for p in routes.pages):
@@ -372,10 +378,10 @@ def _asked(demands: Iterable[Demand], given: Mapping[tuple[str, str], Demand]) -
     return asked, {**given, **want}
 
 
-def _digits(placement: Placement, problem: PlacementProblem, risen: int) -> tuple[PlacementProblem, int]:
+def _digits(placement: Placement, problem: PlacementProblem, risen: int) -> tuple[PlacementProblem, int, bool]:
     """`problem` with the annexes for the digits of the page count, once they pass the `risen` reserved; digits only rise (R1883)."""
     rise = len(problem.wider[: len(str(len(placement.pages))) - 1])  # capped at the sets `wider` holds
-    return (replace(problem, annexes=problem.wider[rise - 1]), rise) if rise > risen else (problem, risen)
+    return (replace(problem, annexes=problem.wider[rise - 1]), rise, True) if rise > risen else (problem, risen, False)
 
 
 def widen(
@@ -393,17 +399,17 @@ def widen(
     over: tuple[Finding, ...] = ()
     held: dict[str | tuple[str, str], RowReserve] = {}
     roomed_for: dict[tuple[str, str], Demand] = {}
-    risen = 0
+    risen, tried = 0, {}
     for i in count():
-        problem, now = _digits(placement, problem, risen)
-        rose, risen = now > risen, now
-        asked, roomed_for = _asked((d for p in rnd.routes.pages for d in p.needs), roomed_for)
-        problem2 = roomed(tagged_by(problem, rnd.lost), asked)
+        problem, risen, rose = _digits(placement, problem, risen)
+        tried, needs = unspent(tried, rnd.routes, options)
+        asked, roomed_for = _asked(needs, roomed_for)
+        problem2 = roomed(tagged_by(problem, rnd.lost), asked, options.outline)
         # a marker's ask is the last resort, tried before a quiet pass settles the loop (layout-0559, KI-1004)
         marker_only = problem2 is problem and not rose and (i > 0 or not _grew(placement, rnd.routes))
         if marker_only:
             asked, roomed_for = _asked(rnd.asks, roomed_for)
-            problem2 = roomed(problem, asked)
+            problem2 = roomed(problem, asked, options.outline)
         if i == 0 and problem2 is problem and not rose and not _grew(placement, rnd.routes) and not overflows(placement, cut, problem, options):
             return cut, _counted(placement, reserves_of(placement, rnd.routes)), rnd, problem, ()
         if settled(i, options, asked, quiet=problem2 is problem and not rose):

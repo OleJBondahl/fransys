@@ -225,3 +225,19 @@ def test_a_by_others_device_drawn_with_a_unit_prints_with_that_unit() -> None:
     printer = documents(model)[printed]
     assert printer.unit is not None
     assert printer.preset is fr.DocumentPreset.CABINET_SCHEMATIC
+
+
+def _cuts(box: Any, a: tuple[int, int], b: tuple[int, int]) -> bool:
+    """Whether the orthogonal edge a-b passes the open interior of `box`."""
+    (x1, y1), (x2, y2) = a, b
+    if x1 == x2:
+        return bool(box.x < x1 < box.x + box.w and min(y1, y2) < box.y + box.h and max(y1, y2) > box.y)
+    return bool(box.y < y1 < box.y + box.h and min(x1, x2) < box.x + box.w and max(x1, x2) > box.x)
+
+
+def test_no_frame_edge_passes_through_a_text() -> None:
+    """TEXT-KEEPS A1: a framed terminal's tag stands wholly inside or wholly outside each frame, never cut by an edge."""
+    pages = drawn_pages(_built().model).values()
+    assert [
+        t.text for d in pages for o in d.outlines for t in d.texts if any(_cuts(t.box, a, b) for a, b in pairwise((*o.points, o.points[0])))
+    ] == []

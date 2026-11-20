@@ -80,6 +80,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="WHERE_TEXT_FAR",
+        severity=Severity.WARNING,
+        stage="render",
+        who="Fransys",
+        cause="A where-text stands farther from the text before it than one line pitch, the distance the stack guarantees.",
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
         code="POWER_SYMBOL_NOT_JOINED",
         severity=Severity.ERROR,
         stage="render",

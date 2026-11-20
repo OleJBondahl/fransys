@@ -34,6 +34,7 @@ class Turned:
     footprint: Box
     pins: tuple[PinTurn, ...]
     row_footprint: Box | None = None
+    ink: Box | None = None  # body and every slot but the designation's, what a label keeps off (TP4)
 
 
 @dataclass(frozen=True, slots=True)

@@ -81,6 +81,11 @@ def _placed(model: Model, owner: Mapping[str, Id[Function]], sym: DrawnSymbol, p
     return replace(sym, texts=texts, slots=tuple(drawn_slots(HEAD, texts).items()))
 
 
+def line_box(box: Box, width: int, height: int, *, turned: bool, offset: int = 0) -> Box:
+    """The ink box of a text `width` long in the annex `box`, `offset` along its stack; a turned one stands at the annex top (TP6)."""
+    return Box(box.x + offset, box.y, height, width) if turned else Box(box.x, box.y + offset, width, height)
+
+
 def _lines(model: Model, on: tuple[Library, int], text: DrawnText, rows: Sequence[tuple[Id[Page], FrameCell]], page: Id[Page]) -> list[DrawnText]:
     """The where lines under the tag `text`: one per placement of its terminal off `page`, each one line pitch after the last.
 
@@ -97,10 +102,7 @@ def _lines(model: Model, on: tuple[Library, int], text: DrawnText, rows: Sequenc
     found = []
     for i, (line, link) in enumerate(lines):
         width = text_width_g(library.font, line, height=height)
-        if text.turned:
-            box = Box(text.box.x + step * (i + 1), text.box.y + text.box.h - width, height, width)
-        else:
-            box = Box(text.box.x, text.box.y + step * (i + 1), width, height)
+        box = line_box(text.box, width, height, turned=text.turned, offset=step * (i + 1))
         found.append(DrawnText(line, box, "WHERE", "SW" if text.turned else "NW", text.owner, text.turned, link))
     return found
 

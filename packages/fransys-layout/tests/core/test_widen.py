@@ -210,7 +210,7 @@ def wide_annex_columns(width: int) -> PlacementProblem:
 def test_a_label_blocked_at_every_candidate_widens_its_gap_before_it_is_a_finding() -> None:
     """A6: a box 100 wide beside a body stands in a gap of 8 nowhere; its need goes to the recut, the gaps grow, and every label stands."""
     layout = solve(wide_annex_columns(100), PLAIN)
-    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f for f in layout.findings if f.code == "LABEL_NO_ROOM"] == []
     assert len(layout.annotations.annexes) == 6
     assert min(g.x1 - g.x0 for g in layout.placement.pages[0].gaps) >= 100
 
@@ -226,7 +226,7 @@ def edge_column_annexes() -> PlacementProblem:
 def test_a_label_blocked_at_the_page_edge_widens_the_gap_at_its_other_side() -> None:
     """LABEL-PLACE 3: the first column's left spot lies outside the page; its need goes to the gap on its right and every label stands."""
     layout = solve(edge_column_annexes(), PLAIN)
-    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f for f in layout.findings if f.code == "LABEL_NO_ROOM"] == []
     assert min(g.x1 - g.x0 for g in layout.placement.pages[0].gaps) >= 100
 
 
@@ -241,7 +241,7 @@ def stacked_column_annexes() -> PlacementProblem:
 def test_a_label_with_no_gap_beside_its_column_asks_for_room_above_its_owner() -> None:
     """LABEL-PLACE 3: a column with no gap has no width to give; the tag's need is vertical room, and the label stands clear of both bodies."""
     layout = solve(stacked_column_annexes(), PLAIN)
-    assert [f for f in layout.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f for f in layout.findings if f.code == "LABEL_NO_ROOM"] == []
     bodies = [p.body for p in layout.placement.pages[0].placed]
     assert len(layout.annotations.annexes) == 1
     assert not any(overlaps(a.box, b) for a in layout.annotations.annexes for b in bodies)
@@ -251,7 +251,7 @@ def test_a_label_with_no_gap_beside_its_column_asks_for_room_above_its_owner() -
 def test_a_label_still_blocked_after_the_widen_is_a_finding_naming_it_and_stands_at_its_first_spot() -> None:
     """T6: a box wider than the page fits no gap; the finding names its owner and the label is neither dropped nor moved."""
     layout = solve(wide_annex_columns(AREA.w + 8), PLAIN)
-    named = {f.subject for f in layout.findings if f.code == "ANNEX_UNPLACED"}
+    named = {f.subject for f in layout.findings if f.code == "LABEL_NO_ROOM"}
     assert named == {s.id for s in three_columns().symbols}
     assert len(layout.annotations.annexes) == 6
 

@@ -12,21 +12,18 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from .anchors import anchor_keeps
-from .annex import text_keeps
+from .anchors import MARKED, Stood, anchor_pages, page_keeps
 from .clearance import clear, own_end, through_keeps
 from .errors import CoreError
 from .geometry import inset, inside, marker_box, marker_drawn_box
 from .hang_levels import staggered
-from .hangings import hung_keeps
 from .keys import natural_key
 from .net_keys import net_of_key
-from .outline import outline_keeps
 from .outputs import Demand, Marker
 from .ref_kind import kind_of
 from .stand_fit import Limits, fit
 from .text_cells import cell_of
-from .text_ends import bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, who, wire_keeps
+from .text_ends import bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, who
 from .values import Box, Finding, RefKind
 
 if TYPE_CHECKING:
@@ -179,18 +176,15 @@ def stagger(
 
 def _all_keeps(env: MarkEnv, placement: Placement, problem: PlacementProblem, options: Options, fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:
     """Every page's keeps a marker clears: pins, fixed wires, the labels that stand, unit frames and anchor outlines."""
-    keeps = pin_keeps(env)
-    for page, more in wire_keeps(fixed).items():
-        keeps.setdefault(page, []).extend(more)
-    for page, pair in fixed.items():
-        keeps.setdefault(page, []).extend(text_keeps(pair.labels))
+    pins = pin_keeps(env)
+    anchored, _ = anchor_pages(placement, problem, options)
+    out = {}
     for pg in placement.pages:
-        keeps.setdefault(pg.page, []).extend(hung_keeps(pg.hangings))
-    for page in {o.page for o in placement.outlines}:
-        keeps.setdefault(page, []).extend(outline_keeps(placement.outlines, options.outline, page))
-    for page, more in anchor_keeps(placement, problem, options).items():
-        keeps.setdefault(page, []).extend(more)
-    return keeps
+        pair = fixed.get(pg.page)
+        wires, labels = (pair.trunks.wires, pair.labels) if pair else ((), ())
+        stood = page_keeps(pg, Stood((), anchored, placement.outlines, wires, labels), problem, options, MARKED)
+        out[pg.page] = [*pins.get(pg.page, []), *stood]
+    return out
 
 
 def placed_marks(

@@ -30,23 +30,6 @@ def require_reading(model: Model, ctx: PrintContext) -> None:
         raise SchemaError(msg, kind="unit", record_id=ctx.reading)
 
 
-def common_location(model: Model, ctx: PrintContext) -> Id[AspectNode] | None:
-    """The deepest location that holds every located item of the reading unit's own items.
-
-    Own items only, each read via `reference_leaves`; an unlocated item does not count.
-    No reading unit (the system listing) gives `None`: a top-level item keeps its whole location.
-    """
-    if ctx.reading is None:
-        return None
-    nodes = aspect_nodes(model)
-    leaves = {
-        leaf.id
-        for item in unit_index(model).own_items.get(ctx.reading, ())
-        if (leaf := reference_leaves(model, item).get(Aspect.LOCATION)) is not None
-    }
-    return common_node([list(chain_up(nodes, leaf))[::-1] for leaf in leaves])
-
-
 def _authored_in(model: Model, chain: tuple[Id[AspectNode], ...], unit: Id[Unit]) -> tuple[Id[AspectNode], ...]:
     """The nodes of `chain` whose authoring key sits under `unit`'s scope: the unit's own function blocks.
 
@@ -57,6 +40,25 @@ def _authored_in(model: Model, chain: tuple[Id[AspectNode], ...], unit: Id[Unit]
     return tuple(node for node in chain if nodes[node].key[: len(scope)] == scope)
 
 
+def common_location(model: Model, ctx: PrintContext) -> Id[AspectNode] | None:
+    """The deepest location that holds every located item of the reading unit's own items.
+
+    Own items only, each via `reference_leaves`, and only nodes authored under the unit's scope: a parent's
+    placement never moves it. No reading unit (the system listing) gives `None`.
+    """
+    if ctx.reading is None:
+        return None
+    nodes = aspect_nodes(model)
+    leaves = {
+        leaf.id
+        for item in unit_index(model).own_items.get(ctx.reading, ())
+        if (leaf := reference_leaves(model, item).get(Aspect.LOCATION)) is not None
+    }
+    chains = (_authored_in(model, tuple(chain_up(nodes, leaf))[::-1], ctx.reading) for leaf in leaves)
+    return common_node([list(chain) for chain in chains if chain])
+
+
+# KI-1126: the per-aspect cuts below go when the own-records projection lands (BASELINE-OWN-RECORDS)
 def kept_nodes(model: Model, chain: tuple[Id[AspectNode], ...], aspect: Aspect, ctx: PrintContext) -> tuple[Id[AspectNode], ...]:
     """`chain` (root first) without the nodes `ctx` drops from a segment of `aspect`.
 
@@ -67,9 +69,10 @@ def kept_nodes(model: Model, chain: tuple[Id[AspectNode], ...], aspect: Aspect, 
         own = own_nodes(model, ctx.reading)
         return tuple(node for node in chain if node in own)
     if ctx.scope is Scope.BELOW_COMMON:
-        if aspect is Aspect.LOCATION:
-            return tuple(below(chain, common_location(model, ctx)))
-        return chain if ctx.reading is None else _authored_in(model, chain, ctx.reading)
+        if ctx.reading is None:
+            return chain
+        authored = _authored_in(model, chain, ctx.reading)
+        return tuple(below(authored, common_location(model, ctx))) if aspect is Aspect.LOCATION else authored
     if ctx.location is None:
         return chain
     dropped = frozenset(chain_up(aspect_nodes(model), ctx.location))

@@ -32,4 +32,11 @@ def test_where_lines_step_one_line_pitch_down_under_an_upright_tag_and_right_of_
     assert 0 < step == low[0].box.y - tag.box.y < tag.box.h
     turned = _lines_under(replace(tag, box=Box(10, 20, 16, 30), anchor="SW", turned=True), monkeypatch)
     assert [t.box.x for t in turned] == [10 + step, 10 + 2 * step]
-    assert all(t.turned and t.anchor == "SW" and t.box.y + t.box.h == 50 for t in turned)
+    assert all(t.turned and t.anchor == "SW" and t.box.y == tag.box.y for t in turned)  # TP6: every turned line starts at the annex top
+
+
+def test_a_turned_text_in_a_taller_annex_stands_at_the_annex_top_nearest_its_terminal() -> None:
+    """TP6 (owner Q1 a): the ink of a turned tag touches the top edge of its annex, however much of the annex it leaves free below."""
+    annex = Box(10, 20, 16, 100)
+    assert write_tables.line_box(annex, 30, 16, turned=True) == Box(10, 20, 16, 30)
+    assert write_tables.line_box(annex, 30, 16, turned=False) == Box(10, 20, 30, 16)

@@ -263,4 +263,12 @@ def test_a_dot_off_the_pin_point_or_on_another_symbols_pin_still_overlaps():
     assert _dot_page((5, 5), (7, 7)) == ["terminal / junction-dot"]
 
 
+def test_a_where_line_two_pitches_off_its_stack_raises_where_text_far():
+    """TP6 (layout-0623): a where line stands within the stack distance of the line before it, else WHERE_TEXT_FAR."""
+    tag = DrawnText("-X1", Box(10, 10, 8, 2), "TAG", "NW", "x")
+    near, far = (DrawnText("p2", Box(10, y, 8, 2), "WHERE", "NW", "x") for y in (13, 16))
+    assert _codes(_drawing(texts=(tag, near))) == []
+    assert _codes(_drawing(texts=(tag, far))) == ["WHERE_TEXT_FAR"]
+
+
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

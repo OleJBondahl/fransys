@@ -66,7 +66,7 @@ FindingCode = Literal[
     "WIRE_AS_REFERENCE",
     "WIRE_THROUGH_BODY",
     "PAGE_OVERFLOW",
-    "ANNEX_UNPLACED",
+    "LABEL_NO_ROOM",
     "OUTLINE_NO_ROOM",
     "FILL_UNDER_MIN",
     "WIDER_THAN_PAGE",
@@ -288,6 +288,7 @@ class Options:
     recut_rounds: int = field(kw_only=True)
     where_digit_rounds: int = field(kw_only=True)  # rises of the where-text page number's digit count `widen` follows (R1883)
     label_moves: int = field(kw_only=True)  # standing labels a blocked label may move before the recut (R1479)
+    label_recut_limit: int = field(kw_only=True)  # recuts one blocked label asks for before the loop stops asking (R2486)
     route_fallback_rounds: int = field(kw_only=True)  # routing and reference loop bound (R1246)
     solve_rounds: int = field(kw_only=True)  # layouts after the first that hold missed anchor outlines
     widen_rounds_limit: int = field(kw_only=True)  # widen passes before it raises CoreError (R1981)

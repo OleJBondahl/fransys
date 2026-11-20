@@ -37,7 +37,7 @@ from .placement_tables import is_table_spot
 from .read_markers import drawn_marker
 from .write_markings import marking_slots
 from .write_power import power_symbols
-from .write_tables import table_heads, table_texts
+from .write_tables import line_box, table_heads, table_texts
 from .write_texts import symbol_keys
 
 if TYPE_CHECKING:
@@ -117,8 +117,8 @@ def _labels(w: Written, keys: Mapping[str, PickKey]) -> list[tuple[Id[Page], Dra
             )
         page = pages[label.page]
         height = text_room_on(model, sheet_format_of(model, page.sheet_format), w.library)
-        box, turned, long = label.box, label.turned, text_width_g(w.library.font, text, height=height)
-        box = Box(box.x, box.y + box.h - long, height, long) if turned else Box(box.x, box.y, long, height)
+        turned = label.turned
+        box = line_box(label.box, text_width_g(w.library.font, text, height=height), height, turned=turned)
         found.append(
             (page.id, DrawnText(text, box, "TAG", "SW" if turned else "NW", core_symbol_id(label.owner) if label.owner in keys else None, turned))
         )

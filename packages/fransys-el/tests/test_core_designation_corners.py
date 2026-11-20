@@ -16,6 +16,7 @@ from fransys_el.placement_options import options
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, solve
 from fransys_layout.core.annex import place_labels, spot_box
+from fransys_layout.core.clearance import Keep
 from fransys_layout.core.geometry import overlaps
 
 CORNERS = {"TL", "BL", "BR", "TR"}
@@ -135,7 +136,7 @@ def test_a_tag_stands_at_the_centred_turned_rung_when_the_ten_before_it_are_bloc
     here = placed[annex.owner]
     boxes = [spot_box(here, annex.turned if s.turned else annex.size, s, 0) for s in annex.spots[here.orient]]
     walls = [_pin_down(b, boxes[-1]) for b in boxes[:-1]]
-    (label,), found, _ = place_labels([annex], {annex.owner: here}, ((), walls), (1, problem.area, 0, 2))
+    (label,), found, _ = place_labels([annex], {annex.owner: here}, [Keep("", b, "text", "") for b in [here.body, *walls]], (1, problem.area, 0, 2))
     assert (label.spot, label.turned, label.box) == ("TL", True, boxes[-1])
     assert found == []
     assert label.box.x + label.box.w <= here.body.x

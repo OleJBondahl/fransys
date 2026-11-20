@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 from functools import reduce
+from itertools import pairwise
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
+from .annex import text_keeps
 from .clearance import Keep, clear
 from .geometry import marker_drawn_box, overlaps, shift, union
 from .hang_levels import raised
@@ -21,15 +23,16 @@ from .outputs import Anchored, Wire
 from .values import Box, Finding, PinRef
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
+    from .annex_values import AnnexBox
     from .hangings import Hanging
-    from .outputs import Marker, PagePlacement, Placed, Placement
+    from .outputs import Marker, Outline, PagePlacement, Placed, Placement
     from .sym_values import Sym, Turned
     from .values import Anchor, Options, Orientation, PlacementProblem, Pose
 
-__all__ = ("anchor_keeps", "anchor_misses", "anchor_pages", "reserved")
+__all__ = ("anchor_misses", "anchor_pages", "reserved")
 
 
 def _frame(problem: PlacementProblem, options: Options) -> Box:
@@ -64,36 +67,60 @@ def _anchor_keeps(page: int, anchored: Sequence[Anchored], net_of: Mapping[PinRe
     return tuple(Keep("", o.outline, "anchor", o.sym, net_of.get(PinRef(o.sym, o.pin)), o.port) for o in anchored if o.page == page)
 
 
-def page_keeps(
-    page: PagePlacement,
-    markers: Sequence[Marker],
-    anchored: Sequence[Anchored],
-    problem: PlacementProblem,
-    options: Options,
-) -> tuple[Keep, ...]:
-    """The boxes the router keeps wires out of on a page: marker, anchor and hanging outlines (R535, layout-0547)."""
-    net_of = {ref: n.id for n in problem.nets for ref in n.pins}
-    return (*_marker_keeps(page.page, markers, options), *_anchor_keeps(page.page, anchored, net_of), *hung_keeps(page.hangings))
+#: The kinds each reader of a page's keeps takes, in its order (TP1): the router's obstacles, a label's besides those, a marker's, an anchor's.
+ROUTED = ("marker", "anchor", "hanging")
+HELD = ("keepout", "body", "outline")
+MARKED = ("wire", "text", "hanging", "outline", "anchor")
+ANCHORED = ("body", "pin", "outline", "marker", "anchor")
+
+
+def wire_keeps(wires: Iterable[Wire]) -> tuple[Keep, ...]:
+    """One keep per wire segment, its true extent, owned by its net (R872, R1007)."""
+    return tuple(
+        Keep("", Box(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay)), "wire", w.net, None, None, (w.points[0], w.points[-1]))
+        for w in wires
+        for (ax, ay), (bx, by) in pairwise(w.points)
+    )
+
+
+class Stood(NamedTuple):
+    """What stands on a page besides its placement and hangings: the markers, anchors, frames, wires and labels that `page_keeps` turns into keeps."""
+
+    markers: Sequence[Marker] = ()
+    anchored: Sequence[Anchored] = ()
+    outlines: Sequence[Outline] = ()
+    wires: Iterable[Wire] = ()
+    labels: Iterable[AnnexBox] = ()
+
+
+def page_keeps(page: PagePlacement, stood: Stood, problem: PlacementProblem, options: Options, kinds: Sequence[str] = ROUTED) -> tuple[Keep, ...]:
+    """The boxes a page holds, as keeps in the order of `kinds`: the one ledger every placer of a text, a marker, an anchor and a wire reads (TP1).
+
+    A placer passes the kinds it keeps clear of: the router `ROUTED` (a wire crosses a frame), a marker its own frame by `own`.
+    `keepout` is each symbol's slot ink (TP4); `outline` the frame edges and titles (TP3).
+    """
+    net_of = {ref: n.id for n in problem.nets for ref in n.pins} if "anchor" in kinds else {}
+    ledger = {
+        "marker": lambda: _marker_keeps(page.page, stood.markers, options),
+        "anchor": lambda: _anchor_keeps(page.page, stood.anchored, net_of),
+        "hanging": lambda: hung_keeps(page.hangings),
+        "footprint": lambda: tuple(Keep("", p.footprint, "footprint", p.sym) for p in page.placed),
+        "body": lambda: tuple(Keep("", p.body, "body", p.sym) for p in page.placed),
+        "keepout": lambda: tuple(Keep("", p.keepout, "keepout", p.sym) for p in page.placed if p.keepout is not None),
+        "pin": lambda: tuple(Keep("", Box(xy.x, xy.y, 0, 0), "pin", p.sym) for p in page.placed for xy in p.pin_xy),
+        "outline": lambda: outline_keeps(stood.outlines, options.outline, page.page),
+        "wire": lambda: wire_keeps(stood.wires),
+        "text": lambda: text_keeps(stood.labels),
+    }
+    return tuple(k for kind in kinds for k in ledger[kind]())
 
 
 # KI-1099: the first clear pose can sit in a neighbour pin's lane; POWER-POSE poses it clear of the lane.
-def _fit(
-    poses: Sequence[Pose],
-    pin: tuple[int, int],
-    page: PagePlacement,
-    taken: Sequence[Keep],
-    frame: Box,
-) -> Pose | None:
-    """The first pose inside the frame meeting no body, taken keep or pin, else None.
-
-    `taken` holds the page's marker boxes and the outlines posed before.
-    """
-    stops = [p.body for p in page.placed]
-    pins = [(xy.x, xy.y) for p in page.placed for xy in p.pin_xy]
+def _fit(poses: Sequence[Pose], pin: tuple[int, int], taken: Sequence[Keep], frame: Box) -> Pose | None:
+    """The first pose inside the frame meeting no keep in `taken`: the page's bodies, pins, frames, markers and the outlines posed before."""
     for pose in poses:
         box = shift(pose.outline, *pin)
-        on_pin = any(box.x <= x <= box.x + box.w and box.y <= y <= box.y + box.h for x, y in pins)
-        if _inside(box, frame) and not on_pin and not any(overlaps(box, b) for b in stops) and not clear(box, taken, {}, edge="open"):
+        if _inside(box, frame) and not clear(box, taken, {}, edge="open"):
             return pose
     return None
 
@@ -244,20 +271,12 @@ def anchor_pages(
         page, at = placed[a.pin.sym]
         sym = syms[a.pin.sym]
         if poses := _poses(a, sym.views[at.orient].pins[_index(sym, a.pin.pin)].side):
-            lines = outline_keeps(placement.outlines, options.outline, page.page)
-            taken = [*_anchor_keeps(page.page, out, {}), *lines]
-            pose = _fit(poses, pins[a.pin], page, taken, _frame(problem, options))
+            taken = page_keeps(page, Stood((), out, placement.outlines), problem, options, ANCHORED)
+            pose = _fit(poses, pins[a.pin], taken, _frame(problem, options))
             if pose is None:
                 found.append(_unfit(a, page.page))
             out.append(_posed(a, page, at, pose or poses[0]))
     return tuple(out), tuple(found)
-
-
-def anchor_keeps(placement: Placement, problem: PlacementProblem, options: Options) -> dict[int, list[Keep]]:
-    """Each page's anchor outlines as keeps for the markers to clear (R1786)."""
-    net_of = {ref: n.id for n in problem.nets for ref in n.pins}
-    anchored, _ = anchor_pages(placement, problem, options)
-    return {pg.page: list(_anchor_keeps(pg.page, anchored, net_of)) for pg in placement.pages}
 
 
 def _on_trunk(page: PagePlacement, at: tuple[int, int], step: int) -> bool:

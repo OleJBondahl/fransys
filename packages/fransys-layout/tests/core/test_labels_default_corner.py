@@ -45,7 +45,7 @@ def test_a_corner_past_the_content_box_is_not_taken() -> None:
 
 def test_with_no_free_corner_a_finding_names_the_symbol_and_the_label_stays_in_a_corner() -> None:
     labels, findings = dense().run(house_options())
-    assert {f.code for f in findings} == {"ANNEX_UNPLACED"}
+    assert {f.code for f in findings} == {"LABEL_NO_ROOM"}
     assert {f.subject for f in findings} == {"S1", "S2", "S3"}
     assert {x.spot for x in labels} <= {"TL", "BL", "BR", "TR"}
 
@@ -58,4 +58,4 @@ def test_a_spot_with_only_a_near_wire_places_the_label_and_one_under_a_wire_refu
     soft, found = _corner(on_page((("S1", 88, 96),), wires=(near, side)), corner_order=("TL",))
     assert (soft.spot, soft.box, found) == ("TL", Box(80, 72, 16, 8), ())
     _, found = _corner(on_page((("S1", 88, 96),), wires=(through, side)), corner_order=("TL",))
-    assert {f.code for f in found} == {"ANNEX_UNPLACED"}
+    assert {f.code for f in found} == {"LABEL_NO_ROOM"}

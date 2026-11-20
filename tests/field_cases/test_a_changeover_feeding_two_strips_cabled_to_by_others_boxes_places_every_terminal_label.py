@@ -7,7 +7,10 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from _model_build_cover import _COVER
+from annex_tag_spy import ink_boxes, tags_with_annexes
 from fransys.colours import GNYE
+
+from fransys_layout.drawing import page_texts, text_overlaps
 
 _TB = "DEMO-TBLK-2P-DUAL"
 _PINS = ("2", "4", "6", "N")
@@ -69,4 +72,32 @@ def test_every_terminal_label_under_the_changeover_is_placed(tmp_path: Any, *, h
     toml.write_text(f"[export]\nhide_pe = {str(hide).lower()}\n")
     d, docs = _design()
     result = fr.build(d, *docs, settings=fr.settings(toml))
-    assert [f.message for f in result.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f.message for f in result.findings if f.code in {"LABEL_NO_ROOM", "WHERE_TEXT_FAR"}] == []
+
+
+@pytest.fixture(scope="module")
+def drawn() -> tuple[Any, list[tuple[Any, Any, Any]]]:
+    """The build's Drawings, and each tag with its core annex as (page, TAG text, annex)."""
+    d, docs = _design()
+    return tags_with_annexes(lambda: fr.build(d, *docs).drawings)
+
+
+def test_every_tag_and_where_ink_lies_inside_its_annex(drawn: Any) -> None:
+    """TEXT-KEEPS A2: the where reserve holds the widest line printed under a tag."""
+    drawings, seen = drawn
+    inks = ink_boxes(drawings, seen)
+    assert inks
+    assert [i for i, a in inks if i.x < a.x or i.y < a.y or i.x + i.w > a.x + a.w or i.y + i.h > a.y + a.h] == []
+
+
+def test_a_turned_tag_in_a_taller_annex_stands_at_the_annex_top(drawn: Any) -> None:
+    """TEXT-KEEPS A3: a turned tag reads from the annex edge nearest its terminal, whatever the where lines reserve."""
+    _, seen = drawn
+    turned = [(t.box.y, a.box.y) for _, t, a in seen if a.turned and a.box.h > t.box.h]
+    assert turned
+    assert [y for y, top in turned if y != top] == []
+
+
+def test_no_two_texts_share_interior_on_any_page(drawn: Any) -> None:
+    """TEXT-KEEPS A4: tags, where lines and slot ink (pin numbers, markings) keep clear of each other."""
+    assert [text_overlaps(page_texts(d)) for d in drawn[0].values() if text_overlaps(page_texts(d))] == []

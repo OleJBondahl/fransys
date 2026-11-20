@@ -79,6 +79,7 @@ LAYOUT_VALUES = {
     "recut_rounds": 3,
     "where_digit_rounds": 2,
     "label_moves": 2,
+    "label_recut_limit": 5,
     "route_fallback_rounds": 10,
     "solve_rounds": 3,
     "widen_rounds_limit": 50,

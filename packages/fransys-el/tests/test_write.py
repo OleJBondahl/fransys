@@ -211,7 +211,7 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
 
     emitted = set(get_args(FindingCode))
     wants = sorted(info.code for info in (*LAYOUT_CODES, *FINDING_CODES) if info.code in emitted and "<subject>" in info.fix)
-    assert {"ANNEX_UNPLACED", "LANE_WIRE_DROPPED", "WIRE_MEETS_NET"} <= set(wants)
+    assert {"LABEL_NO_ROOM", "LANE_WIRE_DROPPED", "WIRE_MEETS_NET"} <= set(wants)
     symbols = symbol_subjects(written.model, written.kit)
     sym = next(iter(symbols))
     net = next(iter(net_ports(written.model)))

@@ -4,12 +4,16 @@ A clean build raises none of the sweep's codes. Each class is planted as a small
 finished drawing: join two nets, move a wire end to a neighbour port, drop a junction dot, unpair a
 """
 
+import importlib
+import os
 from dataclasses import dataclass, replace
+from functools import cache
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import fransys as fr
 import pytest
+import test_two_mated_plugs_wired_to_one_device_draw_every_end as mated
 from _card_case import card_case_drafts
 from _expected_codes import expect_codes
 from _model_build_cover import unit_document
@@ -36,6 +40,8 @@ from ring_cases import bank_model, box_kit
 
 from electrical_symbols import LIBRARY, MARKER_SLOT, power_symbol_key
 from fransys_layout.core import Box, page_graph
+from fransys_layout.core.outputs import Refused
+from fransys_layout.core.route_env import lost_key
 from fransys_layout.drawing import DrawnSymbol, DrawnWire
 from fransys_layout.symbols import frame_cell
 from fransys_model.derive import PowerKind, link_groups, net_of, port_power_kind, reference_targets, required_groups, terminal_items
@@ -48,6 +54,8 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from fransys_layout.drawing import Drawing
+
+widen_stage = importlib.import_module("fransys_layout.core.widen")
 
 CODES = {
     "CONNECTION_NOT_DRAWN",
@@ -938,3 +946,53 @@ def test_ink_without_conductor_is_a_warning_and_the_write_goes_on(monkeypatch: p
     result = _pe_build()
     assert [f.severity.name for f in fr.check(result) if f.code == "INK_WITHOUT_CONDUCTOR"] == ["WARNING"]
     assert fr.write(result, tmp_path / "out")
+
+
+@cache
+def _forced_loss_case(plugs: int, pins: int) -> tuple[tuple[Any, ...], tuple[tuple[str, Any], ...]]:
+    """The arguments of `lay_out_drawn` for `plugs` mated plugs wired to the first `pins` pins of one device, and every pin of that set.
+
+    Built once per session by the KI-1069 field case's builder; the pins are those `lay_out_core` hands `solve` for the plugs' set.
+    """
+
+    args, parts = [], []
+    with pytest.MonkeyPatch.context() as mp:
+        for target, into in (("fransys._layout_core.lay_out_drawn", args), ("fransys_el.lay_out_core.solve", parts)):
+            real = cast("Any", importlib.import_module(target.rpartition(".")[0]))
+            real = getattr(real, target.rpartition(".")[2])
+            mp.setattr(target, lambda *a, real=real, into=into: (into.append(a), real(*a))[1])
+        mated._built.__wrapped__(plugs=plugs, pins=pins)
+    own = next(a[0] for a in parts if any("/plug" in s.id for s in a[0].symbols))
+    return args[0], tuple((n.id, pin) for n in own.nets for pin in n.pins)
+
+
+def _lost(shape: tuple[int, int], net_id: str, pin: Any) -> list[str]:
+    """The CONNECTION_NOT_DRAWN messages of `lay_out_drawn` after the router loses `pin` of net `net_id` (R2622: read after the last round)."""
+    real = widen_stage.route_pages
+
+    def lose(placement: Any, cut: Any, prob: Any, options: Any, laid: Any) -> Any:
+        routes = real(placement, cut, prob, options, laid)
+        skip = pin.sym not in {s.id for s in prob.symbols} or lost_key(net_id, (pin,)) in laid.lost
+        return routes if skip else replace(routes, failed=(*routes.failed, Refused(net_id, (pin,))))
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(widen_stage, "route_pages", lose)
+        return [f.message for f in lay_out_drawn(*_forced_loss_case(*shape)[0])[1] if f.code == "CONNECTION_NOT_DRAWN"]
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lost_plug_pin_leaves_no_conductor_end_undrawn():
+    """R2631, RR3: the CI witness, lone plug pin 6 of the 2x3 pool, fails with `whole` and with `restood` off.
+    P1: CND over far_pins, the one home of far_ends (placement_facts.py:95)."""
+    assert _lost((2, 3), *next(c for c in _forced_loss_case(2, 3)[1] if "plug0/fn/x1 6" in c[0])) == []
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+@pytest.mark.skipif(not os.environ.get("FALLBACK_PROPERTY"), reason="run by `just fallback-property` and the daily sweep (R2624)")
+@pytest.mark.parametrize("shape", [(2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (3, 2), (3, 3), (3, 4)])
+def test_no_conductor_end_is_undrawn_after_any_single_lost_pin(shape: tuple[int, int]) -> None:
+    """R2583(2), R2624(2): every single lost pin of the plugs' set, plug or device, of each pool shape."""
+    cases = _forced_loss_case(*shape)[1]
+    failed = [f"{shape} {net_id} {pin.sym}.{pin.pin}: {found}" for net_id, pin in cases if (found := _lost(shape, net_id, pin))]
+    print("\n".join(["", f"FALLBACK-CASES {len(cases)}", *(f"FALLBACK-FAILED {line}" for line in failed)]))  # noqa: T201 - the recipe reads these
+    assert failed == []

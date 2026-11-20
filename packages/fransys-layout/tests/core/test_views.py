@@ -24,6 +24,7 @@ R90 = Turned(
     footprint=Box(-2, 3, 60, 14),
     pins=(PinTurn(33, 7, "W"), PinTurn(-4, 9, "E")),
     row_footprint=Box(-2, 3, 61, 15),
+    ink=Box(1, 4, 50, 12),
 )
 CELL = Cell("U", "R90", "a", "b")
 

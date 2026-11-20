@@ -9,15 +9,17 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import AnnexBox, Box, Size, natural_key
-from fransys_layout.core.anchors import anchor_leads
+from fransys_layout.core.anchors import HELD, Stood, anchor_leads, page_keeps
 from fransys_layout.core.annex import place_labels, spot_box
 from fransys_layout.core.annex_values import Annex, Spot
+from fransys_layout.core.clearance import Keep
 from fransys_layout.core.errors import CoreError
-from fransys_layout.core.geometry import inside, overlaps, union
-from fransys_layout.core.outputs import Anchored, Demand, StripRun
+from fransys_layout.core.geometry import inside, overlaps, shift, union
+from fransys_layout.core.outline import framed, unit_hulls
+from fransys_layout.core.outputs import Anchored, Demand, Outline, Placement, StripRun
 from fransys_layout.core.route_labels import roomed
 from fransys_layout.core.route_runs import alone_annexes, named, stand_runs
-from fransys_layout.core.values import Finding
+from fransys_layout.core.values import Finding, Hints, OutlineRoom
 from fransys_layout.core.widen import route_round
 
 from . import pipeline_fixtures
@@ -27,6 +29,7 @@ from .label_fixtures import (
     colliding_neighbours,
     dense,
     house_options,
+    keeps_of,
     lone,
     marker_over_candidate,
     on_page,
@@ -49,7 +52,7 @@ OPTIONS = core_options(
     marker=MARKER,
 )
 OVER_WIRE = AnnexBox("S1", 1, Box(80, 112, 16, 8), "BL")
-ANNEX_UNPLACED = Finding("ANNEX_UNPLACED", "no free corner", page=1, subject="S1")
+LABEL_NO_ROOM = Finding("LABEL_NO_ROOM", "no free corner", page=1, subject="S1")
 
 
 def _conflicts(case, labels, findings=()):
@@ -114,7 +117,7 @@ def test_conflicts_flags_label_over_wire() -> None:
 
 
 def test_conflicts_accepts_flagged_overlap() -> None:
-    assert _conflicts(under_wire(), [OVER_WIRE], [ANNEX_UNPLACED]) == []
+    assert _conflicts(under_wire(), [OVER_WIRE], [LABEL_NO_ROOM]) == []
 
 
 def test_conflicts_flags_two_labels_on_one_box() -> None:
@@ -192,7 +195,7 @@ def test_two_neighbours_do_not_share_a_box() -> None:
 def test_the_dense_page_reports_text_overlap_and_is_repeatable() -> None:
     first = dense().run()
     assert {f.subject for f in first[1]} == {"S1", "S2", "S3"}
-    assert {f.code for f in first[1]} == {"ANNEX_UNPLACED"}
+    assert {f.code for f in first[1]} == {"LABEL_NO_ROOM"}
     assert dense().run() == first
 
 
@@ -227,7 +230,7 @@ def test_no_routed_wire_runs_through_a_label_the_router_stood(name: str) -> None
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     rnd = route_round(cut, pipeline_fixtures.placed_from(cut, prob, OPTIONS), pipeline_fixtures.with_annexes(prob, OPTIONS), OPTIONS)
     routed = [w for page in rnd.routes.pages for w in page.wires if w.kind == "routed"]
-    flagged = {f.subject for f in rnd.routes.findings if f.code == "ANNEX_UNPLACED"}
+    flagged = {f.subject for f in rnd.routes.findings if f.code == "LABEL_NO_ROOM"}
     assert rnd.routes.labels
     assert [lab.owner for lab in rnd.routes.labels if lab.owner not in flagged and not free(lab.box, [], routed, None)] == []
 
@@ -259,7 +262,7 @@ def test_a_label_stays_at_the_spot_it_stood_at_the_round_before_while_that_spot_
     placed = {p.sym: p for p in case.placement.pages[0].placed}
     second = annex.spots[placed["S1"].orient][1]
     before = AnnexBox("S1", 1, spot_box(placed["S1"], annex.size, second, 0), second.name)
-    ink, on = ((), []), (1, case.problem.area, 0, 2)
+    ink, on = keeps_of(placed), (1, case.problem.area, 0, 2)
     (fresh,), _, _ = place_labels([annex], placed, ink, on)
     (stays,), _, _ = place_labels([annex], placed, ink, on, [before])
     assert fresh.box != before.box
@@ -273,7 +276,7 @@ def test_a_blocked_label_demands_its_first_rung_and_the_owner_footprint_holds_it
     placed = {p.sym: p for p in case.placement.pages[0].placed}
     annex = Annex("S1", Size(16, 8), None, {"R0": (Spot("near", "BL", 0, 0, "down"), Spot("far", "BL", 0, 40, "down"))})
     walls = [Box(0, 112, 400, 8), Box(0, 152, 400, 8)]
-    _, _, asks = place_labels([annex], placed, ((), walls), (1, Size(400, 300), 0, 2))
+    _, _, asks = place_labels([annex], placed, keeps_of(placed, walls), (1, Size(400, 300), 0, 2))
     demand = asks[0]
     here = placed["S1"]
     assert demand.owner == "S1"
@@ -283,8 +286,20 @@ def test_a_blocked_label_demands_its_first_rung_and_the_owner_footprint_holds_it
 
 
 @pytest.mark.rule("TAG-CORNERS")
+def test_a_blocked_label_demands_the_rung_only_its_frame_blocks_not_one_a_wire_or_solid_holds() -> None:
+    """TP3, TP8: growing the frame frees a rung only the frame blocks, so that is the rung demanded; the first one stays blocked by its solid."""
+    case = on_page((("S1", 88, 96),))
+    placed = {p.sym: p for p in case.placement.pages[0].placed}
+    annex = Annex("S1", Size(16, 8), None, {"R0": (Spot("near", "BL", 0, 0, "down"), Spot("far", "BL", 0, 40, "down"))})
+    keeps = [*keeps_of(placed, [Box(0, 112, 400, 8)]), Keep("", Box(0, 152, 400, 2), "outline", "U")]  # a solid on near, a frame edge on far
+    _, _, asks = place_labels([annex], placed, keeps, (1, Size(400, 300), 0, 2))
+    here = placed["S1"]
+    assert asks[0].box == Box(here.body.x - here.x, here.body.y + here.body.h + 40 - here.y, 16, 8)
+
+
+@pytest.mark.rule("TAG-CORNERS")
 def test_a_label_blocked_at_every_candidate_stands_inside_the_content_box_never_off_the_page() -> None:
-    """T6 (AMENDED 1): ANNEX_UNPLACED names it and it stands at its first candidate inside the box, never at one off the page."""
+    """T6 (AMENDED 1): LABEL_NO_ROOM names it and it stands at its first candidate inside the box, never at one off the page."""
     case = on_page((("S1", 88, 96),))
     placed = {p.sym: p for p in case.placement.pages[0].placed}
     off, near, far = Spot("off", "TL", 1000, 0, "down"), Spot("near", "BL", 0, 0, "down"), Spot("far", "BL", 0, 40, "down")
@@ -292,8 +307,8 @@ def test_a_label_blocked_at_every_candidate_stands_inside_the_content_box_never_
     wall = Box(0, 112, 400, 8)  # a solid across the near candidate
     wall2 = Box(0, 152, 400, 8)  # and across the far one
     area = Size(400, 300)
-    (label,), found, blocked = place_labels([annex], placed, ((), [wall, wall2]), (1, area, 0, 2))
-    assert [f.code for f in found] == ["ANNEX_UNPLACED"]
+    (label,), found, blocked = place_labels([annex], placed, keeps_of(placed, [wall, wall2]), (1, area, 0, 2))
+    assert [f.code for f in found] == ["LABEL_NO_ROOM"]
     assert list(blocked) == [0]
     assert label.spot == "near"
     assert label.box.x + label.box.w <= area.w
@@ -308,7 +323,7 @@ def test_a_label_whose_only_free_spot_is_turned_stands_there_with_the_turned_box
     side = Spot("side", "TL", -8, 0, "down", turned=True)
     annex = Annex("S1", Size(16, 8), None, {"R0": (upright, side)}, Size(8, 16))
     wall = Box(0, 112, 400, 8)  # across the upright spot only
-    (label,), found, _ = place_labels([annex], placed, ((), [wall]), (1, Size(400, 300), 0, 2))
+    (label,), found, _ = place_labels([annex], placed, keeps_of(placed, [wall]), (1, Size(400, 300), 0, 2))
     assert found == []
     assert (label.spot, label.turned) == ("side", True)
     assert (label.box.w, label.box.h) == (8, 16)
@@ -339,7 +354,7 @@ def _two_labels() -> tuple[list[Annex], dict[str, Placed]]:
 def test_a_label_with_no_free_candidate_makes_room_by_moving_the_one_in_its_way() -> None:
     """T3: the first label took the only spot of the second; it gives way to its next, and nothing is flagged."""
     annexes, placed = _two_labels()
-    labels, found, blocked = place_labels(annexes, placed, ((), []), (1, Size(400, 300), 0, 2))
+    labels, found, blocked = place_labels(annexes, placed, keeps_of(placed), (1, Size(400, 300), 0, 2))
     assert (found, blocked) == ([], {})
     assert [(a.owner, a.spot) for a in labels] == [("S1", "above"), ("S2", "below")]
     assert not overlaps(labels[0].box, labels[1].box)
@@ -357,7 +372,7 @@ def _runs_case(*, blocked: bool = False):
         [replace(a, alone=replace(a, size=Size(40, 8))) if a.owner == "T3" else a for a in problem.annexes if a.owner in placed], lone
     )
     stood = {**placed, **{k: p for k, (_, p) in runs.items()}}
-    ink = ((), [Box(0, 0, 400, 300)] if blocked else [])
+    ink = keeps_of(stood, [Box(0, 0, 400, 300)] if blocked else [])
     return runs, named(runs, *place_labels([*members, *tags], stood, ink, (1, problem.area, 0, 2)))
 
 
@@ -409,3 +424,55 @@ def test_a_room_demand_grows_the_owner_footprint_on_its_own_side() -> None:
             assert v.footprint == Box(old.x, old.y - up, old.w, old.h + up + down)
     with pytest.raises(CoreError, match="only N and S"):
         roomed(case.problem, [Demand("", 0, 16, "S1", side="E")])
+
+
+def _ledger_labels(case, annex: Annex, *, frame: Box | None = None, keepout: Box | None = None):
+    """place_labels over `page_keeps` of the case's page, with a frame and a slot-ink box if given."""
+    opts = house_options(outline=OutlineRoom(4, Box(2, 2, 8, 4), Size(64, 48)))
+    page = case.placement.pages[0]
+    if keepout is not None:
+        page = replace(page, placed=tuple(replace(p, keepout=keepout) for p in page.placed))
+    outlines = [Outline("U", 1, frame, 0)] if frame else []
+    keeps = page_keeps(page, Stood(outlines=outlines), case.problem, opts, HELD)
+    return place_labels([annex], {p.sym: p for p in page.placed}, keeps, (1, case.problem.area, 0, 2))
+
+
+@pytest.mark.rule("TAG-CORNERS")
+def test_a_label_keeps_off_a_frame_edge_and_stands_at_the_next_rung() -> None:
+    """TP3: a frame edge across the first rung blocks it, so a text stands wholly inside or outside the frame."""
+    case = on_page((("S1", 88, 96),))
+    annex = Annex("S1", Size(16, 8), None, {"R0": (Spot("below", "BL", 0, 0, "down"), Spot("above", "TL", 0, -8, "down"))})
+    (free_label,), _, _ = _ledger_labels(case, annex)
+    (label,), found, _ = _ledger_labels(case, annex, frame=Box(40, 116, 200, 100))  # its top edge runs through the BL rung (y 112 to 120)
+    assert (free_label.spot, label.spot, found) == ("below", "above", [])
+
+
+@pytest.mark.rule("TAG-CORNERS")
+def test_a_label_keeps_off_the_slot_ink_of_its_own_symbol() -> None:
+    """TP4: the keepout of a placed symbol is a keep, its own included: the first rung under the body is inside it."""
+    case = on_page((("S1", 88, 96),))
+    annex = Annex("S1", Size(16, 8), None, {"R0": (Spot("below", "BL", 0, 0, "down"), Spot("above", "TL", 0, -8, "down"))})
+    (label,), found, _ = _ledger_labels(case, annex, keepout=Box(80, 80, 16, 44))
+    assert (label.spot, found) == ("above", [])
+
+
+@pytest.mark.rule("TAG-CORNERS")
+def test_a_framed_label_blocked_at_every_rung_stands_inside_the_frame_its_demand_grows() -> None:
+    """TP3: the frame edge cuts the only rung; the demand grows the footprint and so the frame: the label stands inside it."""
+    case = on_page((("S1", 88, 96),))
+    room = OutlineRoom(4, Box(2, 2, 8, 4), Size(64, 48))
+    opts = house_options(outline=room)
+    annex = Annex("S1", Size(16, 8), None, {"R0": (Spot("first", "TL", 0, -8, "down"),)})
+
+    def stand(problem):
+        here, view = case.placement.pages[0].placed[0], problem.symbols[0].views["R0"]
+        page = replace(case.placement.pages[0], placed=(replace(here, footprint=shift(view.footprint, here.x, here.y)),))
+        frames, _ = unit_hulls(Placement((page,)), problem, opts)
+        keeps = page_keeps(page, Stood(outlines=frames), problem, opts, HELD)
+        return place_labels([annex], {"S1": page.placed[0]}, keeps, (1, problem.area, 0, 2))
+
+    start = framed(replace(case.problem, hints=Hints(frames=(("U", frozenset({"S1"})),))), opts)
+    (_,), found, asks = stand(start)
+    assert [f.code for f in found] == ["LABEL_NO_ROOM"]
+    (label,), found, _ = stand(roomed(start, asks.values(), room))
+    assert (label.box, found) == (Box(80, 72, 16, 8), [])

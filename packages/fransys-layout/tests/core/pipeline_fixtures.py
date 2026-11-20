@@ -104,13 +104,13 @@ def with_annexes(prob: PlacementProblem, options: Options) -> PlacementProblem:
 
 
 def labelled_of(prob: PlacementProblem, options: Options | None = None) -> tuple[tuple[AnnexBox, ...], tuple[Finding, ...]]:
-    """Stages 1 to 6 on a problem, the routing loop given its designation annexes: the labels it stood and its ANNEX_UNPLACED."""
+    """Stages 1 to 6 on a problem, the routing loop given its designation annexes: the labels it stood and its LABEL_NO_ROOM."""
     from fransys_layout.core.widen import route_round
 
     opts = options or core_options()
     cut = cut_of(prob, opts)
     rnd = route_round(cut, placed_from(cut, prob, opts), with_annexes(prob, opts), opts)
-    return rnd.routes.labels, tuple(f for f in rnd.routes.findings if f.code == "ANNEX_UNPLACED")
+    return rnd.routes.labels, tuple(f for f in rnd.routes.findings if f.code == "LABEL_NO_ROOM")
 
 
 def solved_of(prob: PlacementProblem, options: Options | None = None) -> CoreLayout:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib
 from dataclasses import replace
-from itertools import pairwise
+from itertools import count, pairwise
 
 import pytest
 
@@ -232,13 +232,13 @@ def _pages_of(prob: PlacementProblem, count: int) -> Placement:
 
 def test_the_annexes_follow_the_digits_of_the_page_count_and_the_digits_only_rise() -> None:
     prob = _wide_prob()
-    one, risen = widen_module._digits(_pages_of(prob, 9), prob, 0)
+    one, risen, _ = widen_module._digits(_pages_of(prob, 9), prob, 0)
     assert (one is prob, risen) == (True, 0)
-    two, risen = widen_module._digits(_pages_of(prob, 10), prob, risen)
+    two, risen, _ = widen_module._digits(_pages_of(prob, 10), prob, risen)
     assert (two.annexes, risen) == (prob.wider[0], 1)
-    back, risen = widen_module._digits(_pages_of(prob, 2), two, risen)  # fewer pages leave the 2-digit annexes
+    back, risen, _ = widen_module._digits(_pages_of(prob, 2), two, risen)  # fewer pages leave the 2-digit annexes
     assert (back is two, risen) == (True, 1)
-    capped, risen = widen_module._digits(_pages_of(prob, 1000), two, risen)  # 4 digits: only 3 are held
+    capped, risen, _ = widen_module._digits(_pages_of(prob, 1000), two, risen)  # 4 digits: only 3 are held
     assert (capped.annexes, risen) == (prob.wider[1], 2)
 
 
@@ -261,7 +261,7 @@ def _grants_for(monkeypatch, rounds: int) -> int:
     placement = placed_from(cut, prob, OPTS)
     rnd = Round((), (), routed_from(cut, prob, OPTS), ())
     ran: list[int] = []
-    monkeypatch.setattr(widen_module, "roomed", lambda p, _asked: replace(p) if len(ran) < rounds else p)
+    monkeypatch.setattr(widen_module, "roomed", lambda p, _asked, _room: replace(p) if len(ran) < rounds else p)
     monkeypatch.setattr(widen_module, "_widened", lambda c, pl, *_: (ran.append(1), (c, pl, ()))[1])
     monkeypatch.setattr(widen_module, "route_round", lambda *_: rnd)
     widen(cut, placement, rnd, prob, OPTS)
@@ -297,8 +297,31 @@ def test_a_dedupe_that_grants_the_same_ask_again_raises_core_error_not_a_hang(mo
     rnd = Round((), (), routed_from(cut, prob, OPTS), ())
     ask = Demand("", 0, 1, "c:a0", side="E")
     monkeypatch.setattr(widen_module, "_asked", lambda *_: ([ask], {}))
-    monkeypatch.setattr(widen_module, "roomed", lambda problem, _: replace(problem))
+    monkeypatch.setattr(widen_module, "roomed", lambda problem, *_: replace(problem))
     monkeypatch.setattr(widen_module, "_widened", lambda c, p, *_: (c, p, ()))
     monkeypatch.setattr(widen_module, "route_round", lambda *_: rnd)
     with pytest.raises(CoreError, match=r"after 4 rounds.*c:a0"):
         widen(cut, placement, rnd, prob, replace(OPTS, widen_rounds_limit=4))
+
+
+def _blocked(routes: Routes, wide: int) -> Round:
+    """A round whose one label stays blocked and asks for a rung `wide` wide, a new ask on each pass."""
+    page = replace(routes.pages[0], needs=(Demand("", 0, owner="c:a0", box=Box(0, 0, wide, 8)),))
+    return Round((), (), replace(routes, pages=(page, *routes.pages[1:])), ())
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.parametrize("limit", [1, 4])
+def test_a_label_blocked_after_every_recut_is_asked_for_exactly_label_recut_limit_recuts_not_a_core_error(monkeypatch, limit: int) -> None:
+    """R2486: a label whose ask grows each pass is recut `label_recut_limit` times, then asked for no more and the loop settles."""
+    prob = three_columns()
+    cut = cut_of(prob, OPTS)
+    placement = placed_from(cut, prob, OPTS)
+    routes = routed_from(cut, prob, OPTS)
+    wide = count(9)
+    monkeypatch.setattr(widen_module, "roomed", lambda problem, needs, *_: replace(problem) if needs else problem)
+    monkeypatch.setattr(widen_module, "_widened", lambda c, p, *_: (c, p, ()))
+    monkeypatch.setattr(widen_module, "route_round", lambda *_: _blocked(routes, next(wide)))
+    *_, rnd, _, _ = widen(cut, placement, _blocked(routes, 8), prob, replace(OPTS, label_recut_limit=limit))
+    assert next(wide) - 9 == limit
+    assert rnd.routes.pages[0].needs[0].owner == "c:a0"  # still blocked: the finding of the final round names it

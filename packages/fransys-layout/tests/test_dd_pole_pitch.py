@@ -34,7 +34,7 @@ def test_a_contactor_beside_two_relays_has_no_overlap_and_no_unplaced_label() ->
     result = contactor_with_pole_one_wired(relays=True)
     codes = [f.code for f in result.findings]
     assert "SYMBOL_OVERLAP" not in codes
-    assert "ANNEX_UNPLACED" not in codes
+    assert "LABEL_NO_ROOM" not in codes
     bodies = {
         tag: placed(result.model, tag, key, poles)
         for tag, key, poles in (

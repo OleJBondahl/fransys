@@ -232,9 +232,10 @@ def _net_unit(model: Model, port_ids: tuple[Id[Port], ...]) -> Id[Unit] | None:
 
 def _net_rows(model: Model, unit: Id[Unit] | None, rules: ListingRules) -> tuple[BaselineNet, ...]:
     direct_nested = frozenset(unit_index(model).child_units.get(unit, ()))
+    scope = () if unit is None else units_table(model)[unit].key[:-1]
     rows = []
     for record in nets(model).values():
-        if _net_unit(model, record.ports) != unit:
+        if _net_unit(model, record.ports) != unit or record.key[: len(scope)] != scope:  # a parent's net on the unit's ports is not its own
             continue
         ends = sorted(
             (end for p in record.ports if (end := net_port_end(model, unit, direct_nested, p, rules)) is not None),

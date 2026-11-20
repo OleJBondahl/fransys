@@ -36,6 +36,7 @@ class Placed:
     body: Box
     footprint: Box
     pin_xy: tuple[PinXY, ...]
+    keepout: Box | None = None  # the view's slot ink, absolute: what a label keeps off, its own symbol's included (TP4)
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,16 +423,7 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
         side = f.sides[p.orient]
         head = (p.sym, xy.pin) in facts.heads
         pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.biased, f.box, head))
-    return SceneBox(
-        p.sym,
-        p.page,
-        p.body,
-        p.footprint,
-        tuple(pins),
-        p.sym in facts.attached,
-        facts.strips.get(p.sym),
-        p.orient,
-    )
+    return SceneBox(p.sym, p.page, p.body, p.footprint, tuple(pins), p.sym in facts.attached, facts.strips.get(p.sym), p.orient)
 
 
 def _scene_marker(m: Marker, facts: SceneFacts, orient: Mapping[str, Orientation]) -> SceneMarker:

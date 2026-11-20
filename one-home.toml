@@ -450,7 +450,6 @@
 "fransys_layout.engines.overview.wrap::_oriented" = 1
 "fransys_layout.engines.overview.wrap::_tracks" = 1
 "fransys_layout.lint.diagram::lint_diagram" = 1
-"fransys_layout.options::__post_init__" = 1
 "fransys_layout.routing.cell_index::_cells" = 2
 "fransys_layout.routing.cell_index::meeting" = 1
 "fransys_layout.routing.grid_path::_walk" = 1
@@ -664,6 +663,7 @@
 
 [core_order_sites]
 "fransys_layout.core.anchors::anchor_pages" = 1
+"fransys_layout.core.annex::_rung" = 1
 "fransys_layout.core.blocks::_unit_list" = 1
 "fransys_layout.core.blocks::assign_blocks" = 2
 "fransys_layout.core.blocks_card::pin_order" = 1
@@ -897,7 +897,6 @@
 "name:fransys_layout.geometry.boxes::translate" = 1
 "name:fransys_layout.geometry.errors::UnknownSymbolError" = 1
 "name:fransys_layout.geometry.units::Point" = 1
-"name:fransys_layout.options::TextPlacement" = 1
 "name:fransys_model.layout.enums::Orientation" = 1
 "name:fransys_parts._changeover::check" = 1
 "name:fransys_parts._function_facts::check" = 1

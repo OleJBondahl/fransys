@@ -74,10 +74,10 @@ def _view(
     pitch = int(library.grid.wire_pitch)
     footprint = to_reach(bare.keepout, pitch)
     others = [box for name, box in bare.slots.items() if name != ask.text_slot]
-    row = to_reach(GridBox.union(bare.body, *others), pitch) if ask.strip else None
+    ink = to_reach(GridBox.union(bare.body, *others), pitch)
     ports = [bare.ports[p] for p in ask.order]
     pins = tuple(PinTurn(p.x, p.y, p.direction.name) for p in ports)
-    view = Turned(to_box(bare.body), footprint, footprint, pins, row)
+    view = Turned(to_box(bare.body), footprint, footprint, pins, ink if ask.strip else None, ink)
     return view, None if kept is None else to_box(kept)
 
 

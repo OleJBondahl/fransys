@@ -97,7 +97,7 @@ def test_a_strip_terminals_run_prints_its_strip_tag_over_the_points(fixture) -> 
 
 def test_no_text_overlaps_and_every_text_box_is_inside_the_content_box(fixture) -> None:
     _, _, core, _, drawn, _ = fixture
-    assert [f for f in core.findings if f.code == "ANNEX_UNPLACED"] == []
+    assert [f for f in core.findings if f.code == "LABEL_NO_ROOM"] == []
     for drawing in drawn.values():
         for t in drawing.texts:
             assert t.box.x >= 0

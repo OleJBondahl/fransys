@@ -11,7 +11,7 @@ from fransys_model.kernel import Severity
 
 _CORE_ONLY = [
     "MARKER_UNPLACED",
-    "ANNEX_UNPLACED",
+    "LABEL_NO_ROOM",
     "OUTLINE_NO_ROOM",
     "ALIGN_DROPPED",
     "CARD_OVERFULL",
@@ -34,6 +34,7 @@ _EL_ONLY = [
     "SYMBOL_PORT_MISSING",  # el raises it from a PortMissingError (decision 0018)
     "OVERLAP",  # DRAWING-INVARIANTS: el emits it over the finished drawings
     "OUT_OF_PAGE",
+    "WHERE_TEXT_FAR",
     "WIRE_OVER_MARKER",  # MARKER-FREE-SIDE: el counts what meets a marker box
     "NOT_SERIES_PARALLEL",  # el emits it for a bridge of derive.series_parallel (0364)
     "CONNECTION_NOT_DRAWN",  # DRAWN-NETLIST (el-0052): el checks the finished drawings

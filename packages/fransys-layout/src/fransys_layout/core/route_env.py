@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from .anchors import HELD, Stood, page_keeps
 from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
 from .clearance import Keep, fan_own, pin_points, through_keeps
 from .errors import CoreError
@@ -127,6 +128,8 @@ class RouteEnv:
     runs: Mapping[str, tuple[str, Placed]] = field(default_factory=dict)
     # the anchors' leads on this page, pin to port: wire ink for the label stage only
     anchor_leads: tuple[Wire, ...] = ()
+    # every box a label keeps off, a wire's apart: the obstacles with the page's bodies, slot ink and frames (TP1, `anchors.page_keeps`)
+    ledger: tuple[Keep, ...] = ()
 
 
 type LostKey = tuple[str, frozenset[PinRef]]
@@ -279,7 +282,13 @@ def route_envs(
     obstacles: Sequence[Keep] = (),
 ) -> tuple[RouteEnv, ...]:
     """One env per placed page, in the placement's order; `obstacles` block cells on every page."""
-    return tuple(_page_env(pg, cut, problem, options, obstacles) for pg in placement.pages)
+    return tuple(
+        replace(
+            _page_env(pg, cut, problem, options, obstacles),
+            ledger=(*obstacles, *page_keeps(pg, Stood(outlines=placement.outlines), problem, options, HELD)),
+        )
+        for pg in placement.pages
+    )
 
 
 def z_points(a: XY, b: XY, level: int) -> tuple[XY, ...]:

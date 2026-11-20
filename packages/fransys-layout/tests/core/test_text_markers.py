@@ -12,6 +12,7 @@ from options_fixtures import core_options
 from turn_fixtures import marker_views, turn_pin
 
 from fransys_layout.core import AnnexBox, Facts, PinRef, PlacementProblem, Size, Unit
+from fransys_layout.core.anchors import wire_keeps
 from fransys_layout.core.arrow_reserve import leg_feet, leg_lines
 from fransys_layout.core.clearance import Keep, clear
 from fransys_layout.core.errors import CoreError
@@ -19,12 +20,12 @@ from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import inside, marker_box, marker_box_at, marker_drawn_box, overlaps
 from fransys_layout.core.hangings import hung_keeps
 from fransys_layout.core.outline import outline_keeps
-from fransys_layout.core.outputs import Demand, Marker, Outline, Trunk, Wire
+from fransys_layout.core.outputs import Anchored, Demand, Marker, Outline, Trunk, Wire
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route_env import Drawn
 from fransys_layout.core.route_fixed import Fixed
 from fransys_layout.core.text_cells import cell_of
-from fransys_layout.core.text_ends import MarkEnv, Stand, _trunk_end_stand, bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, pin_stand, wire_keeps
+from fransys_layout.core.text_ends import MarkEnv, Stand, _trunk_end_stand, bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, pin_stand
 from fransys_layout.core.text_markers import _missed, _order, placed_marks, stagger, stand_ref
 from fransys_layout.core.values import Box, Bundle, CutEnd, Finding, OutlineRoom, Pin, Ref, RefEnd, RefKind, StandClass
 
@@ -564,7 +565,8 @@ def test_the_anchor_outlines_are_keeps_the_markers_clear(monkeypatch: pytest.Mon
     pl = place_pages(cut, prob, OPTIONS)
     assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
     wall = Keep("", Box(0, 0, AREA.w, AREA.h), "anchor", "K1")
-    monkeypatch.setattr("fransys_layout.core.text_markers.anchor_keeps", lambda *_: {1: [wall]})
+    over = Anchored("K1", "1", 1, 0, 0, "R90", wall.box, (0, 0), ((0, 0), (0, 0)))
+    monkeypatch.setattr("fransys_layout.core.text_markers.anchor_pages", lambda *_: ((over,), ()))
     marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
@@ -605,7 +607,7 @@ def test_a_wire_of_the_arrows_own_fan_does_not_block_it() -> None:
 
     def keeps(net: str) -> dict[int, list[Keep]]:
         wire = Wire(net, 1, ((90, 400), (90, 600)), "trunk")
-        return wire_keeps({1: Fixed(Drawn(wires=(wire,)))})
+        return {1: list(wire_keeps([wire]))}
 
     own = {"f": frozenset({"f", "g"})}
     assert stagger([(arrow, stand)], OPTIONS, AREA, keeps("g"), own) == [arrow]

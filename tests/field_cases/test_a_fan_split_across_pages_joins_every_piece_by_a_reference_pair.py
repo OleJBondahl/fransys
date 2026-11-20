@@ -74,14 +74,14 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
 ) -> None:
     """KI-495: the fan reaches 3 pages; its copy has 2 ends and CONNECTION_NOT_DRAWN is 0 at every salt.
 
-    MARKER_UNPLACED is 0 (KI-604 closed); ANNEX_UNPLACED is 0 too (STRIP-TAG-ONCE: a run's tag is one annex).
+    MARKER_UNPLACED is 0 (KI-604 closed); LABEL_NO_ROOM is 0 too (STRIP-TAG-ONCE: a run's tag is one annex).
     """
     copied: list[tuple[int, int]] = []
 
     with id_namespace(salt) if salt != "-" else nullcontext():
         findings = _built(tmp_path, copied, monkeypatch).findings
     assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
-    assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "ANNEX_UNPLACED"}] == []
+    assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "LABEL_NO_ROOM"}] == []
     assert copied
     assert all(ends == pages >= 2 for ends, pages in copied)  # the cut fell inside the fan
 

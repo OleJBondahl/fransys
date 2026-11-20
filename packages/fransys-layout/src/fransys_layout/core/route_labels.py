@@ -1,7 +1,8 @@
 """Stage 6b: a page's labels, stood after its fixed wires and before its A* round (TAG-CORNERS, layout-0515).
 
-A label that is blocked at every candidate hands its first rung to its owner's footprint as a demand (R1831):
-widen cuts again; still blocked after that, ANNEX_UNPLACED names it.
+A label that is blocked at every candidate hands the least-cost rung that growing its owner's frame frees
+to its owner's footprint as a demand (R1831): widen cuts again, a limited number of times per label;
+one still blocked after that is a LABEL_NO_ROOM finding.
 """
 
 from __future__ import annotations
@@ -9,9 +10,11 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .anchors import wire_keeps
 from .annex import place_labels, text_keeps
 from .errors import CoreError
 from .geometry import union
+from .outline import grown
 from .outputs import Demand
 from .route_runs import named
 from .values import Box
@@ -24,7 +27,7 @@ if TYPE_CHECKING:
     from .outputs import Wire
     from .route_env import RouteEnv
     from .sym_values import Turned
-    from .values import Finding, PlacementProblem
+    from .values import Finding, OutlineRoom, PlacementProblem
 
 
 def _need(env: RouteEnv, annex: Annex) -> Demand | None:
@@ -54,14 +57,19 @@ def _held(view: Turned, rooms: Mapping[str, int], box: Box | None) -> Turned:
     return replace(view, footprint=_grown(view.footprint, rooms, box), row_footprint=_grown(view.row_footprint, rooms, box))
 
 
-def roomed(problem: PlacementProblem, needs: Iterable[Demand]) -> PlacementProblem:
-    """`problem` whose owners of the room and rung demands hold that box and room: a footprint is a keep-out, so the solve clears it."""
+def roomed(problem: PlacementProblem, needs: Iterable[Demand], room: OutlineRoom | None = None) -> PlacementProblem:
+    """`problem` whose owners of the room and rung demands hold that box and room: a footprint is a keep-out, so the solve clears it.
+
+    A frame member holds its box with the frame's room around it (`outline.grown`), so its grown frame keeps off the label and its title (TP3).
+    """
+    members = frozenset().union(*(m for _, m in problem.hints.frames)) if room else frozenset()
     ask: dict[str, tuple[dict[str, int], Box | None]] = {}
     for d in needs:
         if d.owner and (d.room or d.box):
             rooms, box = ask.get(d.owner, ({}, None))
             rooms[d.side] = max(rooms.get(d.side, 0), d.room)
-            ask[d.owner] = (rooms, d.box if box is None or d.box is None else union(box, d.box))
+            held = grown(d.box, room) if room and d.box and d.owner in members else d.box
+            ask[d.owner] = (rooms, held if box is None or held is None else union(box, held))
     if not ask:
         return problem
     fits = {s.id: {o: _held(v, *ask[s.id]) for o, v in s.views.items()} for s in problem.symbols if s.id in ask}
@@ -69,13 +77,13 @@ def roomed(problem: PlacementProblem, needs: Iterable[Demand]) -> PlacementProbl
 
 
 def page_labels(env: RouteEnv, wires: Sequence[Wire]) -> tuple[tuple[AnnexBox, ...], tuple[Keep, ...], tuple[Finding, ...], tuple[Demand, ...]]:
-    """The page's labels, the keeps of those that stand, ANNEX_UNPLACED for the others and their demands on the gaps."""
+    """The page's labels, the keeps of those that stand, LABEL_NO_ROOM for the others and their demands on the gaps."""
     if not env.annexes:
         return (), (), (), ()
-    ink = ([*wires, *env.anchor_leads], [k.box for k in env.obstacles])
+    keeps = (*env.ledger, *wire_keeps([*wires, *env.anchor_leads]))
     placed = {**env.placed, **{k: p for k, (_, p) in env.runs.items()}}
-    on = (env.page, env.area, env.options.label_gap, env.options.label_moves)
-    labels, found, blocked = named(env.runs, *place_labels(env.annexes, placed, ink, on, env.labels))
+    on = (env.page, env.area, env.options.label_gap, env.options.label_moves, env.options.outline)
+    labels, found, blocked = named(env.runs, *place_labels(env.annexes, placed, keeps, on, env.labels))
     standing = text_keeps(a for i, a in enumerate(labels) if i not in blocked)
     gaps = (_need(env, replace(a, owner=env.runs[a.owner][1].sym) if a.owner in env.runs else a) for a in (env.annexes[i] for i in blocked))
     return tuple(labels), standing, tuple(found), (*blocked.values(), *(d for d in gaps if d))

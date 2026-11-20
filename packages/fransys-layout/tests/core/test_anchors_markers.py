@@ -29,11 +29,11 @@ def test_the_marker_box_is_the_one_home_box() -> None:
 
 def test_a_pose_on_a_marker_box_is_skipped_for_the_next() -> None:
     marks = _marker_keeps(1, [STUB], OPTIONS)
-    assert _fit([ON_STUB, BESIDE], (0, 0), PAGE, marks, FRAME) is BESIDE
+    assert _fit([ON_STUB, BESIDE], (0, 0), marks, FRAME) is BESIDE
 
 
 def test_with_no_markers_the_first_pose_stands() -> None:
-    assert _fit([ON_STUB, BESIDE], (0, 0), PAGE, (), FRAME) is ON_STUB
+    assert _fit([ON_STUB, BESIDE], (0, 0), (), FRAME) is ON_STUB
 
 
 def _item(outline: Box) -> Anchored:

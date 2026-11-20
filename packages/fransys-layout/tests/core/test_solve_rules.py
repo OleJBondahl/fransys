@@ -102,7 +102,7 @@ def test_is1_names_a_solve_that_gives_two_layouts(monkeypatch: pytest.MonkeyPatc
     def by_call(prob: PlacementProblem, options: Options) -> CoreLayout:
         found = real(prob, options)
         calls.append(1)
-        extra = Finding("ANNEX_UNPLACED", "call", len(calls), prob.symbols[0].id)
+        extra = Finding("LABEL_NO_ROOM", "call", len(calls), prob.symbols[0].id)
         return replace(found, findings=(*found.findings, extra))
 
     monkeypatch.setattr(solve_checks, "solve", by_call)
@@ -146,13 +146,13 @@ def test_is5_names_a_foreign_code_page_and_subject(ring) -> None:
     prob, layout = ring
     bad = (
         Finding("NOT_A_CODE", "x"),  # ty: ignore[invalid-argument-type] -- the foreign code is the point
-        Finding("ANNEX_UNPLACED", "x", 99),
+        Finding("LABEL_NO_ROOM", "x", 99),
         Finding("NO_CELL", "x", 1, "zz"),
     )
     msgs = check_findings(replace(layout, findings=bad), prob, OPTIONS)
     assert [m.split(":")[0] for m in msgs] == [
         "IS.5 NOT_A_CODE",
-        "IS.5 ANNEX_UNPLACED",
+        "IS.5 LABEL_NO_ROOM",
         "IS.5 NO_CELL",
     ]
 
@@ -169,7 +169,7 @@ def test_is7_names_a_solve_that_reads_an_id_spelling(monkeypatch: pytest.MonkeyP
     def reads_spelling(prob: PlacementProblem, options: Options) -> CoreLayout:
         found = real(prob, options)
         if not prob.symbols[0].id.islower():
-            found = replace(found, findings=(Finding("ANNEX_UNPLACED", "x", 1),))
+            found = replace(found, findings=(Finding("LABEL_NO_ROOM", "x", 1),))
         return found
 
     monkeypatch.setattr(solve_checks, "solve", reads_spelling)

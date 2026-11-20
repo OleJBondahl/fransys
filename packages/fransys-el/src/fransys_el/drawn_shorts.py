@@ -1,4 +1,4 @@
-"""DRAWING_SHORTS_NETS, MISSING_JUNCTION_DOT, DOT_ON_CROSSING, WIRE_OVER_PIN_TIP and ROUTE_WRONG_PORT over the drawn netlist.
+"""DRAWING_SHORTS_NETS, MISSING_JUNCTION_DOT, DOT_ON_CROSSING and WIRE_OVER_PIN_TIP over the drawn netlist.
 
 A piece of the drawings that holds ports of two physical nets is a short, unless a bundle trunk
 carries it. A wire that ends on another wire with no dot is a short when the two hold different
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from .drawn_netlist import Netlist
 
-__all__ = ["ink_findings", "short_findings", "wrong_port_findings"]
+__all__ = ["ink_findings", "short_findings"]
 
 XY = tuple[int, int]
 _BARE = "three or more ink directions meet with no junction dot and no pin"
@@ -75,21 +75,4 @@ def ink_findings(net: Netlist) -> tuple[Finding, ...]:
         found += [drawn_finding("MISSING_JUNCTION_DOT", (page,), f"{_BARE} at {at}") for at in graph.bare_joints if at not in tees]
         found += [drawn_finding("DOT_ON_CROSSING", (page,), f"a junction dot at {at} stands where two wires cross") for at in graph.dot_crossings]
         found += [drawn_finding("WIRE_OVER_PIN_TIP", (page,), f"wire {i} passes over the pin tip at {at}") for at, i in graph.over_tips]
-    return tuple(found)
-
-
-def _ends_at(part_ports: dict[str, XY], at: XY) -> list[str]:
-    return [port for port, point in part_ports.items() if point == at]
-
-
-def wrong_port_findings(net: Netlist) -> tuple[Finding, ...]:
-    """ROUTE_WRONG_PORT per wire whose two ends stand on ports of different nets."""
-    found = []
-    for part in net.pages.values():
-        for wire in part.drawing.wires:
-            first = {net.net(p): p for p in _ends_at(part.ports, wire.points[0])}
-            last = {net.net(p): p for p in _ends_at(part.ports, wire.points[-1])}
-            if first and last and not first.keys() & last.keys():
-                ids = [net.ids[next(iter(m.values()))] for m in (first, last)]
-                found.append(drawn_finding("ROUTE_WRONG_PORT", ids, f"a wire joins ports of {len(ids)} nets"))
     return tuple(found)

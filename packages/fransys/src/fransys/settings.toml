@@ -291,7 +291,7 @@ csv = "csv_ends"
 
 
 [lists.cables]
-pdf_columns = ["designation", "mpn", "description", "core_count", "gauge_mm2", "length_mm", "from_label", "to_label"]
+pdf_columns = ["designation", "mpn", "description", "core_count", "cross_section", "length_mm", "from_label", "to_label"]
 
 [[lists.cables.columns]]
 field = "designation"
@@ -314,7 +314,7 @@ pdf = "head_core_count"
 csv = "csv_core_count"
 
 [[lists.cables.columns]]
-field = "gauge_mm2"
+field = "cross_section"
 pdf = "head_gauge_mm2"
 csv = "csv_gauge_mm2"
 
@@ -360,7 +360,7 @@ pdf = "cores"
 csv = "cores"
 
 [[lists.contents.columns]]
-field = "gauge_mm2"
+field = "cross_section"
 pdf = "gauge"
 csv = "gauge"
 
@@ -424,6 +424,7 @@ gauge = "Gauge"
 length_mm = "Length mm"
 ends = "Ends"
 spare = "spare"
+unknown = "unknown"
 signal_di = "DI"
 signal_do = "DO"
 signal_ai_ma = "AI (mA)"

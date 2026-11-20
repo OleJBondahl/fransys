@@ -63,3 +63,6 @@ def test_the_terminals_own_marker_names_the_first_end_in_reading_order() -> None
     """The terminal names no other terminal: its first target is first in reading order."""
     model = _built()
     assert marker_text(model, _marker(model, "-X1:1")).startswith("#1-1A +")
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

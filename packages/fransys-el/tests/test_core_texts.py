@@ -339,3 +339,6 @@ def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
     for t in tags:
         drawn_g = text_width(LIBRARY.font, t.text, float(em_mm)) / float(mm_per_division(model, sheet))
         assert t.box.w >= float(drawn_g)
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

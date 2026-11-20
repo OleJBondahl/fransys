@@ -2,6 +2,8 @@
 The bug: CONNECTION_NOT_DRAWN on the plugs' pins and the device pin, though each mated pin owes an OFF stub.
 Fixed at the root (R2578): `cut_ledger.whole` and `restood`, called from `widen._stand` after the losses; up to three sibling plugs (R2580)."""
 
+import importlib
+from dataclasses import replace
 from functools import cache
 from typing import NamedTuple, TypedDict
 
@@ -9,6 +11,9 @@ import fransys as fr
 import pytest
 from _model_build_cover import unit_document
 from fransys.colours import BU
+
+from fransys_layout.core.outputs import Refused
+from fransys_layout.core.route_env import lost_key
 
 
 class _Release(TypedDict):
@@ -20,6 +25,7 @@ class _Release(TypedDict):
 
 
 _REL: _Release = {"revision": 1, "interface_version": 1, "date": "2026-11-16", "text": "First", "by": "XX"}
+widen = importlib.import_module("fransys_layout.core.widen")
 _ORDER = ("a.A1", "a.A2", "b.B1", "b.B2", "c.C1", "c.C2")
 
 
@@ -87,3 +93,19 @@ def test_mated_plugs_wired_to_the_same_pins_of_one_device_draw_every_end(plugs: 
     """KI-1069 (R2578, R2580): the ends of every sibling plug are drawn, and no stub names a far end that has no conductor."""
     codes = {f.code for f in _built(plugs=plugs, pins=pins).findings}
     assert codes.isdisjoint({"CONNECTION_NOT_DRAWN", "PLACEMENT_PROBLEM"})
+
+
+def test_a_forced_loss_of_one_plug_pin_leaves_no_dangling_wire_end(monkeypatch: pytest.MonkeyPatch) -> None:
+    """R2618: the router loses the first pin of plug0 in round 1 (2 plugs x 2 pins); the wires and the markers of the next round agree."""
+    real = widen.route_pages
+
+    def lose_one(placement, cut, problem, options, laid):
+        routes = real(placement, cut, problem, options, laid)
+        net = problem.nets[0]
+        if lost_key(net.id, net.pins[:1]) in laid.lost:
+            return routes
+        return replace(routes, failed=(*routes.failed, Refused(net.id, net.pins[:1])))
+
+    monkeypatch.setattr(widen, "route_pages", lose_one)
+    codes = {f.code for f in _built.__wrapped__(plugs=2, pins=2).findings}
+    assert "DANGLING_WIRE_END" not in codes

@@ -752,6 +752,7 @@ def test_cable_page_part_line_counts_conductor_cores_not_the_screen():
     m = model(demo_part, cable, cable_facet("w1", subject=cable.id, length_mm=None), product, doc)
     (found,) = harness_cables_for(m, doc.id, (K.HARNESS_DRAWING,))
     assert _part_line(found).endswith("4 x 0.5 mm²")
+    assert _part_line(dataclasses.replace(found, part_cross_section="unknown")).endswith("4 x unknown")
 
 
 def test_connector_with_no_wired_pin_prints_one_line_and_no_heading():

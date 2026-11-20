@@ -34,6 +34,7 @@ from .designation import (
 from .designation_connector import prints_connector_label
 from .designation_label import own_label
 from .facts.cores import conductor_count
+from .facts.house_settings import word
 from .lookups import (
     connector_facets,
     item_of_port,
@@ -46,6 +47,7 @@ from .open_cores import open_core_rows
 from .order import natural_key
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
 from .texts.context import PrintContext
+from .texts.core_text import cross_section_text
 from .texts.end_text import LIST_END, end_designation, end_text
 from .wire_list import wire_labels
 
@@ -153,6 +155,13 @@ class _Facts:
     context: Id[AspectNode] | None
 
 
+def _cross_sections(model: Model, product: CableProductFacet | None) -> tuple[str, str]:
+    """The list's and the part line's gauge text (R2541, R2547); the `[words]` "unknown" is read only for a stated unknown."""
+    gauge = None if product is None else product.gauge_mm2
+    unknown = word(model, "unknown") if product is not None and gauge is None else ""
+    return cross_section_text(gauge, unknown, with_unit=False), cross_section_text(gauge, unknown)
+
+
 def _cable_facts(model: Model, cable: Id[Item], facts: _Facts) -> HarnessCable:
     """`cable`'s own `HarnessCable`: product facts, cores and ends, shared by every cable query.
 
@@ -163,13 +172,15 @@ def _cable_facts(model: Model, cable: Id[Item], facts: _Facts) -> HarnessCable:
     part = None if part_id is None else facts.all_parts[part_id]
     product = None if part_id is None else facts.products.get(part_id)
     cores = _cores(cable_rows(model, cable, unit=facts.unit), facts.labels)
+    cross_sections = _cross_sections(model, product)
     return HarnessCable(
         cable=cable,
         designation=printed_designation(model, cable, unit=facts.unit),
         mpn=None if part is None else part.mpn,
         description=None if part is None else part.description,
         core_count=None if product is None else conductor_count(product),
-        gauge_mm2=None if product is None else product.gauge_mm2,
+        cross_section=cross_sections[0],
+        part_cross_section=cross_sections[1],
         shielded=None if product is None else product.shielded,
         length_mm=facts.lengths.get(cable),
         cores=cores,
@@ -371,7 +382,7 @@ def _list_row(model: Model, cable: Id[Item], facts: _Facts) -> CableListRow:
         mpn=cable_facts.mpn,
         description=cable_facts.description,
         core_count=cable_facts.core_count,
-        gauge_mm2=cable_facts.gauge_mm2,
+        cross_section=cable_facts.cross_section,
         length_mm=cable_facts.length_mm,
         from_label=_list_end(model, kept[0], ctx) if kept else "",
         to_label=", ".join(_list_end(model, end, ctx) for end in kept[1:]),
@@ -439,7 +450,7 @@ def contents_rows(cables: tuple[HarnessCable, ...]) -> tuple[ContentsRow, ...]:
             mpn=cable.mpn,
             description=cable.description,
             core_count=cable.core_count,
-            gauge_mm2=cable.gauge_mm2,
+            cross_section=cable.cross_section,
             length_mm=cable.length_mm,
             # Text, not a tuple: `cell_text` would join a tuple with `CELL_SEPARATOR` (`"; "`),
             # not the en dash this column needs.

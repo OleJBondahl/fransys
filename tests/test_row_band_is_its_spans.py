@@ -88,3 +88,6 @@ _LOOKS = {
 def test_every_row_band_is_the_extent_of_its_spans(request: pytest.FixtureRequest, misses: list[tuple[Any, ...]]) -> None:
     distinct = sorted(set(misses))
     assert len(distinct) <= _LOOKS.get(request.node.callspec.id, 0), distinct[:8]
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

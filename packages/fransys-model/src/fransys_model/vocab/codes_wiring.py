@@ -22,6 +22,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="GAUGE_UNKNOWN",
+        severity=Severity.INFO,
+        stage="validators",
+        who="consumer",
+        cause="A cable part states its cross-section as unknown, so its lists print the word unknown.",
+        fix="Add gauge_mm2 from the datasheet when known.",
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="CONDUCTOR_ON_UNINSTALLED",
         severity=Severity.WARNING,
         stage="validators",

@@ -355,7 +355,7 @@ def cable_heading(model: Model, cable: HarnessCable) -> str:
     parts = [cable.designation]
     pairs = cable_pairs(model, cable.cable)
     if pairs:
-        parts.append(pair_form(pairs, cable.gauge_mm2))
+        parts.append(pair_form(pairs, cable.cross_section))
     if screened_pairs(pairs):
         parts.append("screened pairs")
     if cable.shielded:

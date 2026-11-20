@@ -266,10 +266,11 @@ def _stand(
     lost, labels, memo = held
     groups = whole(lost.values(), problem.facts.far_ends, cut.spec.drawn)
     keys, refs = frozenset(lost), fallback(cut, placement, (*groups, *(Refused(n, pair) for n, pair in cut.spec.unjoined)))
+    cut = replace(cut, spec=replace(cut.spec, reference_plan=restood(cut.spec.reference_plan, lost.values(), cut.spec.drawn)))
     fixed = {
         pg: f._replace(labels=tuple(a for a in labels if a.page == pg)) for pg, f in fixed_wires(placement, cut, problem, options, lost=keys).items()
     }
-    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*restood(cut.spec.reference_plan, lost.values(), cut.spec.drawn), *refs)))
+    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*cut.spec.reference_plan, *refs)))
     markers, missed, asks = placed_marks(planned, placement, problem, options, fixed)
     return Round(
         markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys, memo)), refs, tuple(lost.values()), asks, memo
@@ -282,6 +283,7 @@ def route_round(cut: CutResult, placement: Placement, problem: PlacementProblem,
     It stops after the first round that loses nothing (R1245), or at `route_fallback_rounds`, where the
     last round's losses still become references (R1244).
     """
+    # KI-1120: the closing stand at the cap is unread (A6-CAP-STAND, after FALLBACK-PROPERTY)
     lost: dict[LostKey, Refused] = {}
     labels: Sequence[AnnexBox] = ()
     memo = {} if memo is None else memo

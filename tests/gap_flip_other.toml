@@ -140,3 +140,6 @@
 
 # KI-738 (CORRECTNESS-PROOF S0 R6, R1861): the dangling-end check meets a wire end that lies along another wire by a dot further along the run
 "packages/fransys-el/tests/test_drawn_netlist.py::test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself" = "GAP-FLIP-738"  # KI-738
+
+# KI-974 (CHAIN-FROM-HEAD): the distribution board shows INK_WITHOUT_CONDUCTOR (3 warnings), revealed by P1-ALONE's reader (designer R2619)
+"tests/test_placement_corpus_distribution_board.py::test_the_board_has_no_error_and_no_warning" = "GAP-FLIP-974"  # KI-974 (CHAIN-FROM-HEAD)

@@ -165,6 +165,7 @@ from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets
 from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.house_settings import export_form_of
 from .facts.ink_net import ink_net
+from .facts.joins import port_joins
 from .facts.keep_whole import KeepWhole, keep_whole_sets
 from .facts.mates import mate_pairs, mate_port_of
 from .facts.part import (
@@ -1043,6 +1044,7 @@ __all__ = [
     "port_function",
     "port_is_reached",
     "port_is_unused",
+    "port_joins",
     "port_marking",
     "port_name",
     "port_potential_current",

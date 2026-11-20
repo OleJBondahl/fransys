@@ -195,7 +195,7 @@ def _build_cable_product(draft: Draft, cable_product: _toml.Table, part: _PartCo
             key=key,
             subject=part.id,
             core_colours=tuple(cable_product["core_colours"]),
-            gauge_mm2=Decimal(cable_product["gauge_mm2"]),
+            gauge_mm2=None if cable_product["gauge_mm2"] == "unknown" else Decimal(cable_product["gauge_mm2"]),
             shielded=cable_product["shielded"],
             pairs=tuple(CorePair(cores=tuple(pair["cores"]), screen=pair.get("screen")) for pair in cable_product.get("pairs", ())),
         ),

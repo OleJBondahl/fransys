@@ -261,3 +261,6 @@ def test_a_dot_on_its_symbols_own_pin_point_is_no_overlap():
 def test_a_dot_off_the_pin_point_or_on_another_symbols_pin_still_overlaps():
     assert _dot_page((5, 5), (5, 0)) == ["terminal / junction-dot"]
     assert _dot_page((5, 5), (7, 7)) == ["terminal / junction-dot"]
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

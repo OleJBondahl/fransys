@@ -152,3 +152,6 @@ def test_the_bank_of_54_draws_every_connection() -> None:
     """BANK-PIECES-JOINED (R1713): a piece of a required group a reference touches but no wire joins is joined by a loop reference, not left apart."""
     built = built_bank(54)
     assert [f for f in (*built.findings, *fr.check(built)) if f.code == "CONNECTION_NOT_DRAWN"] == []
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

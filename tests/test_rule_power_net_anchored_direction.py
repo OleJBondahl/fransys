@@ -61,3 +61,6 @@ def test_the_heading_of_a_pin_is_the_side_of_the_body_it_stands_on() -> None:
     assert _heading(body, (10, 40)) == (0, 1)
     assert _heading(body, (0, 20)) == (-1, 0)
     assert _heading(body, (20, 20)) == (1, 0)
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

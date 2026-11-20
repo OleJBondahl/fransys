@@ -40,6 +40,7 @@ def marker_text(model: Model, marker: LinkMarker) -> str:
     return "\n".join(line for line, _ in _own_text(model, marker))
 
 
+# KI-1088: a stub line is no PDF link; ONE-MARKER-PER-END
 def marker_line_targets(model: Model, marker: LinkMarker) -> tuple[LinkMarker | None, ...]:
     """The end each printed line of `marker`'s box names, `None` for a line that names none (a stub's own text).
 

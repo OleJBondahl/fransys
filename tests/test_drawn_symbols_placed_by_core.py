@@ -200,3 +200,6 @@ def test_every_drawn_route_point_is_a_core_route_point_but_a_falling_stock(case)
 def test_annex_unplaced_findings_are_a_falling_stock(name):
     findings = [f for f in _built_with_unlaid(name)[0].findings if f.code == "ANNEX_UNPLACED"]
     assert len(findings) == annex_unplaced[name]  # equal: a lower count lowers the stock
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

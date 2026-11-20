@@ -237,3 +237,6 @@ def test_the_ink_of_the_longest_text_stands_in_the_slot_and_beyond_the_bar_in_ev
 
 def _mm_box(box: Any) -> tuple[float, float, float, float]:
     return (float(box.min.x * _MM), float(box.min.y * _MM), float(box.max.x * _MM), float(box.max.y * _MM))
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

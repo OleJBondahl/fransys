@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import far_pins
 from fransys_model.layout import StarKind
 
+from .drawn_ends import ink_without_conductor
 from .drawn_finding import drawn_finding
 from .drawn_graph import Union
 from .drawn_power import inked_power
@@ -99,7 +100,8 @@ def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Un
 
 
 def not_drawn_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:
-    """One WARNING per conductor end of a port drawn at its home that no wire, reference, stub or where-text draws (R1573, R1617)."""
+    """One finding per conductor end that no wire, reference, stub or where-text draws (R1573, R1617), then per ink run no conductor makes."""
     stubs = _stubs(net)
     message = "1 conductor end not drawn: no wire, reference, stub or where-text"
-    return tuple(drawn_finding("CONNECTION_NOT_DRAWN", (net.ids[near],), message) for near, _ in _unmarked(model, net, stubs, _pairs(net, stubs)))
+    ends = (drawn_finding("CONNECTION_NOT_DRAWN", (net.ids[near],), message) for near, _ in _unmarked(model, net, stubs, _pairs(net, stubs)))
+    return (*ends, *ink_without_conductor(model, net))

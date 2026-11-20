@@ -39,7 +39,7 @@ _EL_ONLY = [
     "CONNECTION_NOT_DRAWN",  # DRAWN-NETLIST (el-0052): el checks the finished drawings
     "DANGLING_WIRE_END",  # DRAWN-NETLIST (el-0086): a wire end that meets nothing
     "DRAWING_SHORTS_NETS",
-    "ROUTE_WRONG_PORT",
+    "INK_WITHOUT_CONDUCTOR",  # CONDUCTOR-INK (CP-S2c-2): el reads the drawn ink against the conductors of the model
     "CONNECTION_DRAWN_TWICE",
     "WIRE_NOT_ORTHOGONAL",
     "MISSING_JUNCTION_DOT",
@@ -73,9 +73,9 @@ def test_every_code_the_core_can_emit_is_registered_for_the_mapper():
     assert sorted(set(get_args(FindingCode)) - held - {"LANE_TURNED"}) == []
 
 
-def test_a_drawn_short_a_wrong_port_a_trunk_through_a_body_and_a_page_overflow_are_errors():
+def test_a_drawn_short_a_trunk_through_a_body_and_a_page_overflow_are_errors():
     """Stocks are 0 on all seven builds, so each is an ERROR (el-0052, R452; layout-0394, R492; CUT-TALL step 1)."""
-    for code in ("DRAWING_SHORTS_NETS", "ROUTE_WRONG_PORT", "WIRE_THROUGH_BODY", "PAGE_OVERFLOW"):
+    for code in ("DRAWING_SHORTS_NETS", "WIRE_THROUGH_BODY", "PAGE_OVERFLOW"):
         info = next(i for i in FINDING_CODES if i.code == code)
         assert info.severity is Severity.ERROR, code
 

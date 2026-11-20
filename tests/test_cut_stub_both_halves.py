@@ -91,3 +91,6 @@ def test_a_same_page_reference_is_a_row_wrap_or_a_card_halves_tag(solved) -> Non
                 odd.append((ref.net[:8], ref.kind.value, ref.cut))
     assert odd == [], name
     assert wraps == WRAPS[name], name
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

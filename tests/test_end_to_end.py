@@ -298,3 +298,6 @@ def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path)
         for row in range(sheet_format_of(model, partner.sheet_format).frame_rows)
     ]
     assert max(marker_boxes(LIBRARY, line)["R0"].w for line in lines) <= reserved
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -258,3 +258,6 @@ def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_car
     net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"})
     monkeypatch.setattr(drawn_power, "port_power_text", lambda *_: text)
     assert (inked_power(net, None) == {"a"}) is (key != "supply" or text is not None)  # ty: ignore[invalid-argument-type] the read is monkeypatched
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

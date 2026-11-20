@@ -1,6 +1,5 @@
 """The row shapes of the ring-out sheet: one join to test, and the words that head it (R2008, model-0199)."""
 
-from decimal import Decimal
 from enum import Enum
 
 from fransys_model.kernel import value
@@ -21,7 +20,7 @@ class RingOutRow:
     """One join the electrician measures end to end.
 
     `from_`/`to` are the printed ends, `label` the wire label or the cable core text, `colour`
-    and `cross_section_mm2` the wire's or the core's cable's (`""` and `None` for a bridge), `drawing` the
+    and `cross_section` the wire's or the core's cable's as text (`""` for a bridge), `drawing` the
     page text of the first drawing of this document that shows an end, `""` for none.
     """
 
@@ -30,7 +29,7 @@ class RingOutRow:
     to: str
     label: str
     colour: str
-    cross_section_mm2: Decimal | None
+    cross_section: str
     drawing: str
 
 

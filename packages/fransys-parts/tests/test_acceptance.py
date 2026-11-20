@@ -523,3 +523,20 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
     assert SCHEMA_VERSION == 34
+
+
+def test_cable_product_gauge_unknown_loads_as_none(tmp_path):
+    """R2540: the literal "unknown" is a stated unknown (None, never 0)."""
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab.facets.cable import CableProductFacet
+    from fransys_model.vocab.tables import facets_of
+
+    (tmp_path / "library.toml").write_text('schema = 2\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n')
+    (tmp_path / "parts").mkdir()
+    part = 'schema = 2\n[part]\nmpn = "X"\nmanufacturer = "D"\ndescription = "d"\ncategory = "cable"\nclass_code = "W"\n'
+    cable = '[cable_product]\ncore_count = 1\ncore_colours = ["BN"]\nshielded = false\ngauge_mm2 = "unknown"\n'
+    (tmp_path / "parts" / "x.toml").write_text(
+        part + '[[function]]\nname = "f"\nkind = "generic"\nports = [{ name = "1", role = "generic" }]\n' + cable
+    )
+    (facet,) = facets_of(freeze(fransys_parts.load_path(tmp_path)), CableProductFacet).values()
+    assert facet.gauge_mm2 is None

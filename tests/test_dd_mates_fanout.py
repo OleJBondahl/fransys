@@ -182,3 +182,6 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
     mirrors = [(page, m) for page, m in every if set_of(model, page).unit is None]
     assert len(mirrors) == 2  # the top-level set
     assert all(text.endswith(port_designation(model, pin)) for _, m in mirrors for text in marker_strings(m))
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

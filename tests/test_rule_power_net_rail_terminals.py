@@ -94,3 +94,6 @@ def test_a_group_is_a_rail_only_when_it_is_flagged() -> None:
     flagged, plain = _strip_model(rail=True), _strip_model(rail=False)
     assert {i for i in terminal_items(flagged) if is_rail_terminal(flagged, i)}
     assert not {i for i in terminal_items(plain) if is_rail_terminal(plain, i)}
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

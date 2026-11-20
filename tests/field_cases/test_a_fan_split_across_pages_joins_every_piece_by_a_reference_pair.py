@@ -84,3 +84,6 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
     assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "ANNEX_UNPLACED"}] == []
     assert copied
     assert all(ends == pages >= 2 for ends, pages in copied)  # the cut fell inside the fan
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

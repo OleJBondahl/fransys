@@ -265,7 +265,7 @@ class HarnessEnd:
 class HarnessCable:
     """One cable of a harness with its product facts, cores and ends.
 
-    `mpn` and `description` are the cable `Part`'s; `core_count`, `gauge_mm2` and `shielded` are
+    `mpn` and `description` are the cable `Part`'s; `core_count`, `cross_section` and `shielded` are
     its `cable_product` facet; `length_mm` is the item's `cable` facet. Each is `None` where the
     part or the facet is absent. `designation` is the cable's `printed_designation` (`"-W1"`),
     the text the drawing's cable node title prints. `open_cores` are the cable's spares and
@@ -277,7 +277,8 @@ class HarnessCable:
     mpn: str | None
     description: str | None
     core_count: int | None
-    gauge_mm2: Decimal | None
+    cross_section: str
+    part_cross_section: str
     shielded: bool | None
     length_mm: int | None
     cores: tuple[HarnessCore, ...]
@@ -294,7 +295,7 @@ class _CableFacts:
     mpn: str | None
     description: str | None
     core_count: int | None
-    gauge_mm2: Decimal | None
+    cross_section: str
     length_mm: int | None
 
 
@@ -302,13 +303,14 @@ class _CableFacts:
 class CableListRow(_CableFacts):
     """One top-level cable of the system document's cable list.
 
-    `mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
+    `mpn`, `description`, `core_count`, `cross_section` and `length_mm` are `HarnessCable`'s own
     facts, `None` where the part or facet is absent. `designation` is the cable's
     `printed_designation` (`"-W1"`). Ends are ordered by `cable_end_rank` (a unit member first),
     so a cable authored either way round reads the same way round. `from_label` is the first end's
     `HarnessEnd.designation`, the text the drawing prints. `to_label` lists every other end's
     designation in that order, joined by `", "`. With one end `to_label` is `""`, with none
-    both are. `pairs` is the number of twisted pairs of the product, `None` for a product with none.
+    both are. `cross_section` is the gauge text: `""` with no product, the `[words]`
+    "unknown" for a stated unknown, else the decimal. `pairs` is the number of twisted pairs of the product, `None` for a product with none.
     """
 
     from_label: str
@@ -320,7 +322,7 @@ class CableListRow(_CableFacts):
 class ContentsRow(_CableFacts):
     """One cable of a document's CONTENTS page.
 
-    `mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
+    `mpn`, `description`, `core_count`, `cross_section` and `length_mm` are `HarnessCable`'s own
     facts, as in `CableListRow`. `designation` is the cable's `printed_designation` (`"-W1"`).
     `ends` is every end's `designation` in the cable's end order, joined by an en dash, a blank
     end (outside a nested unit) dropped with its dash; unlike `CableListRow` it keeps

@@ -181,7 +181,7 @@ assert s.table("export")["data_dir"] == "data"
 
 ## The ring-out sheet
 
-Add `"ring_out"` to `reports` and `fr.write` also writes one `.xlsx` for every PDF document that has drawings, named with the PDF's stem (`pump.pdf`, `pump.xlsx`). A unit's sheet lists its own joins; any other document's lists the wires and cores drawn on its pages and the bridges of its strips. `ring_out_skip = ["system"]` leaves the named document presets without a sheet (default empty). The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild. Bridge rows carry no mm²: a bridge is a terminal accessory, not a wire.
+Add `"ring_out"` to `reports` and `fr.write` also writes one `.xlsx` for every PDF document that has drawings, named with the PDF's stem (`pump.pdf`, `pump.xlsx`). A unit's sheet lists its own joins; any other document's lists the wires and cores drawn on its pages and the bridges of its strips. `ring_out_skip = ["system"]` leaves the named document presets without a sheet (default empty). The electrician rings out the cabinet line by line on a phone and marks each line. Files in the output folder are replaced on each write, so copy a filled-in sheet out of it before you rebuild. Bridge rows carry no mm²: a bridge is a terminal accessory, not a wire. A core line's mm² is its cable's `cross_section` text (`RingOutRow.cross_section`), so a stated unknown prints the word `unknown`.
 
 ```toml
 [export]

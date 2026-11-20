@@ -171,3 +171,6 @@ def test_a_coil_wired_to_itself_keeps_a_wire_to_both_pins(monkeypatch: pytest.Mo
     for codes in (star, crash):
         assert "CONNECTION_NOT_DRAWN" not in codes
         assert "DRAWING_SHORTS_NETS" not in codes
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

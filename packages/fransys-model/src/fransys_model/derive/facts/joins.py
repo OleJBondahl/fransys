@@ -26,10 +26,13 @@ def _joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
 
 
 def port_joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]:
-    """Each (header port, function port) pair the model's header joins make, sorted.
+    """Each (header port, function port) pair the model's header joins make.
 
-    The pair is on one item: the join names a port template of the header's own part. A join whose
-    target function the item lacks yields no pair.
+    A part file's `joins =` joins a header port to a function port of the same part. The pair is on one item:
+    the join names a port template of the header's own part. A join whose target function the item lacks
+    yields no pair. A join carries no conductor, so a drawing's wire to the header port reaches the function port.
+
+    Example: a module's header pin `P01` joined to its coil port `A1` gives the pair `P01`, `A1`.
     """
     return _joins(model)
 

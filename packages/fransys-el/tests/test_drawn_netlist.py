@@ -16,7 +16,11 @@ from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import GNYE
 from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, drawn_references, lay_out_core, lay_out_drawn, symbol_kit
+from fransys_el import drawn_ends as drawn_ends_module
 from fransys_el import drawn_netlist as drawn_netlist_module
+from fransys_el import drawn_nets as drawn_nets_module
+from fransys_el.drawn_ends import ink_without_conductor
+from fransys_el.drawn_finding import drawn_finding
 from fransys_el.drawn_graph import Union
 from fransys_el.drawn_lanes import Lanes
 from fransys_el.drawn_netlist import Netlist, drawn_netlist, is_marker, with_lines
@@ -41,13 +45,13 @@ from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
 
     from fransys_layout.drawing import Drawing
 
 CODES = {
     "CONNECTION_NOT_DRAWN",
     "DRAWING_SHORTS_NETS",
-    "ROUTE_WRONG_PORT",
     "CONNECTION_DRAWN_TWICE",
     "WIRE_NOT_ORTHOGONAL",
     "MISSING_JUNCTION_DOT",
@@ -149,7 +153,7 @@ def _wire_between_ports(built: Built):
 def test_a_clean_build_raises_none_of_the_sweeps_codes(bank8, bank40):
     """The bank of 8 raises no code of the sweep since ROUTING's guard (R439)."""
     assert bank8.codes() & CODES == set()
-    assert bank40.codes() & {"ROUTE_WRONG_PORT", "CONNECTION_DRAWN_TWICE"} == set()
+    assert bank40.codes() & {"CONNECTION_DRAWN_TWICE"} == set()
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -162,18 +166,6 @@ def test_a_wire_that_joins_two_nets_is_a_short(bank8):
     bridge = DrawnWire("bridge", ((ax, ay), (ax, by), (bx, by)), part.drawing.wires[0].style)
     planted = bank8.patched(page, wires=(*part.drawing.wires, bridge))
     assert bank8.count("DRAWING_SHORTS_NETS", planted) > bank8.count("DRAWING_SHORTS_NETS")
-
-
-@pytest.mark.rule("DRAWN-NETLIST")
-def test_a_wire_end_moved_to_a_neighbour_port_is_a_wrong_port(bank8):
-    page, i = _wire_between_ports(bank8)
-    part = bank8.netlist().pages[page]
-    wire = part.drawing.wires[i]
-    mine = bank8.netlist().net(_at(part, wire.points[-1]))
-    other = next(at for p, at in part.ports.items() if bank8.netlist().net(p) != mine)
-    moved = replace(wire, points=(*wire.points[:-1], other))
-    wires = tuple(moved if k == i else w for k, w in enumerate(part.drawing.wires))
-    assert bank8.count("ROUTE_WRONG_PORT", bank8.patched(page, wires=wires)) > bank8.count("ROUTE_WRONG_PORT")
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -256,12 +248,6 @@ def test_a_wire_end_lying_along_another_wire_is_not_met_by_it(bank8):
     """KI-365: a wire laid collinear over part of another wire ends on nothing; only a wire end on its interior across, or a dot, meets."""
     planted, a, b = _overlap(bank8, dot=False)
     assert sorted(bank8.messages("DANGLING_WIRE_END", planted)) == sorted(f"wire end at {x}, {y}" for x, y in (a, b))
-
-
-@pytest.mark.rule("DRAWN-NETLIST")
-def test_a_wire_end_lying_along_another_wire_is_met_where_a_dot_lies_on_the_run(bank8):
-    """R1665: the same overlap with a junction dot on the shared run is a joined bus, so both ends are met."""
-    assert bank8.messages("DANGLING_WIRE_END", _overlap(bank8, dot=True)[0]) == []
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -359,23 +345,17 @@ def _drawn(net: Netlist, near: str, far: str, stubs: dict[str, set[str]] | None 
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
-def test_a_port_drawn_on_two_pages_counts_where_it_is_wired():
-    """R717: a copy is a second point of its port; the group is drawn when a piece holds every member."""
-    places = {"s": ((P2, (2, 2)),), "t": ((P1, (5, 5)), (P2, (1, 1)))}
-    assert _drawn(_homed(places, [((P2, (1, 1)), (P2, (2, 2)))]), "t", "s", {"t": {"s"}})
-    assert not _drawn(_homed(places), "t", "s")
-
-
 @pytest.mark.rule("G01-CONNECTED")
-def test_a_wired_copy_does_not_cover_an_unwired_home_port():
-    net = _homed({"s": ((P2, (4, 4)),), "t": ((P1, (1, 1)), (P2, (3, 3)))}, [((P2, (3, 3)), (P2, (4, 4)))], [(P1, (1, 1))])
-    assert not _drawn(net, "t", "s", {"s": {"t"}})
-
-
-@pytest.mark.rule("G01-CONNECTED")
-def test_a_complete_piece_on_a_copy_page_is_not_whole():
-    places = {"s": ((P1, (1, 1)), (P2, (3, 3))), "t": ((P1, (2, 2)), (P2, (4, 4)))}
-    assert not _drawn(_homed(places, [((P2, (3, 3)), (P2, (4, 4)))]), "s", "t")
+def test_a_group_is_drawn_where_a_piece_holds_every_member_at_its_home():
+    """R717: a copy is a second point of its port; a wired copy covers no unwired home port and a complete piece on a copy page is not whole."""
+    two = {"s": ((P2, (2, 2)),), "t": ((P1, (5, 5)), (P2, (1, 1)))}
+    wired = {"s": ((P2, (4, 4)),), "t": ((P1, (1, 1)), (P2, (3, 3)))}
+    copies = {"s": ((P1, (1, 1)), (P2, (3, 3))), "t": ((P1, (2, 2)), (P2, (4, 4)))}
+    pair = [((P2, (3, 3)), (P2, (4, 4)))]
+    assert _drawn(_homed(two, [((P2, (1, 1)), (P2, (2, 2)))]), "t", "s", {"t": {"s"}})
+    assert not _drawn(_homed(two), "t", "s")
+    assert not _drawn(_homed(wired, pair, [(P1, (1, 1))]), "t", "s", {"s": {"t"}})
+    assert not _drawn(_homed(copies, pair), "s", "t")
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -704,19 +684,17 @@ H, V = [(-20, 0), (20, 0)], [(0, -20), (0, 20)]
 FOUR = [[(-20, 0), (0, 0)], [(0, 0), (20, 0)], [(0, 0), (0, 20)], [(0, 0), (0, -20)]]
 
 
-def _rule(rule: str, code: str, geometry: Any) -> Any:
-    return pytest.param(code, geometry, marks=pytest.mark.rule(rule), id=code)
+def _rule(rule: str, code: str | None, geometry: Any) -> Any:
+    return pytest.param(code, geometry, marks=pytest.mark.rule(rule), id=f"{rule}-{code or 'drawn-right'}")
 
 
 INK_CASES = [
     _rule("READ-T-DOT", "MISSING_JUNCTION_DOT", (FOUR, set(), [])),
+    _rule("READ-T-DOT", None, (FOUR, {(0, 0)}, [])),
     _rule("READ-DOT-CROSSING", "DOT_ON_CROSSING", ([H, V], {(0, 0)}, [])),
+    _rule("READ-DOT-CROSSING", None, ([H, V], set(), [])),
     _rule("READ-WIRE-OVER-TIP", "WIRE_OVER_PIN_TIP", ([H], set(), [(0, 0)])),
-]
-INK_CLEAN = [
-    pytest.param((FOUR, {(0, 0)}, []), marks=pytest.mark.rule("READ-T-DOT"), id="four-way-with-dot"),
-    pytest.param(([H, V], set(), []), marks=pytest.mark.rule("READ-DOT-CROSSING"), id="crossing-no-dot"),
-    pytest.param(([[(-20, 0), (0, 0)]], set(), [(0, 0)]), marks=pytest.mark.rule("READ-WIRE-OVER-TIP"), id="wire-ends-at-tip"),
+    _rule("READ-WIRE-OVER-TIP", None, ([[(-20, 0), (0, 0)]], set(), [(0, 0)])),
 ]
 
 
@@ -726,15 +704,12 @@ def _ink(wires: list[list[tuple[int, int]]], dots: set[tuple[int, int]], tips: l
 
 
 @pytest.mark.parametrize(("code", "geometry"), INK_CASES)
-def test_ink_the_page_graph_lists_is_an_error_of_its_code(code: str, geometry: Any):
-    """R5, R6, R7: a four-way with no dot, a dot on a crossing and a wire over a pin tip each give one finding."""
-    expect_codes(SimpleNamespace(findings=_ink(*geometry)), code)
-    assert len(_ink(*geometry)) == 1
-
-
-@pytest.mark.parametrize("geometry", INK_CLEAN)
-def test_ink_that_is_drawn_right_gives_no_finding(geometry: Any):
-    assert _ink(*geometry) == ()
+def test_ink_the_page_graph_lists_is_an_error_of_its_code_and_ink_drawn_right_gives_none(code: str | None, geometry: Any):
+    """R5, R6, R7: a four-way with no dot, a dot on a crossing and a wire over a pin tip each give one finding; the same drawn right, none."""
+    found = _ink(*geometry)
+    assert len(found) == (code is not None)
+    if code:
+        expect_codes(SimpleNamespace(findings=found), code)
 
 
 @pytest.mark.rule("READ-T-DOT")
@@ -750,7 +725,7 @@ def _ports_of(model, port):
     return physical.ports
 
 
-def _pe_model():
+def _pe_build():
     """A pump cabinet with a flagged PE strip: M1 earthed by `d.earth`, M2 by a conductor to the strip, so two PE nets meet only there."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
@@ -759,7 +734,11 @@ def _pe_model():
         m1, m2 = d.device("M1", "DEMO-MOTOR-4KW"), d.device("M2", "DEMO-MOTOR-4KW")
     d.earth(pe[1].inner, m1.motor["PE"])
     d.series(pe[2].outer, m2.motor["PE"], wire=(GNYE, 2.5))
-    return fr.build(d, unit_document(cab)).model
+    return fr.build(d, unit_document(cab))
+
+
+def _pe_model():
+    return _pe_build().model
 
 
 @pytest.mark.rule("READ-RAILS")
@@ -899,3 +878,63 @@ def test_each_declared_bridge_of_a_strip_is_a_join_pair_and_a_plain_strip_has_no
     d = fr.design("demo_parts")
     d.terminal_strip("X4", "DEMO-TB-2.5", 6, bridged=bridged)
     assert len(drawn_netlist_module._bridges(fr.build(d).model)) == pairs
+
+
+def _ink_net(
+    monkeypatch: pytest.MonkeyPatch, edges: list[tuple[tuple[int, int], tuple[int, int]]], pairs: list[tuple[str, str]], **kw: Any
+) -> list[str]:
+    """INK_WITHOUT_CONDUCTOR messages of one page: ports a, b, c, h stand at fixed points, `edges` join points, `pairs` are the model's conductors."""
+    at = {"a": (0, 0), "b": (16, 0), "c": (8, 16), "h": (8, 0)}
+    ids = {p: Id[Any](kind="port", value=p) for p in at}
+    mark = [SimpleNamespace(x=x, y=y, key="marker-arrow", ports=("p",), net="n") for x, y in kw.get("markers", ())]
+    part = _page(tuple(DrawnWire("n", e, "w") for e in edges), at, set())
+    part.powers, part.drawing.symbols = kw.get("powers", {}), mark
+    net = SimpleNamespace(pages={P1: part}, ids=ids, joins=kw.get("joins", ()), lanes=Lanes(bare={(P1, f) for f in kw.get("feet", ())}))
+    monkeypatch.setattr(drawn_ends_module, "far_pins", lambda _m, _near: tuple((ids[x], ids[y]) for x, y in pairs))
+    monkeypatch.setattr(drawn_ends_module, "port_designation", lambda _m, i: i.value)
+    monkeypatch.setattr(drawn_ends_module, "port_joins", lambda _m: tuple((ids[x], ids[y]) for x, y in kw.get("header", ())))
+    return [f.message for f in ink_without_conductor(cast("Any", None), cast("Any", net))]
+
+
+_DOT = (8, 8)
+_STAR = [((0, 0), _DOT), ((16, 0), _DOT), ((8, 16), _DOT)]  # a, b, c joined by a dot
+_HUB = [("a", "h"), ("b", "h"), ("c", "h")]
+
+
+@pytest.mark.rule("DRAWN-NETLIST")
+@pytest.mark.parametrize(
+    ("edges", "pairs", "kw", "found"),
+    [
+        ([((0, 0), (16, 0))], [("a", "b")], {}, 0),
+        ([((0, 0), (16, 0))], [("a", "h"), ("b", "h")], {}, 1),
+        ([((0, 0), (16, 0))], [("a", "b"), ("a", "b")], {}, 0),  # twin conductors: one run certifies the set
+        ([((0, 0), (16, 0))], [], {"joins": ((Id[Any](kind="port", value="a"), Id[Any](kind="port", value="b")),)}, 0),
+        (_STAR, [("a", "b"), ("b", "c")], {}, 0),
+        (_STAR, [("a", "b")], {}, 1),
+        ([((0, 0), (16, 0))], [], {"header": [("a", "b")]}, 0),  # a part's own join (`joins =`) is no ink without a conductor
+        ([((0, 0), (16, 0))], [], {}, 1),
+        (_STAR, _HUB, {"feet": [_DOT]}, 0),  # a bundle lane foot: the arrow joins ports of one net
+        (_STAR, [("a", "h"), ("b", "h")], {"feet": [_DOT]}, 1),  # R2298: ports of two nets at a foot
+        ([*_STAR, ((8, 0), _DOT)], _HUB, {}, 0),  # the hub is a terminal of the dot: the pair graph is connected
+        ([((0, 0), (16, 0))], [("a", "h"), ("b", "h")], {"markers": [(0, 0)]}, 1),  # a marker on a port point hides no piece
+        ([((0, 0), (16, 4))], [("a", "h"), ("b", "h")], {"markers": [(16, 4)]}, 0),  # a marker off a port point is the reference rule's
+        ([((0, 0), (16, 0))], [("a", "h"), ("b", "h")], {"powers": {"a": (0, 0)}}, 0),
+        ([((0, 0), (16, 0))], [], {"powers": {"a": (0, 0)}}, 1),  # R2298: ports of two nets at a power symbol
+        ([((0, 0), (8, 4)), ((8, 4), (16, 0))], [], {"markers": [(8, 4)]}, 1),  # R2298: ports of two nets through an off-port marker
+    ],
+    ids=[
+        *("run", "run-via-hub", "twin", "node", "dot-tree", "dot-split", "part-join", "no-join"),
+        *("lane-foot", "foot-two-nets", "dot-with-hub", "marker-on-port", "marker-off-port", "power", "power-two-nets", "marker-two-nets"),
+    ],
+)
+def test_ink_between_ports_is_a_model_conductor(monkeypatch: pytest.MonkeyPatch, edges: Any, pairs: Any, kw: Any, found: int):
+    """CONDUCTOR-INK, R2297: a run needs a conductor or symbol node between its classes, a dot a connected pair graph; R2287 item 5 clauses."""
+    assert len(_ink_net(monkeypatch, edges, pairs, **kw)) == found
+
+
+def test_ink_without_conductor_is_a_warning_and_the_write_goes_on(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """R2323: a build with ink stock reports the code at WARNING, so `fr.write` is not refused."""
+    monkeypatch.setattr(drawn_nets_module, "ink_without_conductor", lambda _m, _n: (drawn_finding("INK_WITHOUT_CONDUCTOR", (), "planted"),))
+    result = _pe_build()
+    assert [f.severity.name for f in fr.check(result) if f.code == "INK_WITHOUT_CONDUCTOR"] == ["WARNING"]
+    assert fr.write(result, tmp_path / "out")

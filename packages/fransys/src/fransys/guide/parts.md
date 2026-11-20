@@ -303,6 +303,10 @@ d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_a", parent=f1)
 d.device(None, "DEMO-JUMPER-BAR-3P", name="f1_bar_b", parent=f1)
 ```
 
+## A cable part whose cross-section is not known
+
+A `[cable_product]` table states `gauge_mm2` as a quoted number, `"1.5"`. A fitted cable with no known cross-section in any source states the literal `"unknown"`: `gauge_mm2 = "unknown"`. The cable list prints the word `unknown` (a `[words]` entry) in the gauge cell, and one `GAUGE_UNKNOWN` INFO names the part. Add the number from the datasheet when it is known. A missing `gauge_mm2` key stays `FIELD_MISSING`.
+
 ## How many conductors a terminal point takes
 
 A terminal part states the conductors each point takes in a `[connection]` table, `conductors_per_clamp = 2`. An unstated count is 1.

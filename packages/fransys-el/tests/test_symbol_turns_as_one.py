@@ -100,3 +100,6 @@ def test_the_motor_stands_in_four_chains_of_one_symbol() -> None:
     flow = _flow(*_motor_with_pe())
     cells = [c for col in flow.columns for lane in col.lanes for c in lane.cells if c.sym.startswith("M1 ")]
     assert len(cells) == 4
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

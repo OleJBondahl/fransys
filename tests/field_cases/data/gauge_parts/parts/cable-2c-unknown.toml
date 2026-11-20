@@ -1,0 +1,17 @@
+schema = 2
+
+[part]
+mpn = "GAUGE-CBL-2C"
+manufacturer = "Demo"
+description = "Fitted cable, 2 cores, cross-section not known"
+category = "cable"
+class_code = "W"
+
+[rating]
+voltage = [{ nom = "60 V", at = ["DC"] }]
+
+[cable_product]
+core_count = 2
+core_colours = ["BN", "BU"]
+gauge_mm2 = "unknown"
+shielded = false

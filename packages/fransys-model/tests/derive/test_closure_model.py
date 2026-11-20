@@ -143,6 +143,20 @@ def test_a_sole_root_boards_declared_net_is_required_but_not_a_declared_net_off_
     assert derive.required_groups(loose.model()) == ()
 
 
+def test_port_joins_is_on_the_derive_door_and_gives_a_header_join() -> None:
+    from dataclasses import replace
+
+    from fransys_model import derive
+
+    plant = Plant()
+    part, template, first, second = plant.relay_part()
+    plant.records[plant.records.index(first)] = replace(first, joins=second.id)
+    function = plant.function(plant.item("K1", part=part.id), "fn", template=template.id)
+    header = plant.port(function, "1", template=first.id)
+    target = plant.port(function, "2", template=second.id)
+    assert derive.port_joins(plant.model()) == ((header, target),)
+
+
 def test_a_terminal_functions_conductive_link_joins_its_ports_in_the_drawn_net_and_a_poles_does_not() -> None:
     """KI-1067: a panel receptacle's terminal function draws as one node, so a wire at one port is a wire at both."""
     from fransys_model import derive

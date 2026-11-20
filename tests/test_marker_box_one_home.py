@@ -35,3 +35,6 @@ def test_the_model_derive_has_no_marker_box() -> None:
 
     assert not hasattr(derive, "marker_box")
     assert importlib.util.find_spec("fransys_model.derive.marker_box") is None
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -41,3 +41,6 @@ def test_no_anchored_item_overlaps_in_a_case(name: str) -> None:
 @pytest.mark.private_input
 def test_the_cases_hold_anchored_items_so_the_check_has_something_to_test() -> None:
     assert sum(_anchored_overlaps(name)[0] for name in BUILDS) > 0
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

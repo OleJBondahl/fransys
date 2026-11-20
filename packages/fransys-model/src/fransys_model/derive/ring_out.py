@@ -80,8 +80,7 @@ def ring_out_statuses(words: RingOutWords) -> tuple[str, str, str]:
 def ring_out_cells(row: RingOutRow, number: int, words: RingOutWords) -> tuple[int | str, ...]:
     """The first eight cells of `row`, numbered `number`: No to Drawing; Status to Comment are the electrician's."""
     kind = {RingOutKind.WIRE: words.wire, RingOutKind.CORE: words.core, RingOutKind.BRIDGE: words.bridge}[row.join]
-    mm2 = "" if row.cross_section_mm2 is None else str(row.cross_section_mm2)
-    return (number, kind, row.from_, row.to, row.label, row.colour, mm2, row.drawing)
+    return (number, kind, row.from_, row.to, row.label, row.colour, row.cross_section, row.drawing)
 
 
 def ring_out_title(model: Model, document: Id[Document]) -> str:
@@ -106,7 +105,7 @@ def _wire_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[C
                 to=row.to,
                 label=row.ends,
                 colour=row.colour,
-                cross_section_mm2=row.cross_section_mm2,
+                cross_section=str(row.cross_section_mm2),
                 drawing=places.get((row.conductor, render_id(first)), ""),
             )
         )
@@ -122,7 +121,7 @@ def _core_joins(model: Model, document: Id[Document], places: Mapping[tuple[Id[C
             to=core.end_b_designation,
             label=f"{core.cable_designation}.{core.index}",
             colour=core.colour,
-            cross_section_mm2=listed.gauge_mm2,
+            cross_section=listed.cross_section,
             drawing=places.get((core.conductor, render_id(core.end_a)), ""),
         )
         for listed in cable_list_rows(model, unit=unit)
@@ -152,9 +151,7 @@ def _bridge_joins(model: Model, document: Id[Document]) -> list[RingOutRow]:
         before = last.get(row.jumper_group)
         last[row.jumper_group] = row.designation
         if before is not None:
-            rows.append(
-                RingOutRow(join=RingOutKind.BRIDGE, from_=before, to=row.designation, label="", colour="", cross_section_mm2=None, drawing="")
-            )
+            rows.append(RingOutRow(join=RingOutKind.BRIDGE, from_=before, to=row.designation, label="", colour="", cross_section="", drawing=""))
     return rows
 
 

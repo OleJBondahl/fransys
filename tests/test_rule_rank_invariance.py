@@ -177,3 +177,6 @@ def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps(
             assert t.room[1] <= page.bands[t.row][1] - t.y  # the solved row keeps what the trunk says it holds
             deep = deep or depth > 0
     assert deep
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

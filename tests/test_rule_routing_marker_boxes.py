@@ -71,3 +71,6 @@ def test_no_wire_passes_through_a_marker_box(case: Any) -> None:
     assert any(lay.annotations.markers for lay, _ in layouts), case[0]
     struck = [s for lay, opts in layouts for s in _struck(lay, opts)]
     assert len(struck) <= _LOOKS.get(case[0], 0), (len(struck), struck[:8])
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

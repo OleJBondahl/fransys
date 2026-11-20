@@ -9,7 +9,6 @@ from .cable_drawing import cable_block_key, cable_subject
 from .document_scope import document_scope
 from .facts.system_document import is_system_document
 from .rows_cable_run import CableBlockRef
-from .texts.core_text import cross_section_text
 lazy from .rows import HarnessCable
 
 __all__ = [
@@ -50,8 +49,8 @@ def system_has_no_top_level_cables(model: Model, document: Id[Document], cables_
 def _part_line(cable: HarnessCable) -> str:
     """The page's part line (pdf-0021): mpn, description, cores x gauge; unset ones omitted."""
     composite = None
-    if cable.core_count is not None and cable.gauge_mm2 is not None:
-        composite = f"{cable.core_count} x {cross_section_text(cable.gauge_mm2)}"
+    if cable.core_count is not None and cable.part_cross_section:
+        composite = f"{cable.core_count} x {cable.part_cross_section}"
     return _join_part_line(cable.mpn, cable.description, composite)
 
 

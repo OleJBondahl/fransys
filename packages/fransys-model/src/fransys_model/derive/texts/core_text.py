@@ -11,9 +11,11 @@ def join_words(*words: str | None) -> str:
     return " ".join(word for word in words if word)
 
 
-def cross_section_text(mm2: Decimal) -> str:
-    """A cross section as printed: `1.5 mm²`."""
-    return f"{mm2} mm²"
+def cross_section_text(mm2: Decimal | None, unknown: str = "", *, with_unit: bool = True) -> str:
+    """A cross section as printed: `1.5 mm²`, or `1.5` without the unit; `None` prints `unknown` (R2547)."""
+    if mm2 is None:
+        return unknown
+    return f"{mm2} mm²" if with_unit else str(mm2)
 
 
 def core_text(index: int, colour: str, label: str | None, mark: str = "") -> str:

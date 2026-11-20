@@ -33,3 +33,6 @@ def test_write_refuses_on_dangling_wire_end(monkeypatch: pytest.MonkeyPatch, tmp
         fr.write(built, tmp_path / "out")
     assert {f.code for f in raised.value.findings} == set(codes)
     assert not any((tmp_path / "out").rglob("*"))
+
+
+# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -26,6 +26,7 @@ class CableProductFacet:
 
     Example: the invented 4-core cable example part carries
     `core_colours=("BN", "BK", "GY", "BU")`, `gauge_mm2=Decimal("1.5")`, `shielded=False`.
+    `gauge_mm2=None` is a stated unknown (the part file's `"unknown"`), never 0.
     The checked core count is `len(core_colours)`, a screen included (SC4, decision model-0082); the
     printed count is `derive.conductor_count`, without the screen (pdf-0039); the part file's own
     `core_count` is the author's checksum, compared by the part lint. `core_colours` is
@@ -39,7 +40,7 @@ class CableProductFacet:
     key: AuthoringKey
     subject: Id[Part]
     core_colours: tuple[str, ...]
-    gauge_mm2: Decimal
+    gauge_mm2: Decimal | None
     shielded: bool
     pairs: tuple[CorePair, ...] = ()
     ext: frozendict[str, Value] = frozendict()

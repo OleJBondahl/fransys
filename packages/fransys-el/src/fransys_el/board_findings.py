@@ -42,6 +42,7 @@ def _innermost_opaque_board(model: Model, ends: Iterable[Id[Port]]) -> Id[Item] 
     return [b for b in outer_first if b in (common or ())][-1] if common else None
 
 
+# KI-1068: a board's conductor-less trace net is never drawn; BOARD-TRACE-DRAW
 def undrawn_board_nets(model: Model) -> dict[Id[Item], set[str]]:
     """Each opaque board with the names of the nets wholly on it."""
     found: dict[Id[Item], set[str]] = {}

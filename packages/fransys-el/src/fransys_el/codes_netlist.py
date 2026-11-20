@@ -1,7 +1,7 @@
 """The codes of the finished-drawing sweep over the drawn netlist (DRAWN-NETLIST, el-0052).
 
 Each starts as a WARNING with a falling stock per example (`tests/ratchets.toml`) and becomes an
-ERROR in the commit that brings its stock to 0: DRAWING_SHORTS_NETS and ROUTE_WRONG_PORT are 0 on
+ERROR in the commit that brings its stock to 0: DRAWING_SHORTS_NETS is 0 on
 all seven builds.
 """
 
@@ -41,15 +41,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="ROUTE_WRONG_PORT",
-        severity=Severity.ERROR,
-        stage="render",
-        who="Fransys",
-        cause="A wire of one lane ends on a port of one net and on a port of another net.",
-        fix=_REPORT,
-        page="findings-render",
-    ),
-    CodeInfo(
         code="DANGLING_WIRE_END",
         severity=Severity.ERROR,
         stage="render",
@@ -58,6 +49,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A Fransys drawing defect: a drawn wire ends where no symbol port, junction dot, "
             "reference marker, other wire or joined bundle lane end stands."
         ),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="INK_WITHOUT_CONDUCTOR",
+        severity=Severity.WARNING,
+        stage="render",
+        who="Fransys",
+        cause=("Wires or dots join ports that no conductor joins: a run between two pins, or a dot over three or more (CONDUCTOR-INK)."),
         fix=_REPORT,
         page="findings-render",
     ),

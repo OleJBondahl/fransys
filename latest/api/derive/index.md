@@ -3566,6 +3566,20 @@ Whether no conductor (wire, jumper, cable core or link) ends at `port` and no ne
 A mate does not count. This is the one test of an unused port; a function is unused when all
 its ports are (`function_is_unused`).
 
+### port_joins
+
+```python
+def port_joins(model: HasTables) -> tuple[tuple[Id[Port], Id[Port]], ...]
+```
+
+Each (header port, function port) pair the model's header joins make.
+
+A part file's `joins =` joins a header port to a function port of the same part. The pair is on one item:
+the join names a port template of the header's own part. A join whose target function the item lacks
+yields no pair. A join carries no conductor, so a drawing's wire to the header port reaches the function port.
+
+Example: a module's header pin `P01` joined to its coil port `A1` gives the pair `P01`, `A1`.
+
 ### port_marking
 
 ```python
@@ -5314,13 +5328,14 @@ class CableListRow
 
 One top-level cable of the system document's cable list.
 
-`mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
+`mpn`, `description`, `core_count`, `cross_section` and `length_mm` are `HarnessCable`'s own
 facts, `None` where the part or facet is absent. `designation` is the cable's
 `printed_designation` (`"-W1"`). Ends are ordered by `cable_end_rank` (a unit member first),
 so a cable authored either way round reads the same way round. `from_label` is the first end's
 `HarnessEnd.designation`, the text the drawing prints. `to_label` lists every other end's
 designation in that order, joined by `", "`. With one end `to_label` is `""`, with none
-both are. `pairs` is the number of twisted pairs of the product, `None` for a product with none.
+both are. `cross_section` is the gauge text: `""` with no product, the `[words]`
+"unknown" for a stated unknown, else the decimal. `pairs` is the number of twisted pairs of the product, `None` for a product with none.
 
 ### CableRow
 
@@ -5460,7 +5475,7 @@ class ContentsRow
 
 One cable of a document's CONTENTS page.
 
-`mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
+`mpn`, `description`, `core_count`, `cross_section` and `length_mm` are `HarnessCable`'s own
 facts, as in `CableListRow`. `designation` is the cable's `printed_designation` (`"-W1"`).
 `ends` is every end's `designation` in the cable's end order, joined by an en dash, a blank
 end (outside a nested unit) dropped with its dash; unlike `CableListRow` it keeps
@@ -5840,7 +5855,7 @@ class HarnessCable
 
 One cable of a harness with its product facts, cores and ends.
 
-`mpn` and `description` are the cable `Part`'s; `core_count`, `gauge_mm2` and `shielded` are
+`mpn` and `description` are the cable `Part`'s; `core_count`, `cross_section` and `shielded` are
 its `cable_product` facet; `length_mm` is the item's `cable` facet. Each is `None` where the
 part or the facet is absent. `designation` is the cable's `printed_designation` (`"-W1"`),
 the text the drawing's cable node title prints. `open_cores` are the cable's spares and
@@ -6585,7 +6600,7 @@ class RingOutRow
 One join the electrician measures end to end.
 
 `from_`/`to` are the printed ends, `label` the wire label or the cable core text, `colour`
-and `cross_section_mm2` the wire's or the core's cable's (`""` and `None` for a bridge), `drawing` the
+and `cross_section` the wire's or the core's cable's as text (`""` for a bridge), `drawing` the
 page text of the first drawing of this document that shows an end, `""` for none.
 
 ### RingOutWords

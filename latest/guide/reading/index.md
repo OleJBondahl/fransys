@@ -161,6 +161,7 @@ the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no s
 or per cable of `unit`, with its product facts. `from_label` is the first end's designation; `to_label` lists the others,
 in end order, joined by `, `. An end on a device that prints its connectors as sub-parts names the
 connector behind the designation (`+C1-A1-X1`).
+`cross_section` is the gauge text: `""` without a product, the `[words]` `unknown` for `gauge_mm2 = "unknown"`.
 `pairs` is the number of twisted pairs of the cable's product, `None` for a product without pairs,
 and `fransys.derive.cores_text(core_count, pairs)` is the Cores cell: `2x2` for two pairs, else the count.
 

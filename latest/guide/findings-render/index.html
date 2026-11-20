@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/guide/findings-render/">
       
       
       
@@ -2144,6 +2144,14 @@
 <td>Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first.</td>
 </tr>
 <tr>
+<td><a id="ink_without_conductor"></a>INK_WITHOUT_CONDUCTOR</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>Wires or dots join ports that no conductor joins: a run between two pins, or a dot over three or more (CONDUCTOR-INK).</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
 <td><a id="lane_wire_dropped"></a>LANE_WIRE_DROPPED</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2294,14 +2302,6 @@
 <td>consumer</td>
 <td>A printed reference points to a page that no page of its own document holds, and its text names no document, so a reader cannot tell which document to open. The message names the reference, its page and the target page.</td>
 <td>Print both drawing sets in one document, or print the target's drawing set in a document so the reference names it. Write: fr.document(<preset>, <subject>, cover=<cover>)</td>
-</tr>
-<tr>
-<td><a id="route_wrong_port"></a>ROUTE_WRONG_PORT</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A wire of one lane ends on a port of one net and on a port of another net.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
 <td><a id="set_without_page"></a>SET_WITHOUT_PAGE</td>
@@ -2484,7 +2484,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.31 documentation
+      Fransys 0.23.32 documentation
     </div>
   
   

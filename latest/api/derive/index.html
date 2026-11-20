@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/api/derive/">
       
       
       
@@ -5287,6 +5287,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         port_is_unused
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port_joins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        port_joins
       </span>
     </span>
   </a>
@@ -12453,6 +12464,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#port_joins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        port_joins
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#port_marking" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -18182,6 +18204,14 @@ this holds for it or its mated pin, or a parent's black box needs it.</p>
 <p>Whether no conductor (wire, jumper, cable core or link) ends at <code>port</code> and no net has it.</p>
 <p>A mate does not count. This is the one test of an unused port; a function is unused when all
 its ports are (<code>function_is_unused</code>).</p>
+<h3 id="port_joins">port_joins</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_joins</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+<p>Each (header port, function port) pair the model's header joins make.</p>
+<p>A part file's <code>joins =</code> joins a header port to a function port of the same part. The pair is on one item:
+the join names a port template of the header's own part. A join whose target function the item lacks
+yields no pair. A join carries no conductor, so a drawing's wire to the header port reaches the function port.</p>
+<p>Example: a module's header pin <code>P01</code> joined to its coil port <code>A1</code> gives the pair <code>P01</code>, <code>A1</code>.</p>
 <h3 id="port_marking">port_marking</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_marking</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">list_end</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -19168,13 +19198,14 @@ only, stretches it on y to the rows the lane covers.</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CableListRow</span>
 </code></pre></div>
 <p>One top-level cable of the system document's cable list.</p>
-<p><code>mpn</code>, <code>description</code>, <code>core_count</code>, <code>gauge_mm2</code> and <code>length_mm</code> are <code>HarnessCable</code>'s own
+<p><code>mpn</code>, <code>description</code>, <code>core_count</code>, <code>cross_section</code> and <code>length_mm</code> are <code>HarnessCable</code>'s own
 facts, <code>None</code> where the part or facet is absent. <code>designation</code> is the cable's
 <code>printed_designation</code> (<code>"-W1"</code>). Ends are ordered by <code>cable_end_rank</code> (a unit member first),
 so a cable authored either way round reads the same way round. <code>from_label</code> is the first end's
 <code>HarnessEnd.designation</code>, the text the drawing prints. <code>to_label</code> lists every other end's
 designation in that order, joined by <code>", "</code>. With one end <code>to_label</code> is <code>""</code>, with none
-both are. <code>pairs</code> is the number of twisted pairs of the product, <code>None</code> for a product with none.</p>
+both are. <code>cross_section</code> is the gauge text: <code>""</code> with no product, the <code>[words]</code>
+"unknown" for a stated unknown, else the decimal. <code>pairs</code> is the number of twisted pairs of the product, <code>None</code> for a product with none.</p>
 <h3 id="cablerow">CableRow</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CableRow</span>
 </code></pre></div>
@@ -19254,7 +19285,7 @@ the connector plugged into this one, <code>None</code> when unmated.</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ContentsRow</span>
 </code></pre></div>
 <p>One cable of a document's CONTENTS page.</p>
-<p><code>mpn</code>, <code>description</code>, <code>core_count</code>, <code>gauge_mm2</code> and <code>length_mm</code> are <code>HarnessCable</code>'s own
+<p><code>mpn</code>, <code>description</code>, <code>core_count</code>, <code>cross_section</code> and <code>length_mm</code> are <code>HarnessCable</code>'s own
 facts, as in <code>CableListRow</code>. <code>designation</code> is the cable's <code>printed_designation</code> (<code>"-W1"</code>).
 <code>ends</code> is every end's <code>designation</code> in the cable's end order, joined by an en dash, a blank
 end (outside a nested unit) dropped with its dash; unlike <code>CableListRow</code> it keeps
@@ -19475,7 +19506,7 @@ page and a <code>co_1</code> <code>Function</code> drawn on the power page; both
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HarnessCable</span>
 </code></pre></div>
 <p>One cable of a harness with its product facts, cores and ends.</p>
-<p><code>mpn</code> and <code>description</code> are the cable <code>Part</code>'s; <code>core_count</code>, <code>gauge_mm2</code> and <code>shielded</code> are
+<p><code>mpn</code> and <code>description</code> are the cable <code>Part</code>'s; <code>core_count</code>, <code>cross_section</code> and <code>shielded</code> are
 its <code>cable_product</code> facet; <code>length_mm</code> is the item's <code>cable</code> facet. Each is <code>None</code> where the
 part or the facet is absent. <code>designation</code> is the cable's <code>printed_designation</code> (<code>"-W1"</code>),
 the text the drawing's cable node title prints. <code>open_cores</code> are the cable's spares and
@@ -19897,7 +19928,7 @@ source functions counted, sorted.</p>
 </code></pre></div>
 <p>One join the electrician measures end to end.</p>
 <p><code>from_</code>/<code>to</code> are the printed ends, <code>label</code> the wire label or the cable core text, <code>colour</code>
-and <code>cross_section_mm2</code> the wire's or the core's cable's (<code>""</code> and <code>None</code> for a bridge), <code>drawing</code> the
+and <code>cross_section</code> the wire's or the core's cable's as text (<code>""</code> for a bridge), <code>drawing</code> the
 page text of the first drawing of this document that shows an end, <code>""</code> for none.</p>
 <h3 id="ringoutwords">RingOutWords</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RingOutWords</span>
@@ -20232,7 +20263,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.31 documentation
+      Fransys 0.23.32 documentation
     </div>
   
   

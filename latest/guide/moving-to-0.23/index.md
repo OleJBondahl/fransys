@@ -2,6 +2,13 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.32
+
+- A wire and the reference markers of its round now come from one routing plan, so a pin whose route is lost never leaves a dangling wire end.
+- INK_WITHOUT_CONDUCTOR (WARNING) names ink drawn between pins that the model joins by no conductor; its finding text names the fix.
+- A part whose cable gauge is unknown now reads None, reports one INFO (`GAUGE_UNKNOWN`) per part, and the cable rows print the text it gives.
+- The cable list's gauge column field is now `cross_section`, the gauge text; the part facet's `gauge_mm2` is `Decimal | None`.
+
 ## New in 0.23.31
 
 - A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.

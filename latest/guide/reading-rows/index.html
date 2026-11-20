@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/guide/reading-rows/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/guide/reading-rows/">
       
       
       
@@ -2100,7 +2100,7 @@
 <p><code>open_core_rows(model, cable, *, unit=None)</code> returns one <code>OpenCoreRow</code> per open core of <code>cable</code>, by core number. An open core is a spare or a screen earthed at one end. A row holds the core's <code>index</code>, <code>colour</code>, the port it lands on (<code>at</code>, <code>at_designation</code>; <code>None</code> and <code>""</code> for none) and <code>spare</code>, false for an <code>SH</code> screen. <code>HarnessCable.open_cores</code> holds the same rows.</p>
 </li>
 <li><code>core_list_rows(model, *, unit=None)</code> returns one <code>CoreListRow</code> per core of every cable <code>cable_list_rows</code> lists. The order is the cable list's, then core number. The wired cores and the open ones are in it, and the ends print as the cable drawing prints them. A spare parked on a pin has it as <code>end_a</code>. <code>pair</code> is <code>P1</code> or <code>screen P1</code>, <code>""</code> outside a pair, and <code>note</code> is <code>spare</code> for a spare core. <code>list_columns(model, "cores")</code> names the fields, in print order. <code>cores.csv</code> is this list.</li>
-<li><code>contents_rows(cables)</code> reshapes a tuple of <code>HarnessCable</code>s into one <code>ContentsRow</code> per cable. The tuple comes from <code>harness_cables</code>, <code>top_level_cables</code> or <code>unit_cables</code>. The row keeps the cable's product facts and adds <code>ends</code>. That is every end's designation, in the cable's own order, joined by an en dash, and a blank end drops its dash. <code>list_columns(model, "contents")</code> names its columns, in print order.</li>
+<li><code>contents_rows(cables)</code> reshapes a tuple of <code>HarnessCable</code>s into one <code>ContentsRow</code> per cable. The tuple comes from <code>harness_cables</code>, <code>top_level_cables</code> or <code>unit_cables</code>. The row keeps the cable's product facts and adds <code>ends</code>. That is every end's designation, in the cable's own order, joined by an en dash, and a blank end drops its dash. <code>list_columns(model, "contents")</code> names its columns, in print order. <code>cross_section</code> is the gauge text, as in <code>CableListRow</code>: <code>""</code> without a product, the <code>[words]</code> <code>unknown</code> for a stated unknown, else the number. <code>HarnessCable.cross_section</code> is the same text, and <code>part_cross_section</code> is it with the unit (<code>1.5 mm2</code>), the text the harness part line prints; the unknown word has no unit.</li>
 </ul>
 <h2 id="printed-texts-and-order-keys">Printed texts and order keys</h2>
 <p>These functions give the one text and the one order that each list uses. A list that prints a label or sorts a column calls them rather than building its own.</p>
@@ -2146,7 +2146,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.31 documentation
+      Fransys 0.23.32 documentation
     </div>
   
   

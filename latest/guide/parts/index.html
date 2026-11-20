@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/guide/parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/guide/parts/">
       
       
       
@@ -527,6 +527,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         An accessory in its holder
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-cable-part-whose-cross-section-is-not-known" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A cable part whose cross-section is not known
       </span>
     </span>
   </a>
@@ -2217,6 +2228,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-cable-part-whose-cross-section-is-not-known" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A cable part whose cross-section is not known
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-many-conductors-a-terminal-point-takes" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2550,6 +2572,8 @@ It prints its holder's designation and has no row or netlist line, and draws not
 <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"DEMO-JUMPER-BAR-3P"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"f1_bar_a"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">f1</span><span class="p">)</span>
 <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"DEMO-JUMPER-BAR-3P"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"f1_bar_b"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">f1</span><span class="p">)</span>
 </code></pre></div>
+<h2 id="a-cable-part-whose-cross-section-is-not-known">A cable part whose cross-section is not known</h2>
+<p>A <code>[cable_product]</code> table states <code>gauge_mm2</code> as a quoted number, <code>"1.5"</code>. A fitted cable with no known cross-section in any source states the literal <code>"unknown"</code>: <code>gauge_mm2 = "unknown"</code>. The cable list prints the word <code>unknown</code> (a <code>[words]</code> entry) in the gauge cell, and one <code>GAUGE_UNKNOWN</code> INFO names the part. Add the number from the datasheet when it is known. A missing <code>gauge_mm2</code> key stays <code>FIELD_MISSING</code>.</p>
 <h2 id="how-many-conductors-a-terminal-point-takes">How many conductors a terminal point takes</h2>
 <p>A terminal part states the conductors each point takes in a <code>[connection]</code> table, <code>conductors_per_clamp = 2</code>. An unstated count is 1.</p>
 <p>A point with more wires and cable cores than that is an ERROR, <code>TERMINAL_POINT_OVERFILLED</code>. Bridges do not count. Fix it with a part that takes more, such as <code>DEMO-TB-2.5-TWIN</code>, or bridge a second terminal to this one.</p>
@@ -2614,7 +2638,7 @@ It prints its holder's designation and has no row or netlist line, and draws not
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.31 documentation
+      Fransys 0.23.32 documentation
     </div>
   
   

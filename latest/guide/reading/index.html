@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.31/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/guide/reading/">
       
       
       
@@ -2286,6 +2286,7 @@ the overview sort by it, and <code>fn.pins</code> follows it. Sort pins through 
 or per cable of <code>unit</code>, with its product facts. <code>from_label</code> is the first end's designation; <code>to_label</code> lists the others,
 in end order, joined by <code>,</code>. An end on a device that prints its connectors as sub-parts names the
 connector behind the designation (<code>+C1-A1-X1</code>).
+<code>cross_section</code> is the gauge text: <code>""</code> without a product, the <code>[words]</code> <code>unknown</code> for <code>gauge_mm2 = "unknown"</code>.
 <code>pairs</code> is the number of twisted pairs of the cable's product, <code>None</code> for a product without pairs,
 and <code>fransys.derive.cores_text(core_count, pairs)</code> is the Cores cell: <code>2x2</code> for two pairs, else the count.</p>
 <h2 id="designations">Designations</h2>
@@ -2463,7 +2464,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.31 documentation
+      Fransys 0.23.32 documentation
     </div>
   
   

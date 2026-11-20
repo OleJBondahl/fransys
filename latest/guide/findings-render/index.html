@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.32/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/findings-render/">
       
       
       
@@ -1936,14 +1936,6 @@
 <td>Shorten the stack, or move the members to the same end of their columns. Write: d.series(a, b, c) to stand a path in one column.</td>
 </tr>
 <tr>
-<td><a id="annex_unplaced"></a>ANNEX_UNPLACED</td>
-<td>WARNING</td>
-<td>render</td>
-<td>consumer</td>
-<td>A tag, marking or table beside a symbol found no spot free of every outline, wire and text; it stands at its first spot, over what blocks it.</td>
-<td>No call clears this: shorten the tag of <subject>, or move the symbols around it to leave a corner free.</td>
-</tr>
-<tr>
 <td><a id="block_not_placed"></a>BLOCK_NOT_PLACED</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2150,6 +2142,14 @@
 <td>Fransys</td>
 <td>Wires or dots join ports that no conductor joins: a run between two pins, or a dot over three or more (CONDUCTOR-INK).</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="label_no_room"></a>LABEL_NO_ROOM</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A tag, marking or table found no spot free of every outline, wire and text, and the recuts that asked for room beside its symbol did not free one; the message names the label and the room it needs.</td>
+<td>No call clears this: send the smallest model that shows the label of <subject>.</td>
 </tr>
 <tr>
 <td><a id="lane_wire_dropped"></a>LANE_WIRE_DROPPED</td>
@@ -2392,6 +2392,14 @@
 <td>Add a document for the set's unit or location, passing its handle as the subject, or nest the unit in one that has one. A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)</td>
 </tr>
 <tr>
+<td><a id="where_text_far"></a>WHERE_TEXT_FAR</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A where-text stands farther from the text before it than one line pitch, the distance the stack guarantees.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
 <td><a id="wider_than_page"></a>WIDER_THAN_PAGE</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2484,7 +2492,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.32 documentation
+      Fransys 0.23.33 documentation
     </div>
   
   

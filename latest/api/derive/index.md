@@ -87,6 +87,16 @@ Returns:
 Raises:
     SchemaError: `board` is not an item of `model`, or it or a listed item has no designation.
 
+### board_of_ports
+
+```python
+def board_of_ports(model: HasTables, net_ports: Iterable[Id[Port]]) -> Id[Item] | None
+```
+
+The innermost board that is the whole content of its own unit and holds every port's item; `None` when none does.
+
+The one board intersection: a declared net on it is its traces, and a net across it needs no conductor.
+
 ### board_pins
 
 ```python
@@ -465,7 +475,7 @@ def channel_pins(model: Model) -> frozenset[Id[Port]]
 
 Count the channel pins: those of a PLC channel template, and every pin of a part-less device.
 
-It counts channel pins; "is a PLC channel" is `plc_channel_facets`. The second
+It counts channel pins; "is a PLC channel" is `function_channels`. The second
 case is an external item with no part: its channels are unknown, so each pin is one.
 
 ### channel_signal
@@ -645,8 +655,7 @@ def connected_ports(model: Model) -> frozenset[Id[Port]]
 
 Every port a kept connection or net group ends on, a stranded end, or a rail end.
 
-A connection or net group wholly on one opaque board is not drawn, so its ports are not
-connected by it. A net group loses the ports of removed rail terminals and rail ends first.
+A net group loses the ports of removed rail terminals and rail ends first.
 
 ### connector_facets
 
@@ -1089,7 +1098,7 @@ One document's file name (`extension`, the PDF's by default), from its own subje
 
 Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix; a
 placement (no `unit_name`) adds the instance's tag in the system.
-Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
+Location, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
 
 ### document_facts
 
@@ -1163,9 +1172,7 @@ def document_sheet_format(model: Model, document: Id[Document], pages: tuple[Pag
 The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.
 
 Before layout there is no drawing-set page, so a document with a SCHEMATIC takes `sheet_for(SCHEMATIC)`, the sheet layout gives its pages.
-An item document draws no schematic, so it takes the cover's sheet.
-
-`document` is the document's id.
+    `document` is the document's id.
 
 ### document_sheets
 
@@ -1257,6 +1264,7 @@ def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]
 
 Left out: each conductor `drawn_conductors` omits (a bridge, in the terminal table), each group no drawn conductor
 ends in (a mate or a join inside a part), each group wholly on rail terminals (the power symbol stands for them).
+A board's trace has no conductor and stays: it is routed like any net, with the reference fallback.
 
 ### drawn_net_of
 
@@ -1361,14 +1369,6 @@ designations, excluding `item` itself; it walks boards and harnesses alike),
 schematic_functions` (a function on or under a board item, board-relative walk), and
 layout's board-internal connection rule -- one walk, so a drawn
 connector can never fail to count as its own board's by one copy drifting from another.
-
-### ends_without_jumpers
-
-```python
-def ends_without_jumpers(model: Model, row: TerminalRow) -> tuple[tuple[str, ...], tuple[str, ...]]
-```
-
-`row`'s (internal, external) ends without jumper partners, which the Bridge shows.
 
 ### error_count
 
@@ -1521,6 +1521,7 @@ def far_pins(model: Model, near: Iterable[Id[Port]]) -> tuple[tuple[Id[Port], Id
 
 Ordered by `order.stub_far_order`: a conductor before a mate, the far port's printed designation, then the near port's, then the key.
 A bridge is no wire and gives no pair; a port no conductor reaches gives no pair; a conductor between two `near` ports gives two.
+A drawn board trace, which has no conductor, gives a pair to each other port of its net, after the conductors.
 `stub_far` reads `reach`.
 
 ### field_devices
@@ -1742,7 +1743,7 @@ The item `function` belongs to.
 def function_moves(model: Model) -> dict[Id[Function], Id[AspectNode]]
 ```
 
-Each function drawn away from its home: the block its wires were authored in, then its `GroupHint` (which wins).
+Each function drawn away from its home: the block its wires were authored in.
 
 ### function_operating
 
@@ -1882,7 +1883,7 @@ Whether any drawn function lands in `group`: false for a group whose members are
 def group_members_drawn_in(model: Model, group: Id[AspectNode]) -> tuple[Id[AspectNode], ...]
 ```
 
-The other groups the functions placed in `group` are drawn in (by a `GroupHint`), first seen first.
+The other groups the functions placed in `group` are drawn in (by the block their wires were authored in), first seen first.
 
 ### group_role
 
@@ -1990,16 +1991,6 @@ def has_project(model: Model) -> bool
 ```
 
 Whether the model holds a project.
-
-### has_schematic_subject
-
-```python
-def has_schematic_subject(model: Model, document: Id[Document]) -> bool
-```
-
-True for a location, unit or root (subject-less) document; an item document draws no schematic.
-
-`document` is the document's id.
 
 ### hidden_pins
 
@@ -4262,7 +4253,7 @@ def schematic_page_ids(model: Model, document: Id[Document], pages: tuple[PageKi
 
 The ids of the SCHEMATIC pages of `document` in set then page order.
 
-Empty when `pages` has no SCHEMATIC or `document` is an item document.
+Empty when `pages` has no SCHEMATIC.
 
 ### scope_path
 
@@ -4600,7 +4591,7 @@ The kind text of `subject`'s handle (`"net"`, `"item"`, ...), as an error names 
 def subject_label(model: Model, document: Id[Document]) -> str
 ```
 
-The heading's subject: location, unit or item label; the Project's title for SYSTEM ("" with no Project).
+The heading's subject: location or unit label; the Project's title for SYSTEM ("" with no Project).
 
 `document` is the document's id.
 
@@ -5592,7 +5583,7 @@ class DocumentRow
 
 The fields of one `Document` an output reads.
 
-`location` and `item` are the subject's ids (the `SYSTEM` preset has neither), `cover` and
+`location` is the subject's id (the `SYSTEM` preset has none), `cover` and
 `notes` the Markdown texts (`notes` is `None` when dropped) and `logo` the title block's SVG.
 
 ### DocumentScope
@@ -5607,14 +5598,14 @@ The selections one `Document` makes, each read once from its subject.
 - `cables`: the `HarnessCable`s the drawings show (`SYSTEM`: the top-level ones, a unit: its
   own, an item: its cable children, a location: none); `harnesses`: the harness items with
   single wires the drawings add.
-- `bom_location`, `bom_item` and `top_level` make `bom_scope`, the scope `bom_lines` takes:
-  the unit, else `TOP_LEVEL` for the system, else the location, else the item.
+- `bom_location` and `top_level` make `bom_scope`, the scope `bom_lines` takes:
+  the unit, else `TOP_LEVEL` for the system, else the location.
 - `bom_without`: the harness items a location document does not draw, with all they own;
   `bom_lines` leaves them out (`without=`) and `connector_items` omits them.
 - `drawing_sets`: the drawing sets this document prints, each set printed by exactly one
   document (`set_printers`): a unit's, the nested undocumented units', the fed items' ones.
 - `strips`: the terminal strips a terminal list covers; `connector_items`: the items a
-  connector list covers for a unit or a location; `boards`: a board document's board.
+  connector list covers for a unit or a location.
 
 ### DocumentSheets
 
@@ -6480,6 +6471,7 @@ class PlcRackChannel
 
 One channel of a rack module, bound or spare.
 
+`label` is the raw name of its first pin in natural order, the text the drawing prints.
 The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
 `None` when the requesting function carries no `scaling` facet. `signal_name` is the bound
 device's request name, else a spare's own name. `routing` and `configured` are its `plc_request`

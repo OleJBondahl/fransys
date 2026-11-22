@@ -37,7 +37,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | [`preset`](../documents/index.md#presets-cover-and-notes-text) | required | The `fr.DocumentPreset` that fixes the deliverable's default page kinds (documents.md). | `fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))` |
-| [`subject`](../documents/index.md#subjects) | required | What the document is about: what `d.location(...)` returns, a `Device`, a unit release name, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
+| [`subject`](../documents/index.md#subjects) | required | What the document is about: what `d.location(...)` returns, a unit release name, a unit instance, or `None` for the system preset. Another value raises `TypeError`. | `fr.document(preset, "pump-board", cover=cover)` |
 | [`cover`](../documents/index.md#presets-cover-and-notes-text) | required | The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises `FileNotFoundError`. A `<stem>.notes.md` beside it becomes the notes page. | `cover=Path("cover.md")` |
 | [`logo`](../documents/index.md#presets-cover-and-notes-text) | `None` | An SVG file for the title block's logo cell. `None` leaves the cell empty. A missing file raises. | `logo=Path("logo.svg")` |
 | [`notice`](../documents/index.md#presets-cover-and-notes-text) | `''` | The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty. | `notice="Property of Demo Ltd"` |

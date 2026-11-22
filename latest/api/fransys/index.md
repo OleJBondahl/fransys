@@ -80,7 +80,7 @@ Reads `cover` (a missing file raises `FileNotFoundError`) and the optional `<ste
 beside it (absent: no notes page); `logo` is an optional SVG for the title block (missing
 raises); `notice` is the title block's IP notice
 text. Texts are stored in the record. `subject` is what `d.location(...)` returns, a
-`Device`, a unit release name (`str`) or `None` (the `system` preset only);
+unit release name (`str`), a unit Scope or `d.add` result, a unit or location `Id`, or `None` (the `system` preset only);
 any other value raises `TypeError`. Key: the cover stem, preset and subject, so documents
 may share a cover path.
 

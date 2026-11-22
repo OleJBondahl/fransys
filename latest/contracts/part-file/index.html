@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/contracts/part-file/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/contracts/part-file/">
       
       
       
@@ -2981,9 +2981,9 @@ files, no Fransys code inside it.</p>
   A library can ship many releases against one <code>schema</code>.</li>
 <li>A breaking change to this contract (a renamed field, a changed meaning, a removed table) bumps
   <code>schema</code>. It is never changed in place under the same number.</li>
-<li><code>fransys_parts.SUPPORTED_SCHEMAS: frozenset[int]</code> names the accepted <code>schema</code> values;
-  today <code>frozenset({2})</code>; a <code>schema = 1</code> file is <code>PART_SCHEMA_OLD</code>. <code>library.toml</code> and every part file carry <code>schema</code>. A value outside
-  <code>SUPPORTED_SCHEMAS</code> is the lint finding <code>SCHEMA_UNSUPPORTED</code>, naming the file and the value
+<li>The accepted <code>schema</code> values are a private set in <code>fransys_parts</code> (not public API); today only 2;
+  a <code>schema = 1</code> file is <code>PART_SCHEMA_OLD</code>. <code>library.toml</code> and every part file carry <code>schema</code>. A value outside
+  the accepted set is the lint finding <code>SCHEMA_UNSUPPORTED</code>, naming the file and the value
   found. A part file whose <code>schema</code> differs from its <code>library.toml</code> is <code>SCHEMA_MIXED</code>.</li>
 <li>There is no converter: a schema 1 library is rewritten by hand (parts-0026). A library bumps <code>schema</code> for every part file in one commit.</li>
 </ul>
@@ -3022,7 +3022,7 @@ files, no Fransys code inside it.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

@@ -202,8 +202,7 @@ lookup `port_designation` itself reads through.
 `fransys.derive.part_rating(model, part)` returns the rating stated on a part itself, for a
 part with no function to rate, such as a fuse link. `None` when the part states none. It reads
 the model after the build.
-`d.rating` and `d.operating` state a rating or an operating envelope while authoring; the
-functions below read it back.
+A rating or an operating envelope is stated in the part file; the functions below read it back.
 
 `fransys.derive.function_rating(model, function)` returns the rating a function's template
 states, else its part's. `None` when neither states one.

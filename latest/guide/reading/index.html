@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/reading/">
       
       
       
@@ -2313,8 +2313,7 @@ lookup <code>port_designation</code> itself reads through.</p>
 <p><code>fransys.derive.part_rating(model, part)</code> returns the rating stated on a part itself, for a
 part with no function to rate, such as a fuse link. <code>None</code> when the part states none. It reads
 the model after the build.
-<code>d.rating</code> and <code>d.operating</code> state a rating or an operating envelope while authoring; the
-functions below read it back.</p>
+A rating or an operating envelope is stated in the part file; the functions below read it back.</p>
 <p><code>fransys.derive.function_rating(model, function)</code> returns the rating a function's template
 states, else its part's. <code>None</code> when neither states one.</p>
 <p><code>fransys.derive.part_function_rows(model)</code> returns one <code>PartFunctionRow</code> per function a part
@@ -2464,7 +2463,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

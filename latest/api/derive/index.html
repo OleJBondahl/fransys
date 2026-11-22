@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/api/derive/">
       
       
       
@@ -1961,6 +1961,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#board_of_ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        board_of_ports
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#board_pins" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3105,17 +3116,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ends_without_jumpers" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ends_without_jumpers
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#error_count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3725,17 +3725,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         has_project
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#has_schematic_subject" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        has_schematic_subject
       </span>
     </span>
   </a>
@@ -9131,6 +9120,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#board_of_ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        board_of_ports
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#board_pins" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10275,17 +10275,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ends_without_jumpers" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        ends_without_jumpers
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#error_count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -10895,17 +10884,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         has_project
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#has_schematic_subject" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        has_schematic_subject
       </span>
     </span>
   </a>
@@ -16240,6 +16218,11 @@ declared nets, never <code>Mate</code>s; part designations are relative to <code
     A <code>BoardNetlist</code> (defined in <code>derive.rows</code>) for <code>board</code>.</p>
 <p>Raises:
     SchemaError: <code>board</code> is not an item of <code>model</code>, or it or a listed item has no designation.</p>
+<h3 id="board_of_ports">board_of_ports</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">board_of_ports</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">HasTables</span><span class="p">,</span> <span class="n">net_ports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+<p>The innermost board that is the whole content of its own unit and holds every port's item; <code>None</code> when none does.</p>
+<p>The one board intersection: a declared net on it is its traces, and a net across it needs no conductor.</p>
 <h3 id="board_pins">board_pins</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">board_pins</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">board</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">BoardPins</span>
 </code></pre></div>
@@ -16464,7 +16447,7 @@ Sorted by <code>common</code>; it never raises. Cached on <code>model.digest</co
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">channel_pins</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]]</span>
 </code></pre></div>
 <p>Count the channel pins: those of a PLC channel template, and every pin of a part-less device.</p>
-<p>It counts channel pins; "is a PLC channel" is <code>plc_channel_facets</code>. The second
+<p>It counts channel pins; "is a PLC channel" is <code>function_channels</code>. The second
 case is an external item with no part: its channels are unknown, so each pin is one.</p>
 <h3 id="channel_signal">channel_signal</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">channel_signal</span><span class="p">(</span><span class="n">template</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">FunctionTemplate</span><span class="p">],</span> <span class="n">channels</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">FunctionTemplate</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">PlcChannelFacet</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SignalType</span> <span class="o">|</span> <span class="kc">None</span>
@@ -16563,8 +16546,7 @@ one; a conductor with both ends on one child is listed once per role it touches.
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connected_ports</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]]</span>
 </code></pre></div>
 <p>Every port a kept connection or net group ends on, a stranded end, or a rail end.</p>
-<p>A connection or net group wholly on one opaque board is not drawn, so its ports are not
-connected by it. A net group loses the ports of removed rail terminals and rail ends first.</p>
+<p>A net group loses the ports of removed rail terminals and rail ends first.</p>
 <h3 id="connector_facets">connector_facets</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">connector_facets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">FunctionTemplate</span><span class="p">],</span> <span class="n">ConnectorFacet</span><span class="p">]</span>
 </code></pre></div>
@@ -16820,7 +16802,7 @@ row; an added mark is never turned into a changed one. Boxes come first, by inde
 <p>One document's file name (<code>extension</code>, the PDF's by default), from its own subject, never its cover.</p>
 <p>Unit subject (<code>record.unit</code>, or <code>record.unit_name</code> via <code>document_unit</code>): its own prefix; a
 placement (no <code>unit_name</code>) adds the instance's tag in the system.
-Location, item, SYSTEM: the write scope's; empty prefix gives bare <code>&lt;cover-stem&gt;.pdf</code> here.</p>
+Location, SYSTEM: the write scope's; empty prefix gives bare <code>&lt;cover-stem&gt;.pdf</code> here.</p>
 <h3 id="document_facts">document_facts</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">document_facts</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
@@ -16858,8 +16840,7 @@ notes text. <code>fransys_pdf.source</code> assembles exactly these pages.</p>
 </code></pre></div>
 <p>The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.</p>
 <p>Before layout there is no drawing-set page, so a document with a SCHEMATIC takes <code>sheet_for(SCHEMATIC)</code>, the sheet layout gives its pages.
-An item document draws no schematic, so it takes the cover's sheet.</p>
-<p><code>document</code> is the document's id.</p>
+    <code>document</code> is the document's id.</p>
 <h3 id="document_sheets">document_sheets</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">document_sheets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">diagrams</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DiagramSheet</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DocumentSheets</span>
 </code></pre></div>
@@ -16910,7 +16891,8 @@ content.</p>
 </code></pre></div>
 <p><code>required_groups</code> less what a drawing draws no wire for: what a drawing must join.</p>
 <p>Left out: each conductor <code>drawn_conductors</code> omits (a bridge, in the terminal table), each group no drawn conductor
-ends in (a mate or a join inside a part), each group wholly on rail terminals (the power symbol stands for them).</p>
+ends in (a mate or a join inside a part), each group wholly on rail terminals (the power symbol stands for them).
+A board's trace has no conductor and stays: it is routed like any net, with the reference fallback.</p>
 <h3 id="drawn_net_of">drawn_net_of</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_net_of</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PhysicalNet</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -16972,10 +16954,6 @@ designations, excluding <code>item</code> itself; it walks boards and harnesses 
 schematic_functions</code> (a function on or under a board item, board-relative walk), and
 layout's board-internal connection rule -- one walk, so a drawn
 connector can never fail to count as its own board's by one copy drifting from another.</p>
-<h3 id="ends_without_jumpers">ends_without_jumpers</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">ends_without_jumpers</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">TerminalRow</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
-</code></pre></div>
-<p><code>row</code>'s (internal, external) ends without jumper partners, which the Bridge shows.</p>
 <h3 id="error_count">error_count</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">error_count</span><span class="p">(</span><span class="n">findings</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Finding</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span>
 </code></pre></div>
@@ -17060,6 +17038,7 @@ Reads the per-model unit index.</p>
 <p><code>(near, far)</code> for each conductor or mate pair at a <code>near</code> port; the far end is <code>conductor_ends</code>'.</p>
 <p>Ordered by <code>order.stub_far_order</code>: a conductor before a mate, the far port's printed designation, then the near port's, then the key.
 A bridge is no wire and gives no pair; a port no conductor reaches gives no pair; a conductor between two <code>near</code> ports gives two.
+A drawn board trace, which has no conductor, gives a pair to each other port of its net, after the conductors.
 <code>stub_far</code> reads <code>reach</code>.</p>
 <h3 id="field_devices">field_devices</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">field_devices</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Item</span><span class="p">],</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]]</span>
@@ -17184,7 +17163,7 @@ a spare in its coil's contact table.</p>
 <h3 id="function_moves">function_moves</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">function_moves</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">],</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]]</span>
 </code></pre></div>
-<p>Each function drawn away from its home: the block its wires were authored in, then its <code>GroupHint</code> (which wins).</p>
+<p>Each function drawn away from its home: the block its wires were authored in.</p>
 <h3 id="function_operating">function_operating</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">function_operating</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Operating</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -17259,7 +17238,7 @@ It seeds the reserved facets and serves <code>release()</code>: decided once.</p
 <h3 id="group_members_drawn_in">group_members_drawn_in</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">group_members_drawn_in</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
-<p>The other groups the functions placed in <code>group</code> are drawn in (by a <code>GroupHint</code>), first seen first.</p>
+<p>The other groups the functions placed in <code>group</code> are drawn in (by the block their wires were authored in), first seen first.</p>
 <h3 id="group_role">group_role</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">group_role</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PageRole</span>
 </code></pre></div>
@@ -17323,11 +17302,6 @@ A wire on no harness, or on two, is left out.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_project</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 <p>Whether the model holds a project.</p>
-<h3 id="has_schematic_subject">has_schematic_subject</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_schematic_subject</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
-</code></pre></div>
-<p>True for a location, unit or root (subject-less) document; an item document draws no schematic.</p>
-<p><code>document</code> is the document's id.</p>
 <h3 id="hidden_pins">hidden_pins</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">hidden_pins</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]]</span>
 </code></pre></div>
@@ -18602,7 +18576,7 @@ and render, since neither package may import the other.</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">schematic_page_ids</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">pages</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PageKind</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Page</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>The ids of the SCHEMATIC pages of <code>document</code> in set then page order.</p>
-<p>Empty when <code>pages</code> has no SCHEMATIC or <code>document</code> is an item document.</p>
+<p>Empty when <code>pages</code> has no SCHEMATIC.</p>
 <h3 id="scope_path">scope_path</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">scope_path</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
@@ -18787,7 +18761,7 @@ drawn yet (layout sizes its box from this text).</p>
 <h3 id="subject_label">subject_label</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">subject_label</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">document</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 </code></pre></div>
-<p>The heading's subject: location, unit or item label; the Project's title for SYSTEM ("" with no Project).</p>
+<p>The heading's subject: location or unit label; the Project's title for SYSTEM ("" with no Project).</p>
 <p><code>document</code> is the document's id.</p>
 <h3 id="subject_marks">subject_marks</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">subject_marks</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">ViewRows</span><span class="p">,</span> <span class="n">lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">RefKey</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">subject</span><span class="p">:</span> <span class="n">Subject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
@@ -19350,7 +19324,7 @@ position's two end ports, its identity when equal <code>functions</code> repeat 
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocumentRow</span>
 </code></pre></div>
 <p>The fields of one <code>Document</code> an output reads.</p>
-<p><code>location</code> and <code>item</code> are the subject's ids (the <code>SYSTEM</code> preset has neither), <code>cover</code> and
+<p><code>location</code> is the subject's id (the <code>SYSTEM</code> preset has none), <code>cover</code> and
 <code>notes</code> the Markdown texts (<code>notes</code> is <code>None</code> when dropped) and <code>logo</code> the title block's SVG.</p>
 <h3 id="documentscope">DocumentScope</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocumentScope</span>
@@ -19361,14 +19335,14 @@ position's two end ports, its identity when equal <code>functions</code> repeat 
 <li><code>cables</code>: the <code>HarnessCable</code>s the drawings show (<code>SYSTEM</code>: the top-level ones, a unit: its
   own, an item: its cable children, a location: none); <code>harnesses</code>: the harness items with
   single wires the drawings add.</li>
-<li><code>bom_location</code>, <code>bom_item</code> and <code>top_level</code> make <code>bom_scope</code>, the scope <code>bom_lines</code> takes:
-  the unit, else <code>TOP_LEVEL</code> for the system, else the location, else the item.</li>
+<li><code>bom_location</code> and <code>top_level</code> make <code>bom_scope</code>, the scope <code>bom_lines</code> takes:
+  the unit, else <code>TOP_LEVEL</code> for the system, else the location.</li>
 <li><code>bom_without</code>: the harness items a location document does not draw, with all they own;
   <code>bom_lines</code> leaves them out (<code>without=</code>) and <code>connector_items</code> omits them.</li>
 <li><code>drawing_sets</code>: the drawing sets this document prints, each set printed by exactly one
   document (<code>set_printers</code>): a unit's, the nested undocumented units', the fed items' ones.</li>
 <li><code>strips</code>: the terminal strips a terminal list covers; <code>connector_items</code>: the items a
-  connector list covers for a unit or a location; <code>boards</code>: a board document's board.</li>
+  connector list covers for a unit or a location.</li>
 </ul>
 <h3 id="documentsheets">DocumentSheets</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocumentSheets</span>
@@ -19859,7 +19833,8 @@ channel's own number, <code>wired_to</code> the printed far ends at that port jo
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PlcRackChannel</span>
 </code></pre></div>
 <p>One channel of a rack module, bound or spare.</p>
-<p>The field fields are <code>None</code> for a spare channel, as in <code>PlcChannelRow</code>; <code>scaling</code> is also
+<p><code>label</code> is the raw name of its first pin in natural order, the text the drawing prints.
+The field fields are <code>None</code> for a spare channel, as in <code>PlcChannelRow</code>; <code>scaling</code> is also
 <code>None</code> when the requesting function carries no <code>scaling</code> facet. <code>signal_name</code> is the bound
 device's request name, else a spare's own name. <code>routing</code> and <code>configured</code> are its <code>plc_request</code>
 settings (<code>None</code> and <code>True</code> when it has none).</p>
@@ -20263,7 +20238,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

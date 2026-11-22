@@ -90,16 +90,16 @@ ahead of the schematic.
 
 ## Subjects
 
-A document's `subject` is a unit, an item, or a place where units stand. It is one of:
+A document's `subject` is a unit or a place where units stand. It is one of:
 
 - A location handle, what `d.location(...)` returns: a place where units stand.
-- A device handle, what `d.device(...)` or `d.harness(...)` returns.
 - A unit release's name, a plain `str`, such as a cabinet's: resolved to the one instance of that release at build
   and write time, not at the `fr.document` call itself.
 - What `d.add(...)` returned: that one unit instance. Use it when a release stands more than once, since a name
   then matches several units and `DOCUMENT_UNIT_UNRESOLVED` follows.
+- A unit or location `Id`.
 
-Any other value, such as a bare design, is a `TypeError` at the call. The cabinet example above
+Any other value, such as a device handle, an item `Id` or a bare design, is a `TypeError` at the call. The cabinet example above
 passes its release name. A unit added with `d.add(fn, "U1")` is named by its release name:
 
 ```python

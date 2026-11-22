@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/findings-render/">
       
       
       
@@ -1944,14 +1944,6 @@
 <td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
-<td><a id="board_nets_not_drawn"></a>BOARD_NETS_NOT_DRAWN</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>A board shares its unit with another top-level device, so layout draws it as a black box and drops the nets between its parts.</td>
-<td>Make the board its own unit's only top-level device, with its parts as children. Write: @fr.unit(...) def board(d): b = d.device("A1", "DEMO-PCB-IO") and d.device("J1", "DEMO-CONN-2P", parent=b) in a unit of their own.</td>
-</tr>
-<tr>
 <td><a id="card_overfull"></a>CARD_OVERFULL</td>
 <td>INFO</td>
 <td>render</td>
@@ -1976,6 +1968,14 @@
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
+<td><a id="connection_not_accounted"></a>CONNECTION_NOT_ACCOUNTED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Fransys</td>
+<td>No wire or marker accounts for a conductor end, or a wire and a stub both do, or two stubs do (CORE-ACCOUNT); the message names it.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
+</tr>
+<tr>
 <td><a id="connection_not_drawn"></a>CONNECTION_NOT_DRAWN</td>
 <td>ERROR</td>
 <td>render</td>
@@ -1985,7 +1985,7 @@
 </tr>
 <tr>
 <td><a id="connection_to_undrawn"></a>CONNECTION_TO_UNDRAWN</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
 <td>A connection, net group or rail has an end whose function layout never draws.</td>
@@ -2080,12 +2080,28 @@
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
+<td><a id="drawing_set_refused"></a>DRAWING_SET_REFUSED</td>
+<td>INFO</td>
+<td>render</td>
+<td>note</td>
+<td>A layout ERROR refused a drawing set: its drawing is not written and its drawn-page checks did not run. The message names the set.</td>
+<td>Nothing more to do here; clear the ERROR that refused the set, and the set is drawn and checked.</td>
+</tr>
+<tr>
 <td><a id="drawing_shorts_nets"></a>DRAWING_SHORTS_NETS</td>
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>The wires, junction dots and references of the drawings join ports of two physical nets, or a wire ends on another net's wire with no junction dot.</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="drawn_read_incomplete"></a>DRAWN_READ_INCOMPLETE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A drawing set failed to lay out or its output steps were skipped, so the drawn-page checks did not read it: no CONNECTION_NOT_DRAWN or DANGLING_WIRE_END result covers its pages and ports. The message names the pages and the count of ports not read.</td>
+<td>No call clears this: fix the refusing ERROR: LABEL_NO_ROOM, WIDER_THAN_PAGE, PAGE_OVERFLOW, LANE_WIRE_DROPPED or PLACEMENT_PROBLEM.</td>
 </tr>
 <tr>
 <td><a id="draw_problem"></a>DRAW_PROBLEM</td>
@@ -2125,7 +2141,7 @@
 <td>render</td>
 <td>Fransys</td>
 <td>A wire drawn in a cable or harness block page differs from the harness-wire row of the model: another core, other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the cable and the core.</td>
+<td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
 <td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
@@ -2161,7 +2177,7 @@
 </tr>
 <tr>
 <td><a id="marker_unplaced"></a>MARKER_UNPLACED</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>A reference marker has no place inside the page: every level of its stagger leaves the content box, so layout draws no marker there; the message names its pin and page.</td>
@@ -2201,23 +2217,15 @@
 </tr>
 <tr>
 <td><a id="no_cell"></a>NO_CELL</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>A symbol is drawn but stands in no cell of any column, or in more cells than it has elements, so layout places it by no rule; the message names it.</td>
 <td>No call clears this: report it with the smallest model that shows it.</td>
 </tr>
 <tr>
-<td><a id="order_hint_unmet"></a>ORDER_HINT_UNMET</td>
-<td>WARNING</td>
-<td>render</td>
-<td>consumer</td>
-<td>An authored order hint names two groups that are not on the same drawing set, so no page order can honour it.</td>
-<td>Move both groups onto one drawing set, or drop the hint. Write: d.layout.order(a, b) for groups on one drawing set.</td>
-</tr>
-<tr>
 <td><a id="outline_no_room"></a>OUTLINE_NO_ROOM</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
 <td>A nested unit stands on its parent's page, but its frame does not fit the page or would hold another unit's symbol; the unit is drawn with no frame.</td>
@@ -2225,7 +2233,7 @@
 </tr>
 <tr>
 <td><a id="out_of_page"></a>OUT_OF_PAGE</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>A symbol body or a text lies outside the content box of its page.</td>
@@ -2236,8 +2244,8 @@
 <td>WARNING</td>
 <td>render</td>
 <td>Fransys</td>
-<td>Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power symbol), a text and a body, two texts, or a wire and a text meet on one page; the message names the first of them.</td>
-<td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. The message names the page and the members.</td>
+<td>Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power symbol), a text and a body, two texts, or a wire and a text meet on one page; the message names the page and the first of them.</td>
+<td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.</td>
 </tr>
 <tr>
 <td><a id="overview_unplaced"></a>OVERVIEW_UNPLACED</td>
@@ -2284,7 +2292,7 @@
 <td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
-<td>Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential), so the page would join nets the model keeps apart.</td>
+<td>Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential).</td>
 <td>No call clears this: two nets of one supply print one name in a cabinet. For a supply name with no unique protective device between them: put a fuse or breaker between them. For a ground: bond the nets, or declare each supply in its own unit, so each prints its declaring unit's tag.</td>
 </tr>
 <tr>
@@ -2292,7 +2300,7 @@
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
-<td>A reference marker is not drawn as the model gives it: it prints a text other than the one derived, stands in another cell than the stored one, stands on no wire of its net, or one reference number names two groups in one drawing set. A reader of the page then cannot find the other end.</td>
+<td>A reference marker is not drawn as the model gives it: it prints a text other than the one derived, stands in another cell than the stored one, stands on no wire of its net, or one reference number names two groups in one drawing set.</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
@@ -2300,7 +2308,7 @@
 <td>WARNING</td>
 <td>render</td>
 <td>consumer</td>
-<td>A printed reference points to a page that no page of its own document holds, and its text names no document, so a reader cannot tell which document to open. The message names the reference, its page and the target page.</td>
+<td>A printed reference points to a page that no page of its own document holds, and its text names no document. The message names the reference, its page and the target page.</td>
 <td>Print both drawing sets in one document, or print the target's drawing set in a document so the reference names it. Write: fr.document(<preset>, <subject>, cover=<cover>)</td>
 </tr>
 <tr>
@@ -2388,7 +2396,7 @@
 <td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
-<td>A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items.</td>
+<td>A drawing set has pages but no document prints it, so its items are not in any export.</td>
 <td>Add a document for the set's unit or location, passing its handle as the subject, or nest the unit in one that has one. A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)</td>
 </tr>
 <tr>
@@ -2417,7 +2425,7 @@
 </tr>
 <tr>
 <td><a id="wire_meets_net"></a>WIRE_MEETS_NET</td>
-<td>WARNING</td>
+<td>ERROR</td>
 <td>render</td>
 <td>consumer</td>
 <td>A fixed wire (a lane wire, join, trunk or drop) meets another net's wire and no detour exists, so it is drawn as placed; the message names the wire and its ends.</td>
@@ -2436,8 +2444,8 @@
 <td>WARNING</td>
 <td>render</td>
 <td>Fransys</td>
-<td>A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them.</td>
-<td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. The message names the page and the members.</td>
+<td>A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the page and the first of them.</td>
+<td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.</td>
 </tr>
 <tr>
 <td><a id="wire_over_pin_tip"></a>WIRE_OVER_PIN_TIP</td>
@@ -2492,7 +2500,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

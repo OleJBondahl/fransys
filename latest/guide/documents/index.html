@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/documents/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/documents/">
       
       
       
@@ -2250,16 +2250,16 @@ PDF's page count.</p>
 <p><code>out/</code> now holds one PDF for the cabinet, with the cover and notes text on their own pages
 ahead of the schematic.</p>
 <h2 id="subjects">Subjects</h2>
-<p>A document's <code>subject</code> is a unit, an item, or a place where units stand. It is one of:</p>
+<p>A document's <code>subject</code> is a unit or a place where units stand. It is one of:</p>
 <ul>
 <li>A location handle, what <code>d.location(...)</code> returns: a place where units stand.</li>
-<li>A device handle, what <code>d.device(...)</code> or <code>d.harness(...)</code> returns.</li>
 <li>A unit release's name, a plain <code>str</code>, such as a cabinet's: resolved to the one instance of that release at build
   and write time, not at the <code>fr.document</code> call itself.</li>
 <li>What <code>d.add(...)</code> returned: that one unit instance. Use it when a release stands more than once, since a name
   then matches several units and <code>DOCUMENT_UNIT_UNRESOLVED</code> follows.</li>
+<li>A unit or location <code>Id</code>.</li>
 </ul>
-<p>Any other value, such as a bare design, is a <code>TypeError</code> at the call. The cabinet example above
+<p>Any other value, such as a device handle, an item <code>Id</code> or a bare design, is a <code>TypeError</code> at the call. The cabinet example above
 passes its release name. A unit added with <code>d.add(fn, "U1")</code> is named by its release name:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Io</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="n">X1</span><span class="p">:</span> <span class="n">fr</span><span class="o">.</span><span class="n">Device</span>
@@ -2370,7 +2370,7 @@ document's subject, as the unit example on this page does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

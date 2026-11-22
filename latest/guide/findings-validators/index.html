@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/findings-validators/">
       
       
       
@@ -1943,6 +1943,14 @@
 <td>Make the parents of locations form a tree, never a loop. Write: d.location("BATT", "Battery bay", within="HOLD")</td>
 </tr>
 <tr>
+<td><a id="board_shares_unit"></a>BOARD_SHARES_UNIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A board is not the only top-level device of its unit, so it has no unit of its own to draw on.</td>
+<td>Make the board its own unit's only top-level device, with its parts as children. Write: @fr.unit(...) def board(d): b = d.device("A1", "DEMO-PCB-IO") and d.device("J1", "DEMO-CONN-2P", parent=b) in a unit of their own.</td>
+</tr>
+<tr>
 <td><a id="boundary_not_in_unit"></a>BOUNDARY_NOT_IN_UNIT</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -2507,7 +2515,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

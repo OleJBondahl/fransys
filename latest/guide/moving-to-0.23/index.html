@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.33/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02335" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.35
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02333" class="md-nav__link">
@@ -2360,6 +2371,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02335" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.35
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02333" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2800,6 +2822,23 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02335">New in 0.23.35</h2>
+<p>0.23.34 was not published; this release carries its changes too.</p>
+<p>BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or <code>None</code>. A device handle, a harness and an item id are no longer accepted and raise <code>TypeError</code>; <code>DocumentRow</code> and <code>DocumentScope</code> lose <code>item</code>, <code>bom_item</code> and <code>boards</code>, and <code>has_schematic_subject</code> is gone.</p>
+<p>BREAKING: stored releases are rebuilt (schema 35); reading an old one gives <code>SchemaVersionError</code>.</p>
+<p>BREAKING: a board that shares its unit with another top-level device is refused with the ERROR <code>BOARD_SHARES_UNIT</code>, which replaces <code>BOARD_NETS_NOT_DRAWN</code>. Give the board a unit of its own.</p>
+<ul>
+<li>A conductor whose ink is readable now counts as drawn, so a chain of tapped device pins no longer reports a false CONNECTION_NOT_DRAWN.</li>
+<li>A link's wire joins only what the ledger's ink joins, so a cut net draws one wire per ink part.</li>
+<li>A generic box is now as wide as symdef draws it, and the INK_WITHOUT_CONDUCTOR reader counts ink on more pages; some drawings move.</li>
+<li>A board's traces are drawn from its pins, so board pages show the traces they should.</li>
+<li>Every lane of a bundle now ends on the flat edge of its arrow.</li>
+<li>New WARNING CONNECTION_NOT_ACCOUNTED: a conductor end that no wire or marker accounts for, or that two do.</li>
+<li>CONNECTION_TO_UNDRAWN, MARKER_UNPLACED, NO_CELL, OUTLINE_NO_ROOM, OUT_OF_PAGE and WIRE_MEETS_NET are now ERRORs, so <code>fr.write</code> refuses a model that shows them.</li>
+<li>New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.</li>
+<li>An unnamed rack channel is named by its drawn pin label, for example <code>DO3</code>.</li>
+<li>Page titles now state what the page draws.</li>
+</ul>
 <h2 id="new-in-02333">New in 0.23.33</h2>
 <ul>
 <li>A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.</li>
@@ -2860,6 +2899,7 @@
 </ul>
 <h2 id="new-in-02321">New in 0.23.21</h2>
 <ul>
+<li>BREAKING: a stored model of schema 34 or older is refused; the unused <code>layout.group_hint</code> record is gone (schema 35). Rebuild stored releases with <code>fr.release</code>.</li>
 <li>BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with <code>fr.release</code>.</li>
 <li>By-others sets print on the system drawing with no setting on your side: a by-others device wired to one unit no longer appears on that unit's PDF. The system document now holds a schematic section, and a reference into it reads <code>&lt;design title&gt; p&lt;n&gt;:&lt;cell&gt;</code>.</li>
 <li>Also in 0.23.20: a page title and its title-page index row name only the groups drawn on that page. A group reached only through a copy or stub keeps its own page's title (KI-986).</li>
@@ -3018,7 +3058,6 @@
 <li>KI-749: <code>CONNECTION_NOT_DRAWN</code> or <code>MARKER_UNPLACED</code> on a page that also has <code>PAGE_OVERFLOW</code>. Fix the overflow first; the others follow it.</li>
 <li>KI-757: a wide marker on a page that does not overflow can leave <code>CONNECTION_NOT_DRAWN</code>.</li>
 <li>KI-759: a very large two-pole switch fan (24 or more chains per pole) can leave <code>CONNECTION_NOT_DRAWN</code> and <code>DANGLING_WIRE_END</code>.</li>
-<li>KI-762: a hub alone on a page or in a short row can lose a tag pair (<code>MARKER_UNPLACED</code>), and a <code>CONNECTION_NOT_DRAWN</code> can follow. A fix is in progress and ships in the release after it lands.</li>
 <li>KI-746, KI-747: a tag or <code>WHERE</code> marker text can overlap a wire or a slot text (<code>OVERLAP</code>, looks only).</li>
 <li>KI-748: the <code>OVERLAP</code> message does not name both elements yet.</li>
 </ul>
@@ -3070,7 +3109,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.33 documentation
+      Fransys 0.23.35 documentation
     </div>
   
   

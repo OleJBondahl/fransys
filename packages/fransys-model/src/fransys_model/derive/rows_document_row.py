@@ -7,7 +7,6 @@ own order, and passes `DocumentRow.id` to the derive functions that take a docum
 from fransys_model.kernel import Id, Model, value
 from fransys_model.vocab import Document, DocumentPreset, UnitRelease
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.core import Item
 from fransys_model.vocab.tables import documents
 
 from .facts.house_settings import revision_form_of
@@ -21,14 +20,13 @@ __all__ = ["DocumentRow", "RevisionRow", "document_row", "document_rows", "revis
 class DocumentRow:
     """The fields of one `Document` an output reads.
 
-    `location` and `item` are the subject's ids (the `SYSTEM` preset has neither), `cover` and
+    `location` is the subject's id (the `SYSTEM` preset has none), `cover` and
     `notes` the Markdown texts (`notes` is `None` when dropped) and `logo` the title block's SVG.
     """
 
     id: Id[Document]
     preset: DocumentPreset
     location: Id[AspectNode] | None
-    item: Id[Item] | None
     cover: str
     notes: str | None
     logo: str | None
@@ -53,7 +51,6 @@ def _row(record: Document) -> DocumentRow:
         id=record.id,
         preset=record.preset,
         location=record.location,
-        item=record.item,
         cover=record.cover,
         notes=record.notes,
         logo=record.logo,

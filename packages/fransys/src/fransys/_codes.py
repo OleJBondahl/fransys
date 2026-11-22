@@ -1,8 +1,5 @@
 """The facade's finding codes: build, release and verify (BUILD-MESSAGES M1)."""
 
-from typing import Any
-lazy from collections.abc import Iterable
-
 import fransys_el
 import fransys_kicad
 import fransys_parts
@@ -11,7 +8,7 @@ import fransys_render
 
 import fransys_layout
 from fransys_model import vocab
-from fransys_model.kernel import CodeInfo, Finding, Id, Severity
+from fransys_model.kernel import CodeBook, CodeInfo, Severity
 
 _OWN: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -194,21 +191,15 @@ _OWN: tuple[CodeInfo, ...] = (
     ),
 )
 
-BY_CODE: dict[str, CodeInfo] = {
-    info.code: info
-    for info in (
-        *_OWN,
-        *vocab.FINDING_CODES,
-        *fransys_el.FINDING_CODES,
-        *fransys_layout.FINDING_CODES,
-        *fransys_render.FINDING_CODES,
-        *fransys_pdf.FINDING_CODES,
-        *fransys_kicad.FINDING_CODES,
-        *fransys_parts.FINDING_CODES,
-    )
-}
+BY_CODE = CodeBook(
+    *_OWN,
+    *vocab.FINDING_CODES,
+    *fransys_el.FINDING_CODES,
+    *fransys_layout.FINDING_CODES,
+    *fransys_render.FINDING_CODES,
+    *fransys_pdf.FINDING_CODES,
+    *fransys_kicad.FINDING_CODES,
+    *fransys_parts.FINDING_CODES,
+)
 
-
-def finding(code: str, subjects: Iterable[Id[Any]], message: str, **fix_values: str) -> Finding:
-    """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
-    return BY_CODE[code].finding(subjects, message, **fix_values)
+finding = BY_CODE.finding

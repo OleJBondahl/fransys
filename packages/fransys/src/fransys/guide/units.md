@@ -268,8 +268,8 @@ device of its own unit. So make the board assembly its own unit: the board plus 
 Nest that unit in the enclosure unit, which holds the receptacles. Join the board's interface
 connector to the receptacles with `d.series(..., wire=...)`; the wire crosses the unit
 boundary and draws as a boundary connection. The board's parts draw on the board unit's pages, not
-the enclosure's. A board that shares its unit with another top-level device draws as a black box,
-and `BOARD_NETS_NOT_DRAWN` is an ERROR that names its dropped nets.
+the enclosure's. A board that shares its unit with another top-level device is refused: `BOARD_SHARES_UNIT` is an ERROR
+that names the board; give it a unit of its own.
 
 ## Task: a board unit in a cabinet
 

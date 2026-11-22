@@ -74,3 +74,6 @@ def test_the_a2_wires_stay_routed_and_the_a1_wires_are_not() -> None:
     model = _k1().model
     wires = [w for d in _own_drawings(model, own=True) for w in d.wires]
     assert len(wires) == 2
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

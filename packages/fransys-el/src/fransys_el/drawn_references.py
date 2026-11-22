@@ -113,12 +113,13 @@ def _read_stubs(
     return References(tuple(faults), read, groups, listed)
 
 
-def join_references(model: Model, pages: Mapping[Id[Page], PagePart], library: Library, union: Union) -> References:
-    """Join the nodes of the markers of each reference group that are read back, and read the stubs; the faults of those that are not."""
-    drawn, markers = _drawn(pages), layout_of(model, LinkMarker)
+def _read_markers(
+    model: Model, pages: Mapping[Id[Page], PagePart], drawn: Mapping[tuple[Id[Page], str, str], list[XY]], library: Library
+) -> References:
+    """Read each reference marker where its text is drawn: the faults, the nodes by group, the node by marker and the ports it lists."""
+    markers = layout_of(model, LinkMarker)
     faults, nodes, read, listed = _ambiguous(model), defaultdict(list), {}, defaultdict(set)
-    targets = reference_targets(model)
-    for (page, cell), ends in targets.items():
+    for (page, cell), ends in reference_targets(model).items():
         for marker, _, group, text in (end for end in ends if page in pages):
             at = drawn.get((page, markers[marker].port.value, text), [])
             held = [(page, one) for one in at if one in pages[page].nodes]
@@ -131,11 +132,20 @@ def join_references(model: Model, pages: Mapping[Id[Page], PagePart], library: L
                 read[marker.value] = held[0]
                 if markers[marker].star is StarKind.OFF:
                     listed[held[0]].update(x.port.value for x in markers[marker].pairs)
-    stubs = _read_stubs(model, drawn, pages, {m for ends in targets.values() for m, *_ in ends})
-    for joined in nodes.values():
+    return References(tuple(faults), read, nodes, listed)
+
+
+def join_references(model: Model, pages: Mapping[Id[Page], PagePart], library: Library, union: Union) -> References:
+    """Join the nodes of the markers of each reference group that are read back, and read the stubs; the faults of those that are not."""
+    drawn = _drawn(pages)
+    marked = _read_markers(model, pages, drawn, library)
+    stubs = _read_stubs(model, drawn, pages, {m for ends in reference_targets(model).values() for m, *_ in ends})
+    for joined in marked.groups.values():
         for node in joined[1:]:
             union.join(joined[0], node)
-    return References((*faults, *stubs.faults), {**read, **stubs.markers}, {**nodes, **stubs.groups}, {**listed, **stubs.stubs})
+    return References(
+        (*marked.faults, *stubs.faults), {**marked.markers, **stubs.markers}, {**marked.groups, **stubs.groups}, {**marked.stubs, **stubs.stubs}
+    )
 
 
 def reference_findings(net: Netlist) -> tuple[Finding, ...]:

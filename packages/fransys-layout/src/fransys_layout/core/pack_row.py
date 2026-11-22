@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from .flow_values import Block
     from .pack import Attached, LanePins, PlacedColumn
     from .sym_values import Sym
-    from .values import Options
+    from .values import BoxSpec, Options
 
 Reach = tuple[str, int]
 
@@ -71,10 +71,13 @@ def extent(spec: RowSpec, col: str) -> tuple[int, int]:
     return column_extent(spec.syms, lanes, spec.in_row)
 
 
-def _margin(spec: RowSpec, box: str) -> int:
-    """Body beyond the end pins of a box: its spec margin, else `Options.box_margin`."""
-    box_spec = spec.syms[box].box
-    return box_spec.margin if box_spec else spec.options.box_margin
+def _ends(spec: RowSpec, box: str) -> BoxSpec:
+    """The box's body beyond its first and last pins (`lead`, `tail`), as its symbol draws them."""
+    ends = spec.syms[box].box
+    if ends is None:
+        msg = f"{box} has no box spec, so it has no ends"
+        raise CoreError(msg)
+    return ends
 
 
 def _sep(spec: RowSpec, a: str, b: str) -> int:
@@ -124,11 +127,11 @@ def _segment(g: Graph, spec: RowSpec, block: Block | None, here: Sequence[str], 
 def _reserve(g: Graph, spec: RowSpec, extra: int) -> None:
     """A reserved pair keeps its separation, the justify extra and a grid per extra track.
 
-    A pair not both in this row is skipped (a block moved to another row).
+    A pair not both in this row is skipped (a block moved to another row), and so is one the row now orders the other way (a re-cut swapped it).
     """
-    here = set(spec.cols)
+    at = {c: i for i, c in enumerate(spec.cols)}
     for (a, b), tracks in sorted(spec.reserves.items()):
-        if tracks > 1 and a in here and b in here:
+        if tracks > 1 and a in at and b in at and at[a] < at[b]:
             g.after(
                 col_node(a),
                 col_node(b),
@@ -159,11 +162,9 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str]) -> None:
     lead, tail = box_reach(spec.syms[box])
     g.after(slot_node(block.id, LOW), box_node(box, LOW), lead)
     g.after(box_node(box, HIGH), slot_node(block.id, HIGH), tail)
-    g.after(
-        box_node(box, LOW),
-        box_node(box, HIGH),
-        2 * _margin(spec, box) if cols else spec.syms[box].body.w,
-    )
+    ends = _ends(spec, box)
+    pins = [] if cols else [p.dx for p in spec.syms[box].pins]  # no column moves a pin: they stay at the symbol's own offsets
+    g.after(box_node(box, LOW), box_node(box, HIGH), ends.lead + ends.tail + max(pins, default=0) - min(pins, default=0))
 
 
 def _pair_pins(g: Graph, spec: RowSpec, box: str, block: Block) -> None:
@@ -224,7 +225,7 @@ def pin_pitches(spec: RowSpec) -> dict[tuple[str, str, str], int]:
 
 
 def _pin_chain(g: Graph, spec: RowSpec, box: str, pins: Sequence[str], extra: int) -> None:
-    margin = _margin(spec, box)
+    ends = _ends(spec, box)
     for a, b in pairwise(pins):
         if _one_column(spec, a, b):
             continue
@@ -233,8 +234,8 @@ def _pin_chain(g: Graph, spec: RowSpec, box: str, pins: Sequence[str], extra: in
         else:
             g.after(pin_node(box, a), pin_node(box, b), spec.pin_pitch[box, a, b] + extra)
     if pins:
-        g.after(box_node(box, LOW), pin_node(box, pins[0]), margin)
-        g.after(pin_node(box, pins[-1]), box_node(box, HIGH), margin)
+        g.after(box_node(box, LOW), pin_node(box, pins[0]), ends.lead)
+        g.after(pin_node(box, pins[-1]), box_node(box, HIGH), ends.tail)
 
 
 def _solve(spec: RowSpec, extra: int) -> tuple[dict[str, int], int] | None:

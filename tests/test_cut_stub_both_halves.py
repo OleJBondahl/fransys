@@ -8,8 +8,6 @@ import importlib
 from collections import defaultdict
 
 import pytest
-from _direct_case import built_with_unlaid, laid_again
-from fransys_el import lay_out_core
 
 WRAPS = {  # census 2026-10-25: the 7 builds of R847
     "machine_panel": 0,  # BRIDGE-NOT-DRAWN (R1145): a bridged rail draws no cut, was 1 (RAIL-FLAG R921: was 0)
@@ -23,31 +21,10 @@ WRAPS = {  # census 2026-10-25: the 7 builds of R847
 SIZES = {"machine_panel": {"channels": 32}}
 
 
-def _circuit(name: str):
-    """The corpus runner's circuit of a build: a standard module, a large size, or the demo skid."""
-    run = importlib.import_module("placement_corpus.run")
-    if name == "demo-skid":
-        return (run.SKID.name, run.load(run.SKID, "demo_skid_census"), {}, {})
-    found = {c[0]: c for s in ("standard", "large") for c in run.circuits(s)}
-    base = found[name]
-    return (*base[:2], SIZES.get(name, base[2]), base[3])
-
-
 def _solved(name: str) -> list[tuple[object, object]]:
-    """(problem, CoreLayout) of every core solve the case's layout step makes."""
+    """(problem, CoreLayout) of every core solve the case's build makes."""
     run = importlib.import_module("placement_corpus.run")
-    _, unlaid = built_with_unlaid(lambda: run.build(name, _circuit(name), fresh=True))
-    solved = []
-    real = lay_out_core.solve
-
-    def spy(problem, options, *args, **kwargs):
-        solved.append((problem, real(problem, options, *args, **kwargs)))
-        return solved[-1][1]
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(lay_out_core, "solve", spy)
-        laid_again(unlaid)
-    return solved
+    return [(problem, layout) for problem, _, layout in run.observed(name, **SIZES.get(name, {})).caught("solves")]
 
 
 @pytest.fixture(
@@ -94,3 +71,5 @@ def test_a_same_page_reference_is_a_row_wrap_or_a_card_halves_tag(solved) -> Non
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

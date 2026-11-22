@@ -123,16 +123,29 @@ def spilled(
 
 
 def across(flow: FlowGraph, where: Mapping[str, int], planned: Collection[Ref], nets: Iterable[Net] = ()) -> list[Ref]:
-    """A tag pair for each across-body link (layout-0440) and each handed link the cut left on one page (`Net.tagged`, layout-0508).
+    """A tag pair for each across-body link (layout-0440), each handed link the cut left on one page (`Net.tagged`, layout-0508) and each apart pair.
 
-    The cut plans the handed link's pair, so placement reserves its room; a link the cut already planned as references keeps those.
+    The cut plans the pair, so placement reserves its room; a link the cut already planned as references keeps those. An apart pair
+    (`Net.apart`, layout-0635) is a tag pair of its own and joins no link.
     """
     done = {(r.net, e.pin) for r in planned for e in r.ends}
     handed = {(n.id, frozenset(t)) for n in nets for t in n.tagged}
+    column = {a.pin: a.column for ln in flow.cross_links for a in ln.ends}
+    cells = {c.sym: col.id for col in flow.columns for lane in col.lanes for c in lane.cells}
+    wanted = [
+        (ln.net, tuple(a.pin for a in ln.ends)) for ln in flow.cross_links if ln.tagged or (ln.net, frozenset(a.pin for a in ln.ends)) in handed
+    ]
+    for n in nets:  # a pin ends one tag of its net: apart pairs that share a pin are one pair
+        pairs: list[tuple[PinRef, ...]] = []
+        for ends in n.apart:
+            hit = [o for o in pairs if set(o) & set(ends)]
+            pairs = [o for o in pairs if o not in hit]
+            pairs.append(tuple(dict.fromkeys(p for o in (*hit, ends) for p in o)))
+        wanted += [(n.id, ends) for ends in pairs]
     return [
-        Ref(link.net, RefKind.TAG, tuple(RefEnd(where[a.column or a.pin.sym], a.column, a.pin) for a in link.ends))
-        for link in flow.cross_links
-        if (link.tagged or (link.net, frozenset(a.pin for a in link.ends)) in handed) and not all((link.net, a.pin) in done for a in link.ends)
+        Ref(net, RefKind.TAG, tuple(RefEnd(where[col or p.sym], col, p) for p in ends for col in [column[p] if p in column else cells.get(p.sym)]))
+        for net, ends in dict.fromkeys(wanted)
+        if all(p.sym in where for p in ends) and not all((net, p) in done for p in ends)
     ]
 
 

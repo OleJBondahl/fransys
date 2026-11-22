@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="8.75mm" height="10.6875mm" viewBox="-1.75 -1.025 3.5 4.275">
 <title>Marker arrow (reference marker, text along the wire)</title>
 <g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
-<polygon points="0,0 -0.75,0.375 -0.75,2.25 0.75,2.25 0.75,0.375" stroke-width="0.1" fill="none"/>
+<polygon points="-0.125,0 -0.75,0.375 -0.75,2.25 0.75,2.25 0.75,0.375 0.125,0" stroke-width="0.1" fill="none"/>
 </g>
 <g class="annotation">
 <circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>

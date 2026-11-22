@@ -30,13 +30,13 @@ Routed = list["tuple[Wire, ...] | None"]
 class Negotiated:
     """What was drawn and what was not.
 
-    `routed` holds each routed link's wires by net, in order; `risen` the wires of the routed
+    `routed` holds each routed link's wires, in link order; `risen` the wires of the routed
     rises; `failed` the links and `lost` the rises that no legal route was found for.
     """
 
-    routed: dict[str, tuple[Wire, ...]]
+    routed: tuple[tuple[Wire, ...], ...]
     risen: tuple[Wire, ...]
-    failed: tuple[str, ...]
+    failed: tuple[CrossLink, ...]
     lost: tuple[Rise, ...]
 
 
@@ -57,6 +57,11 @@ def _crossed(grid: Occupancy, net: str, wires: Sequence[Wire]) -> list[tuple[XY,
     ]
 
 
+def _key(item: CrossLink | Rise) -> str:
+    """The key the item's wires stand under on the map."""
+    return item.key if isinstance(item, CrossLink) else item.net
+
+
 def _lay(env: RouteEnv, grid: Occupancy, item: CrossLink | Rise) -> tuple[Wire, ...] | None:
     """The item's wires by A*, marked on the map; None on a dead end, partial marks left."""
     if not isinstance(item, CrossLink):
@@ -69,7 +74,7 @@ def _lay(env: RouteEnv, grid: Occupancy, item: CrossLink | Rise) -> tuple[Wire, 
 def _lift(grid: Occupancy, item: CrossLink | Rise, wires: Sequence[Wire]) -> None:
     """Take the item off the map: a link's whole net, a rise its own wire (the trunk stays)."""
     if isinstance(item, CrossLink):
-        grid.remove_net(item.net)
+        grid.remove_net(item.key)
         return
     for w in wires:
         grid.unmark_wire(w.net, w.points)
@@ -88,7 +93,7 @@ def _heat(grid: Occupancy, items: Sequence[CrossLink | Rise], routed: Routed, am
     """Each cell where an item meets another against R391 costs `amount` more from now on; True when any did."""
     heated = False
     for k, item in enumerate(items):
-        for cell, axis in _conflicts(grid, item.net, routed[k] or ()):
+        for cell, axis in _conflicts(grid, _key(item), routed[k] or ()):
             grid.add_history(cell, axis, amount)
             heated = True
     return heated
@@ -117,7 +122,7 @@ def _costliest(grid: Occupancy, meeting: Sequence[int], routed: Routed) -> int:
 def _check(grid: Occupancy, items: Sequence[CrossLink | Rise], routed: Routed) -> list[int]:
     """The costliest item that still breaks R391 leaves the map, until none does; their indices."""
     out: list[int] = []
-    while meeting := [k for k, it in enumerate(items) if _conflicts(grid, it.net, routed[k] or ())]:
+    while meeting := [k for k, it in enumerate(items) if _conflicts(grid, _key(it), routed[k] or ())]:
         k = _costliest(grid, meeting, routed)
         _lift(grid, items[k], routed[k] or ())
         routed[k] = None
@@ -144,23 +149,23 @@ def _repair(
 
 def _relay(env: RouteEnv, grid: Occupancy, item: CrossLink | Rise, old: tuple[Wire, ...]) -> tuple[Wire, ...]:
     """The item alone again on the settled map, hard; kept only when it crosses less, else the old wires return."""
-    before = len(_crossed(grid, item.net, old))
+    before = len(_crossed(grid, _key(item), old))
     _lift(grid, item, old)
     new = _lay(env, grid, item)
-    if new is not None and len(_crossed(grid, item.net, new)) < before:
+    if new is not None and len(_crossed(grid, _key(item), new)) < before:
         return new
     _lift(grid, item, ())
     if isinstance(item, CrossLink):
         mark_anchors(env, grid, item)
     for w in old:
-        grid.mark_wire(w.net, w.points)
+        grid.mark_wire(_key(item), w.points)
     return old
 
 
 def _ripup(env: RouteEnv, grid: Occupancy, items: Sequence[CrossLink | Rise], routed: Routed) -> None:
     """Each round lays the `ripup_worst` most-crossing routed links alone again (R596); it stops when none crosses."""
     for _ in range(env.options.reroute_rounds):
-        crossing = [(len(_crossed(grid, items[k].net, w)), k) for k, w in enumerate(routed) if w and isinstance(items[k], CrossLink)]
+        crossing = [(len(_crossed(grid, _key(items[k]), w)), k) for k, w in enumerate(routed) if w and isinstance(items[k], CrossLink)]
         top = [k for n, k in sorted(crossing, key=lambda c: -c[0])[: env.options.ripup_worst] if n]
         if not top:
             return
@@ -183,8 +188,8 @@ def negotiate(env: RouteEnv, grid: Occupancy, links: Sequence[CrossLink], rises:
     _ripup(env, grid, items, routed)
     n = len(rises)
     return Negotiated(
-        {ln.net: w for ln, w in zip(links, routed[n:], strict=True) if w is not None},
+        tuple(w for w in routed[n:] if w is not None),
         tuple(w for ws in routed[:n] for w in ws or ()),
-        tuple(ln.net for ln, w in zip(links, routed[n:], strict=True) if w is None),
+        tuple(ln for ln, w in zip(links, routed[n:], strict=True) if w is None),
         tuple(r for r, w in zip(rises, routed[:n], strict=True) if w is None),
     )

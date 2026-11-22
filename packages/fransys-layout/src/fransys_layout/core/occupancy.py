@@ -11,6 +11,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, Literal
 
 from .clearance import closed_cells
+from .net_keys import net_of_key
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -160,7 +161,7 @@ class Occupancy:
         return self.present(cell, axis, net) + sum(1 for n in self.ends.get(cell, ()) if n != net)
 
     def _admits(self, cell: XY, net: str, own: frozenset[str]) -> bool:
-        return any((o, net) in self.admitted.get(cell, ()) for o in own)
+        return any((o, net_of_key(net)) in self.admitted.get(cell, ()) for o in own)
 
     def touched(self, cell: XY, net: str) -> bool:
         """Another net has an end or a corner in the cell (R391)."""

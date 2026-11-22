@@ -17,7 +17,9 @@ def pytest_runtest_setup():
     """Start each field-case test with no build and no declared code, and record builds until its teardown (fixtures included)."""
     _BUILT.clear()
     DECLARED.clear()
-    sys.monitoring.register_callback(3, sys.monitoring.events.PY_RETURN, lambda _code, _off, ret: _BUILT.append(ret))
+    sys.monitoring.register_callback(
+        3, sys.monitoring.events.PY_RETURN, lambda _code, _off, ret: _BUILT.append(ret if hasattr(ret, "findings") else ret.result)
+    )
 
 
 def pytest_runtest_teardown():

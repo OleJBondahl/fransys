@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from itertools import pairwise
 from typing import Any, Literal
+lazy from collections.abc import Sequence
 
 from options_fixtures import core_options
 from turn_fixtures import refit, views_of
@@ -102,9 +104,14 @@ def net(net_id: str, *pins: str, **kw: Any) -> Net:
     return Net(net_id, tuple(PinRef(*p.split(".")) for p in pins), **kw)
 
 
+def conductors(nets: Sequence[Net]) -> tuple[tuple[PinRef, PinRef], ...]:
+    """The conductors a test's nets state: each net's pins in a chain."""
+    return tuple(pair for n in nets for pair in pairwise(n.pins))
+
+
 def problem(syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA) -> PlacementProblem:
     """A placement problem over the given symbols and nets, default hints and the test area."""
-    return PlacementProblem(area, tuple(syms), tuple(nets), Facts(far_ends=()), hints or Hints())
+    return PlacementProblem(area, tuple(syms), tuple(nets), Facts(far_ends=conductors(nets)), hints or Hints())
 
 
 def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:

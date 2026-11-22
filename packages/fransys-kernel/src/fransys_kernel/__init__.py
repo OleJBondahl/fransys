@@ -2,7 +2,7 @@
 
 from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
 from .canonical_forms import dumps, from_data, loads, to_data
-from .codes import WHO_ACTS, CodeInfo
+from .codes import WHO_ACTS, CodeBook, CodeInfo
 from .decode import value_from
 from .draft import Draft
 from .encode import JsonValue, decimal_text, value_data, write_json
@@ -16,7 +16,7 @@ from .errors import (
     ValueTypeError,
 )
 from .evolve import evolve
-from .findings import Finding, Severity
+from .findings import Finding, Severity, findings_sorted
 from .freeze import freeze
 from .grouping import index_ids
 from .ids import AuthoringKey, Id, id_namespace, make_id, render_id
@@ -43,6 +43,7 @@ __all__ = [
     "WHO_ACTS",
     "AuthoringKey",
     "ByDigest",
+    "CodeBook",
     "CodeInfo",
     "DescribedFinding",
     "Draft",
@@ -73,6 +74,7 @@ __all__ = [
     "dumps",
     "evolve",
     "field_specs",
+    "findings_sorted",
     "freeze",
     "from_data",
     "id_namespace",

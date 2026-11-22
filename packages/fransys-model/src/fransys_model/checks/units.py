@@ -17,8 +17,8 @@ from fransys_model.derive.facts.unit_crossings import (
     function_gender,
     open_boundaries,
 )
-from fransys_model.derive.facts.unit_index import boundary_owners, boundary_unit, unit_index
-from fransys_model.derive.facts.units import declared_unit, drawn_with
+from fransys_model.derive.facts.unit_index import boundary_owners, boundary_unit, item_unit, unit_index
+from fransys_model.derive.facts.units import declared_unit, drawn_with, enclosing_boards, is_sole_unit_root
 from fransys_model.derive.facts.wired_ports import mated_ports, wired_ports
 from fransys_model.kernel import Finding, natural_join
 from fransys_model.vocab.codes import finding
@@ -51,6 +51,7 @@ MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
 UNUSED_NOT_BOUNDARY: Final[str] = "UNUSED_NOT_BOUNDARY"
 UNUSED_POINT_WIRED: Final[str] = "UNUSED_POINT_WIRED"
 DRAWN_WITH_UNIT_UNWIRED: Final[str] = "DRAWN_WITH_UNIT_UNWIRED"
+BOARD_SHARES_UNIT: Final[str] = "BOARD_SHARES_UNIT"
 
 
 def _boundary_unconnected(model: Model) -> list[Finding]:
@@ -223,11 +224,29 @@ def _drawn_with_unwired(model: Model) -> list[Finding]:
     ]
 
 
+def _board_shares_unit(model: Model) -> list[Finding]:
+    """A board that shares its unit and has a pin wired inside needs a unit document of its own (R2481, R2484, R2511).
+
+    A shared board with no pin wired inside stays legal (a declared net has no public spelling); `unit=None` is its own unit (R2496).
+    """
+    used: set[Id[Item]] = set()
+    for conductor in conductors(model).values():
+        for port in (conductor.a, conductor.b):
+            inside = enclosing_boards(model, port_item(model, port))[-1:]
+            if inside and not is_sole_unit_root(model, inside[0]) and not function_role(model, ports(model)[port].function).pin_group:
+                used.add(inside[0])
+    return [
+        finding(BOARD_SHARES_UNIT, (item.id,), f"board {ref(item)} shares its unit with another top-level device; give it a unit of its own")
+        for item in items(model).values()
+        if item.id in used and item_unit(model, item.id) is not None
+    ]
+
+
 def check_units(model: Model) -> tuple[Finding, ...]:
     """Check every unit's boundary and every mate's kind; `UNIT_CYCLE` is `check_structure`'s.
 
     `ERROR`: `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`, `BOUNDARY_NOT_IN_UNIT`, `MATE_NOT_CONNECTOR`,
-    `UNUSED_NOT_BOUNDARY`, `UNUSED_POINT_WIRED`, `DRAWN_WITH_UNIT_UNWIRED`; the others `WARNING`. Sorted by code.
+    `UNUSED_NOT_BOUNDARY`, `UNUSED_POINT_WIRED`, `DRAWN_WITH_UNIT_UNWIRED`, `BOARD_SHARES_UNIT`; the others `WARNING`. Sorted by code.
     """
     return ordered(
         [
@@ -242,5 +261,6 @@ def check_units(model: Model) -> tuple[Finding, ...]:
             *_unused_ports_wired(model),
             *_boundary_membership(model),
             *_drawn_with_unwired(model),
+            *_board_shares_unit(model),
         ]
     )

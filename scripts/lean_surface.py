@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "surface.toml"
 
-#: `fransys_model`'s own eighteen surface modules (amended 2026-09-27 to add
+#: `fransys_model`'s own seventeen surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
 #: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`,
 #: EXACT-SIZES E10 to add `derive.print_sizes`, model-0261 to add

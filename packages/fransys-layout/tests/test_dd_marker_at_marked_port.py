@@ -72,12 +72,6 @@ def _built(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
     return result, [f"-{name}:{n}" for name, n in (("X1", 1), ("X3", 1), ("X3", 2))]
 
 
-@pytest.fixture(autouse=True)
-def _one_build_per_test():
-    """Each test builds its own model, so the finding sweep counts every node's build (a cached build counts for the first test only)."""
-    _built.cache_clear()
-
-
 def _build(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
     """`_built`'s model and designations."""
     result, tags = _built(spec, pair=pair)

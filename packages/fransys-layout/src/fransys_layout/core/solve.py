@@ -8,16 +8,18 @@ from typing import TYPE_CHECKING
 from .anchors import anchor_misses, reserved
 from .blocks import assign_blocks
 from .cut import cut_pages
+from .cut_account_check import unaccounted
 from .fallback import announced, handed
 from .order import order_blocks
 from .outline import framed
 from .outputs import CoreLayout
 from .place import place_pages
+from .route_loop import route_round
 from .row_measure import row_measures
 from .solve_steps import annotate, scored
 from .topology import build_flow
 from .topology_elements import netted_pins
-from .widen import route_round, widen
+from .widen import widen
 
 if TYPE_CHECKING:
     from .values import Options, PinRef, PlacementProblem
@@ -84,6 +86,7 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         *placement.findings,
         *routes.findings,
         *over,
+        *unaccounted(cut, placement, rnd, problem),
         *missed,
         *announced((*handed(cut, placement, problem, (*cut.spec.reference_plan, *rnd.refs)), *rnd.refs)),
     )

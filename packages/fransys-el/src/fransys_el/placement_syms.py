@@ -18,8 +18,8 @@ from .footprints import footprints
 from .kit_keys import PickKey, function_of, strip_tag_of, tag_of
 from .placement_groups import group_of
 from .placement_pins import box_of, narrows, nodes_of, pins_of, shape_of, symbol_of
-from .placement_sets import drawing_scopes
 from .placement_where import where_room
+from .scopes import drawing_scopes
 from .write_markings import marking_slots
 
 if TYPE_CHECKING:
@@ -132,7 +132,7 @@ def strip_tags(env: Env) -> dict[str, dict[str, Size]]:
         symbol = symbol_of(env, lead, pick)
         shape = shape_of(env, lead, pick, symbol)
         pins = pins_of(env, pick, shape)
-        one = replace(_ask(env, lead, pick, pins, box_of(pick, shape, pins)), orientations=("R0",))
+        one = replace(_ask(env, lead, pick, pins, box_of(env, pick, pins)), orientations=("R0",))
         texts = {"": strip_tag_of(env.model, lead)} | {u.value: strip_tag_of(env.model, lead, unit=u) for u in homes}
         found[strip.value] = {k: symbol_views(symbol, env.library, replace(one, text=t)).label for k, t in texts.items()}
     return found
@@ -143,17 +143,18 @@ def sym_and_table(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit
 
     `homes` are the units of the sets that draw it: its label is measured for each as that set prints the tag.
     """
-    sym, table = _drawn(env, lead, pick, homes, symbol_of(env, lead, pick))
+    sym, table = _drawn(env, lead, pick, homes)
     if narrows(env, pick):
-        sym = replace(sym, narrow=_drawn(env, lead, pick, homes, symbol_of(env, lead, pick, turn=True))[0])
+        sym = replace(sym, narrow=_drawn(env, lead, pick, homes, turn=True)[0])
     return sym, table
 
 
-def _drawn(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | None], symbol: LibrarySymbol) -> tuple[Sym, Box | None]:
-    """The `Sym` and contact-table keep-out of `lead` drawn as `symbol`."""
+def _drawn(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | None], *, turn: bool = False) -> tuple[Sym, Box | None]:
+    """The `Sym` and contact-table keep-out of `lead` drawn as its symbol, a generic box's markings turned when `turn`."""
+    symbol = symbol_of(env, lead, pick, turn=turn)
     shape = shape_of(env, lead, pick, symbol)
     pins = pins_of(env, pick, shape)
-    box = box_of(pick, shape, pins)
+    box = box_of(env, pick, pins, turn=turn)
     function = function_of(env.model, lead)
     item = function_item(env.model, function)
     strip = strip_of(env.model, item)

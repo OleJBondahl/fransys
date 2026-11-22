@@ -7,7 +7,6 @@ fixtures' vocabulary, standing in for whatever `vocab` will later declare with t
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from hypothesis import settings
 from hypothesis.internal.conjecture import providers
 from hypothesis.internal.constants_ast import Constants
 from kind_registry import restored_kind_registry
@@ -16,11 +15,6 @@ from fransys_kernel import AuthoringKey, Id, Model, Origin, Record, Value, recor
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
-
-
-# Decision 0020: derandomized, no deadline, bounded examples (the same profile as fransys-model).
-settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
-settings.load_profile("fransys")
 
 
 @record(kind="thing")

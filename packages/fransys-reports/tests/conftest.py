@@ -9,7 +9,6 @@ from random import Random
 from typing import Any
 
 import pytest
-from hypothesis import settings
 from library_records import freeze
 
 from fransys_model.elecdef import Connector, Gender
@@ -32,12 +31,6 @@ from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, Plc
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
-
-# Decision 0020: same profile as fransys-model's conftest (registering it again under the
-# same name with the same settings is a no-op); see that file's comment.
-settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
-settings.load_profile("fransys")
-
 
 _ORIGIN = Origin(file="conftest.py", line=1, note="fixture")
 

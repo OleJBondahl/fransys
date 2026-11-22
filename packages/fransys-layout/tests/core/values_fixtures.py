@@ -88,7 +88,7 @@ def problem() -> PlacementProblem:
         pins=pins,
         nodes=(("1",), ("2",)),
         views=views_of(BOX, BOX, BOX, pins, ("R0", "R180"), row_footprint=row_footprint),
-        box=BoxSpec(("1", "2"), 8),
+        box=BoxSpec(("1", "2"), 8, 8),
         row_group="RG",
         band=1,
         item="I1",
@@ -97,7 +97,7 @@ def problem() -> PlacementProblem:
         wider=({"": Size(10, 8)},),
         alone={"": Size(40, 8)},
     )
-    box_sym = dataclasses.replace(box_sym, narrow=dataclasses.replace(box_sym, box=BoxSpec(("1", "2"), 8)))
+    box_sym = dataclasses.replace(box_sym, narrow=dataclasses.replace(box_sym, box=BoxSpec(("1", "2"), 8, 8)))
     plain = dataclasses.replace(
         box_sym,
         id="K2",
@@ -117,6 +117,8 @@ def problem() -> PlacementProblem:
                 crosses_unit=True,
                 cut=(CutEnd(PinRef("K1", "1"), "W1"),),
                 tagged=((PinRef("K1", "1"), PinRef("K2", "1")),),
+                apart=((PinRef("K1", "1"), PinRef("K2", "1")),),
+                legless=(PinRef("K1", "1"),),
             ),
             Net("N2", (PinRef("K1", "2"), PinRef("K2", "2"))),
         ),
@@ -184,6 +186,7 @@ def layout() -> CoreLayout:
                     (Junction("N1", 1, 8, 0),),
                     (AnnexBox("K1", 1, BOX, "TL", turned=True),),
                     (Demand("g1", 5, 16, "K1", box=Box(0, -16, 8, 8), side="S"),),
+                    ((PinRef("K1", "1"), PinRef("K2", "1")),),
                 ),
             ),
             (Refused("N2", (PinRef("K1", "1"), PinRef("K2", "1"))),),
@@ -250,7 +253,7 @@ def flow_values() -> tuple[object, ...]:
         FlowGraph(
             (column,),
             (fan,),
-            (CrossLink("N1", (attach,), tagged=True),),
+            (CrossLink("N1", (attach,), tagged=True, part=1),),
             (BiasedEnd("K1", "1", 0),),
             ("K1",),
             (finding,),

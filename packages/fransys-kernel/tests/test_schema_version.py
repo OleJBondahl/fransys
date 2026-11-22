@@ -48,6 +48,15 @@ def test_from_data_refuses_the_old_version_once_a_new_one_is_registered(
     assert (excinfo.value.expected, excinfo.value.actual) == (SCHEMA_VERSION + 1, SCHEMA_VERSION)
 
 
+def test_a_version_34_envelope_is_refused() -> None:
+    """Fails if schema 34 (before the dropped Document.item, R2922) still loads."""
+    stored = dict(to_data(model_of(_ORIGIN, make_owner("1"), make_item("2"))))
+    stored["schema_version"] = 34
+    with pytest.raises(SchemaVersionError) as excinfo:
+        from_data(stored)
+    assert (excinfo.value.expected, excinfo.value.actual) == (35, 34)
+
+
 def test_a_second_version_is_refused_and_the_same_one_is_a_no_op() -> None:
     """Fails if a domain may change the number after it registered one."""
     register_schema_version(SCHEMA_VERSION)

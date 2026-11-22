@@ -9,7 +9,6 @@ from itertools import pairwise
 from typing import Any
 
 import pytest
-from _core_solves import caught_solves
 from _export_signature import is_export
 
 from fransys_layout.core import through
@@ -18,17 +17,13 @@ from fransys_layout.core.geometry import marker_box
 run: Any = None if is_export() else importlib.import_module("placement_corpus.run")
 
 _CORPUS = {"machine_panel", "panel_di16p", "remote_io", "distribution_board", "mcc"}
-_CASES = (
-    [("export",)]  # one placeholder, skipped by its marker (R462)
-    if run is None
-    else [c for c in run.circuits("standard") if c[0] in _CORPUS] + [("demo-skid", run.load(run.SKID, "demo_skid_marker_boxes"), {}, {})]
-)
+# "export": one placeholder, skipped by its marker (R462)
+_CASES = ["export"] if run is None else [n for n in run.corpus_names() if n in _CORPUS or n == "skid"]
 
 
-def _layouts(case: Any) -> list[tuple[Any, Any]]:
+def _layouts(case: str) -> list[tuple[Any, Any]]:
     """Each drawing set's (core layout, options), caught as the build solves it."""
-    _, caught = caught_solves(lambda: run.build(case[0], case, fresh=True))
-    return [(layout, options) for _, options, layout in caught]
+    return [(layout, options) for _, options, layout in run.observed(case).caught("solves")]
 
 
 def _struck(layout: Any, options: Any) -> list[str]:
@@ -64,13 +59,12 @@ _LOOKS = {
 
 @pytest.mark.private_input  # reads internal/ (R462)
 @pytest.mark.rule("ROUTING")
-@pytest.mark.parametrize("case", _CASES, ids=[c[0] for c in _CASES])
-def test_no_wire_passes_through_a_marker_box(case: Any) -> None:
+@pytest.mark.parametrize("case", _CASES)
+def test_no_wire_passes_through_a_marker_box(case: str) -> None:
     layouts = _layouts(case)
-    assert layouts, f"{case[0]}: no drawing set was solved"
-    assert any(lay.annotations.markers for lay, _ in layouts), case[0]
+    assert any(lay.annotations.markers for lay, _ in layouts), case
     struck = [s for lay, opts in layouts for s in _struck(lay, opts)]
-    assert len(struck) <= _LOOKS.get(case[0], 0), (len(struck), struck[:8])
+    assert len(struck) <= _LOOKS.get(case, 0), (len(struck), struck[:8])
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

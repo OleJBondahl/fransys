@@ -6,8 +6,8 @@ The layout engine sizes a marker's box and a cross-reference label from their te
 must print exactly that text but may not import `fransys_layout`. Pure formatters on
 plain values (`position_text`) and a family of readers on a
 laid-out model (`marker_text`, `cross_reference_text`) hold that
-text so both sides call the same code. `fransys_layout.stages.references` calls the
-formatters and keeps no copy; render will call the readers. `port_designation_in` applies
+text so both sides call the same code. `fransys_el` calls the formatters and
+keeps no copy; render will call the readers. `port_designation_in` applies
 the same location rule to a list's end (`terminal_rows`, `wire_rows` and
 `connector_rows` call it).
 

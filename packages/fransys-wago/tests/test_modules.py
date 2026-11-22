@@ -121,12 +121,12 @@ def test_the_demo_rack_reads_as_the_spec_says(demo_rack):
         ("750-460_2AI_a", "2-channel analog input; For Pt100/RTD resistance sensors"),
     ]
     assert [[c.get("Name") for c in module] for module in root] == [
-        ["Door", "Gate", "DI2"],
+        ["Door", "Gate", "DI3"],
         ["Fan"],
         ["Level", "Flow", "unused"],
-        ["DI0"],
+        ["DI1"],
         ["Start", "Run", "Ready", "Fault"],
-        ["AI0", "AI1"],
+        ["AI1", "AI2"],
     ]
     assert [[c.get("Nr") for c in module] for module in root] == [
         ["0", "1", "2"],
@@ -304,12 +304,12 @@ def test_a_bound_channel_name_is_the_bare_sanitised_signal_name_and_never_the_de
 @pytest.mark.parametrize(
     ("signals", "expected"),
     [
-        ((SignalType.DI,) * 2, ["DI0", "DI1"]),
-        ((SignalType.AI_CURRENT, SignalType.RTD), ["AI0", "AI1"]),
-        ((SignalType.DI, SignalType.DO, SignalType.DI, SignalType.DO), ["DO0", "DO1", "DI0", "DI1"]),
+        ((SignalType.DI,) * 2, ["DI1", "DI2"]),
+        ((SignalType.AI_CURRENT, SignalType.RTD), ["AI1", "AI2"]),
+        ((SignalType.DI, SignalType.DO, SignalType.DI, SignalType.DO), ["DO2", "DO4", "DI1", "DI3"]),
     ],
 )
-def test_a_spare_channel_name_is_its_cdp_kind_and_its_number_within_its_direction(new_rack, signals, expected):
+def test_a_spare_channel_name_is_its_pin_label(new_rack, signals, expected):
     rack = new_rack()
     rack.module(rack.part("p", "750-X", signals), "m", "A1", 1)
     assert _channel_names(rack) == expected
@@ -319,7 +319,7 @@ def test_a_spare_takes_the_name_set_on_its_own_channel(new_rack):
     rack = new_rack()
     module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
     rack.spare("s", module.channels[0], name="unused")
-    assert _channel_names(rack) == ["unused", "DI1"]
+    assert _channel_names(rack) == ["unused", "DI2"]
 
 
 def test_an_unconfigured_channel_is_not_written_and_its_neighbours_keep_their_nr(new_rack):
@@ -327,7 +327,7 @@ def test_an_unconfigured_channel_is_not_written_and_its_neighbours_keep_their_nr
     module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 3), "m", "A1", 1)
     rack.spare("s", module.channels[1], configured=False)
     (element,) = _parse(modules_xml(rack.freeze(), rack.rack))
-    assert [(c.get("Name"), c.get("Nr")) for c in element] == [("DI0", "0"), ("DI2", "2")]
+    assert [(c.get("Name"), c.get("Nr")) for c in element] == [("DI1", "0"), ("DI3", "2")]
     assert element.get("Name") == "750-X_3DI_a"
 
 
@@ -354,7 +354,7 @@ def test_a_channel_with_a_device_but_no_signal_name_is_named_as_a_spare(new_rack
     rack = new_rack()
     module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
     rack.device("dev", "B1", None, module.channels[1])
-    assert _channel_names(rack) == ["DI0", "DI1"]
+    assert _channel_names(rack) == ["DI1", "DI2"]
 
 
 def test_two_channels_with_one_name_are_both_written_as_they_are(new_rack):

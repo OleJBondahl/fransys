@@ -70,3 +70,25 @@ def test_a_units_cable_is_in_the_units_cores_csv_only(tmp_path: Path) -> None:
     assert system == [_HEADER]
     own = _lines(_cores_csv(fr.write(relay_cab_with_cable_list(), tmp_path / "unit", unit="demo-cab")))
     assert [row.split(",")[:2] for row in own[1:]] == [["-W1", "1"], ["-W1", "2"]]
+
+
+@cache
+def _located() -> fr.BuildResult:
+    d = fr.design("demo_parts")
+    d.location("EXT", "External")
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
+    h1 = d.device("H1", "DEMO-LAMP-24", place="EXT")
+    w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
+    w1.core(1, x1[1], h1[1])
+    w1.core(2, x1[2], h1[2])
+    return fr.build(d)
+
+
+def test_a_core_end_prints_the_text_terminals_csv_prints_for_it(tmp_path: Path) -> None:
+    written = fr.write(_located(), tmp_path)
+    (terminals,) = [p for p in written if p.name.endswith("terminals.csv")]
+    rows = [line.split(",") for line in _lines(terminals.read_text(encoding="utf-8").replace("\r\n", "\n"))[1:]]
+    sides = {row[0]: {*row[3].split(" "), *row[4].split(" ")} for row in rows}
+    cores = [line.split(",") for line in _lines(_cores_csv(written))[1:]]
+    assert [c[4] for c in cores] == ["+EXT-H1:1", "+EXT-H1:2"]
+    assert all(core[4] in sides[core[5]] for core in cores)

@@ -44,7 +44,6 @@ def _with_cabinet_documents(result: Any) -> Any:
             preset=DocumentPreset.CABINET_SCHEMATIC,
             location=place,
             unit=owner,
-            item=None,
             cover="# Cover",
             notes=None,
         )

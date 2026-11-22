@@ -76,34 +76,25 @@ def test_a_parallel_with_nothing_after_it_in_its_lane_gives_no_hold() -> None:
 
 
 @pytest.mark.rule("SERIES-PARALLEL")
-def test_a_nested_parallel_mid_way_down_the_home_branch_holds_its_follower() -> None:
-    """Inner (E 20, F 30) between S1 and D in the home branch: D is held 30 - 20 = 10.
-
-    The home branch is 10 + 30 + 60 + 2 * 5 = 110 against C = 80, so the outer gives no hold.
-    """
-    tree = Series((Parallel((Series(("S1", Parallel(("E", "F")), "D")), "C")), "B"))
-    assert tree_holds(tree, _H, _W) == {"D": 10}
-
-
-@pytest.mark.rule("SERIES-PARALLEL")
-def test_a_nested_parallel_ending_the_home_branch_adds_to_the_outer_hold() -> None:
-    """Home branch Series(S1, Parallel(E 20, F 30)) = 10 + 5 + 30 = 45; C = 80, outer hold 35.
-
-    The inner hold 30 - 20 = 10 also falls on B, the home lane's next leaf: 35 + 10 = 45.
-    """
-    tree = Series((Parallel((Series(("S1", Parallel(("E", "F")))), "C")), "B"))
-    assert tree_holds(tree, _H, _W) == {"B": 45}
-
-
-@pytest.mark.rule("SERIES-PARALLEL")
-def test_a_series_branch_with_more_cells_is_held_with_the_wires_between_its_cells() -> None:
-    """First branch A (40) is one cell; the tallest is Series(E 20, F 30, E 20) of 3 cells.
-
-    Its height is 70 + 2 * 5 = 80 as stack_lane builds it, so B is held 80 - 40 = 40 and stands
-    wire_min (5) below the tallest branch's bottom.
-    """
-    tree = Series((Parallel(("A", Series(("E", "F", "E")))), "B"))
-    assert tree_holds(tree, _H, _W) == {"B": 40}
+@pytest.mark.parametrize(
+    ("tree", "holds"),
+    [
+        # Inner (E 20, F 30) mid way down the home branch: D is held 30 - 20 = 10; the home branch 110 against C = 80: no outer hold.
+        (Series((Parallel((Series(("S1", Parallel(("E", "F")), "D")), "C")), "B")), {"D": 10}),
+        # Home branch Series(S1, Parallel(E 20, F 30)) = 10 + 5 + 30 = 45; C = 80, outer hold 35; the inner hold 10 falls on B too: 45.
+        (Series((Parallel((Series(("S1", Parallel(("E", "F")))), "C")), "B")), {"B": 45}),
+        # First branch A (40); the tallest is Series(E 20, F 30, E 20) = 70 + 2 * 5 = 80 as stack_lane builds it: B is held 80 - 40 = 40.
+        (Series((Parallel(("A", Series(("E", "F", "E")))), "B")), {"B": 40}),
+    ],
+    ids=[
+        "nested-mid-way-holds-its-follower",
+        "nested-ending-the-home-branch-adds-to-the-outer-hold",
+        "series-branch-held-with-the-wires-between-cells",
+    ],
+)
+def test_a_parallel_holds_the_leaf_that_follows_it(tree: Series, holds: dict[str, int]) -> None:
+    """Each tree holds its follower by the height the taller branch adds (the arithmetic is beside each row)."""
+    assert tree_holds(tree, _H, _W) == holds
 
 
 def test_leaves_of_lists_every_symbol_id_in_tree_order() -> None:

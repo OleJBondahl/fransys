@@ -162,6 +162,6 @@ def _render(target: Id[Any], source: OriginSource, name: str | None = None) -> s
 
 
 def _subject_lines(problem: ModelError, source: OriginSource) -> list[str]:
-    # An error of another package that carries `subjects` (a layout `HintError`).
+    # An error of another package that carries `subjects`.
     subjects = getattr(problem, "subjects", ())
     return [f"  subject: {_render(s, source)}" for s in subjects]

@@ -28,4 +28,5 @@ prefixes = ["packages/electrical-symbols/build/"]
 # Paths no `just ci` input reads (R2308): a change to one reuses T's gate. Each names its only reader and why.
 gate_blind = [
     { path = "internal/deps-lag.toml", reader = "internal/scripts/deps_latest.py via internal.just:18", reason = "no just ci input reads it" },
+    { path = "packages/fransys/src/fransys/guide/moving-to-0.23.md", reader = "packages/fransys/scripts/release.py `_notes_section`", reason = "release notes: the tag's `## New in` section (R3207); the guide tests it feeds run in the targeted gate when the guide changes" },
 ]

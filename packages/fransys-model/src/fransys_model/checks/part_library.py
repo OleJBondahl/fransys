@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import part_libraries
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -32,4 +32,4 @@ def check_part_library(model: Model) -> tuple[Finding, ...]:
         for name, libraries in by_name.items()
         if len({library.version for library in libraries}) > 1
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return findings_sorted(found)

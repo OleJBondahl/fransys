@@ -191,20 +191,6 @@ def test_schematic_pages_fall_back_to_no_drawings_when_the_location_has_no_drawi
     assert '#par(text("No drawings."))' in text
 
 
-def test_schematic_pages_fall_back_to_no_drawings_for_an_item_subject():
-    board = item("a1", description="Invented board")
-    doc = document(
-        "d1",
-        preset=DocumentPreset.CABINET_SCHEMATIC,
-        subject=board,
-        cover="# Cover",
-        notes=None,
-    )
-    m = model(board, doc)
-    text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m, ()), LIBRARY), diagrams=())
-    assert '#par(text("No drawings."))' in text
-
-
 def test_location_document_picks_only_the_unit_none_set_at_its_location():
     """The join-key fix (model-0041 amending decision 0024): a location subject
     matches `unit is None` at that location, never a nested unit's own set that happens to
@@ -463,35 +449,6 @@ def test_source_does_not_crash_with_no_project_record():
     text = source(m, doc.id, {}, sheets, diagrams=())
     assert '#set document(title: ""' in text  # the empty title, in the metadata
     assert ">Title</text>" in sheets[SheetKey(doc.id, K.COVER, 0)].svg  # the cell still prints
-
-
-def test_subject_label_for_an_item_with_a_part_and_no_authored_text_uses_the_parts_description():
-    demo_part = part("relay", description="Invented relay")
-    board = item("a1", description="", part=demo_part.id)
-    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
-    m = model(demo_part, board, doc)
-    record = document_row(m, doc.id)
-    assert document_heading(m, record) == "Cabinet schematic — A1 Invented relay"
-
-
-def test_subject_label_for_an_item_with_a_part_and_authored_text_shows_the_authored_text():
-    """The heading asks `derive.item_description`: an authored text wins over the part's."""
-    demo_part = part("relay", description="Invented relay")
-    board = item("a1", description="Authored relay text", part=demo_part.id)
-    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
-    m = model(demo_part, board, doc)
-    record = document_row(m, doc.id)
-    heading = document_heading(m, record)
-    assert heading == "Cabinet schematic — A1 Authored relay text"
-    assert "Invented relay" not in heading
-
-
-def test_subject_label_for_an_item_without_a_part_falls_back_to_its_own_description():
-    board = item("a1", description="Invented board, no part yet")
-    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover", notes=None)
-    m = model(board, doc)
-    record = document_row(m, doc.id)
-    assert document_heading(m, record) == "Cabinet schematic — A1 Invented board, no part yet"
 
 
 def test_harness_cables_for_is_empty_for_a_location_subject():

@@ -7,6 +7,7 @@ from itertools import pairwise
 from fransys_layout.core import Facts, PlacementProblem
 
 from .cut_fixtures import AREA, elem, net
+from .flow_builders import conductors
 
 
 def ring_problem(extra: int = 0) -> PlacementProblem:
@@ -21,7 +22,7 @@ def ring_problem(extra: int = 0) -> PlacementProblem:
         net(f"n{k + 4}", "d.s", "lamp.n"),
     ]
     names = (*chain, "b", "c", "d", "s")
-    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets), facts=Facts(far_ends=()))
+    return PlacementProblem(AREA, tuple(elem(i, 60) for i in names), tuple(nets), facts=Facts(far_ends=conductors(nets)))
 
 
 def acyclic_problem() -> PlacementProblem:

@@ -6,7 +6,8 @@ import fransys as fr
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_sets import DrawingScope, _carried, _carriers, drawing_scopes, frame_titles, restriction
+from fransys_el.restrict import _carried, _carriers, restriction
+from fransys_el.scopes import DrawingScope, drawing_scopes, frame_titles
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Facts, PinRef, Unit

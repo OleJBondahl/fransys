@@ -14,7 +14,6 @@ from fransys_author.handles import Cable, Fn, Item, Location, Port, Strip, Termi
 from fransys_model.checks.revisions import REVISION_CURRENT_MISSING, check_revisions
 from fransys_model.kernel import Draft, Record, Severity, freeze, merge
 from fransys_model.layout import (
-    GroupHint,
     OrderHint,
     default_profile,
 )
@@ -125,7 +124,7 @@ def test_part_less_item_has_no_functions(parts):
 
 
 def test_item_at_and_group_write_two_placements(parts):
-    """`at=`/`group=` are both placements: one at `+`, one at `=`, no hints."""
+    """`at=`/`group=` are both placements: one at `+`, one at `=`."""
     d = Design(parts)
     c1 = d.location("C1", "cabinet")
     g1 = d.group("G1", "group")
@@ -133,7 +132,6 @@ def test_item_at_and_group_write_two_placements(parts):
     placements = _only(d.draft(), Placement)
     assert len(placements) == 2
     assert {p.node for p in placements} == {c1.id, g1.id}
-    assert _only(d.draft(), GroupHint) == ()
     assert k1.functions
 
 
@@ -204,7 +202,7 @@ def test_terminal_explicit_index_is_used_and_bumps_the_counter(parts):
     assert t6.key[-1] == "6"
 
 
-def test_terminal_with_group_writes_a_placement_not_a_hint(parts):
+def test_terminal_with_group_writes_a_placement(parts):
     d = Design(parts)
     g1 = d.group("G1", "group")
     x1 = d.strip("X1")
@@ -213,7 +211,6 @@ def test_terminal_with_group_writes_a_placement_not_a_hint(parts):
     assert len(placements) == 1
     assert placements[0].node == g1.id
     assert placements[0].item == t1.id
-    assert _only(d.draft(), GroupHint) == ()
 
 
 def test_cable_core_writes_its_index_and_leaves_the_colour_to_the_part(parts):

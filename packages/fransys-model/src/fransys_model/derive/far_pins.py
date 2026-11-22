@@ -7,12 +7,14 @@ A harness wire's conductor is a pair like any other (R546).
 
 lazy from collections.abc import Iterable
 
+from fransys_model.derive.facts.closure import board_nets
 from fransys_model.derive.facts.conductor_facts import conductor_ends, drawn_conductors
+from fransys_model.derive.facts.drawn_closure import drawn_groups
 from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.order import stub_far_order
 from fransys_model.derive.rows_drawn import ConductorEnd, MateEnd
-lazy from fransys_model.kernel import Id, Model
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 lazy from fransys_model.vocab.core import Port
 
 __all__ = ["far_pins"]
@@ -32,11 +34,21 @@ def reach(model: Model, near: Iterable[Id[Port]]) -> list[ConductorEnd | MateEnd
     return stub_far_order(model, found)
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _trace_far(model: Model) -> frozendict[Id[Port], tuple[Id[Port], ...]]:
+    """Each port of a drawn board trace with the other ports of its net: a trace is copper (R2626, model-0478)."""
+    drawn = {frozenset(group) for group in drawn_groups(model)}
+    return frozendict({p: tuple(q for q in net if q != p) for net in board_nets(model) if frozenset(net) in drawn for p in net})
+
+
 def far_pins(model: Model, near: Iterable[Id[Port]]) -> tuple[tuple[Id[Port], Id[Port]], ...]:
     """`(near, far)` for each conductor or mate pair at a `near` port; the far end is `conductor_ends`'.
 
     Ordered by `order.stub_far_order`: a conductor before a mate, the far port's printed designation, then the near port's, then the key.
     A bridge is no wire and gives no pair; a port no conductor reaches gives no pair; a conductor between two `near` ports gives two.
+    A drawn board trace, which has no conductor, gives a pair to each other port of its net, after the conductors.
     `stub_far` reads `reach`.
     """
-    return tuple((end.port, end.far) for end in reach(model, near))
+    near = tuple(near)
+    traces = _trace_far(model)
+    return (*((end.port, end.far) for end in reach(model, near)), *((p, f) for p in near for f in traces.get(p, ())))

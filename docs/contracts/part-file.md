@@ -329,8 +329,8 @@ files, no Fransys code inside it.
   A library can ship many releases against one `schema`.
 - A breaking change to this contract (a renamed field, a changed meaning, a removed table) bumps
   `schema`. It is never changed in place under the same number.
-- `fransys_parts.SUPPORTED_SCHEMAS: frozenset[int]` names the accepted `schema` values;
-  today `frozenset({2})`; a `schema = 1` file is `PART_SCHEMA_OLD`. `library.toml` and every part file carry `schema`. A value outside
-  `SUPPORTED_SCHEMAS` is the lint finding `SCHEMA_UNSUPPORTED`, naming the file and the value
+- The accepted `schema` values are a private set in `fransys_parts` (not public API); today only 2;
+  a `schema = 1` file is `PART_SCHEMA_OLD`. `library.toml` and every part file carry `schema`. A value outside
+  the accepted set is the lint finding `SCHEMA_UNSUPPORTED`, naming the file and the value
   found. A part file whose `schema` differs from its `library.toml` is `SCHEMA_MIXED`.
 - There is no converter: a schema 1 library is rewritten by hand (parts-0026). A library bumps `schema` for every part file in one commit.

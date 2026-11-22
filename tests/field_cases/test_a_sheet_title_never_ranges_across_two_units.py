@@ -83,3 +83,6 @@ def test_no_form_names_the_board_the_page_does_not_draw(forms: tuple[str, ...]) 
 
 def test_the_forms_are_the_joined_texts_then_the_lead_and_n_more(forms: tuple[str, ...]) -> None:
     assert forms == ("Feed 1, Feed 2", "Feed 1 to 2")
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

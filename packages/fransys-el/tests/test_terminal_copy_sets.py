@@ -9,8 +9,9 @@ from conventions_fixtures import house
 from fransys.colours import BN
 from fransys_el import build, symbol_kit
 from fransys_el.placement_env import make_env
-from fransys_el.placement_sets import drawing_scopes, frame_titles, restriction
 from fransys_el.placement_syms import strip_tags
+from fransys_el.restrict import restriction
+from fransys_el.scopes import drawing_scopes, frame_titles
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import function_replicas, function_scopes, item_functions

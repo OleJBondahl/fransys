@@ -4,12 +4,7 @@ Closed means an edge or a corner is enough (`<=`), open means shared interior (`
 emptiness guard here; a site that needs one (`overlaps`) keeps it.
 """
 
-from typing import TYPE_CHECKING
-
 lazy from .boxes import Box
-
-if TYPE_CHECKING:
-    from .units import Point
 
 type Span = tuple[int, int]
 
@@ -24,19 +19,3 @@ def meets(a: Span, b: Span, *, closed: bool = True, open_a: tuple[bool, bool] = 
 def contains_point(box: Box, x: int, y: int) -> bool:
     """Whether the point `(x, y)` is in `box`, edges included."""
     return box.x <= x <= box.x + box.width and box.y <= y <= box.y + box.height
-
-
-def through(segment: tuple[Point, Point], box: Box) -> bool:
-    """Whether `segment` passes through `box`'s interior; touching an edge does not count."""
-    (a, b), low, high = segment, 0.0, 1.0
-    for start, delta, lo, hi in (
-        (a.x, b.x - a.x, box.x, box.x + box.width),
-        (a.y, b.y - a.y, box.y, box.y + box.height),
-    ):
-        if delta == 0:
-            if not lo < start < hi:
-                return False
-            continue
-        one, two = (lo - start) / delta, (hi - start) / delta
-        low, high = max(low, min(one, two)), min(high, max(one, two))
-    return low < high

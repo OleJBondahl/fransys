@@ -9,7 +9,6 @@ from dataclasses import replace
 from typing import Any, cast
 
 from fransys_kernel import render_id
-from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.units import is_harness, item_root, unit_own_roots
 from fransys_model.kernel import Id, Model, value
@@ -144,9 +143,7 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
     landed = cable_end_owner(model, item)
     connector = _connector_of(model, port)
     anchored = terminal_strip(model, item) is not None or connector is not None
-    parent = parent_item(model, item)
-    line_parent = parent is not None and (is_cable(model, parent) or is_harness(model, parent))
-    plug = plug_of(model, item, connector, {parent} if line_parent else set())
+    plug = plug_of(model, item, connector)
     if plug is not None:
         mate = mate_of(model, plug)
         if mate is None:
@@ -278,7 +275,7 @@ def diagram_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...
     `DIAGRAM_LOOSE_WIRE` in the system reading only: a unit's schematic draws every wire it has.
     """
     found = (*_cable_facts(model, unit), *(_loose_wires(model) if unit is None else ()))
-    return tuple(sorted(found, key=lambda fact: (fact.code, render_id(fact.subject))))
+    return tuple(sorted(found, key=lambda fact: (fact.code, render_id(fact.subject))))  # a DiagramFact, not a Finding: keeps its key (R2711)
 
 
 def diagram_marker_text(model: Model, sheet: DiagramSheet, at_sheet: int, column: int, row: str) -> str:

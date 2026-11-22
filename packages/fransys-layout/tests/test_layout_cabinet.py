@@ -10,7 +10,6 @@ from library_records import freeze
 from fransys_model.derive import function_templates, internal_links, port_templates
 from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import make_id
-from fransys_model.layout import GroupHint, layout_of
 from fransys_model.vocab import Item, aspect_nodes, conductors, items, nets, parts
 
 if TYPE_CHECKING:
@@ -64,15 +63,13 @@ def test_items_are_found_by_key() -> None:
     assert child.parent == board.id
 
 
-def test_one_group_hint_and_no_other_layout_kind_but_symbol_choices() -> None:
+def test_no_layout_kind_but_symbol_choices() -> None:
     model = _model()
-    assert len(layout_of(model, GroupHint)) == 1
     assert {kind for kind in model.tables if kind.startswith("layout.")} == {
         "layout.designation",
         "layout.drawing_library",
         "layout.export",
         "layout.frame_form",
-        "layout.group_hint",
         "layout.harness_text",
         "layout.house_profile",
         "layout.lists",

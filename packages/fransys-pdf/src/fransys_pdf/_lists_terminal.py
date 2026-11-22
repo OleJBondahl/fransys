@@ -3,7 +3,6 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    ends_without_jumpers,
     jumper_lanes,
     list_pdf_columns,
     list_pdf_heading,
@@ -33,10 +32,9 @@ def _bridge_marks(rows: tuple[TerminalRow, ...]) -> tuple[tuple[_BridgeMark | No
     return bridge_geometry(groups, jumper_lanes(groups))
 
 
-def _row_values(model: Model, row: TerminalRow, data: tuple[str, ...]) -> tuple[object, ...]:
-    """The cells of `row` under the printed `data` columns, the ends without their jumpers."""
-    ends = dict(zip(_TERMINAL_SIDES, ends_without_jumpers(model, row), strict=True))
-    return tuple(ends.get(name, getattr(row, name)) for name in data)
+def _row_values(row: TerminalRow, data: tuple[str, ...]) -> tuple[object, ...]:
+    """The cells of `row` under the printed `data` columns, as `terminal_rows` gives them."""
+    return tuple(getattr(row, name) for name in data)
 
 
 def _body(
@@ -68,7 +66,7 @@ def _terminal_table(
     data = list_pdf_columns(model, "terminal")
     geometry = _bridge_marks(rows)
     side_label = {"internal_ends": headings[0], "external_ends": headings[1]}
-    values = [_row_values(model, row, data) for row in rows]
+    values = [_row_values(row, data) for row in rows]
     kept = _kept_columns(values, len(data))  # empty columns are not drawn (pdf-0011)
     bridge = any(geometry)  # a strip with no jumper group has an all-empty Bridge column
     if not kept and not bridge:

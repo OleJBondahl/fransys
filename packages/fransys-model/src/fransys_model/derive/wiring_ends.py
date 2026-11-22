@@ -1,7 +1,6 @@
-"""What a terminal list prints at the ends of a strip: its Side A and Side B headings and ends.
+"""What a terminal list prints at the head of a strip: its Side A and Side B headings.
 
-See design/derive-queries.md. Both functions are one data's views (model-0253): the PDF list
-calls them, and the CSV keeps the jumper ends and the fixed labels.
+See design/derive-queries.md. The PDF list calls it; the ends themselves are `terminal_rows`'s.
 """
 
 from itertools import product
@@ -9,16 +8,13 @@ from itertools import product
 from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.tables import ports
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item
 
 from .columns import list_pdf_heading
 from .facts.children import child_items
-from .facts.conductor_facts import is_bridge
 from .facts.roles import port_boundary
 from .indexes import build_indexes
 from .lookups import terminal_items
-lazy from .rows import TerminalRow
 
 
 def _marking_pairs(model: Model, strip: Id[Item]) -> set[tuple[str | None, str | None]]:
@@ -52,18 +48,4 @@ def strip_side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
     return (
         list_pdf_heading(model, "terminal", "internal_ends"),
         list_pdf_heading(model, "terminal", "external_ends"),
-    )
-
-
-def _kept(model: Model, ids: tuple[Id[Conductor], ...], ends: tuple[str, ...]) -> tuple[str, ...]:
-    """`ends` without the jumper conductors' ends; the open cores come after the conductors'."""
-    wired = tuple(end for conductor, end in zip(ids, ends, strict=False) if not is_bridge(model, conductor))
-    return (*wired, *ends[len(ids) :])
-
-
-def ends_without_jumpers(model: Model, row: TerminalRow) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """`row`'s (internal, external) ends without jumper partners, which the Bridge shows."""
-    return (
-        _kept(model, row.internal, row.internal_ends),
-        _kept(model, row.external, row.external_ends),
     )

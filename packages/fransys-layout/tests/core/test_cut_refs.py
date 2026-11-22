@@ -29,7 +29,7 @@ from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_bundle import leg_stubs
 from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
-from fransys_layout.core.cut_ledger import account
+from fransys_layout.core.cut_ledger import _pole_carried, account
 from fransys_layout.core.cut_refs import _column_pin, across
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
@@ -492,7 +492,7 @@ def _legs_of(far: tuple[tuple[PinRef, PinRef], ...], ink: set[tuple[PinRef, PinR
     problem = PlacementProblem(AREA, (side("x", 40, 40),), (net("m", "x.e", "y.e"),), Facts(far_ends=far))
     made = [Ref("m", RefKind.STUB, (RefEnd(1, None, x),))]
     flow: Any = SimpleNamespace(fans=[fan] if fanned else [])
-    return _legs(problem, flow, {"x": 1, "y": 1, "z": 2, "c:x": 1}, [page], (ink, made))
+    return _legs(problem, flow, {"x": 1, "y": 1, "z": 2, "c:x": 1}, [page], (ink, made, []))
 
 
 def test_a_fan_pin_drawn_to_every_far_end_keeps_no_stub_and_no_leg() -> None:
@@ -547,12 +547,31 @@ def test_legs_that_leave_to_different_far_devices_are_a_stub_each() -> None:
 def test_a_tagged_link_gets_its_tag_unless_every_pin_is_already_a_planned_end() -> None:
     """layout-0508: a lost link with a pin no planned reference ends still needs its tag; one fully referenced does not."""
     a, b = PinRef("a", "p"), PinRef("b", "p")
-    flow: Any = SimpleNamespace(cross_links=[CrossLink("n", tuple(Attach(None, 0, 0, p, net="n") for p in (a, b)), tagged=True)])
+    flow: Any = SimpleNamespace(columns=(), cross_links=[CrossLink("n", tuple(Attach(None, 0, 0, p, net="n") for p in (a, b)), tagged=True)])
     where = {"a": 1, "b": 1}
     whole = [Ref("n", RefKind.TAG, (RefEnd(1, None, a), RefEnd(1, None, b)))]
     part = [Ref("n", RefKind.STUB, (RefEnd(1, None, a),))]
     assert across(flow, where, whole) == []
     assert [(r.net, r.kind, [e.pin for e in r.ends]) for r in across(flow, where, part)] == [("n", RefKind.TAG, [a, b])]
+
+
+def test_an_apart_pair_is_planned_as_a_tag_pair_that_joins_no_link() -> None:
+    """layout-0635: an apart pair gets its own tag pair; the link whose ends hold it stays whole."""
+    a, b, c = (PinRef(s, "p") for s in "abc")
+    link = CrossLink("n", tuple(Attach(None, 0, 0, p, net="n") for p in (a, b, c)))
+    flow: Any = SimpleNamespace(columns=(), cross_links=[link])
+    nets: Any = [SimpleNamespace(id="n", tagged=(), apart=((b, c),))]
+    got = across(flow, dict.fromkeys("abc", 1), [], nets)
+    assert [[e.pin for e in r.ends] for r in got] == [[b, c]]
+
+
+def test_apart_pairs_sharing_a_pin_are_one_tag_pair() -> None:
+    """layout-0635 (R3008): a pin ends one tag of its net, so two apart pairs on one pin plan one tag."""
+    a, b, c = (PinRef(s, "p") for s in "abc")
+    flow: Any = SimpleNamespace(columns=(), cross_links=[])
+    nets: Any = [SimpleNamespace(id="n", tagged=(), apart=((a, b), (b, c)))]
+    got = across(flow, dict.fromkeys("abc", 1), [], nets)
+    assert [[e.pin for e in r.ends] for r in got] == [[a, b, c]]
 
 
 def test_a_boundary_pin_with_a_drawn_and_an_undrawn_conductor_is_stubbed() -> None:
@@ -743,7 +762,7 @@ def test_every_conductor_of_a_cut_fan_is_drawn_whole_or_carried_at_both_ends_by_
 
 
 def _stub_env(lane_ends: tuple[tuple[int, int] | None, ...]) -> tuple[MarkEnv, Ref, list[RefEnd]]:
-    """A page with one trunk of a 2-lane bundle, no leg lines, and a LEG and a TRUNK_END stub end at each pole's pin."""
+    """A page with one trunk of a 2-lane bundle, no leg lines, and a TRUNK_END stub end at each pole's pin (R3472)."""
     pins = [PinRef(f"s{k}", "p") for k in (0, 1)]
     attach = tuple(Attach(None, 0, k, pins[k], k, net=f"n{k}") for k in (0, 1))
     fan = Fan("f", ("n0", "n1"), (), attach, None, 2, "S")
@@ -751,7 +770,7 @@ def _stub_env(lane_ends: tuple[tuple[int, int] | None, ...]) -> tuple[MarkEnv, R
     options = core_options(marker=MARKER, marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}), marker_above="R270", marker_below="R90")
     env = MarkEnv(options, Size(1312, 854), {}, {}, {(1, "f"): (trunk,)}, {"f": fan})
     ref = Ref("n0", RefKind.STUB, ())
-    ends = [RefEnd(1, None, p, row=0, stand=st_) for st_ in (StandClass.LEG, StandClass.TRUNK_END) for p in pins]
+    ends = [RefEnd(1, None, p, row=0, stand=StandClass.TRUNK_END) for p in pins]
     return env, ref, ends
 
 
@@ -766,7 +785,44 @@ def test_a_bundled_stub_with_no_leg_line_stands_on_its_own_poles_lane_end() -> N
         assert marker_box_at(stand.x, stand.y, env.options, stand.orient).x == (498, 530)[pole], end
 
 
+def test_a_trunk_end_stub_stands_at_the_fans_trunk_in_its_own_row_not_the_first_of_the_page() -> None:
+    """R3498: the first trunk of the page lacks pole 1's lane end; the trunk in the end's row (0) has it, so the stub stands at x=530 there."""
+    env, ref, ends = _stub_env(((498, 498), (530, 530)))
+    first = Trunk("f", 1, 100, 498, 498, 2, 1, ((498, 498), None))
+    own = Trunk("f", 1, 256, 498, 530, 2, 0, ((498, 498), (530, 530)))
+    env = replace(env, trunks={(1, "f"): (first, own)})
+    stand = pinned_stand(env, replace(ref, net="n1"), ends[1])
+    assert marker_box_at(stand.x, stand.y, env.options, stand.orient).x == 530
+
+
 def test_a_bundled_stub_whose_pole_has_no_lane_end_raises_naming_the_stub_and_the_pole() -> None:
     env, ref, ends = _stub_env(((498, 498), None))
     with pytest.raises(CoreError, match=r"pole 1 of the bundle has no lane end for the stub at s1.p"):
         pinned_stand(env, replace(ref, net="n1"), ends[1])
+
+
+@pytest.mark.parametrize("pole", [0, 1, 2])
+def test_one_pole_has_one_end_at_a_cut_a_pole_an_arrow_end_stands_for_takes_no_stub(pole: int) -> None:
+    """R3484: of a bundle's poles at a cut end, the lead's own stub stays; each other pole an arrow end stands for is carried, not stubbed."""
+    pins = [PinRef(f"s{k}", "p") for k in range(3)]
+    fan = Fan("f", ("n0", "n1", "n2"), tuple(Attach("c", 0, k, pins[k], k, net=f"n{k}") for k in range(3)), (), None, 3, "S")
+    arrow = Ref("f", RefKind.ARROW, (RefEnd(1, "c", PinRef("a", "x"), 0, StandClass.PIN, also=(pins[1], pins[2])),))
+    plan = PagePlan(1, "u", (RowPlan(("c",), ()),), ())
+    assert _pole_carried(fan, pins[pole], (plan, 0), [arrow]) == (pole != 0)  # the arrow's lead is pole 0: its end is the lane's own
+
+
+def test_a_far_groups_copy_and_stub_end_on_the_same_pin_of_its_page() -> None:
+    """KI-567: cut_ledger.copies and _fan_refs reach a page's pin through the one _page_pin: the first by natural order, not by listing."""
+    from fransys_layout.core.cut_ledger import _fan_refs, copies
+
+    def leg(col: str, pin: str, cell: int) -> Attach:
+        return Attach(col, 0, cell, PinRef(pin, "n"), net="n")
+
+    fan = Fan("f", ("n",), (Attach("c0", 0, 0, PinRef("t0", "e"), net="n"),), (leg("c1", "k10", 0), leg("c1", "k9", 1)), "t0", 1, "s")
+    flow = SimpleNamespace(fans=(fan,))
+    where = {"c0": 1, "c1": 2}
+    (copy,) = copies(flow, where, {"f"})  # ty: ignore[invalid-argument-type]  # a SimpleNamespace stands for FlowGraph
+    problem = SimpleNamespace(nets=[SimpleNamespace(id="n", cut=True, pins=(PinRef("t0", "e"),))])
+    stubs, _ = _fan_refs(problem, flow, where)  # ty: ignore[invalid-argument-type]  # SimpleNamespace stands for PlacementProblem and FlowGraph
+    stub_end = next(e for s in stubs for e in s.ends if e.page == 2)
+    assert copy.ends[0].pin == stub_end.pin == PinRef("k9", "n")

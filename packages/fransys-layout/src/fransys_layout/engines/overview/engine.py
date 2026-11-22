@@ -9,6 +9,7 @@ from fransys_layout.engines.overview.read.result import OverviewLayout, Overview
 from fransys_layout.fix_text import finding
 from fransys_layout.lint import lint_diagram
 from fransys_layout.lint.codes import OVERVIEW_UNPLACED
+from fransys_model.kernel import findings_sorted
 
 if TYPE_CHECKING:
     from fransys_layout.symbols import SymbolLibrary
@@ -40,5 +41,5 @@ def lay_out_overview(model: Model, library: SymbolLibrary) -> tuple[OverviewLayo
         scene = view_scene(facts, sheet)
         found.extend(lint_diagram(scene))
         views.append(placed_view(facts, sheet, scene))
-    ordered = tuple(sorted(found, key=lambda x: (x.code, x.subjects)))
+    ordered = findings_sorted(found, by_message=False)
     return OverviewLayout(views=tuple(views)), ordered

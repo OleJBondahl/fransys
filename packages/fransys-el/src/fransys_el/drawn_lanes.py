@@ -24,6 +24,7 @@ __all__ = ["Lanes", "join_lanes", "lane_chain"]
 XY = tuple[int, int]
 type _Node = tuple[Id[Page], XY]
 _TRUNK = "trunk"  # the layout's only fact for a lane wire (DrawnWire has no role field): a Core candidate
+_STEP = 2  # pitches between two lanes of one bundle: a net with no lane leaves a row empty (R3372)
 _SHORT = ""  # the net of a piece that holds ports of two nets: already a short, so it joins nothing
 
 
@@ -35,31 +36,28 @@ class Lanes:
     bare: set[_Node] = field(default_factory=set)
 
 
-def lane_chain(part: PagePart, y: int, pitch: int) -> set[int]:
-    """The rows of the trunk lanes one pitch apart in a chain from row `y`: the lanes one arrow stands for (R903)."""
-    rows = {w.points[0][1] for w in part.drawing.wires if w.style == _TRUNK}
-    chain, grown = {y}, True
+def lane_chain(part: PagePart, at: XY, pitch: int) -> set[int]:
+    """The rows of the lanes that end at the arrow's x, in a chain of at most two pitches from row `at[1]`: the lanes one arrow stands for (R3372).
+
+    A lane another bundle runs elsewhere on the page, or that stops short of this x, is not in it.
+    """
+    rows = {end[1] for w in part.drawing.wires if w.style == _TRUNK for end in (w.points[0], w.points[-1]) if end[0] == at[0]}
+    chain, grown = {at[1]}, True
     while grown:
-        near = {r for r in rows if any(abs(r - row) <= pitch for row in chain)} - chain
+        near = {r for r in rows if any(abs(r - row) <= _STEP * pitch for row in chain)} - chain
         chain, grown = chain | near, bool(near)
     return chain
 
 
 def _feet(part: PagePart, at: XY, pitch: int) -> list[XY]:
-    """The nearest end of each lane of the arrow's trunk, then each other wire end on its column; each group top to bottom (R903, R1664)."""
-    chain = lane_chain(part, at[1], pitch)
-    lanes: set[XY] = set()
-    for wire in part.drawing.wires:
-        first, last = wire.points[0], wire.points[-1]
-        if wire.style == _TRUNK and first[1] in chain:
-            lanes.add(first if abs(first[0] - at[0]) <= abs(last[0] - at[0]) else last)
-    ends = {
-        end
-        for wire in part.drawing.wires
-        for end in (wire.points[0], wire.points[-1])
-        if end[0] == at[0] and (wire.style != _TRUNK or end[1] in chain)
-    }
-    return sorted(lanes | ends, key=lambda e: (e not in lanes, e[1], e[0]))
+    """The end of each lane in the arrow's chain at its x, then each other wire end on its column; each group top to bottom (R903, R1664, R3372).
+
+    A lane that stops short of its arrow has no foot there: it is not read as passing.
+    """
+    chain = lane_chain(part, at, pitch)
+    ends = [(end, wire.style == _TRUNK) for wire in part.drawing.wires for end in (wire.points[0], wire.points[-1]) if end[0] == at[0]]
+    lanes = {end for end, trunk in ends if trunk and end[1] in chain}
+    return sorted(lanes | {end for end, trunk in ends if not trunk}, key=lambda e: (e not in lanes, e[1], e[0]))
 
 
 def _held(page: Id[Page], part: PagePart, union: Union) -> dict[object, set[str]]:
@@ -104,9 +102,29 @@ def _pairs(
     return pairs
 
 
-def _kth(others: list[list[tuple[XY, set[str]]]], k: int, nets: Mapping[str, str]) -> str | None:
-    """The one net of the k-th lane under every other end of a reference; None when one has no k-th lane, no port there, or they differ."""
-    found = {_net(feet[k][1], nets) if k < len(feet) else None for feet in others}
+type _Kth = tuple[_Node, set[str]] | None
+
+
+def _kth(others: list[tuple[Id[Page], list[tuple[XY, set[str]]]]], k: int) -> list[_Kth]:
+    """The k-th lane under each other end of a reference, with the ports of its piece; None where an end has no k-th lane."""
+    return [((page, feet[k][0]), feet[k][1]) if k < len(feet) else None for page, feet in others]
+
+
+def _chains(links: Mapping[object, set[object]]) -> dict[object, object]:
+    """Each piece with the first piece of its chain: portless lanes linked across arrows, k-th lane to k-th lane, are one chain."""
+    out: dict[object, object] = {}
+    for start in links:
+        todo = [start]
+        while todo:
+            if (piece := todo.pop()) not in out:
+                out[piece] = start
+                todo.extend(links[piece])
+    return out
+
+
+def _one_net(read: list[str | None]) -> str | None:
+    """The one net a chain's drawn lanes read; None for none, a missing lane or two nets."""
+    found = set(read)
     return next(iter(found)) if len(found) == 1 else None
 
 
@@ -123,27 +141,35 @@ class _Reader:
         """The feet of the arrow at `at` with the ports of their pieces."""
         return _read(self.held[page], self.union, page, _feet(self.pages[page], at, self.pitch))
 
-    def targets(self, refs: References, nets: Mapping[str, str]) -> dict[_Node, tuple[_Node, str | None]]:
-        """Each portless foot under an arrow whose reference is read at both ends: the arrow, and the net of the k-th lane at its other ends."""
-        found: dict[_Node, tuple[_Node, str | None]] = {}
+    def targets(self, refs: References) -> dict[_Node, tuple[_Node, list[_Kth]]]:
+        """Each portless foot under an arrow whose reference is read at both ends: the arrow, and the k-th lane at its other ends."""
+        found: dict[_Node, tuple[_Node, list[_Kth]]] = {}
         for arrows in (a for a in refs.groups.values() if len(a) > 1):
             feet = {arrow: self.feet(*arrow) for arrow in arrows}
             for arrow, mine in feet.items():
-                others = [f for other, f in feet.items() if other != arrow]
-                found.update({(arrow[0], end): (arrow, _kth(others, k, nets)) for k, (end, ports) in enumerate(mine) if not ports})
+                others = [(other[0], f) for other, f in feet.items() if other != arrow]
+                found.update({(arrow[0], end): (arrow, _kth(others, k)) for k, (end, ports) in enumerate(mine) if not ports})
         return found
 
     def passing(self, refs: References, nets: Mapping[str, str]) -> dict[_Node, str]:
-        """The feet of a lane between two arrows with no port on the page, each arrow read at both ends and the lane there of one net (R2065)."""
-        by_piece: dict[object, list[tuple[_Node, _Node, str | None]]] = defaultdict(list)
-        for foot, (arrow, net) in self.targets(refs, nets).items():
-            by_piece[self.union.find(foot)].append((foot, arrow, net))
-        return {
-            foot: lane[0][2]
-            for lane in by_piece.values()
-            if len({arrow for _, arrow, _ in lane}) > 1 and len({net for *_, net in lane}) == 1 and lane[0][2] is not None
-            for foot, _, _ in lane
-        }
+        """The feet of a chain of lanes with no port on the page, arrow to arrow, whose drawn lanes at the chain's ends read one net (R2065).
+
+        A chain meets two arrows or more, and each foot has a k-th lane at every other end of its arrow.
+        """
+        found = self.targets(refs)
+        piece = {foot: self.union.find(foot) for foot in found}
+        links: dict[object, set[object]] = {p: set() for p in piece.values()}
+        for foot, (_, lanes) in found.items():
+            for node, _ports in (k for k in lanes if k is not None and k[0] in piece):
+                links[piece[foot]].add(piece[node])
+                links[piece[node]].add(piece[foot])
+        chain = _chains(links)
+        arrows: dict[object, set[_Node]] = defaultdict(set)
+        read: dict[object, list[str | None]] = defaultdict(list)
+        for foot, (arrow, lanes) in found.items():
+            arrows[chain[piece[foot]]].add(arrow)
+            read[chain[piece[foot]]] += [None if k is None else _net(k[1], nets) for k in lanes if k is None or k[0] not in piece]
+        return {foot: net for foot in found if len(arrows[c := chain[piece[foot]]]) > 1 and (net := _one_net(read[c])) is not None}
 
 
 def join_lanes(union: Union, pages: Mapping[Id[Page], PagePart], refs: References, nets: Mapping[str, str], pitch: int) -> Lanes:

@@ -19,12 +19,12 @@ from _rank_rename import (
     unrename,
 )
 from _rank_salt_runner import run
-from _reference_lane_runner import _cases
+from _reference_lane_runner import _cases, observation
 from fransys_el import lay_out_core
 
 from fransys_layout.core.arrow_reserve import leg_depth, leg_fit, leg_rows
 from fransys_layout.core.band import trunk_room
-from fransys_layout.core.cut_end_rooms import arrow_room
+from fransys_layout.core.cut_end_rooms import arrow_room, stub_room
 from fransys_layout.core.topology import build_flow
 
 # Builds here show DANGLING_WIRE_END (KI-414) at the salts (R1219, R1174 anchors); CONNECTION_NOT_DRAWN is 0 (KI-413 closed, R1736).
@@ -41,9 +41,8 @@ _NAMES = (
 )
 
 
-def _builds() -> dict[str, Any]:
-    ring = importlib.import_module("ring_cases")
-    return {**_cases(), "bank40": lambda: ring.bank_model(40)}
+def _builds() -> list[str]:
+    return [*_cases(), "bank40"]
 
 
 @pytest.fixture(scope="module", params=_NAMES)
@@ -54,8 +53,10 @@ def solves(request: pytest.FixtureRequest) -> list[tuple[Any, Any, Any]]:
 
 @cache
 def _solved(name: str) -> list[tuple[Any, Any, Any]]:
-    """A second `fr.build` of the same case is cached and solves nothing, so build once."""
-    return caught_solves(_builds()[name])[1]
+    """A corpus build is stored: its solves are the recorded observation (R3302); the bank builds fresh, as no corpus build."""
+    if name == "bank40":  # fresh: not a corpus build, so no store serves it
+        return caught_solves(lambda: importlib.import_module("ring_cases").bank_model(40))[1]
+    return observation(name).caught("solves")
 
 
 def _small() -> tuple[Any, Any, Any]:
@@ -161,7 +162,7 @@ def test_bank40_overflows_no_page_and_strands_no_leg_at_any_salt(salt: str) -> N
 
 
 def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps() -> None:
-    """R1647, R1719: a trunk's `room` is `trunk_room` of `leg_depth` (its tallest leg marker or arrow room), and the solved row keeps that room."""
+    """R1647, R1719: a trunk's `room` is `trunk_room` of `leg_depth` or its trunk-end stub box (R3472), the deeper; the row keeps that room."""
     problem, options, layout = _solved("bank40")[0]
     fans = {f.id: f for f in build_flow(problem, options).fans}
     plans = {p.page: p for p in layout.pages}
@@ -172,7 +173,7 @@ def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps(
         for t in page.trunks:
             fan = fans[t.fan]
             arrow = arrow_room(layout.references, plans[page.page], [fan], t.row, options)
-            depth = leg_depth(fan, stood, t.row, fit, arrow)
+            depth = max(leg_depth(fan, stood, t.row, fit, arrow), stub_room(layout.references, plans[page.page], [fan], t.row, options))
             assert t.room == trunk_room(t.lanes, options.wiring_grid, depth)
             assert t.room[1] <= page.bands[t.row][1] - t.y  # the solved row keeps what the trunk says it holds
             deep = deep or depth > 0
@@ -180,3 +181,5 @@ def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps(
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

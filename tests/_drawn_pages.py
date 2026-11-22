@@ -5,6 +5,7 @@ A test that needs a drawn fact (symbol, wire, text, outline, marker) calls `draw
 """
 
 import functools
+import importlib.util
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 
@@ -24,19 +25,28 @@ RUN_TAG_REACH = 16  # G: a run's tag may stand this far right of the first point
 _NOTED: dict[str, Mapping[Id[Any], Drawing]] = {}
 
 
-def _noting(build):
+def _noting(build, result_of=lambda got: got):
     @functools.wraps(build)
     def noted(*args, **kwargs):
-        result = build(*args, **kwargs)
+        got = build(*args, **kwargs)
+        result = result_of(got)
         _NOTED.pop(result.model.digest, None)
         _NOTED[result.model.digest] = result.drawings
-        return result
+        return got
 
     return noted
 
 
 if not getattr(pipeline.build, "__wrapped__", None):
     pipeline.build = fransys.build = _noting(pipeline.build)
+
+if importlib.util.find_spec(
+    "placement_corpus"
+):  # every corpus build a test gets, made or stored, passes `_observe`; a stored one ran in no process here
+    from placement_corpus import run as _corpus
+
+    if not getattr(_corpus._observe, "__wrapped__", None):
+        _corpus._observe = _noting(_corpus._observe, lambda observed: observed.result)
 
 
 def drawn_pages(model: Model) -> Mapping[Id[Any], Drawing]:

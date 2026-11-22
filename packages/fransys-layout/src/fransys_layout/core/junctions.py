@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 
 from .outputs import Junction
 from .score_wiring import heading
+from .unionfind import UnionFind
 from .values import PinRef
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-    from collections.abc import Set as AbstractSet
 
     from .outputs import Wire
     from .route_env import RouteEnv
@@ -37,17 +37,29 @@ def _leaves(point: XY, segment: _Segment) -> set[XY]:
     return {d for d in (heading(point, segment[0]), heading(point, segment[1])) if d != (0, 0)}
 
 
-def _found(segments: Mapping[_Key, Sequence[_Segment]], pins: Mapping[tuple[_Key, XY], AbstractSet[PinRef]]) -> tuple[Junction, ...]:
-    """The junction rule over the segments and pins of each (page, net)."""
+def _found(
+    segments: Mapping[_Key, Sequence[_Segment]], pins: Mapping[tuple[_Key, XY], Sequence[PinRef]]
+) -> tuple[tuple[Junction, ...], tuple[tuple[PinRef, ...], ...]]:
+    """The junction rule over the segments and pins of each (page, net), and the pins each connected piece of them reaches.
+
+    What meets at a point is one piece: the segments that pass through it and the pins on it. A piece with one pin is no join.
+    """
     keyed = dict.fromkeys([(key, point) for key, segs in segments.items() for seg in segs for point in seg] + list(pins))
-    found = []
+    found: list[Junction] = []
+    ties = UnionFind()
     for key, point in keyed:
-        directions: set[XY] = set()
-        for seg in segments.get(key, ()):
-            directions |= _leaves(point, seg)
-        if len(directions) + len(pins.get((key, point), ())) >= _MEETING:
+        leaves = [_leaves(point, seg) for seg in segments.get(key, ())]
+        here = pins.get((key, point), ())
+        if len(set().union(*leaves)) + len(here) >= _MEETING:
             found.append(Junction(key[1], key[0], *point))
-    return tuple(found)
+        meeting = [f"{key}#{i}" for i, leave in enumerate(leaves) if leave] + [f"{r.sym}/{r.pin}" for r in here]
+        for other in meeting[1:]:
+            ties.union(meeting[0], other)
+    pieces: dict[str, list[PinRef]] = {}
+    for refs in pins.values():
+        for ref in refs:
+            pieces.setdefault(ties.find(f"{ref.sym}/{ref.pin}")[0], []).append(ref)
+    return tuple(found), tuple(tuple(refs) for refs in pieces.values() if len(refs) > 1)
 
 
 def _anchor_leads(env: RouteEnv) -> dict[_Key, list[_Segment]]:
@@ -63,18 +75,18 @@ def _anchor_leads(env: RouteEnv) -> dict[_Key, list[_Segment]]:
     return found
 
 
-def page_junctions(env: RouteEnv, wires: Sequence[Wire]) -> tuple[Junction, ...]:
-    """The junctions of one page's `wires`: three or more directions and pins of one net (R535 H10).
+def page_junctions(env: RouteEnv, wires: Sequence[Wire]) -> tuple[tuple[Junction, ...], tuple[tuple[PinRef, ...], ...]]:
+    """The junctions of one page's `wires` (three or more directions and pins of one net, R535 H10), and its pieces (CORE-ACCOUNT).
 
     Anchor leads count as wires. Pins are the page's placed pins that `env.net_of` gives a net; order: wires first, then pins.
     """
     segments = _anchor_leads(env)
     for wire in wires:
         segments.setdefault((env.page, wire.net), []).extend(zip(wire.points, wire.points[1:], strict=False))
-    pins: dict[tuple[_Key, XY], set[PinRef]] = {}
+    pins: dict[tuple[_Key, XY], list[PinRef]] = {}
     for placed in env.placed.values():
         for pin in placed.pin_xy:
             ref = PinRef(placed.sym, pin.pin)
             if ref in env.net_of:
-                pins.setdefault(((env.page, env.net_of[ref]), (pin.x, pin.y)), set()).add(ref)
+                pins.setdefault(((env.page, env.net_of[ref]), (pin.x, pin.y)), []).append(ref)
     return _found(segments, pins)

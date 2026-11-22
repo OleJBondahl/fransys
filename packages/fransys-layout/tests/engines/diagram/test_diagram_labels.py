@@ -3,21 +3,28 @@
 from fransys_layout.engines.overview.lanes.labels import label_at, label_box, label_clear
 from fransys_layout.engines.overview.sizes import MARKER_W, TEXT_LEAD, stub_reach
 from fransys_layout.geometry import Box, Point
+from fransys_layout.routing.cell_index import CellIndex
 from fransys_layout.routing.space import run_of
+from fransys_layout.routing.track_index import TrackIndex
 
 _LINE = (Point(x=0, y=40), Point(x=96, y=40))
 _TH = 8
 _W = 16
+_NONE = TrackIndex([])
+
+
+def _taken(*boxes: Box) -> CellIndex[Box]:
+    return CellIndex((b, b) for b in boxes)
 
 
 def test_a_free_label_keeps_the_longest_runs_middle_above() -> None:
-    assert label_clear(_LINE, _TH, _W, [], []) == label_at(_LINE, _TH)
+    assert label_clear(_LINE, _TH, _W, _NONE, _taken()) == label_at(_LINE, _TH)
 
 
 def test_a_label_struck_by_another_line_moves_along_the_run() -> None:
     x, y = label_at(_LINE, _TH)
-    blocked = [run_of(Point(x=x, y=y - 20), Point(x=x, y=y + 20))]
-    nx, ny = label_clear(_LINE, _TH, _W, blocked, [])
+    blocked = TrackIndex([(run_of(Point(x=x, y=y - 20), Point(x=x, y=y + 20)), None)])
+    nx, ny = label_clear(_LINE, _TH, _W, blocked, _taken())
     assert (nx, ny) != (x, y)
     box = label_box(nx, ny, _W, _TH)
     assert not (box.x < x < box.x + box.width)
@@ -26,14 +33,14 @@ def test_a_label_struck_by_another_line_moves_along_the_run() -> None:
 def test_a_label_over_a_taken_box_moves_off_it() -> None:
     x, y = label_at(_LINE, _TH)
     taken = [label_box(x, y, _W, _TH)]
-    nx, ny = label_clear(_LINE, _TH, _W, [], taken)
+    nx, ny = label_clear(_LINE, _TH, _W, _NONE, _taken(*taken))
     box = label_box(nx, ny, _W, _TH)
     assert not (box.x < taken[0].x + taken[0].width and taken[0].x < box.x + box.width and box.y == taken[0].y)
 
 
 def test_a_label_boxed_in_everywhere_keeps_its_default_place() -> None:
     wall = [Box(x=-40, y=0, width=200, height=80)]
-    assert label_clear(_LINE, _TH, _W, [], wall) == label_at(_LINE, _TH)
+    assert label_clear(_LINE, _TH, _W, _NONE, _taken(*wall)) == label_at(_LINE, _TH)
 
 
 def test_a_jump_stub_holds_its_label_with_a_lead_either_side() -> None:

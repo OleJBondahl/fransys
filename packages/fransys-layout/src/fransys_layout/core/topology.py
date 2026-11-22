@@ -118,8 +118,8 @@ def build_flow(problem: PlacementProblem, options: Options) -> FlowGraph:
 def _tagged(cross: tuple[CrossLink, ...], problem: PlacementProblem) -> tuple[CrossLink, ...]:
     """A link the router lost (`Net.tagged`, layout-0508) splits: its lost ends stay one link, the rest another (a lone one keeps a lost end).
 
-    The lost link is not `tagged`: the cut plans its page-crossing pairs from `Net.tagged`, and its ends on one page are routed like a cut
-    net's (R417) and counted joined by the ledger; only an across-body link is a tag pair never routed (layout-0440).
+    The lost link is not `tagged`: the cut plans its pairs from `Net.tagged`, and a link's wire joins only the ends the cut's ink joins
+    (layout-0634); only an across-body link is a tag pair never routed (layout-0440).
     """
     lost = [(n.id, frozenset(t)) for n in problem.nets for t in n.tagged]
     out: list[CrossLink] = []

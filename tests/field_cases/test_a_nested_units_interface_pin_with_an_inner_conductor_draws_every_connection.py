@@ -100,3 +100,6 @@ def test_an_interface_pin_with_an_inner_conductor_leaves_no_connection_undrawn(c
         result = _BUILDS[case]()
     found = Counter(f.code for f in result.findings)
     assert (found["CONNECTION_NOT_DRAWN"], found["DANGLING_WIRE_END"]) == (0, 0)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

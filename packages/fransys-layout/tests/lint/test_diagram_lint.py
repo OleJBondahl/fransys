@@ -84,6 +84,12 @@ def test_two_cables_sharing_a_track_segment_are_found() -> None:
     assert found == ["DIAGRAM_LINES_SHARE_TRACK"]
 
 
+def test_two_cables_sharing_a_horizontal_track_segment_are_found() -> None:
+    one, two = _track([(8, 0), (40, 0)], CABLE), _track([(24, 0), (56, 0)], hid("cable", 8))
+    found = [c for c in _codes(_scene(lines=[one, two])) if c != "DIAGRAM_LINE_OFF_BOX"]
+    assert found == ["DIAGRAM_LINES_SHARE_TRACK"]
+
+
 def test_tracks_that_only_touch_or_cross_are_clean() -> None:
     one = _track([(0, 8), (0, 40)], CABLE)
     touching = _track([(0, 40), (0, 56)], hid("cable", 8))

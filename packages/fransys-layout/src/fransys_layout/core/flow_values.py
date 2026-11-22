@@ -126,6 +126,12 @@ class CrossLink:
     net: str
     ends: tuple[Attach, ...]
     tagged: bool = False  # layout-0440: drawn as a tag pair, never routed
+    part: int = 0  # the ink part of its net on one page: parts of a net are foreign wires to each other (layout-0635)
+
+    @property
+    def key(self) -> str:
+        """The key the page's wire map holds this link under: the net, and a part after the first."""
+        return f"{self.net}\x00{self.part}" if self.part else self.net
 
 
 @dataclass(frozen=True, slots=True)

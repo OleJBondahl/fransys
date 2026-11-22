@@ -7,7 +7,7 @@ from types import UnionType
 
 from fransys_model import layout
 from fransys_model.kernel import Id
-from fransys_model.layout import AUTHORED_KINDS, GroupHint, OrderHint
+from fransys_model.layout import AUTHORED_KINDS, OrderHint
 from fransys_model.vocab import Port
 
 POSITION_FIELDS = frozenset(["x", "y", "page", "at", "position"])
@@ -46,7 +46,7 @@ def _result_records() -> list[type]:
 
 def test_authored_hints_hold_no_position_field():
     # AUTHORED_KINDS is public in fransys_model.layout.__all__; the hint classes are in it.
-    assert {GroupHint, OrderHint} <= set(AUTHORED_KINDS), "walk missed the hints"
+    assert {OrderHint} <= set(AUTHORED_KINDS), "walk missed the hints"
     assert position_fields(AUTHORED_KINDS) == []
 
 

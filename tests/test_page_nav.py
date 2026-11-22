@@ -433,7 +433,9 @@ def test_every_where_line_of_a_terminal_copy_is_a_link_over_its_text_landing_on_
 
 @pytest.mark.private_input
 @pytest.mark.rule("PDF-LINKS")
-def test_a_marker_with_two_targets_has_two_links_each_landing_on_its_own_page(mcc, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_a_marker_with_two_targets_has_two_links_each_landing_on_its_own_page(
+    mcc, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, request: pytest.FixtureRequest
+) -> None:
     """Acceptance 2: a marker box naming two ends is cut in two strips, each landing on its own end's page."""
     result, _ = mcc
     model = result.model
@@ -445,6 +447,8 @@ def test_a_marker_with_two_targets_has_two_links_each_landing_on_its_own_page(mc
     inside = {p.id for p in document_pages(model, document)} - {one.page, far}  # the pages whose labels `_landings` reads
     ends = (markers[one.partner], min((m for m in markers.values() if m.page in inside), key=lambda m: m.id))
     real = page_nav.marker_line_targets
+    page_nav._target_cells_of.cache_clear()  # keyed on the model digest only: the patched targets must not meet a result built with the real ones
+    request.addfinalizer(page_nav._target_cells_of.cache_clear)  # nor leave patched anchors to a later test of the same digest
     monkeypatch.setattr(page_nav, "marker_line_targets", lambda model, m: ends if m.id == one.id else real(model, m))
     boxes = link_boxes(model, result.drawings, library_of(result.settings))
     bx, by, bw, bh = boxes[one.id]
@@ -488,3 +492,6 @@ def test_the_pdf_with_its_links_is_the_same_bytes_on_every_build_and_its_landing
     landings = sorted((index, round(top, 3)) for page in links for _, index, top in page)
     salted = _pdf_links(_flags_pdfs(_sub(tmp_path, "salted"), "d"))
     assert sorted((index, round(top, 3)) for page in salted for _, index, top in page) == landings
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

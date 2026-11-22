@@ -35,6 +35,6 @@ def group_nodes(model: Model) -> list[Id[AspectNode]]:
 
 
 def group_of(model: Model, function: Id[Function]) -> str | None:
-    """The label of the group `function` is drawn in: its `GroupHint`, else its item's placement."""
+    """The label of the group `function` is drawn in: its wired block, else its item's placement."""
     node = function_group(model, function)
     return None if node is None else label_of(model, node)

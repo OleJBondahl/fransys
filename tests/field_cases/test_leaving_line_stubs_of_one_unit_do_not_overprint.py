@@ -12,8 +12,9 @@ from _drawn_pages import drawn_pages, markers_in, ref_texts
 from _model_build_cover import cabinet_document
 
 from electrical_symbols import G_PER_MODULE, LIBRARY, MARKER_TURN_FACING
-from fransys_layout.geometry import Box, overlaps, text_width_g, through
-from fransys_layout.geometry.units import Point
+from fransys_layout.core import Box as CoreBox
+from fransys_layout.core import through
+from fransys_layout.geometry import Box, overlaps, text_width_g
 from fransys_layout.symbols import text_room_on
 from fransys_model.layout import sheet_format_of
 
@@ -70,7 +71,7 @@ def test_no_line_runs_through_a_stub_box(built: fr.BuildResult) -> None:
         for stub_page, box in stubs
         if stub_page == page
         for a, b in pairwise(line.points)
-        if through((Point(x=a[0], y=a[1]), Point(x=b[0], y=b[1])), box)
+        if through(a, b, CoreBox(box.x, box.y, box.width, box.height), (), ())
     ]
     assert hits == []
 

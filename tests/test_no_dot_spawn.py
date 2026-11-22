@@ -5,6 +5,7 @@
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import subprocess
 
 import fransys as fr
@@ -61,3 +62,6 @@ def test_a_reintroduced_dot_call_fails_the_test_above(monkeypatch):
     monkeypatch.setattr(subprocess.Popen, "__init__", _no_spawn_init)
     with pytest.raises(SpawnAttemptedError):
         subprocess.run(["dot", "-V"], capture_output=True, check=False)  # noqa: S607
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

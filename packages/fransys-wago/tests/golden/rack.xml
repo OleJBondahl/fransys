@@ -2,7 +2,7 @@
   <Module Model="WagoIOModules.IOModule" Name="750-1405_3DI_a" Description="16-channel digital input">
     <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Door" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
     <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Gate" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
-    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI2" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI3" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
   </Module>
   <Module Model="WagoIOModules.IOModule" Name="750-1504_2DO_a" Description="4-channel digital output">
     <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="Fan" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital output channel"></Channel>
@@ -23,7 +23,7 @@
     </Channel>
   </Module>
   <Module Model="WagoIOModules.IOModule" Name="750-1405_1DI_b" Description="16-channel digital input">
-    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI0" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI1" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
   </Module>
   <Module Model="WagoIOModules.IOModule" Name="750-1506" Description="8-channel digital">
     <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="Start" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital output channel"></Channel>
@@ -32,7 +32,7 @@
     <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Fault" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
   </Module>
   <Module Model="WagoIOModules.IOModule" Name="750-460_2AI_a" Description="2-channel analog input; For Pt100/RTD resistance sensors">
-    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="AI0" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
     <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="AI1" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="AI2" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
   </Module>
 </Modules>

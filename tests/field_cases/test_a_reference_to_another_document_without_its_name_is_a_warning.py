@@ -61,3 +61,6 @@ def test_the_same_reference_with_no_name_is_counted_and_warned() -> None:
     found = _off(_unnamed(_built()))
     assert found, "the unnamed reference into the field set is warned"
     assert all(f.severity is fr.Severity.WARNING and "page" in f.message for f in found)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

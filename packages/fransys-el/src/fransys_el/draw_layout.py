@@ -12,10 +12,10 @@ plain values this residue goes.
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from electrical_symbols import drawn_symbol, library_version
+from electrical_symbols import library_version
 from fransys_layout.core import Box
 from fransys_layout.drawing import Drawing, DrawnOutline, DrawnRow, DrawnSymbol, DrawnText, DrawnWire
-from fransys_layout.symbols import ink_boxes, library_symbol, text_room_on, text_width_g
+from fransys_layout.symbols import ink_boxes, text_room_on, text_width_g
 from fransys_model.derive import build_indexes, function_item, ordered_pages
 from fransys_model.derive.order import in_place_order
 from fransys_model.kernel import evolve, render_id
@@ -24,7 +24,7 @@ from fransys_model.layout import sheet_format_of
 from .draw_outlines import drawn_outlines
 from .draw_power import power_leads, power_marks
 from .draw_symbols import junction_dots, placed_symbols
-from .drawn_identity import ports_of
+from .drawn_identity import built_symbol, ports_of
 from .drawn_ids import core_symbol_id, wire_id
 from .drawn_texts import box_rows
 from .kit_keys import function_of, strip_tag_of, tag_of
@@ -32,9 +32,9 @@ from .placement_ids import symbol_key
 from .placement_kit import refuse
 from .placement_nets import net_ports
 from .placement_options import sheet_area
-from .placement_sets import frame_titles
 from .placement_tables import is_table_spot
 from .read_markers import drawn_marker
+from .scopes import frame_titles
 from .write_markings import marking_slots
 from .write_power import power_symbols
 from .write_tables import line_box, table_heads, table_texts
@@ -130,12 +130,7 @@ def _inked(w: Written, items: Iterable[tuple[Id[Page], DrawnSymbol]]) -> Iterato
     by_id = {p.id: p for p in w.pages.values()}
     for page, s in items:
         height = text_room_on(w.model, sheet_format_of(w.model, by_id[page].sheet_format), w.library)
-        built = (
-            drawn_symbol(s.key, s.texts, library=w.library, offsets=dict(s.offsets), sides=dict(s.sides), turn=s.turn)
-            if s.texts
-            else library_symbol(w.library, s.key, s.poles)
-        )
-        boxes = ink_boxes(built, s.orient, dict(s.slots), w.library, height)
+        boxes = ink_boxes(built_symbol(s, w.library), s.orient, dict(s.slots), w.library, height)
         ink = tuple((slot, Box(boxes[slot].x + s.x, boxes[slot].y + s.y, boxes[slot].w, boxes[slot].h)) for slot, _ in s.slots if slot in boxes)
         yield page, replace(s, slot_ink=ink)
 

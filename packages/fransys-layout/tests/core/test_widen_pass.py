@@ -16,21 +16,24 @@ from fransys_layout.core.geometry import marker_box
 from fransys_layout.core.hangings import hung_keeps
 from fransys_layout.core.occupancy import cells_between
 from fransys_layout.core.outputs import Demand, Refused, Routes, RowMeasure
-from fransys_layout.core.route_fixed import fixed_wires
+from fransys_layout.core.route_fixed import Laid, fixed_wires
+from fransys_layout.core.route_loop import routed
 from fransys_layout.core.row_measure import row_measures
 from fransys_layout.core.text_markers import placed_marks
-from fransys_layout.core.values import RowTerm
-from fransys_layout.core.widen import Round, Standing, _culprit, measured_of, overflows, routed, widen
+from fransys_layout.core.values import PinRef, RefKind, RowTerm
+from fransys_layout.core.widen import Round, _culprit, measured_of, overflows, widen
 
 from .conftest import MARKER
 from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
 from .route_fixtures import two_links_one_gap
+from .solve_fixtures import ring_beside_a_tall_chain
 from .test_widen import PLAIN, fan_legs, three_columns
 from .text_fixtures import PLANTS
 from .widen_fixtures import overflowing_row
 
 # the name `widen` in core is the function, so the module comes by name
 widen_module = importlib.import_module("fransys_layout.core.widen")
+loop_module = importlib.import_module("fransys_layout.core.route_loop")
 OPTS = replace(PLAIN, marker=MARKER)
 GRID = OPTS.wiring_grid
 
@@ -72,13 +75,13 @@ def test_a_page_too_short_for_the_widened_block_gets_a_second_page() -> None:
 def test_the_re_mark_passes_the_marker_boxes_of_the_re_cut_to_the_router(monkeypatch) -> None:
     prob = replace(fan_legs(), area=Size(184, 120))  # a row end holds a 56 G arrow reserve (R1362): 120 high holds the tag and the copy
     seen: list[tuple[int, tuple[Box, ...]]] = []
-    real = widen_module.route_pages
+    real = loop_module.route_pages
 
     def spy(placement, cut, problem, options, laid):
         seen.append((placement.pages[0].page, tuple(k.box for k in laid.keeps)))
         return real(placement, cut, problem, options, laid)
 
-    monkeypatch.setattr(widen_module, "route_pages", spy)
+    monkeypatch.setattr(loop_module, "route_pages", spy)
     _, (cut2, after, _, found) = run(prob, demand=2, gap=0)
     markers = placed_marks(cut2, after, prob, OPTS, fixed_wires(after, cut2, prob, OPTS))[0]
     want = {p.page: (*(marker_box(m, OPTS) for m in markers if m.page == p.page), *(k.box for k in hung_keeps(p.hangings))) for p in after.pages}
@@ -192,7 +195,7 @@ def test_a_routed_wire_never_runs_through_a_hanging_the_placement_holds() -> Non
     prob = two_links_one_gap()
     cut = cut_of(prob, OPTS)
     placement = placed_from(cut, prob, OPTS)
-    standing = Standing((), fixed_wires(placement, cut, prob, OPTS), frozenset())
+    standing = Laid((), fixed_wires(placement, cut, prob, OPTS))
     free = [w for w in routed(placement, cut, prob, OPTS, standing).pages[0].wires if w.kind == "routed"]
     (x0, y0), (x1, y1) = free[0].points[0], free[0].points[-1]
     left = -(-(min(x0, x1) + GRID) // GRID) * GRID  # the hanging stands on whole cells, as the keeps do (the pins sit off the grid)
@@ -286,6 +289,9 @@ def test_a_lost_link_already_tagged_is_no_new_grant() -> None:
     once = widen_module.tagged_by(prob, [Refused(net.id, ends), Refused(net.id, ends)])
     assert once.nets[0].tagged == (ends,)
     assert widen_module.tagged_by(once, [Refused(net.id, ends)]) is once
+    held = widen_module.tagged_by(prob, [], legless=[net.pins[0], net.pins[0]])  # MARKER-FREE-SIDE (R3472): a pin that stood no leg
+    assert held.nets[0].legless == (net.pins[0],)
+    assert widen_module.tagged_by(held, [], legless=[net.pins[0]]) is held
 
 
 @pytest.mark.timeout(30)
@@ -325,3 +331,15 @@ def test_a_label_blocked_after_every_recut_is_asked_for_exactly_label_recut_limi
     *_, rnd, _, _ = widen(cut, placement, _blocked(routes, 8), prob, replace(OPTS, label_recut_limit=limit))
     assert next(wide) - 9 == limit
     assert rnd.routes.pages[0].needs[0].owner == "c:a0"  # still blocked: the finding of the final round names it
+
+
+def test_an_unjoined_pair_comes_back_as_a_tagged_net_and_the_cut_plans_its_tag() -> None:
+    """layout-0634: a pair the ledger leaves apart is handed to the cut by `tagged_by`; `across` plans it as a tag pair."""
+    prob = ring_beside_a_tall_chain()
+    pair = (PinRef("lamp", "s"), PinRef("a", "n"))
+    cut = cut_of(prob, OPTS)
+    cut = replace(cut, spec=replace(cut.spec, unjoined=(("n1", pair),)))
+    rnd = loop_module.route_round(cut, placed_from(cut, prob, OPTS), prob, OPTS)
+    again = widen_module.tagged_by(prob, rnd.lost, rnd.apart)
+    assert [n.apart for n in again.nets if n.id == "n1"] == [(pair,)]
+    assert any({e.pin for e in r.ends} == set(pair) for r in cut_of(again, OPTS).spec.reference_plan if r.kind is RefKind.TAG)

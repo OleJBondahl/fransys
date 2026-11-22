@@ -14,14 +14,20 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 # the ratchets run in the cheap phase, apart from `just cov` (R2270): a red stock stops the run in seconds
-_RATCHETS = ("uv", "run", "pytest", "-q", "--override-ini=python_files=test_ratchet_*.py", "tests")
+RATCHETS = ("uv", "run", "pytest", "-q", "--override-ini=python_files=test_ratchet_*.py", "tests")
+
+# the gate stops at its first failed test (FAIL-FAST, R3100.2); the daily sweep never runs through here and keeps every failure
+COV = ("just", "cov")
+# TIER-ORDER (R3102.1): session A runs T0-T2, session B T3 then T4 with coverage appended (one total); each stops at its first failure
+SESSIONS = (("T0,T1,T2", "-x -rX"), ("T3,T4", "-x -rX --cov-append"))  # -rX: every log names its XPASS ids (R3469)
+TIERS = "FRANSYS_TIERS"  # internal/scripts/tier_plan.py reads it, as a pytest plugin the root conftest loads
 
 _GROUPS: tuple[tuple[tuple[str, ...], ...], ...] = (
     (("just", "check"),),
     (("just", "dead-code"),),
-    (_RATCHETS,),
+    (RATCHETS,),
     (
-        ("just", "cov"),
+        COV,
         (
             "uv",
             "run",
@@ -72,10 +78,16 @@ def run_group(group: tuple[tuple[str, ...], ...]) -> list[Block]:
     return blocks
 
 
+def tiered(groups: Groups) -> Groups:
+    """`groups` with `just cov` run as the two tier sessions."""
+    both = tuple(("env", f"PYTEST_ADDOPTS={opts}", f"{TIERS}={tiers}", *COV) for tiers, opts in SESSIONS)
+    return tuple(tuple(c for argv in group for c in (both if argv == COV else (argv,))) for group in groups)
+
+
 def all_groups(root: Path = ROOT) -> Groups:
-    """`_GROUPS`, plus the maintainers' own gate (`internal-gate`, internal/internal.just) where the full repo has its recipes (R1348)."""
+    """`_GROUPS`, plus the maintainers' gate (`internal-gate`) where the repo has internal/internal.just (R1348); `cov` runs as two tier sessions."""
     internal = (("just", "internal-gate"),)
-    return (*_GROUPS, internal) if (root / "internal" / "internal.just").is_file() else _GROUPS
+    return tiered((*_GROUPS, internal) if (root / "internal" / "internal.just").is_file() else _GROUPS)
 
 
 def runs_pytest(group: tuple[tuple[str, ...], ...]) -> bool:

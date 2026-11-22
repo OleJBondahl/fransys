@@ -50,6 +50,10 @@ def test_history_parts_links_that_the_price_alone_leaves_meeting() -> None:
     assert sum(grid.history.values()) > 0
 
 
+def _nets(result) -> dict[str, tuple[Wire, ...]]:
+    return {ws[0].net: ws for ws in result.routed}
+
+
 def _one_gap() -> Scene:
     pins = {"a1": (24, 40, "E"), "a2": (200, 40, "W"), "b1": (24, 64, "E"), "b2": (200, 64, "W")}
     return wall_scene(pins, {"A": ("a1", "a2"), "B": ("b1", "b2")}, (5,))
@@ -57,19 +61,19 @@ def _one_gap() -> Scene:
 
 def test_a_pair_with_no_legal_state_fails_the_last_and_keeps_the_other() -> None:
     grid, result = _run(_one_gap())
-    assert result.failed == ("B",)
-    assert list(result.routed) == ["A"]
+    assert [ln.net for ln in result.failed] == ["B"]
+    assert list(_nets(result)) == ["A"]
     assert sum(grid.history.values()) > 0
 
 
 def test_the_costliest_link_is_the_one_with_the_most_history() -> None:
     env, fresh = _one_gap()
     grid, result = _run((env, fresh))
-    routed = [result.routed["A"], result.routed["A"]]
+    routed: list[tuple[Wire, ...] | None] = [_nets(result)["A"], _nets(result)["A"]]
     assert _costliest(grid, [0, 1], routed) == 1
     cell = (WALL, 5)
     grid.add_history(cell, "h", 1_000)
-    routed = [result.routed["A"], ()]
+    routed = [_nets(result)["A"], ()]
     assert _costliest(grid, [0, 1], routed) == 0
 
 
@@ -78,9 +82,9 @@ def test_every_route_negotiate_returns_meets_no_net_against_r391(seed: int) -> N
     env, fresh = seeded_scene(seed)
     grid, result = _run((env, fresh))
     assert grid.share_cost == 0
-    for net, wires in result.routed.items():
+    for net, wires in _nets(result).items():
         assert not [c for w in wires for c in grid.conflicts(net, w.points)]
-    assert set(result.routed) | set(result.failed) == {ln.net for ln in env.cross_links}
+    assert set(_nets(result)) | {ln.net for ln in result.failed} == {ln.net for ln in env.cross_links}
 
 
 def test_the_same_page_twice_gives_the_same_wires() -> None:
@@ -91,8 +95,8 @@ def test_net_names_in_another_order_give_the_same_wires_up_to_the_rename() -> No
     plain = _run(seeded_scene(BLOCK))[1]
     names = {"n0": "z9", "n1": "a1", "n2": "m5"}
     again = _run(seeded_scene(BLOCK, names))[1]
-    assert list(again.routed) == [names[n] for n in plain.routed]
-    assert [[w.points for w in ws] for ws in plain.routed.values()] == [[w.points for w in ws] for ws in again.routed.values()]
+    assert [ws[0].net for ws in again.routed] == [names[ws[0].net] for ws in plain.routed]
+    assert [[w.points for w in ws] for ws in plain.routed] == [[w.points for w in ws] for ws in again.routed]
 
 
 REPAIR = 664  # the check fails two links on the settled map; one alone and hard finds a route there, one has none
@@ -102,8 +106,8 @@ def test_a_link_the_check_failed_is_routed_alone_on_the_settled_map() -> None:
     env, fresh = seeded_scene(REPAIR)
     grid, result = _run((env, fresh))
     assert len(result.failed) == 1
-    assert set(result.routed) | set(result.failed) == {ln.net for ln in env.cross_links}
-    for net, wires in result.routed.items():
+    assert set(_nets(result)) | {ln.net for ln in result.failed} == {ln.net for ln in env.cross_links}
+    for net, wires in _nets(result).items():
         assert not [c for w in wires for c in grid.conflicts(net, w.points)]
 
 
@@ -131,7 +135,7 @@ def test_lifting_a_rise_takes_its_own_wire_off_and_leaves_the_trunk_of_its_net()
 def _crossings(seed: int, ripup_worst: int) -> int:
     env, fresh = seeded_scene(seed)
     grid, result = _run((env, fresh), ripup_worst=ripup_worst)
-    return sum(len(_crossed(grid, net, wires)) for net, wires in result.routed.items())
+    return sum(len(_crossed(grid, net, wires)) for net, wires in _nets(result).items())
 
 
 @pytest.mark.parametrize("seed", [10, 88])

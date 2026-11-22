@@ -15,8 +15,20 @@ from turn_fixtures import marker_views
 
 from fransys_layout.core import Box, Facts, PinRef, PlacementProblem, Size
 from fransys_layout.core import arrow_reserve as ar
-from fransys_layout.core.arrow_reserve import lead_reserve, leg_depth, leg_feet, leg_line, leg_lines, leg_pins, leg_rows, leg_unit, reserve
+from fransys_layout.core.arrow_reserve import (
+    end_widths,
+    lead_reserve,
+    leg_depth,
+    leg_feet,
+    leg_line,
+    leg_lines,
+    leg_pins,
+    leg_rows,
+    leg_unit,
+    reserve,
+)
 from fransys_layout.core.band import arrow_box, arrow_hang, trunk_room
+from fransys_layout.core.clearance import Keep
 from fransys_layout.core.cut_end_rooms import arrow_ends, arrow_poles, arrow_room, cut_ends
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
@@ -77,10 +89,12 @@ def test_a_bundles_cross_document_stub_is_a_cut_end_at_the_right_of_the_first_ro
     assert cut_ends((stub,), _plan(2, ("c1",)), (fan,), 1) == ()
 
 
-def test_a_stub_that_is_no_laned_bundles_is_no_cut_end() -> None:
-    """A plain fan's stub and a bundle of box pins keep their own stand (R1338: plain fans unchanged)."""
+def test_a_stub_that_is_no_laned_bundles_is_a_cut_end_only_at_its_trunk_end() -> None:
+    """A plain fan's stub at its trunk end (a legless pin, R3472) is one; a leg stub and a bundle of box pins keep their own stand (R1338)."""
     fan, stub = _bundle("c1")
-    assert cut_ends((stub,), _plan(2, ("c1",)), (replace(fan, lanes=1),), 0) == ()
+    assert len(cut_ends((stub,), _plan(2, ("c1",)), (replace(fan, lanes=1),), 0)) == 1
+    leg = replace(stub, ends=(replace(stub.ends[0], stand=StandClass.LEG),))
+    assert cut_ends((leg,), _plan(2, ("c1",)), (replace(fan, lanes=1),), 0) == ()
     boxed, box_stub = _bundle(None)
     assert cut_ends((box_stub,), _plan(2, ("c1",)), (boxed,), 0) == ()
     assert cut_ends((replace(stub, kind=RefKind.COPY),), _plan(2, ("c1",)), (fan,), 0) == ()
@@ -137,7 +151,7 @@ def test_a_left_arrow_row_keeps_the_marker_box_and_one_grid_step_before_its_firs
 
 def test_the_lead_reserve_is_the_reserve_and_a_grid_step_only_when_an_arrow_leads() -> None:
     options = OPTIONS
-    assert (lead_reserve(0, options), lead_reserve(1, options)) == (0, reserve(1, options) + options.wiring_grid)
+    assert (lead_reserve(0, options), lead_reserve(W, options)) == (0, W + options.wiring_grid)
 
 
 def test_a_row_without_an_arrow_is_unchanged() -> None:
@@ -492,16 +506,28 @@ def test_the_row_estimate_and_the_placed_sum_read_the_one_leg_unit(monkeypatch: 
 def test_a_row_reserves_the_y_of_its_tallest_stub_box_at_the_trunk_end() -> None:
     """R1634: `stub_room` is the box height `stub_views` gives the stub that stands at the row's trunk end, 0 for a row with none."""
 
-    _, _, pins, refs = _leg_plant()
+    fan, _, pins, refs = _leg_plant()
     fars = [PinRef("x", "1"), PinRef("y", "1")]
-    ends = [RefEnd(1, "c", p, 0, StandClass.LEG, far=(f,)) for p, f in zip(pins, fars, strict=False)]
+    ends = [RefEnd(1, "c", p, 0, StandClass.TRUNK_END, far=(f,)) for p, f in zip(pins, fars, strict=False)]
     refs = [Ref(f"n{i}", RefKind.STUB, (e,)) for i, e in enumerate(ends)]
     table = {(2, 1): {"R0": Box(0, -8, 71, 111)}, (2, 2): {"R0": Box(0, -8, 71, 222)}}
     lines = {(pins[0], fars[0]): (2,), (pins[1], fars[1]): (2, 2)}
     options = replace(OPTIONS, stub_lines=lines, stub_table=table)
-    plan = _plan(2)
-    assert ar.stub_room(refs, plan, [], 0, options) == 222
-    assert ar.stub_room(refs, plan, [], 1, options) == 0
+    plan = _plan(2, ("c",))
+    assert ar.stub_room(refs, plan, [fan], 0, options) == 222
+    assert ar.stub_room(refs, plan, [fan], 1, options) == 0
+
+
+def test_a_trunk_end_stub_keeps_its_measured_box_free_at_the_right_of_its_row_not_the_arrow_width() -> None:
+    """R3499: `end_widths` is the keepout box the marker standing at the end measures (the stub's ledger box, an arrow's link box), 0 with none."""
+
+    fan, _, pins, _ = _leg_plant()
+    far = PinRef("x", "1")
+    stub = Ref("n0", RefKind.STUB, (RefEnd(1, "c", pins[0], 0, StandClass.TRUNK_END, far=(far,)),))
+    options = replace(OPTIONS, stub_lines={(pins[0], far): (2,)}, stub_table={(2, 1): {"R0": Box(0, -8, W + 70, 16), "R180": Box(0, -8, W + 70, 16)}})
+    plan = _plan(2, ("c",))
+    assert end_widths([stub], plan, [fan], 0, options) == (0, W + 70)
+    assert end_widths([stub], plan, [fan], 1, options) == (0, 0)
 
 
 def test_two_plans_that_alternate_a_leg_reach_the_union_after_a_round_each_and_stay() -> None:
@@ -592,3 +618,13 @@ def test_a_tag_stood_at_a_pin_of_the_row_is_held_clear_under_its_trunk_and_other
     assert arrow_room(env.refs, env.plan, [fan], 0, env.options) == want
     assert arrow_room(env.refs, env.plan, [fan], 1, env.options) == 0
     assert held_room(fan, env, 0)[1] == fan.lanes * grid + arrow_hang(fan.lanes, grid, want)
+
+
+def test_a_legs_run_along_a_body_outline_is_refused_and_a_corner_touch_is_free() -> None:
+    """KI-1282 (R3120): the run and the drop judge a body as `through_keeps` does: an outline run hits, a point touch does not."""
+
+    room = ([Keep("", Box(100, 0, 40, 40), "body", "s")], frozenset(), None)
+    start = (0, 40)  # the run lies on the body's bottom edge line y 40
+    assert ar._clear(60, Box(60, 60, 10, 10), start, room)  # stops short of the body
+    assert ar._clear(100, Box(100, 60, 10, 10), start, room)  # run and drop touch the body's corner (100, 40) only
+    assert not ar._clear(120, Box(120, 60, 10, 10), start, room)  # the run lies along the outline from x 100 to 120

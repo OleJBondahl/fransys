@@ -23,7 +23,6 @@ w_row = 0.05
 w_violation = 1000000.0
 bend_penalty = 19
 crossing_penalty = 64
-box_margin = 16
 column_wire_lanes = 3
 jog_lanes = 2
 spare_cells = 3
@@ -31,7 +30,7 @@ reroute_rounds = 3
 share_penalty = 64
 history_step = 16
 ripup_worst = 3
-recut_rounds = 3
+recut_rounds = 4
 # digit rises of a where-text page number the recut follows (R1883)
 where_digit_rounds = 2
 # standing labels a blocked label may move to their next free candidates before the recut (R1479)

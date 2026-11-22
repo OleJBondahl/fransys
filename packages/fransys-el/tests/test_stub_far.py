@@ -10,7 +10,7 @@ from dataclasses import replace
 import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
-from fransys_el.placement_sets import drawing_scopes
+from fransys_el.scopes import drawing_scopes
 from kit_instances import INSTANCES
 
 from electrical_symbols import LIBRARY

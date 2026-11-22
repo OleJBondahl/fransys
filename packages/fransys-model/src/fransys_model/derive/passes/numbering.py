@@ -15,6 +15,7 @@ from fransys_model.derive.designation import (
     product_designation,
     reference_designation,
 )
+from fransys_model.derive.designation_connector import pin_port, port_connector
 from fransys_model.derive.designation_label import (
     own_designation_or_none,
     reference_leaves,
@@ -29,7 +30,7 @@ from fransys_model.derive.passes.numbering_assigned import assigned_facets
 from fransys_model.derive.passes.numbering_units import unit_tag_duplicates
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Model, evolve
+from fransys_model.kernel import Finding, Model, evolve, findings_sorted
 from fransys_model.refdef import Aspect
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
@@ -202,10 +203,17 @@ def _harness_end_ambiguities(model: Model) -> list[Finding]:
     return findings
 
 
+def _counted_under_header(model: Model, port: Id[Port]) -> bool:
+    """Whether `port` names a connector pin that has a header port: it is that pin, counted under the header once (model-0448)."""
+    function, pin = port_connector(model, port)
+    return pin is not None and pin_port(model, function, pin) is not None
+
+
 def _port_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Finding]:
     """One finding per (item, printed port text) shared by more than one port of that item.
 
-    The text is `port_designation`. A terminal (two ports, one point) and an item that cannot print one are left out.
+    The text is `port_designation`. A terminal (two ports, one point), an item that cannot print one and a port
+    that names a pin the connector has a port for (the same pin, one text on purpose) are left out.
     """
     idx = build_indexes(model)
     all_functions = functions(model)
@@ -216,6 +224,8 @@ def _port_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Findi
         by_text: dict[str, list[tuple[Id[Port], str]]] = {}
         for function in idx.functions_by_item.get(item.id, ()):
             for port in idx.ports_by_function.get(function, ()):
+                if _counted_under_header(model, port):
+                    continue
                 by_text.setdefault(port_designation(model, port), []).append((port, all_functions[function].name))
         findings.extend(
             finding(
@@ -340,5 +350,5 @@ def number(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     result = _with_facets(model, numbered)
     findings.extend(unit_tag_duplicates(result, DESIGNATION_DUPLICATE))
     findings.extend(_item_findings(result, terminals))
-    ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
+    ordered = findings_sorted(findings)
     return result, ordered

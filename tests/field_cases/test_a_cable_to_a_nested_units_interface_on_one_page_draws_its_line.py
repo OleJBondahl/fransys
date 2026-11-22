@@ -94,3 +94,6 @@ def test_the_line_ends_on_the_box_edge_facing_its_route_and_never_wraps_round_th
     on_edge = [p for p in ends if p[1] == box[3] and box[0] <= p[0] <= box[2]]
     assert len(on_edge) == 1
     assert all(p[1] >= box[3] for p in line.points)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

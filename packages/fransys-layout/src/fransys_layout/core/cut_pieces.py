@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .flow_values import Attach, Cell, Fan, FlowGraph
     from .values import Ref
 
-__all__ = ("components", "hole_pin", "join", "joined", "key", "pairs", "split", "trunked")
+__all__ = ("components", "hole_pin", "join", "joined", "key", "pairs", "split", "through", "trunked")
 
 type Pair = tuple[PinRef, PinRef]
 _PAIR = 2
@@ -39,7 +39,7 @@ def joined(pairs_: Iterable[Pair]) -> UnionFind:
 
 
 def components(group: Sequence[PinRef], where: Mapping[str, Hashable], piece: UnionFind, *, linked: bool) -> list[list[PinRef]]:
-    """The placed pins of `group` in one drawn piece; a link or mate group also joins its pins by a row of a page (CL1, R676).
+    """The placed pins of `group` in one drawn piece; a model link or mate group also joins its pins by a row of a page (CL1, R676).
 
     A symbol's body joins nothing: each side of a terminal is its own conductor.
     """
@@ -87,16 +87,21 @@ def trunked(flow: FlowGraph, where: Mapping[str, int], net_of: Mapping[PinRef, s
     consecutive cells (route_wires `_lane`).
     """
     sides = [s for fan in flow.fans for net in _ties(fan) for s in _sides([a for a in (*fan.drivers, *fan.legs) if net in (None, a.net)], where)]
-    sides += [s for link in flow.cross_links if not link.tagged for s in _sides(link.ends, where)]
     sides += [s for col in flow.columns if col.id in where for lane in col.lanes for s in _laned(lane.cells, net_of)]
     return {pair for side in sides for pair in permutations(side, 2)}
 
 
+def through(cells: Sequence[Cell], net_of: Mapping[PinRef, str]) -> list[Pair]:
+    """The pin pairs a cell's top and bottom pins make on one net: the page's wire passes through the cell."""
+    pins = [(PinRef(c.sym, c.top_pin), PinRef(c.sym, c.bottom_pin)) for c in cells if c.top_pin and c.bottom_pin]
+    return [(a, b) for a, b in pins if a in net_of and net_of[a] == net_of.get(b)]
+
+
 def _laned(cells: Sequence[Cell], net_of: Mapping[PinRef, str]) -> list[list[PinRef]]:
-    """The pin pairs a lane joins on its page: a cell's top and bottom pins on one net, and the lane wire between two consecutive cells."""
-    pins = [(PinRef(c.sym, c.top_pin) if c.top_pin else None, PinRef(c.sym, c.bottom_pin) if c.bottom_pin else None) for c in cells]
-    pairs_ = [(t, b) for t, b in pins] + [(a[1], b[0]) for a, b in pairwise(pins)]
-    return [[a, b] for a, b in pairs_ if a and b and a in net_of and net_of[a] == net_of.get(b)]
+    """The pin pairs a lane joins on its page: through a cell, and the lane wire between two consecutive cells."""
+    ends = [(PinRef(c.sym, c.top_pin) if c.top_pin else None, PinRef(c.sym, c.bottom_pin) if c.bottom_pin else None) for c in cells]
+    between = [(a[1], b[0]) for a, b in pairwise(ends)]
+    return [[a, b] for a, b in [*through(cells, net_of), *between] if a and b and a in net_of and net_of[a] == net_of.get(b)]
 
 
 def split(group: Sequence[PinRef], where: Mapping[str, Hashable], piece: UnionFind, conductors: Collection[Pair]) -> list[list[PinRef]]:

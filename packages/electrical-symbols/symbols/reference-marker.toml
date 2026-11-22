@@ -6,7 +6,7 @@ status = "unverified"
 reference = { standard = "IEC 60617", number = "reference-marker" }
 
 elements = [
-  { polyline = [[0, 0], [1, -1], [6, -1], [6, 1], [1, 1]], closed = true },
+  { polyline = [[0, -0.125], [1, -1], [6, -1], [6, 1], [1, 1], [0, 0.125]], closed = true },
 ]
 
 stretch = [{ axis = "x", at = 3.5 }, { axis = "y", at = 0 }]

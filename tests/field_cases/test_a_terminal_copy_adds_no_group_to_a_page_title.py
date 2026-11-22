@@ -57,3 +57,6 @@ def test_the_page_that_draws_only_a_strip_copy_of_a_group_is_not_titled_by_it() 
     titles = _titles()
     assert "Bulkhead, Load" not in titles
     assert "Load" in titles
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

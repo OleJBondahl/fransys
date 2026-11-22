@@ -96,7 +96,6 @@ def _with_document(model, unit_id):
         key=("probe-doc", str(unit_id)),
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
-        item=None,
         unit=unit_id,
         cover="# Cover",
         notes=None,

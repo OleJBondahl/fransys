@@ -200,7 +200,8 @@ def respell_cut(cut: CutResult, m: Maps) -> CutResult:
     )
     finds = tuple(replace(f, subject=_any(f.subject, m)) for f in cut.spec.findings)
     leads = frozenset(_pin(p, m) for p in cut.spec.leads)
-    spec = replace(cut.spec, pages=pages, reference_plan=refs, findings=finds, leads=leads)
+    drawn = frozenset((_pin(a, m), _pin(b, m)) for a, b in cut.spec.drawn)
+    spec = replace(cut.spec, pages=pages, reference_plan=refs, findings=finds, leads=leads, drawn=drawn)
     flow, blocks = respell_flow(cut.flow, m), respell_blocks(cut.blocks, m)
     return replace(cut, spec=spec, flow=flow, blocks=blocks)
 

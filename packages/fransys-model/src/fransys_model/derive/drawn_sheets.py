@@ -17,7 +17,6 @@ from .document_sheets import document_sheet_format
 from .library_grid import mm_per_division
 from .printed_sets import document_drawing_sets
 from .rows_drawn_sheets import CableBlockSize, ReplicaOnlySet, SheetGroup, SheetRow
-from .schematic_subject import has_schematic_subject
 
 __all__ = [
     "cable_block_sizes",
@@ -54,9 +53,9 @@ def kind_sheet(model: Model, kind: PageKind) -> SheetRow:
 def schematic_page_ids(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[Id[Page], ...]:
     """The ids of the SCHEMATIC pages of `document` in set then page order.
 
-    Empty when `pages` has no SCHEMATIC or `document` is an item document.
+    Empty when `pages` has no SCHEMATIC.
     """
-    if PageKind.SCHEMATIC not in pages or not has_schematic_subject(model, document):
+    if PageKind.SCHEMATIC not in pages:
         return ()
     return tuple(page.id for page in drawn_pages(model, document))
 
@@ -66,7 +65,7 @@ def replica_only_sets(model: Model, document: Id[Document], pages: tuple[PageKin
 
     Empty on the same terms as `schematic_page_ids`.
     """
-    if PageKind.SCHEMATIC not in pages or not has_schematic_subject(model, document):
+    if PageKind.SCHEMATIC not in pages:
         return ()
     return tuple(
         ReplicaOnlySet(id=found.id, location=found.location)

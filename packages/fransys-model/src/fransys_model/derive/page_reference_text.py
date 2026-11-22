@@ -105,7 +105,7 @@ def document_prefix(model: Model, document: Id[Document]) -> str:
     unit = document_unit(model, document)
     if unit is not None:
         return unit_system_designation(model, unit) or unit_label(model, unit)
-    if record.location is None and record.item is None:
+    if record.location is None:
         return word(model, "system_document_code")
     return scope_path(model, document)
 

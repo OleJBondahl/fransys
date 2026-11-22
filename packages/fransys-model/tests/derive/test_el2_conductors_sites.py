@@ -26,7 +26,7 @@ from fransys_model.derive.wiring import (
     unconnected_ports,
     unused_terminals,
 )
-from fransys_model.derive.wiring_ends import ends_without_jumpers, strip_side_headings
+from fransys_model.derive.wiring_ends import strip_side_headings
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab.core import Port
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, PortBoundary
@@ -34,11 +34,10 @@ from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.tables import functions, items, ports
 
 EXPECTED_ROWS = [
-    ("X", 1, 1, ["jumper"], ["w1"], ("-X1:X:2",), ("-K1:a",)),
-    ("X", 2, 1, ["jumper"], ["j2"], ("-X1:X:1",), ("-K1:c",)),
+    ("X", 1, 1, [], ["w1"], (), ("-K1:a",)),
+    ("X", 2, 1, [], [], (), ()),
     ("X", 3, None, ["w2"], [], ("-K1:b",), ()),
 ]
-EXPECTED_KEPT = [((), ("-K1:a",)), ((), ()), (("-K1:b",), ())]
 EXPECTED_HEADINGS = ("Side A", "Side B")
 EXPECTED_UNCONNECTED = ["t3.t3.ext"]
 EXPECTED_UNUSED_TERMINALS: list[str] = []
@@ -120,8 +119,6 @@ def test_terminal_rows_bridge_the_jumper_and_keep_the_wires() -> None:
         for r in rows
     ]
     assert got == EXPECTED_ROWS
-    kept = [ends_without_jumpers(model, r) for r in rows]
-    assert kept == EXPECTED_KEPT
     assert strip_side_headings(model, ids["strip"]) == EXPECTED_HEADINGS
 
 

@@ -11,9 +11,10 @@ from typing import TYPE_CHECKING
 import pytest
 from library_records import shuffled_draft
 
+from fransys_model.derive import cdp_kind
 from fransys_model.kernel import Draft, Origin, freeze, make_id
-from fransys_model.vocab.core import Function, Item
-from fransys_model.vocab.enums import FunctionKind, PartCategory, SignalType
+from fransys_model.vocab.core import Function, Item, Port
+from fransys_model.vocab.enums import FunctionKind, PartCategory, PortBoundary, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
@@ -38,6 +39,7 @@ class Rack:
     def __init__(self, designation: str = "R1") -> None:
         self.records: list[Record] = []
         self._templates: dict[Id[Part], list[Id[FunctionTemplate]]] = {}
+        self._signals: dict[Id[Part], tuple[SignalType, ...]] = {}
         self.rack: Id[Item] = make_id(Item, ("rack",))
         self.records.append(
             Item(
@@ -74,6 +76,7 @@ class Rack:
         )
         self.records.append(part)
         self._templates[part.id] = []
+        self._signals[part.id] = signals
         for number, signal in enumerate(signals, start=1):
             template = FunctionTemplate(
                 id=make_id(FunctionTemplate, (key, f"ch{number}")),
@@ -116,6 +119,12 @@ class Rack:
                 kind=FunctionKind.PLC_CHANNEL,
             )
             self.records.append(function)
+            kind = cdp_kind(self._signals[part][number - 1])
+            for pin in (number + 10, number):  # a later pin in natural order, declared first
+                key_ = (key, f"ch{number}", f"pin{pin}")
+                self.records.append(
+                    Port(id=make_id(Port, key_), key=key_, function=function.id, template=None, name=f"{kind}{pin}", boundary=PortBoundary.GENERIC)
+                )
             channels.append(function.id)
         return Module(item=item.id, channels=tuple(channels))
 

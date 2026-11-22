@@ -6,9 +6,10 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import widen
+from fransys_layout.core import route_loop
 from fransys_layout.core.anchors import _fit, _marker_keeps, anchor_misses, anchor_pages
 from fransys_layout.core.outputs import Anchored, Marker, PagePlacement, PinXY, Placed, Placement, Routes
+from fransys_layout.core.route_fixed import Laid
 from fransys_layout.core.values import Anchor, Box, PinRef, PlacementProblem, Pose, RefKind
 
 from .test_solve_anchor_rounds import _options, _problem
@@ -78,5 +79,5 @@ def test_an_anchor_that_fits_nowhere_is_a_finding_that_names_it(monkeypatch: pyt
     assert "K1/1" in found[0].text
     assert "enlarge the page or split the unit" in found[0].text
     assert len(posed) == 1
-    monkeypatch.setattr(widen, "route_pages", lambda *_: Routes((), (), ()))
-    assert [f.code for f in widen.routed(placement, None, problem, OPTIONS, widen.Standing([], {})).findings] == ["PLACEMENT_PROBLEM"]  # ty: ignore[invalid-argument-type] - the stub never reads the cut
+    monkeypatch.setattr(route_loop, "route_pages", lambda *_: Routes((), (), ()))
+    assert [f.code for f in route_loop.routed(placement, None, problem, OPTIONS, Laid((), {})).findings] == ["PLACEMENT_PROBLEM"]  # ty: ignore[invalid-argument-type] - the stub never reads the cut

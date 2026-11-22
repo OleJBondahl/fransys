@@ -295,9 +295,8 @@ def test_every_other_record_kind_matches_by_count_except_the_two_explained_ones(
     for kind in _COUNT_ONLY_KINDS:
         assert hand_counts.get(kind, 0) == reauth_counts.get(kind, 0), kind
 
-    # the fixture's group hint (a draw-in) and symbol choices have no author call left: hand-built only
-    assert reauth_counts.get("layout.group_hint", 0) == reauth_counts.get("layout.symbol_choice", 0) == 0
-    assert hand_counts["layout.group_hint"] == 1
+    # the fixture's symbol choices have no author call left: hand-built only
+    assert reauth_counts.get("layout.symbol_choice", 0) == 0
     assert hand_counts["layout.symbol_choice"] > 0
     assert hand_counts.get("facet.cable", 0) == _HAND_BUILT_CABLE_FACETS
     assert reauth_counts.get("facet.cable", 0) == _REAUTHORED_CABLE_FACETS

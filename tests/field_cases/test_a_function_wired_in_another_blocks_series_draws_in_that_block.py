@@ -136,3 +136,6 @@ def test_the_contact_keeps_its_device_and_designation(tmp_path: Path) -> None:
     tags = {f.id: "/".join(f.key) for f in functions(result.model).values()}
     assert tags[_fn(result, "K4", "co_1")].endswith("U1/A/K4/fn/co_1")
     assert tags[_fn(result, "K4", "coil")].endswith("U1/A/K4/fn/coil")
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

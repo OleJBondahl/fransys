@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from plant import Plant
 
-from fransys_model.derive.facts.closure import net_on_one_board, port_item
+from fransys_model.derive.facts.closure import board_of_ports, port_item
 from fransys_model.derive.facts.net_facts import declared_nets_of
 from fransys_model.derive.facts.potential_without_supply import (
     declared_rails,
@@ -48,8 +48,8 @@ def test_port_item_and_one_board() -> None:
     a, b = plant.pin("x", "f", "1"), plant.pin("y", "f", "1")
     model = plant.model()
     assert port_item(model, a) == make_id(Item, ("x",))
-    assert not net_on_one_board(model, (a, b))
-    assert not net_on_one_board(model, ())
+    assert board_of_ports(model, (a, b)) is None
+    assert board_of_ports(model, ()) is None
 
 
 def test_wired_mated_and_half_connected() -> None:

@@ -8,7 +8,7 @@ from .arrow_reserve import leg_depth, leg_fit, leg_rows
 from .band import arrow_hang, trunk_room
 from .clearance import reach
 from .cut_costs import ref_name
-from .cut_end_rooms import arrow_room
+from .cut_end_rooms import arrow_room, stub_room
 from .geometry import pin_of, pin_xy
 from .hangings import hanging_keep
 from .node_names import LOW, box_node, box_y_node, pin_node
@@ -185,7 +185,9 @@ def held_room(fan: Fan, env: PageEnv, row: int) -> tuple[int, int]:
     """The G the solve holds above and below the fan's trunk in `row`: the value its edges, `Trunk.room` and the spans read."""
     stood = leg_rows(env.refs, env.plan.page)
     arrow = arrow_room(env.refs, env.plan, [fan], row, env.options)
-    leg = leg_depth(fan, stood, row, leg_fit(env.options, env.refs, env.plan.page), arrow)
+    leg = max(
+        leg_depth(fan, stood, row, leg_fit(env.options, env.refs, env.plan.page), arrow), stub_room(env.refs, env.plan, [fan], row, env.options)
+    )
     return trunk_room(fan.lanes, env.options.wiring_grid, leg)
 
 

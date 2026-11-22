@@ -68,10 +68,16 @@ def plc_channel_facets(model: Model) -> frozendict[Id[FunctionTemplate] | None, 
     return frozendict({f.subject: f for f in facets_of(model, PlcChannelFacet).values()})
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def function_channels(model: Model) -> frozendict[Id[Function], PlcChannelFacet]:
+    """Each PLC channel function with its `plc_channel` facet: the one reading of "is a channel"."""
+    facets = plc_channel_facets(model)
+    return frozendict({f.id: facets[f.template] for f in functions(model).values() if f.template in facets})
+
+
 def function_channel(model: Model, function: Id[Function]) -> PlcChannelFacet | None:
     """The `plc_channel` facet of `function`'s template, or `None` when it is not a channel."""
-    template = functions(model)[function].template
-    return None if template is None else plc_channel_facets(model).get(template)
+    return function_channels(model).get(function)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

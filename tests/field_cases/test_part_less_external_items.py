@@ -105,10 +105,10 @@ def test_a_part_less_strip_bridges_separate_adjacent_pairs_in_the_table_only() -
         if r.terminal == s
     ]
     assert sorted(set(rows)) == [
-        ("-X2:1", 1, ("+CAB-X2:2",)),
-        ("-X2:2", 1, ("+CAB-X2:1",)),
-        ("-X2:3", 2, ("+CAB-X2:4",)),
-        ("-X2:4", 2, ("+CAB-X2:3",)),
+        ("-X2:1", 1, ()),
+        ("-X2:2", 1, ()),
+        ("-X2:3", 2, ()),
+        ("-X2:4", 2, ()),
     ]
     with pytest.raises(fr.AuthorError, match=r"X2: bridged=\(1, 5\).*number the new terminal next to its partner"):
         fr.design("demo_parts", place="CAB").terminal_strip("X2", None, 4, bridged=(1, 5), external=True)

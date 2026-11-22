@@ -38,7 +38,7 @@ def test_a_solve_failure_is_one_error_naming_the_set_and_the_class(error: Except
     (found,) = (
         f for f in findings if f.severity is Severity.ERROR and f.code == "PLACEMENT_PROBLEM"
     )  # no drawing check runs after a layout ERROR, so no false CND follows
-    expect_codes(built, "PLACEMENT_PROBLEM")
+    expect_codes(built, "PLACEMENT_PROBLEM", "DRAWN_READ_INCOMPLETE")  # R3500: a refused build draws nothing the reader can read
     assert "drawing set 1" in found.message
     assert type(error).__name__ in found.message
     assert found.fix
@@ -53,7 +53,7 @@ def test_a_problem_error_while_writing_a_set_is_one_error_with_the_known_limit_f
 
     monkeypatch.setattr("fransys_el.lay_out_core.write_layout_drawn", fail)
     built = cabinet_build()
-    expect_codes(built, "PLACEMENT_PROBLEM")
+    expect_codes(built, "PLACEMENT_PROBLEM", "DRAWN_READ_INCOMPLETE")  # R3500: a refused build draws nothing the reader can read
     (found,) = (f for f in lay_out_on_core(built.model, LIBRARY)[1] if f.severity is Severity.ERROR and f.code == "PLACEMENT_PROBLEM")
     assert "group label 'C1'" in found.message
     assert "give the two aspect nodes different labels" in found.message
@@ -67,6 +67,6 @@ def test_build_returns_the_error_and_write_refuses(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr("fransys_el.lay_out_core.solve", fail)
     result = cabinet_build()
-    expect_codes(result, "PLACEMENT_PROBLEM")
+    expect_codes(result, "PLACEMENT_PROBLEM", "DRAWN_READ_INCOMPLETE")  # R3500: a refused build draws nothing the reader can read
     with pytest.raises(fr.BuildFailedError):
         fr.write(result, tmp_path / "out")

@@ -47,11 +47,10 @@ def test_device_and_function_ids_are_read_by_derive_after_a_build() -> None:
     assert fr.derive.functions(model)[p1.x1.id].item == p1.id
 
 
-def test_a_document_takes_a_device_and_a_release_name(tmp_path) -> None:
+def test_a_document_takes_a_release_name_and_refuses_a_device(tmp_path) -> None:
     _, p1, _ = _cabinet()
-    by_device = fr.document(DocumentPreset.CABINET_SCHEMATIC, p1, cover=_cover(tmp_path))
-    (record,) = _records(by_device)
-    assert record.item == p1.id
+    with pytest.raises(TypeError, match="Device"):
+        fr.document(DocumentPreset.CABINET_SCHEMATIC, p1, cover=_cover(tmp_path))
     by_unit = fr.document(DocumentPreset.CABINET_SCHEMATIC, "demo-io-board", cover=_cover(tmp_path))
     (record,) = _records(by_unit)
     assert record.unit_name == "demo-io-board"

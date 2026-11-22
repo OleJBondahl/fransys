@@ -16,11 +16,11 @@ from fransys_model.derive import (
 )
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 
-from .placement_env import drawn_pins
+from .placement_env import drawn_pins, refuse_inside_board
 from .placement_forms import DRAWN_FORMS
 from .placement_ids import net_key, net_lead, symbol_key
-from .placement_sets import home_unit
 from .placement_skips import NET_UNDER_TWO_DRAWN_PINS, Skipped, in_order
+from .scopes import home_unit
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -55,6 +55,7 @@ def _net(env: Env, ports: Sequence[Id[Port]], unit_of: Mapping[str, Id[Unit] | N
         return None  # a spare terminal's own net is listed, not drawn (R356)
     if len(ports) < _TWO_ENDS:  # a pin with no second end is no net (Ruling 86)
         return None
+    refuse_inside_board(env, ports)
     first = net_lead(env.model, ports)  # the lead port by order text names the net, whatever order `ports` comes in (R1615)
     name = symbol_key(env.model, first)
     pins = sorted(set(drawn_pins(env, ports)), key=_pin_key)

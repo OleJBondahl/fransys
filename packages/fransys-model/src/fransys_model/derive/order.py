@@ -173,6 +173,12 @@ def port_designation_key(model: Model, port: Id[Port], *, unit: Id[Unit] | None 
     return natural_key(port_designation(model, port, unit=unit))
 
 
+def port_groups_in_order(model: Model, groups: Iterable[Iterable[Id[Port]]]) -> tuple[tuple[Id[Port], ...], ...]:
+    """Port groups in authored order: each group's ports, then the groups, by the ports' authoring keys; no Id orders them."""
+    inner = (tuple(sorted(g, key=lambda p: ports(model)[p].key)) for g in groups)
+    return tuple(sorted(inner, key=lambda g: tuple(ports(model)[p].key for p in g)))
+
+
 def first_terminal_port(model: Model, terminal_ports: Iterable[Id[Port]]) -> Id[Port]:
     """The port a terminal function's tag names: the internal side first, then the port name."""
     return min(terminal_ports, key=lambda port: (not is_internal_port(model, port), ports(model)[port].name))

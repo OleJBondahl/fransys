@@ -16,13 +16,13 @@ from fransys_model.derive import (
     conductor_ends,
     function_scopes,
     is_bridge,
-    link_groups,
     port_function,
     set_unit,
 )
 from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 
 from .drawn_graph import Union
+from .drawn_identity import inked
 from .drawn_identity_marks import declared_marks
 from .drawn_ids import core_symbol_id, symbol_id
 from .drawn_lanes import Lanes, join_lanes
@@ -30,6 +30,7 @@ from .drawn_power import POWER_KEYS, join_power, port_nets
 from .drawn_references import join_references
 from .placement_ids import pin_names, symbol_ids
 from .placement_joins import node_joins
+from .placement_views import MARKER_KEYS
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -65,7 +66,7 @@ class PagePart:
 class Netlist:
     """The pages' parts, one union of all nodes, each port's drawn points (a copy adds one) and the node of each marker read back, by record id.
 
-    `joins` are the port pairs of a link that stand at one node of one symbol (`node_joins`); P1 of CP-S2c-2 reads them too.
+    `joins` are the port pairs the kit maps onto one node of one symbol (`node_joins`); P1 of CP-S2c-2 reads them too.
     """
 
     pages: dict[Id[Page], PagePart]
@@ -105,8 +106,8 @@ class Netlist:
 
 
 def is_marker(symbol: DrawnSymbol) -> bool:
-    """True for a reference marker: it draws a port's net and is no junction dot."""
-    return bool(symbol.ports and symbol.net and symbol.key != _DOT)
+    """True for a reference marker: a symbol of a marker key (`MARKER_KEYS`, the key `readability` counts by), whatever net text it carries."""
+    return symbol.key in MARKER_KEYS
 
 
 def pin_owner(model: Model, kit: SymbolKit) -> dict[str, dict[str, Id[Port]]]:
@@ -139,7 +140,7 @@ def _part(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: L
     graph = page_graph([w.points for w in drawing.wires], dots, list(ports.values()))
     marks = {(s.x, s.y) for s in drawing.symbols if is_marker(s)}
     nodes = {p for edge in graph.edges for p in edge} | graph.joints | (marks & set(ports.values()))
-    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots | marks, powers)
+    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots, powers)
 
 
 def _join(pages: Mapping[Id[Page], PagePart]) -> Union:
@@ -200,7 +201,7 @@ def drawn_netlist(
     """The `Netlist` of `drawings`; `links` are the marker records the drawings stand for."""
     by = pin_owner(model, kit)
     ids = {p.value: p for pins in by.values() for p in pins.values()}
-    pages = {page: _part(drawing, by, library) for page, drawing in drawings.items()}
+    pages = {page: _part(inked(drawing, library), by, library) for page, drawing in drawings.items()}
     union = _join(pages)
     records = {m.id.value: m for m in links}
     read = join_references(model, pages, library, union)
@@ -220,7 +221,7 @@ def drawn_netlist(
         nets=nets,
         marks=declared_marks(drawings, by, library),
         unreadable=read.faults,
-        joins=(*node_joins(model, kit, library, link_groups(model, lambda role: role.joins_net)), *_bridges(model)),
+        joins=(*node_joins(kit, library), *_bridges(model)),
     )
     _link(found)
     join_power(found, model)

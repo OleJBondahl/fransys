@@ -11,6 +11,7 @@ from fransys_model.kernel import Severity
 
 _CORE_ONLY = [
     "MARKER_UNPLACED",
+    "CONNECTION_NOT_ACCOUNTED",  # CORE-ACCOUNT (R2650): the core says it after its last round
     "LABEL_NO_ROOM",
     "OUTLINE_NO_ROOM",
     "ALIGN_DROPPED",
@@ -30,6 +31,7 @@ _CORE_ONLY = [
 ]
 _EL_ONLY = [
     "UNKNOWN_SYMBOL_KEY",  # el emits it where it picks the key (el-0039)
+    "DRAWING_SET_REFUSED",  # el emits it beside the ERROR that refused a set (R3155)
     "PLACEMENT_PROBLEM",  # el raises it from a ProblemError or a failed set (el-0051)
     "SYMBOL_PORT_MISSING",  # el raises it from a PortMissingError (decision 0018)
     "OVERLAP",  # DRAWING-INVARIANTS: el emits it over the finished drawings
@@ -51,6 +53,7 @@ _EL_ONLY = [
     "DOT_ON_CROSSING",
     "WIRE_OVER_PIN_TIP",
     "HARNESS_WIRE_MISMATCH",  # PROOF-S5 (el-0122): el compares the cable block with the harness-wire rows
+    "DRAWN_READ_INCOMPLETE",  # el-0137: el reports a set the drawn-page checks did not read
 ]
 
 
@@ -86,7 +89,13 @@ def test_a_net_function_lane_wire_set_page_or_print_left_out_is_an_error():
     from fransys_model.vocab import FINDING_CODES as MODEL_CODES
 
     wanted = {"NET_NOT_DRAWN", "FUNCTION_NOT_DRAWN", "LANE_WIRE_DROPPED", "SET_WITHOUT_PAGE", "UNPRINTED_SET", "NO_BLOCK"}
-    wanted |= {"CONNECTION_DRAWN_TWICE", "WIRE_NOT_ORTHOGONAL", "MISSING_JUNCTION_DOT", "WIDER_THAN_PAGE", "BOARD_NETS_NOT_DRAWN"}
+    wanted |= {
+        "CONNECTION_DRAWN_TWICE",
+        "WIRE_NOT_ORTHOGONAL",
+        "MISSING_JUNCTION_DOT",
+        "WIDER_THAN_PAGE",
+        "DRAWN_READ_INCOMPLETE",
+    }
     from fransys_layout import FINDING_CODES as LAYOUT_CODES
 
     held = {info.code: info.severity for info in (*MODEL_CODES, *LAYOUT_CODES, *FINDING_CODES)}

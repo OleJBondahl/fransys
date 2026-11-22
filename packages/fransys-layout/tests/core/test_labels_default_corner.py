@@ -6,6 +6,8 @@ wire", for all symbols. The other three corners are fallbacks in the order BL, T
 
 from __future__ import annotations
 
+import pytest
+
 from fransys_layout.core import Box
 from fransys_layout.core.outputs import Wire
 
@@ -24,16 +26,11 @@ def test_the_default_corner_is_top_left_above_the_body() -> None:
     assert findings == ()
 
 
-def test_a_wire_within_the_gap_moves_the_label_to_a_fallback_corner() -> None:
+@pytest.mark.parametrize(("fields", "spot"), [({}, "BL"), ({"label_gap": 0}, "TL")], ids=["within-the-gap-moves-it", "without-a-gap-leaves-top-left"])
+def test_a_wire_beside_the_top_left_box_moves_the_label_only_within_the_gap(fields, spot) -> None:
     wire = Wire("n1", 1, ((96, 64), (96, 80)), "straight")  # beside the TL box, 0 apart
-    label, _ = _corner(on_page((("S1", 88, 96),), wires=(wire,)))
-    assert label.spot == "BL"
-
-
-def test_without_a_gap_the_same_wire_leaves_top_left_free() -> None:
-    wire = Wire("n1", 1, ((96, 64), (96, 80)), "straight")
-    label, _ = _corner(on_page((("S1", 88, 96),), wires=(wire,)), label_gap=0)
-    assert label.spot == "TL"
+    label, _ = _corner(on_page((("S1", 88, 96),), wires=(wire,)), **fields)
+    assert label.spot == spot
 
 
 def test_a_corner_past_the_content_box_is_not_taken() -> None:

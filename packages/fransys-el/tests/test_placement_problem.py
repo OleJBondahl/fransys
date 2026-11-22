@@ -14,9 +14,10 @@ from fransys_el.kit_keys import PickKey, function_of
 from fransys_el.placement_annexes import label_annexes
 from fransys_el.placement_env import make_env
 from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_sets import drawing_scopes, restriction
 from fransys_el.placement_syms import strip_tags, syms_of
 from fransys_el.placement_where import where_room
+from fransys_el.restrict import restriction
+from fransys_el.scopes import drawing_scopes
 from placement_fixtures import _feed, demo_model, kit_for, planted_model, sid
 from symdef import from_divisions, text_footprint
 

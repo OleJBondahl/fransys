@@ -50,3 +50,6 @@ def test_a_boundary_declared_unused_draws_no_pin() -> None:
     assert x2
     printed = {text.text for drawing in drawn_pages(model).values() for text in drawing.texts if text.kind == "TAG"}
     assert not {text for text in printed if text.startswith("-X2")}
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

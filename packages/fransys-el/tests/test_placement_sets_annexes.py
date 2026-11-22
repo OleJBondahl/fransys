@@ -5,7 +5,8 @@ from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_sets import DrawingScope, restriction
+from fransys_el.restrict import restriction
+from fransys_el.scopes import DrawingScope
 from fransys_el.write_findings import kernel_findings
 from fransys_el.write_ids import symbol_subjects
 

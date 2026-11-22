@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 
 
 def net_of_key(key: str) -> str:
-    """A bundle trunk or fan key `f:N` carries net N: its stems end on it by the bundle convention."""
-    return key.removeprefix("f:")
+    """A bundle trunk or fan key `f:N` carries net N: its stems end on it by the bundle convention; so does a link part (layout-0635)."""
+    return key.removeprefix("f:").partition("\x00")[0]
 
 
 def port_key(net_of: Mapping[PinRef, str], pin: PinRef) -> str:

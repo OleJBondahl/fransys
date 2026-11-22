@@ -6,9 +6,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
 lazy from fransys_model.vocab.core import Unit, UnitRelease
 
-from .designation import item_designation, location_node_designation
+from .designation import location_node_designation
 from .document_unit import document_unit
-from .lookups import item_description
 from .unit_release import unit_release
 
 
@@ -29,7 +28,7 @@ __all__ = ["scope_path", "subject_label"]
 
 
 def subject_label(model: Model, document: Id[Document]) -> str:
-    """The heading's subject: location, unit or item label; the Project's title for SYSTEM ("" with no Project).
+    """The heading's subject: location or unit label; the Project's title for SYSTEM ("" with no Project).
 
     `document` is the document's id.
     """
@@ -40,10 +39,7 @@ def subject_label(model: Model, document: Id[Document]) -> str:
     unit = document_unit(model, document)
     if unit is not None:
         return unit_label(model, unit)
-    item_id = record.item
-    if item_id is None:
-        return next((project.title for project in projects(model).values()), "")
-    return f"{item_designation(model, item_id)} {item_description(model, item_id)}"
+    return next((project.title for project in projects(model).values()), "")
 
 
 def scope_path(model: Model, document: Id[Document]) -> str:

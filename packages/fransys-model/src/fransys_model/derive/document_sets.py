@@ -43,7 +43,7 @@ def _subjects(
             by_location.setdefault(document.location, document.id)
         elif (unit := record_unit(model, document)) is not None:
             by_unit.setdefault(unit, document.id)
-        elif document.item is None and PageKind.SCHEMATIC in document_page_kinds(model, document.id):
+        elif PageKind.SCHEMATIC in document_page_kinds(model, document.id):
             by_unit.setdefault(None, document.id)
     return by_unit, by_location
 

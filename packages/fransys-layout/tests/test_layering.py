@@ -272,19 +272,17 @@ def test_no_layer_imports_a_layer_to_its_left() -> None:
     assert problems == []
 
 
-def test_only_engines_import_beyond_the_model_kernel() -> None:
-    """`geometry`, `routing` and `lint` import nothing of the model but its kernel."""
-    problems = [
-        f"{path}: imports {bad}" for layer in KERNEL_ONLY_LAYERS for path in _layer_files(layer) for bad in sorted(_beyond_kernel(_imports_of(path)))
-    ]
-    assert problems == []
+@pytest.mark.parametrize(
+    "offences",
+    [lambda path: _beyond_kernel(_imports_of(path)), _drawing_text_readers],
+    ids=["beyond-the-model-kernel", "the-drawing-text-readers"],
+)
+def test_only_engines_import_beyond_the_model_kernel(offences) -> None:
+    """`geometry`, `routing` and `lint` import nothing of the model but its kernel.
 
-
-def test_only_engines_import_the_drawing_text_readers() -> None:
-    """Outside `engines`, only `DRAWING_TEXT_FORMATTERS` may come from `drawing_text`."""
-    problems = [
-        f"{path}: imports {bad}" for layer in KERNEL_ONLY_LAYERS for path in _layer_files(layer) for bad in sorted(_drawing_text_readers(path))
-    ]
+    Outside `engines`, only `DRAWING_TEXT_FORMATTERS` may come from `drawing_text`.
+    """
+    problems = [f"{path}: imports {bad}" for layer in KERNEL_ONLY_LAYERS for path in _layer_files(layer) for bad in sorted(offences(path))]
     assert problems == []
 
 
@@ -371,12 +369,16 @@ def test_checker_reports_a_stale_allow_list_entry() -> None:
 
 
 def test_checker_exempts_the_reader_package_but_not_the_reader_file() -> None:
-    """A module under `read/` may import `derive`; today's `read.py` file is not exempt."""
+    """A module under `read/` may import `derive`, `vocab` and `layout` alike; today's `read.py` file is not exempt."""
     source = "from fransys_model.derive.designation import port_designation\n"
     inside = _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", source, is_init=False)
     init = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=True)
     file = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=False)
     assert (inside, init, file) == (set(), set(), {"fransys_model.derive.designation"})
+    wide = (
+        source + "from fransys_model.layout import derived_layout_ids\nfrom fransys_model.vocab.tables import ports\n"
+    )  # `layout` and `vocab` alike
+    assert _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", wide, is_init=False) == set()
 
 
 def test_checker_exempts_the_writer_package_for_layout_only() -> None:
@@ -392,36 +394,22 @@ def test_checker_exempts_the_writer_package_for_layout_only() -> None:
     )
 
 
-def test_checker_exempts_the_reader_package_for_layout_too() -> None:
-    """A module under `read/` may import `derive`, `vocab` and `layout` alike."""
-    source = (
-        "from fransys_model.layout import derived_layout_ids\n"
-        "from fransys_model.derive.designation import port_designation\n"
-        "from fransys_model.vocab.tables import ports\n"
-    )
-    inside = _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", source, is_init=False)
-    assert inside == set()
-
-
-def test_checker_fails_when_routing_imports_the_model_vocabulary() -> None:
-    """The kernel-only check catches `vocab`, and the bare package, but not `kernel`."""
-    source = "from fransys_model.kernel import Id\nfrom fransys_model.vocab.enums import FunctionKind\nfrom fransys_model import derive\n"
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            "from fransys_model.kernel import Id\nfrom fransys_model.vocab.enums import FunctionKind\nfrom fransys_model import derive\n",
+            {"fransys_model.vocab.enums", "fransys_model"},
+        ),
+        ("from fransys_model.derive.designation import reference_designation\n", {"fransys_model.derive.designation"}),
+        ("from fransys_model.derive.drawing_text import row_letter, partner_position_text, position_text\n", set()),
+    ],
+    ids=["vocabulary-and-bare-package-fail-kernel-passes", "another-derive-module-fails", "drawing-text-formatters-pass"],
+)
+def test_the_kernel_only_check_for_routing(source: str, expected: set[str]) -> None:
+    """The check catches `vocab` and the bare package but not `kernel`; `drawing_text` itself passes and any other `derive` name fails."""
     imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
-    assert _beyond_kernel(imported) == {"fransys_model.vocab.enums", "fransys_model"}
-
-
-def test_checker_still_fails_when_routing_imports_another_derive_module() -> None:
-    """The `drawing_text` exception is narrow: any other `derive` name still fails."""
-    source = "from fransys_model.derive.designation import reference_designation\n"
-    imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
-    assert _beyond_kernel(imported) == {"fransys_model.derive.designation"}
-
-
-def test_checker_allows_the_drawing_text_formatters_from_routing() -> None:
-    """`fransys_model.derive.drawing_text` itself is not a kernel-only violation."""
-    source = "from fransys_model.derive.drawing_text import row_letter, partner_position_text, position_text\n"
-    imported = _imported_modules("fransys_layout.routing.bad", source, is_init=False)
-    assert _beyond_kernel(imported) == set()
+    assert _beyond_kernel(imported) == expected
 
 
 def test_checker_fails_when_routing_imports_a_drawing_text_reader() -> None:

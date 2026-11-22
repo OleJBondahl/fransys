@@ -2,11 +2,12 @@
 
 Fransys electrical conventions: the values the general layout core takes as options.
 
-Role contract: conventions as values, and the placement-problem builder. `fransys_el` holds our drawing conventions as frozen option values that `fransys_layout` accepts. Its `build(model, kit, conventions)` is a pure function from a model, a symbol kit and conventions to a `PlacementProblem`. It reads facts from `fransys_model.derive`, derives none, and reads no file (el-0002). `fransys_layout` and `fransys_render` never import it; the bundle `fransys` passes `fransys_el.OPTIONS` into every layout call (FRANSYS-SPLIT, seam 1).
+Role contract: conventions as values, and the placement-problem builder. `fransys_el` holds our drawing conventions and builds the placement problem that `fransys_layout` solves. Its `build(model, kit, conventions, library)` is a pure function from a model, a symbol kit, conventions and a library to a `PlacementProblem` and what it left out. It reads facts from `fransys_model.derive`, derives none, and reads no file (el-0002). `fransys_layout` and `fransys_render` never import it. The facade builds the conventions with `house_conventions` and passes them into every layout call (FRANSYS-SPLIT, seam 1).
 
-- `fransys_el.build`, `Conventions`, `options`, `SymbolKit`, `Pick`, `Skipped`, `ProblemError`: the builder, its conventions, the symbol kit it takes (one `Pick` per drawn function) and the error for an impossible input (el-0002). `Skipped` names what `build` left out.
-- `fransys_el.REF_TINTS`: the eight net-reference fill tints, in link-slot order (el-0001).
+Public names (`just api fransys_el`, 14 names):
 
-Imports: `fransys_model`, `fransys_layout` and `electrical_symbols`, through their top-level surfaces. Decision: `docs/decisions/layout-0192-*.md`.
+- The builder: `build`, `symbol_kit`, `unknown_symbols`, `house_conventions`, and `ProblemError`, the error for an impossible input (el-0002).
+- The drawings and their pens: `lay_out_drawn` (the page `Drawing` values laid out straight from the core, el-0004), `style(library)` (the pens and sizes `svg` takes, layout-0323), and `readability`.
+- The findings: `FINDING_CODES`, `block_wire_findings`, `problem_finding`, `read_findings`, `skipped_findings` and `unknown_symbol_key_findings`.
 
-- `fransys_el.lay_out_drawn`, `style(library)`: the page `Drawing` values laid out straight from the core, and the pens and sizes `svg` takes from the build's `Library` (el-0004, layout-0323).
+Imports (checked by grep over `packages/fransys-el/src`): `fransys_model` (its surfaces and `derive` submodules), `electrical_symbols`, and `fransys_layout` through its top-level, `core`, `symbols` and `drawing` surfaces. Decision: `docs/decisions/layout-0192-*.md`.

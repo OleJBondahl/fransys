@@ -97,7 +97,7 @@ class RouteEnv:
     trunks: tuple[Trunk, ...]
     bands: tuple[tuple[int, int], ...]
     cross_links: tuple[CrossLink, ...]
-    cut_nets: frozenset[str]
+    referenced: frozenset[str]
     options: Options
     obstacles: tuple[Keep, ...] = ()
     sides: Mapping[tuple[str, str, Orientation], Side] = field(default_factory=dict)
@@ -130,6 +130,8 @@ class RouteEnv:
     anchor_leads: tuple[Wire, ...] = ()
     # every box a label keeps off, a wire's apart: the obstacles with the page's bodies, slot ink and frames (TP1, `anchors.page_keeps`)
     ledger: tuple[Keep, ...] = ()
+    # the cut's drawn conductors: a link's wire joins only ends they join (layout-0634)
+    ink: frozenset[tuple[PinRef, PinRef]] = frozenset()
 
 
 type LostKey = tuple[str, frozenset[PinRef]]
@@ -238,7 +240,7 @@ def _page_env(
     net_of = {ref: n.id for n in problem.nets for ref in n.pins}
     net_pins = {n.id: n.pins for n in problem.nets}
     fans = {f.id: f for f in cut.flow.fans}
-    cut_nets = frozenset(r.net for r in cut.spec.reference_plan)
+    referenced = frozenset(r.net for r in cut.spec.reference_plan)
     sides = pin_sides(problem)
     arrowed = arrow_rows(cut.spec.reference_plan, cut.spec.pages, cut.flow.fans)
     lines = leg_lines(
@@ -259,7 +261,7 @@ def _page_env(
         pg.trunks,
         pg.bands,
         cut.flow.cross_links,
-        cut_nets,
+        referenced,
         options,
         tuple(obstacles),
         sides,
@@ -271,6 +273,7 @@ def _page_env(
         arrowed,
         lines,
         cut.flow.joined,
+        ink=cut.spec.drawn,
     )
 
 

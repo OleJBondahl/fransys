@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from .drawn_finding import drawn_finding
 from .drawn_graph import Union
+from .drawn_netlist import is_marker
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
@@ -68,6 +69,15 @@ def _sign(a: XY, b: XY) -> tuple[int, int]:
     return ((dx > 0) - (dx < 0), (dy > 0) - (dy < 0))
 
 
+def _stands(part: PagePart) -> dict[XY, set[str]]:
+    """The nets of the reference markers standing at each point of one page."""
+    found: dict[XY, set[str]] = defaultdict(set)
+    for s in part.drawing.symbols:
+        if is_marker(s):
+            found[(s.x, s.y)].add(s.net)
+    return found
+
+
 def _on_run(dot: XY, a: XY, b: XY) -> bool:
     """True when `dot` lies on the segment a-b, not at a."""
     (x, y), (ax, ay), (bx, by) = dot, a, b
@@ -88,13 +98,13 @@ def _dotted_run(part: PagePart, at: XY, wire: int, ways: set[tuple[int, int]]) -
 
 
 def dangling_findings(net: Netlist) -> tuple[Finding, ...]:
-    """DANGLING_WIRE_END per wire end that meets no port, dot, marker or wire, and per lane foot whose piece holds no port.
+    """DANGLING_WIRE_END per wire end that meets no port, dot, wire or marker of its own net, and per lane foot whose piece holds no port.
 
     An overlap along a wire is met only where a dot lies on the run.
     """
     found = []
     for page, part in net.pages.items():
-        met, leaving = _met(part) | {at for there, at in net.lanes.joined if there == page}, _leaving(part)
+        met, leaving, stands = _met(part) | {at for there, at in net.lanes.joined if there == page}, _leaving(part), _stands(part)
         for i, wire in enumerate(part.drawing.wires):
             found.extend(
                 drawn_finding("DANGLING_WIRE_END", (page,), f"wire end at {at[0]}, {at[1]}")
@@ -102,6 +112,7 @@ def dangling_findings(net: Netlist) -> tuple[Finding, ...]:
                 if (page, at) in net.lanes.bare
                 or (
                     at not in met
+                    and wire.net not in stands.get(at, ())
                     and not any(j != i and not ways & leaving.get(at, {}).get(i, set()) for j, ways in leaving.get(at, {}).items())
                     and not _dotted_run(part, at, i, leaving.get(at, {}).get(i, set()))
                 )

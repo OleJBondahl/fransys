@@ -10,7 +10,6 @@ from fransys_model.derive import (
     cable_list_rows_of,
     column_rows,
     connector_item,
-    connector_rows,
     connector_rows_of,
     continued_heading,
     cores_text,
@@ -136,16 +135,6 @@ def terminal_rows_for(model: Model, record: DocumentRow, strip: ItemId) -> tuple
     )
 
 
-def connector_rows_for(model: Model, record: DocumentRow, board: ItemId) -> tuple[ConnectorRow, ...]:
-    """`board`'s `connector_rows`, printed in `record`'s context (`_list_context`)."""
-    return connector_rows(
-        model,
-        board,
-        unit=document_unit(model, record.id),
-        context=_list_context(model, record, board),
-    )
-
-
 def wire_rows_for(model: Model, record: DocumentRow) -> tuple[WireRow, ...]:
     """The WIRE_LABEL_LIST rows of `record`'s unit, ends printed in its location's context."""
     return wire_rows(model, unit=document_unit(model, record.id), context=record.location)
@@ -244,10 +233,8 @@ def terminal_list_page(
 
 
 def _connector_rows_for_page(model: Model, record: DocumentRow) -> tuple[ConnectorRow, ...]:
-    """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
+    """The CONNECTOR_LIST rows: a unit's own, else the location's."""
     scope = document_scope(model, record.id)
-    if record.item is not None:
-        return tuple(row for board in scope.boards for row in connector_rows_for(model, record, board))
     return connector_rows_of(model, scope.connector_items, unit=scope.unit, context=record.location)
 
 

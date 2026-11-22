@@ -60,6 +60,7 @@ class ChannelScaling:
 class PlcRackChannel:
     """One channel of a rack module, bound or spare.
 
+    `label` is the raw name of its first pin in natural order, the text the drawing prints.
     The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
     `None` when the requesting function carries no `scaling` facet. `signal_name` is the bound
     device's request name, else a spare's own name. `routing` and `configured` are its `plc_request`
@@ -68,6 +69,7 @@ class PlcRackChannel:
 
     channel: Id[Function]
     number: int
+    label: str
     signal: SignalType
     field_device: Id[Function] | None
     field_device_designation: str | None

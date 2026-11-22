@@ -28,10 +28,11 @@ def test_the_layout_error_stops_the_build_and_nothing_is_written(tmp_path: Path)
     design = fr.design("demo_parts", "crash_parts")
     design.add(_crash_wide, "U1", place=None)
     result = fr.build(design, unit_document("crash-wide"))
-    expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW")
+    expect_codes(result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "DRAWN_READ_INCOMPLETE")
     assert {f.code for f in fr.check(result) if f.severity.name == "ERROR"} == {
         "WIDER_THAN_PAGE",
         "PAGE_OVERFLOW",
+        "DRAWN_READ_INCOMPLETE",
     }  # R1996: the set's pages are returned, so the list checks run too
     out = tmp_path / "out"
     with pytest.raises(fr.BuildFailedError):

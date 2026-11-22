@@ -104,3 +104,6 @@ def test_motors_inside_the_unit_draw_without_an_error(tmp_path: Path) -> None:
     """KI-918, KI-919: the same fan with the motors authored inside the unit draws with no SHORT, no wire-meets-net, no JUNCTION ERROR."""
     errors = [f"{f.code}: {f.message}" for f in _built(tmp_path, motors_inside=True).findings if f.severity.name == "ERROR"]
     assert not errors
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

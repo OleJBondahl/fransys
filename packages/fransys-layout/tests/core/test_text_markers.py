@@ -25,7 +25,18 @@ from fransys_layout.core.place import place_pages
 from fransys_layout.core.route_env import Drawn
 from fransys_layout.core.route_fixed import Fixed
 from fransys_layout.core.text_cells import cell_of
-from fransys_layout.core.text_ends import MarkEnv, Stand, _trunk_end_stand, bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, pin_stand
+from fransys_layout.core.text_ends import (
+    MarkEnv,
+    Stand,
+    _trunk_end_stand,
+    bundle_nets,
+    end_stand,
+    hub_xy,
+    legless_pins,
+    mark_env,
+    pin_keeps,
+    pin_stand,
+)
 from fransys_layout.core.text_markers import _missed, _order, placed_marks, stagger, stand_ref
 from fransys_layout.core.values import Box, Bundle, CutEnd, Finding, OutlineRoom, Pin, Ref, RefEnd, RefKind, StandClass
 
@@ -124,12 +135,6 @@ def test_a_pin_on_another_page_raises_naming_the_net_and_page() -> None:
         pin_stand(_env("E", "R0"), PIN, 2, STUB)
 
 
-def test_a_stub_end_with_no_pin_raises() -> None:
-    ref = Ref("n", RefKind.STUB, (RefEnd(1, None, None),))
-    with pytest.raises(CoreError, match=r"net n \(stub\) page 1: the end names no pin"):
-        end_stand(_env("E", "R0"), ref, ref.ends[0], 0)
-
-
 def _fan_env() -> MarkEnv:
     """Fan f has a trunk in row 0 (x 40 to 500, y 100) and one in row 1 (x 60 to 400, y 300)."""
     trunks = (
@@ -157,10 +162,9 @@ def test_an_arrow_stands_at_the_right_end_of_the_first_row_and_the_left_end_of_t
     [
         (RefEnd(1, "c3", PIN, 2), r"net f \(arrow\) page 1: no trunk in row 2"),
         (RefEnd(2, "c1", PIN, 0), r"net f \(arrow\) page 2: fan f has no trunk"),
-        (RefEnd(1, "c1", PIN, None), r"net f \(arrow\) page 1: the end names no row"),
     ],
 )
-def test_an_arrow_end_with_no_trunk_or_no_row_raises_naming_the_net_and_page(end: RefEnd, message: str) -> None:
+def test_an_arrow_end_with_no_trunk_raises_naming_the_net_and_page(end: RefEnd, message: str) -> None:
     ref = Ref("f", RefKind.ARROW, (end,))
     with pytest.raises(CoreError, match=message):
         end_stand(_fan_env(), ref, ref.ends[0], 0)
@@ -265,7 +269,7 @@ def test_an_arrow_copy_or_tag_end_with_no_pin_raises_naming_the_net_and_page(kin
     net = "fb" if kind is RefKind.COPY else "f"
     ref = Ref(net, kind, (RefEnd(1, "c1", None, 0),))
     with pytest.raises(CoreError, match=rf"net {net} \({kind.value}\) page 1: the end names no pin"):
-        end_stand(_fan_env(), ref, ref.ends[0], 0)
+        _order(_fan_env(), ref, ref.ends[0])
 
 
 def test_every_marker_of_the_plants_names_a_pin(built) -> None:
@@ -302,24 +306,25 @@ def test_a_copys_hub_is_read_from_the_page_it_stands_on() -> None:
     assert hub_xy(_hub_env(1), ref, ref.ends[0]) == (10, 20)
 
 
-def test_a_copy_on_its_hubs_own_page_raises_naming_the_net_and_page() -> None:
-    ref = Ref("fb", RefKind.COPY, (RefEnd(1, "c1", PIN),))
-    with pytest.raises(
-        CoreError,
-        match=r"net fb \(copy\) page 1: the hub H stands on the copy's.*"
-        r"stage 4 copies\(\) plans a copy end only on a page other than the hub's",
-    ):
-        hub_xy(_hub_env(1), ref, ref.ends[0])
-
-
-def test_a_copy_whose_hub_has_no_placed_pin_raises_naming_the_net() -> None:
-    ref = Ref("fb", RefKind.COPY, (RefEnd(2, "c1", PIN),))
-    with pytest.raises(
-        CoreError,
-        match=r"net fb \(copy\): the hub has no placed pin.*"
-        r"the placement must place a pin of the fan's hub",
-    ):
-        hub_xy(replace(_hub_env(1), pins={}), ref, ref.ends[0])
+@pytest.mark.parametrize(
+    ("page", "pins", "message"),
+    [
+        (
+            1,
+            {("H", "p"): (1, 10, 20, "R0")},
+            r"net fb \(copy\) page 1: the hub H stands on the copy's.*stage 4 copies\(\) plans a copy end only on a page other than the hub's",
+        ),
+        (2, {}, r"net fb \(copy\): the hub has no placed pin.*the placement must place a pin of the fan's hub"),
+    ],
+    ids=["on-its-hubs-own-page", "hub-has-no-placed-pin"],
+)
+def test_a_copy_whose_hub_cannot_be_read_raises_naming_the_net(
+    page: int, pins: dict[tuple[str, str], tuple[int, int, int, str]], message: str
+) -> None:
+    ref = Ref("fb", RefKind.COPY, (RefEnd(page, "c1", PIN),))
+    env = replace(_hub_env(1), pins=pins)
+    with pytest.raises(CoreError, match=message):
+        hub_xy(env, ref, ref.ends[0])
 
 
 # the stagger (I8.7) and the cyclic far end (I8.4)
@@ -553,7 +558,7 @@ def test_a_marker_with_every_slot_refused_is_none(monkeypatch: pytest.MonkeyPatc
     assert placed_marks(cut, pl, prob, OPTIONS, {})[1] == ()
     wall = [Keep("", Box(x, y, 0, 0), "pin", "other") for x in range(0, AREA.w, 8) for y in range(0, AREA.h, 8)]
     monkeypatch.setattr("fransys_layout.core.text_markers.pin_keeps", lambda _env: {1: wall})
-    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {})
+    marks, findings, *_ = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 
@@ -567,7 +572,7 @@ def test_the_anchor_outlines_are_keeps_the_markers_clear(monkeypatch: pytest.Mon
     wall = Keep("", Box(0, 0, AREA.w, AREA.h), "anchor", "K1")
     over = Anchored("K1", "1", 1, 0, 0, "R90", wall.box, (0, 0), ((0, 0), (0, 0)))
     monkeypatch.setattr("fransys_layout.core.text_markers.anchor_pages", lambda *_: ((over,), ()))
-    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {})
+    marks, findings, *_ = placed_marks(cut, pl, prob, OPTIONS, {})
     assert marks == ()
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 
@@ -594,16 +599,16 @@ def test_a_boundary_stub_steps_straight_out_until_its_box_is_clear_of_a_foreign_
     box = marker_box(free, OPTIONS)
     across = Wire("foreign", free.page, ((box.x + box.w // 2, box.y - 8), (box.x + box.w // 2, box.y + box.h + 8)), "trunk")
     foreign = {free.page: Fixed(Drawn(wires=(across,)))}
-    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, foreign)
+    marks, findings, *_ = placed_marks(cut, pl, prob, OPTIONS, foreign)
     assert findings == ()
     assert [(m.kind, m.y, m.end) for m in marks] == [(RefKind.STUB, free.y, free.end)]
     assert marks[0].x != free.x  # R1007: the foreign wire blocks the first end, the stub takes the other
 
 
 def test_a_wire_of_the_arrows_own_fan_does_not_block_it() -> None:
-    """R1331: an arrow stands where its lane end was walked clear; the marker stage tests it no more."""
+    """An arrow is no more exempt from a foreign wire: a wire of its own fan does not block it, another net's moves it."""
     arrow = Marker("f", RefKind.ARROW, 1, "1A", 120, 500, PIN, "R180")
-    stand = Stand(120, 500, PIN, "R180", "W", walked=True)
+    stand = Stand(120, 500, PIN, "R180", "W")
 
     def keeps(net: str) -> dict[int, list[Keep]]:
         wire = Wire(net, 1, ((90, 400), (90, 600)), "trunk")
@@ -611,16 +616,20 @@ def test_a_wire_of_the_arrows_own_fan_does_not_block_it() -> None:
 
     own = {"f": frozenset({"f", "g"})}
     assert stagger([(arrow, stand)], OPTIONS, AREA, keeps("g"), own) == [arrow]
-    assert stagger([(arrow, stand)], OPTIONS, AREA, keeps("x"), own) == [arrow]  # the placement walked its lane end clear: the one fit test (R1331)
+    assert stagger([(arrow, stand)], OPTIONS, AREA, keeps("x"), own) != [arrow]
 
 
 def test_a_leg_end_with_no_leg_line_stands_at_the_trunk_end_not_at_its_pin() -> None:
-    """ONE-SIDED-PIN: a one-sided pin never stands at its own side; a LEG end the legs omitted stands where `_trunk_end_stand` puts it."""
+    """R3472: a LEG end with no leg stands at its pin and `legless_pins` names it; a TRUNK_END end stands at the trunk end."""
     trunk = Trunk("n", 1, 200, 200, 500, 1, 0, ((200, 500),))
     fan = Fan("n", ("n",), (Attach(None, 0, 0, PinRef("S", "p"), net="n"),), (), None, 1, "S")
     env = replace(_env("E", "R0"), pin_net={("S", "p"): "n"}, fans={"n": fan}, trunks={(1, "n"): (trunk,)})
-    ref = Ref("n", RefKind.STUB, (RefEnd(1, "c", PinRef("S", "p"), 0, StandClass.LEG),))
+    leg = Ref("n", RefKind.STUB, (RefEnd(1, "c", PinRef("S", "p"), 0, StandClass.LEG),))
+    assert end_stand(env, leg, leg.ends[0], 0) == pin_stand(env, PinRef("S", "p"), 1, leg)
+    assert legless_pins(env, [leg]) == (PinRef("S", "p"),)
+    ref = Ref("n", RefKind.STUB, (RefEnd(1, "c", PinRef("S", "p"), 0, StandClass.TRUNK_END),))
     assert end_stand(env, ref, ref.ends[0], 0) == _trunk_end_stand(env, trunk, (PinRef("S", "p"), "stub"))
+    assert legless_pins(env, [ref]) == ()
 
 
 @pytest.mark.parametrize("case", ["hanging", "fed-foreign-wire", "unfed-foreign-wire"])
@@ -782,7 +791,7 @@ def test_a_marker_keeps_clear_of_a_label_the_round_before_stood() -> None:
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]
     label = AnnexBox("S", free.page, marker_drawn_box(free, OPTIONS), "TL")
-    marks, findings, _ = placed_marks(cut, pl, prob, OPTIONS, {free.page: Fixed(Drawn(), (label,))})
+    marks, findings, *_ = placed_marks(cut, pl, prob, OPTIONS, {free.page: Fixed(Drawn(), (label,))})
     assert findings == ()
     assert marks
     assert not any(overlaps(marker_drawn_box(m, OPTIONS), label.box) for m in marks)
@@ -797,7 +806,7 @@ def test_a_pair_marker_with_an_end_that_found_no_slot_stands_whole_or_not_at_all
     cut = replace(cut, spec=replace(cut.spec, reference_plan=(pair,)))
     real = stagger
     monkeypatch.setattr("fransys_layout.core.text_markers.stagger", lambda *a: [*real(*a)[:1], Demand("", 0, 16, "A1")])
-    marks, findings, _ = placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})
+    marks, findings, *_ = placed_marks(cut, place_pages(cut, prob, OPTIONS), prob, OPTIONS, {})
     assert len(marks) in {0, 2}
     assert [f.code for f in findings] == ["MARKER_UNPLACED"]
 

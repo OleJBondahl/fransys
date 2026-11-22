@@ -23,7 +23,7 @@ def _junctions(
     placed = {sym: Placed(sym, 1, x, y, "R0", box, box, (PinXY("p", x, y),)) for sym, (_, x, y) in pins.items()}
     net_of = {PinRef(sym, "p"): net for sym, (net, _, _) in pins.items()} if netted else {}
     env = RouteEnv(1, placed, (), net_of, {}, {}, (), (), (), (), frozenset(), _OPTIONS, obstacles=keeps)
-    return page_junctions(env, wires)
+    return page_junctions(env, wires)[0]
 
 
 def _wire(net: str, *points: tuple[int, int]) -> Wire:
@@ -77,3 +77,21 @@ def test_an_anchor_lead_through_a_wire_end_is_a_junction() -> None:
     keep = Keep("", Box(0, 0, 1, 1), "anchor", "K", "n", (0, 16))
     assert _junctions(wires, {"K": ("n", 0, 0)}, keeps=(keep,)) == (Junction("n", 1, 0, 8),)
     assert _junctions(wires, {"K": ("n", 0, 0)}) == ()
+
+
+def _pieces(wires: list[Wire], pins: dict[str, tuple[str, int, int]]) -> tuple[tuple[str, ...], ...]:
+    """The pieces `page_junctions` returns for one page, each piece as its pins' symbol ids."""
+    box = Box(0, 0, 1, 1)
+    placed = {sym: Placed(sym, 1, x, y, "R0", box, box, (PinXY("p", x, y),)) for sym, (_, x, y) in pins.items()}
+    env = RouteEnv(1, placed, (), {PinRef(sym, "p"): net for sym, (net, _, _) in pins.items()}, {}, {}, (), (), (), (), frozenset(), _OPTIONS)
+    return tuple(tuple(p.sym for p in piece) for piece in page_junctions(env, wires)[1])
+
+
+def test_a_trunk_joins_the_pins_whose_drops_end_on_it_and_a_foreign_net_stays_apart() -> None:
+    wires = [_wire("n", (0, 0), (16, 0)), _wire("n", (4, 0), (4, 8)), _wire("n", (12, 0), (12, 8)), _wire("m", (0, 4), (16, 4))]
+    pins = {"A": ("n", 4, 8), "B": ("n", 12, 8), "C": ("n", 30, 8), "D": ("m", 0, 4), "E": ("m", 16, 4)}
+    assert _pieces(wires, pins) == (("A", "B"), ("D", "E"))
+
+
+def test_pins_with_no_wire_are_no_piece_unless_they_share_a_point() -> None:
+    assert _pieces([], {"A": ("n", 4, 4), "B": ("n", 4, 4), "C": ("n", 9, 9)}) == (("A", "B"),)

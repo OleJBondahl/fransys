@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.plc_wiring import plc_settings
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.derive.facts.units import external
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.scaling import ScalingFacet
@@ -21,12 +21,13 @@ from .facts.children import child_items
 from .indexes import build_indexes
 from .lookups import channel_devices, require
 from .order import plc_channel_tie, plc_module_key
+from .plc_channel_text import channel_pin_designations
 from .rows_plc import ChannelScaling, PlcRackChannel, PlcRackModule
 
 if TYPE_CHECKING:
     from fransys_model.vocab.core import Function
     from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
-    from fransys_model.vocab.templates import FunctionTemplate, Part
+    from fransys_model.vocab.templates import Part
 
     from .indexes import Indexes
 
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 class _Facts:
     """What a channel's field side is read from, looked up once per query."""
 
-    channel_of: frozendict[Id[FunctionTemplate] | None, PlcChannelFacet]
+    channels: frozendict[Id[Function], PlcChannelFacet]
     settings: frozendict[Id[Function], PlcRequestFacet]
     scalings: frozendict[Id[Function], ScalingFacet]
     devices: frozendict[Id[Function], Id[Function]]
@@ -47,7 +48,12 @@ def _modules(model: Model, rack: Id[Item]) -> list[tuple[Item, Part]]:
     return [(module, parts(model)[cast("Id[Part]", module.part)]) for module in sorted(found, key=plc_module_key)]  # is_plc_module: part is set
 
 
-def _channel(model: Model, facts: _Facts, pair: tuple[Id[Function], PlcChannelFacet], unit: Id[Unit] | None) -> PlcRackChannel:
+def _label(model: Model, idx: Indexes, function: Id[Function]) -> str:
+    """The raw name of the channel's first pin in natural order: the text the drawing prints for it."""
+    return ports(model)[channel_pin_designations(model, idx, function)[0][0]].name
+
+
+def _channel(model: Model, idx: Indexes, facts: _Facts, pair: tuple[Id[Function], PlcChannelFacet], unit: Id[Unit] | None) -> PlcRackChannel:
     """One channel; the Fn that requests it is its bound device, else the channel's own function (R1824)."""
     function_id, facet = pair
     device = facts.devices.get(function_id)
@@ -58,6 +64,7 @@ def _channel(model: Model, facts: _Facts, pair: tuple[Id[Function], PlcChannelFa
     return PlcRackChannel(
         channel=function_id,
         number=facet.channel,
+        label=_label(model, idx, function_id),
         signal=facet.signal,
         field_device=device,
         field_device_designation=designation,
@@ -81,12 +88,11 @@ def _channels(model: Model, idx: Indexes, facts: _Facts, module: Item, unit: Id[
     all_functions = functions(model)
     found = []
     for function_id in idx.functions_by_item.get(module.id, ()):
-        template = all_functions[function_id].template
-        facet = None if template is None else facts.channel_of.get(template)
+        facet = facts.channels.get(function_id)
         if facet is not None:
             found.append((function_id, facet))
     found.sort(key=lambda pair: plc_channel_tie(pair[1].channel, all_functions[pair[0]]))
-    return tuple(_channel(model, facts, pair, unit) for pair in found)
+    return tuple(_channel(model, idx, facts, pair, unit) for pair in found)
 
 
 def _rack_module(model: Model, idx: Indexes, facts: _Facts, found: tuple[Item, Part], unit: Id[Unit] | None) -> PlcRackModule:
@@ -122,7 +128,7 @@ def plc_rack_modules(model: Model, rack: Id[Item], *, unit: Id[Unit] | None = No
     require(items(model).get(rack), "item", rack)
     idx = build_indexes(model)
     facts = _Facts(
-        channel_of=plc_channel_facets(model),
+        channels=function_channels(model),
         settings=plc_settings(model),
         scalings=frozendict({facet.subject: facet for facet in facets_of(model, ScalingFacet).values()}),
         devices=frozendict(channel_devices(model)),
@@ -134,15 +140,15 @@ def plc_rack_modules(model: Model, rack: Id[Item], *, unit: Id[Unit] | None = No
 def channel_pins(model: Model) -> frozenset[Id[Port]]:
     """Count the channel pins: those of a PLC channel template, and every pin of a part-less device.
 
-    It counts channel pins; "is a PLC channel" is `plc_channel_facets`. The second
+    It counts channel pins; "is a PLC channel" is `function_channels`. The second
     case is an external item with no part: its channels are unknown, so each pin is one.
     """
-    templates = plc_channel_facets(model)
+    channels = function_channels(model)
     all_functions, all_items = functions(model), items(model)
     found = set()
     for pin in ports(model).values():
         function = all_functions[pin.function]
         item = all_items[function.item]
-        if function.template in templates or (item.part is None and external(model, item.id)):
+        if function.id in channels or (item.part is None and external(model, item.id)):
             found.add(pin.id)
     return frozenset(found)

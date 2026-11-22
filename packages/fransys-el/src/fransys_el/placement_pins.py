@@ -46,11 +46,16 @@ def narrows(env: Env, pick: Pick) -> bool:
     return box_pitch(box_marking_widths(env.library, default_order(pick.ports.values(), kernel_key))) > box_pitch(())
 
 
+def _box_symbol(env: Env, pick: Pick, *, turn: bool, offsets: tuple[float, ...] = ()) -> LibrarySymbol:
+    """The generic box over the pick's port names; `offsets` (M) put its pins there and the body then ends past the last (model-0129)."""
+    names = default_order(pick.ports.values(), kernel_key)
+    return generic_box(names, box_sides(env.model, pick, names), offsets, marking_widths=box_marking_widths(env.library, names), turn=turn)
+
+
 def symbol_of(env: Env, lead: PickKey, pick: Pick, *, turn: bool = False) -> LibrarySymbol:
     """The pick's library symbol in the view asked for; a generic box is built over the pick's port names, its markings turned when `turn`."""
     if is_generic_box(pick.key):
-        names = default_order(pick.ports.values(), kernel_key)
-        return generic_box(names, box_sides(env.model, pick, names), marking_widths=box_marking_widths(env.library, names), turn=turn)
+        return _box_symbol(env, pick, turn=turn)
     try:
         return library_symbol(env.library, pick.key, pick.poles)
     except CoreError as error:
@@ -108,13 +113,17 @@ def _bias(env: Env, port: Id[Port] | None, power: Mapping[Id[Port], PowerKind]) 
     return END_BIAS[power[port].name], UNRANKED if rank is None else rank
 
 
-def box_of(pick: Pick, shape: Shape, pins: tuple[Pin, ...]) -> BoxSpec | None:
-    """Fact 16: the movable pins of a generic box in printed-marking order, else `None`."""
+def box_of(env: Env, pick: Pick, pins: tuple[Pin, ...], *, turn: bool = False) -> BoxSpec | None:
+    """Fact 16: the movable pins of a generic box in printed-marking order, else `None`.
+
+    `lead` and `tail` are the body beyond its first and last pin, measured on the box symdef draws with its pins placed.
+    """
     if not is_generic_box(pick.key):
         return None
     edge = [p for p in pins if p.side in EDGE]
     if not edge:
         return None
     order = default_order((p.id for p in edge), kernel_key)
-    margin = min(p.dx for p in edge) - shape.body.x
-    return BoxSpec(order, margin)
+    placed = symbol_shape(_box_symbol(env, pick, turn=turn, offsets=(0.0,) * len(pick.ports)), env.library)
+    dx = [p.dx for p in placed.pins.values()]
+    return BoxSpec(order, min(dx) - placed.body.x, placed.body.x + placed.body.w - max(dx))

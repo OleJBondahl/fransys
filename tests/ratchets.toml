@@ -39,7 +39,7 @@ stock = 1
 # BoxKey, DiagramLine, DrawnWire (across fransys_model.derive*/layout/vocab, fransys_layout(.core),
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
-twins = 99  # +OverviewRef (derive door, R2403, R2416), +port_marking (derive door, R1799(2), MARK-DOOR), -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
+twins = 101  # +CodeBook, +findings_sorted (kernel and fransys_model.kernel, R2711 FINDING-KEY, R2935), +OverviewRef (derive door, R2403, R2416), +port_marking (derive door, R1799(2), MARK-DOOR), -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
 clashes = 26
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
@@ -106,7 +106,7 @@ skid = 0
 # R895 (KI-231, batch M lowers): machine_panel 20 -> 22, panel_di16p 9 -> 11: a replica's stub (a cross-document end) stands on a wire and a dot
 [drawing_wire_over_marker]
 # R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
-distribution_board = 5  # R1957 falls, KI-636: was 6 (R1715: was 7)
+distribution_board = 6  # R2714 LANE-TO-ARROW (looks class, R1081): +1 where a bundled lane now runs on to its arrow; was 5; R1957 falls, KI-636: was 6 (R1715: was 7)
 machine_panel = 0
 mcc = 8  # R2408 shared pole turn, KI-1003: two wires over markers, was 6; R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
@@ -126,25 +126,6 @@ mcc = 0  # R1730 (looks class): as machine_panel; was 3
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0
 remote_io = 0  # B3 merged tree: falls from 1 (R2090); TRUNK-Y-SHARE (R2090): trunks of one row keep apart, 7 -> 1; ONE-PAGE (R1830, looks class): the widest reference text now names the far document; was 6, before R1822 0; R1822 (looks class, KI-711): the leg stands past a footprint edge on its lane, its tag meets a reference marker; was 0
-skid = 0
-
-# MARKER_UNPLACED counts findings (A9: it ends 0 or goes to the owner page); 0 on every case but
-# panel_di16p: 1, the arrow of the 24V rail's left end, off the page since RL-W2 stands the card
-# at the left margin (designer R484, lane in XF-CLOSE). P4C part 4 (R690): row_arrows keeps that arrow; 1 -> 0.
-[marker_unplaced]
-distribution_board = 0
-machine_panel = 0
-mcc = 0
-panel_di16p = 0
-remote_io = 0
-skid = 0
-
-[drawing_out_of_page]
-distribution_board = 0
-machine_panel = 0
-mcc = 0
-panel_di16p = 0
-remote_io = 0
 skid = 0
 
 [drawing_connection_not_drawn]

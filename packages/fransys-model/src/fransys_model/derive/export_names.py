@@ -125,7 +125,7 @@ def document_export_name(model: Model, unit: Id[Unit] | None, record: Document, 
 
     Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix; a
     placement (no `unit_name`) adds the instance's tag in the system.
-    Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
+    Location, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
     """
     document_own_unit = document_unit(model, record.id)
     if document_own_unit is not None:
@@ -135,6 +135,4 @@ def document_export_name(model: Model, unit: Id[Unit] | None, record: Document, 
     if record.location is not None:
         fragment = export_fragment(model, location_node_designation(model, record.location))
         return export_name(model, unit, extension, fragment=fragment)
-    if record.item is not None:
-        return export_name(model, unit, extension, fragment=export_ref(model, record.item, unit))
     return export_name(model, unit, extension)

@@ -6,8 +6,9 @@ from plant import Plant
 
 from fransys_model.derive.facts import closure as vocab_closure
 from fransys_model.elecdef import LinkKind
+from fransys_model.kernel import make_id
 from fransys_model.vocab import FunctionKind
-lazy from fransys_model.vocab.core import Port
+lazy from fransys_model.vocab.core import Item, Port
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
@@ -136,11 +137,24 @@ def test_a_sole_root_boards_declared_net_is_required_but_not_a_declared_net_off_
     plant.net("sig", (one, two))
     model = plant.model()
     assert {frozenset(g) for g in derive.required_groups(model)} == {frozenset((one, two))}
-    assert derive.drawn_groups(model) == ()  # KI-732: no conductor ends at a trace, so a drawing joins nothing there
+    assert {frozenset(g) for g in derive.drawn_groups(model)} == {frozenset((one, two))}  # R2620: a trace has no conductor and is drawn
 
     loose, three, four = _board_with_two_parts(sole_root=False)
     loose.net("sig", (three, four))
     assert derive.required_groups(loose.model()) == ()
+
+
+def test_board_of_ports_is_the_innermost_whole_unit_board_holding_every_port() -> None:
+    """R2484: a sole-root board holds ports under it; a board beside another root, or a port off the board, gives `None`."""
+    from fransys_model.derive.facts.closure import board_of_ports
+
+    plant, one, two = _board_with_two_parts(sole_root=True)
+    model = plant.model()
+    assert board_of_ports(model, (one, two)) == make_id(Item, ("a1",))
+    loose, three, four = _board_with_two_parts(sole_root=False)
+    assert board_of_ports(loose.model(), (three, four)) is None
+    outside = plant.pin("x", "f", "1")
+    assert board_of_ports(plant.model(), (one, outside)) is None
 
 
 def test_port_joins_is_on_the_derive_door_and_gives_a_header_join() -> None:
@@ -167,3 +181,21 @@ def test_a_terminal_functions_conductive_link_joins_its_ports_in_the_drawn_net_a
         model = plant.model()
         first, second = (derive.drawn_net_of(model, p) for p in ports["g1"])
         assert (first == second) is joined, kind
+
+
+def test_drawn_groups_come_in_print_order_under_every_id_salt() -> None:
+    """A group's ports and the groups follow the printed designations, never an Id (a salt must not move a cut's pieces)."""
+    from fransys_model import derive
+    from fransys_model.kernel import id_namespace
+    from fransys_model.vocab.tables import ports
+
+    seen = []
+    for salt in ("a", "b", "c", "d", "e"):
+        with id_namespace(salt):
+            plant = Plant()
+            pins = {name: plant.pin("plug", "J1", name) for name in "12345678"}
+            for key, (one, two) in {"w1": "21", "w2": "43", "w3": "65", "w4": "87"}.items():
+                plant.wire(pins[one], pins[two], key=key)
+            model = plant.model()
+            seen.append([[ports(model)[p].name for p in g] for g in derive.drawn_groups(model)])
+    assert seen == [[["1", "2"], ["3", "4"], ["5", "6"], ["7", "8"]]] * 5

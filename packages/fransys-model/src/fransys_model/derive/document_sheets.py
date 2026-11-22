@@ -12,7 +12,6 @@ lazy from fransys_model.layout import Page
 lazy from fransys_model.vocab import Document
 
 from .cable_runs import cable_runs
-from .designation import item_designation
 from .document_pages import drawn_pages
 from .document_sizes import sizes_of
 from .document_subject import scope_path, subject_label
@@ -24,7 +23,6 @@ from .page_titles import page_title_forms
 from .rows_sheet import DiagramSheet, SheetKey, TitleBlockFields
 from .rows_sheet_index import sheet_index_rows
 from .rows_sheet_pages import DocumentSheets, SheetFrame, SheetPage
-from .schematic_subject import has_schematic_subject
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets
 from .title_block import document_facts
@@ -37,14 +35,12 @@ def document_sheet_format(model: Model, document: Id[Document], pages: tuple[Pag
     """The paper of every page: the first drawing-set page's format, else the schematic's sheet, else the cover's.
 
     Before layout there is no drawing-set page, so a document with a SCHEMATIC takes `sheet_for(SCHEMATIC)`, the sheet layout gives its pages.
-    An item document draws no schematic, so it takes the cover's sheet.
-
-    `document` is the document's id.
+        `document` is the document's id.
     """
     found = drawn_pages(model, document) if PageKind.SCHEMATIC in pages else ()
     if found:
         return sheet_format_of(model, found[0].sheet_format)
-    return sheet_for(model, PageKind.SCHEMATIC if PageKind.SCHEMATIC in pages and has_schematic_subject(model, document) else PageKind.COVER)
+    return sheet_for(model, PageKind.SCHEMATIC if PageKind.SCHEMATIC in pages else PageKind.COVER)
 
 
 def _fields(
@@ -75,8 +71,6 @@ def _drawing_fields(model: Model, record: Document, found: tuple[Page, ...]) -> 
 def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list[SheetPage]:
     kind = PageKind.SCHEMATIC
     found = drawn_pages(model, record.id)
-    if not has_schematic_subject(model, record.id):
-        found = ()
     out = [
         SheetPage(
             key=SheetKey(record.id, kind, i),
@@ -93,12 +87,6 @@ def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list
     return [*out, SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
 
 
-def _harness_scope(model: Model, record: Document) -> str:
-    if record.item is not None:
-        return item_designation(model, record.item)
-    return subject_label(model, record.id)
-
-
 def _harness_pages(model: Model, record: Document, pages: tuple[PageKind, ...], sheet: SheetFormat) -> list[SheetPage]:
     kind = PageKind.HARNESS_DRAWING
     cables = harness_cables_for(model, record.id, pages)
@@ -109,7 +97,7 @@ def _harness_pages(model: Model, record: Document, pages: tuple[PageKind, ...], 
         key = SheetKey(record.id, kind, None)
         fallback = _fields(model, record, (harness_drawing_title(model),))
         return [SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
-    scope = _harness_scope(model, record)
+    scope = subject_label(model, record.id)
     return [
         SheetPage(
             key=SheetKey(record.id, kind, i),

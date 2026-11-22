@@ -3,11 +3,12 @@
 Above `power` in the import order: which conductors a drawing leaves out can depend on a net's kind.
 """
 
-from fransys_model.derive.facts.closure import PhysicalNet, _physical, joined_nets, link_groups, required_groups
+from fransys_model.derive.facts.closure import PhysicalNet, _physical, board_nets, joined_nets, link_groups, required_groups
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import item_of_port
+from fransys_model.derive.order import port_groups_in_order
 from fransys_model.derive.power import is_rail_terminal
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.tables import conductors
@@ -27,11 +28,15 @@ def drawn_groups(model: Model) -> tuple[tuple[Id[Port], ...], ...]:
 
     Left out: each conductor `drawn_conductors` omits (a bridge, in the terminal table), each group no drawn conductor
     ends in (a mate or a join inside a part), each group wholly on rail terminals (the power symbol stands for them).
+    A board's trace has no conductor and stays: it is routed like any net, with the reference fallback.
     """
     groups, wires, drawn = required_groups(model), tuple(conductors(model)), drawn_conductors(model)
     by_port = build_indexes(model).conductors_by_port
     kept = (*(g for g, c in zip(groups, wires, strict=False) if c in drawn), *groups[len(wires) :])
-    return tuple(g for g in kept if any(c in drawn for p in g for c in by_port.get(p, ())) and not _all_rail(model, g))
+    traces = set(board_nets(model))
+    return port_groups_in_order(
+        model, (g for g in kept if (g in traces or any(c in drawn for p in g for c in by_port.get(p, ()))) and not _all_rail(model, g))
+    )
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -41,8 +46,8 @@ def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
     A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
     A terminal function's link stays, a strip terminal or a panel receptacle: its ports draw as one node.
     """
-    links = {g.ports for g in link_groups(model, _physical) if not function_role(model, g.function).terminal}
-    return joined_nets(model, (g for g in drawn_groups(model) if g not in links))
+    links = {frozenset(g.ports) for g in link_groups(model, _physical) if not function_role(model, g.function).terminal}
+    return joined_nets(model, (g for g in drawn_groups(model) if frozenset(g) not in links))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

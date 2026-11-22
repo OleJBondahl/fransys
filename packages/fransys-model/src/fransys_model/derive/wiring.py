@@ -139,7 +139,7 @@ def terminal_rows(
             role: far_ends(
                 model,
                 _near_ports(model, child, role),
-                tuple(by_role.get(role, ())),
+                tuple(c for c in by_role.get(role, ()) if not is_bridge(model, c)),
                 unit=unit,
                 context=context,
             )

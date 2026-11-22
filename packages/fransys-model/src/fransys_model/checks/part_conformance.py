@@ -16,7 +16,7 @@ from fransys_model.vocab.tables import (
     port_templates,
     ports,
 )
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -168,4 +168,4 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
             )
         else:
             found += _item_findings(model, item, index.templates_of.get(item.part, ()), index)
-    return tuple(sorted(found, key=lambda finding: (finding.code, finding.subjects, finding.message)))
+    return findings_sorted(found)

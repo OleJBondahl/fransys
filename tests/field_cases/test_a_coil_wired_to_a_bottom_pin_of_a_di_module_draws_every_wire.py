@@ -35,3 +35,6 @@ def _build() -> fr.BuildResult:
 def test_a_coil_on_a_bottom_pin_of_a_di_module_builds_with_no_error() -> None:
     errors = [f.code for f in _build().findings if f.severity.name == "ERROR"]
     assert errors == []
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

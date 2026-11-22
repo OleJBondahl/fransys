@@ -31,14 +31,18 @@ class CellIndex[T]:
 
     __slots__ = ("_items", "_ranks")
 
-    def __init__(self, entries: Iterable[tuple[Box, T]]) -> None:
+    def __init__(self, entries: Iterable[tuple[Box, T]] = ()) -> None:
         self._items: list[T] = []
         self._ranks: dict[_Cell, list[int]] = {}
         for box, item in entries:
-            rank = len(self._items)
-            self._items.append(item)
-            for cell in _cells(box.x, box.y, box.x + box.width, box.y + box.height):
-                self._ranks.setdefault(cell, []).append(rank)
+            self.add(box, item)
+
+    def add(self, box: Box, item: T) -> None:
+        """Store `item` under the cells of `box`, after every earlier entry."""
+        rank = len(self._items)
+        self._items.append(item)
+        for cell in _cells(box.x, box.y, box.x + box.width, box.y + box.height):
+            self._ranks.setdefault(cell, []).append(rank)
 
     def meeting(self, x: int, y: int, to_x: int, to_y: int) -> tuple[T, ...]:
         """The items stored under a cell of the corner pair's range, once each, in entry order."""

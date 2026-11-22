@@ -1,9 +1,6 @@
 """The render check's finding codes (BUILD-MESSAGES M1)."""
 
-from typing import Any
-lazy from collections.abc import Iterable
-
-from fransys_model.kernel import CodeInfo, Finding, Id, Severity
+from fransys_model.kernel import CodeBook, CodeInfo, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
@@ -25,7 +22,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=(
             "A printed reference points to a page that no page of its own document holds, and its "
-            "text names no document, so a reader cannot tell which document to open. The message "
+            "text names no document. The message "
             "names the reference, its page and the target page."
         ),
         fix=(
@@ -89,9 +86,4 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
 )
 
-_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
-
-
-def finding(code: str, subjects: Iterable[Id[Any]], message: str, **fix_values: str) -> Finding:
-    """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
-    return _BY_CODE[code].finding(subjects, message, **fix_values)
+finding = CodeBook(*FINDING_CODES).finding

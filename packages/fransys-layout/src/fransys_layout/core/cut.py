@@ -64,10 +64,9 @@ def cut_pages(
         for cell in (cell for lane in c.lanes for cell in lane.cells):
             done.where.setdefault(cell.sym, done.where[c.id])
     where = done.where
-    copied = copies(flow, where, copyable)
     tagged = across(flow, where, done.refs, problem.nets)
     flow = tag_links(flow, tagged)
-    planned = [*(on_pages(r, where) for r in folds), *done.refs, *spilled(blocks, flow, where, problem), *tagged, *copied]
+    planned = [*(on_pages(r, where) for r in folds), *done.refs, *spilled(blocks, flow, where, problem), *tagged, *copies(flow, where, copyable)]
     ledger = account(problem, flow, where, planned, done.pages)
     refs = [*planned, *ledger.refs]
     findings = (
@@ -142,14 +141,14 @@ def _rows_of(seq: Sequence[Item], state: RowState, end: int) -> tuple[RowPlan, .
 
 
 def _drawn_groups(items: Sequence[Item], cut: Cut, env: Env) -> tuple[str, ...]:
-    """The groups of the symbols drawn on a page and of its blocks, in the authored order of `env.rank`.
+    """The groups with ink on a page, in the authored order of `env.rank`: the symbols of its columns and each card's box at its first column.
 
-    A group whose only symbols on the page are in `options.untitled` is left out (PAGE-TITLE).
+    A group whose only symbols on the page are in `options.untitled` is left out (PAGE-TITLE, R3283).
     """
+    blocks = [cut.by_id[it.block] for it in items]
+    boxes = [b.anchor for it, b in zip(items, blocks, strict=True) if b.anchor and (it.bare or it.column == b.columns[0])]
     cells = [c.sym for it in items if not it.bare for lane in env.columns[it.column].lanes for c in lane.cells]
-    shown = dict.fromkeys(env.syms[s].group for s in cells if s not in env.options.untitled)
-    hidden = {env.syms[s].group for s in cells} - shown.keys()
-    groups = dict.fromkeys((*shown, *(g for it in items if (g := cut.by_id[it.block].group) not in hidden)))
+    groups = dict.fromkeys(env.syms[s].group for s in (*boxes, *cells) if s not in env.options.untitled)
     return (*(g for g in env.rank if g in groups), *(g for g in groups if g and g not in env.rank))
 
 

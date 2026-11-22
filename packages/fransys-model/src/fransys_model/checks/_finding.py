@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -10,4 +10,4 @@ if TYPE_CHECKING:
 
 def ordered(found: Iterable[Finding]) -> tuple[Finding, ...]:
     """`found` in the one order every check returns: code, subjects, message."""
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return findings_sorted(found)

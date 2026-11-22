@@ -75,9 +75,9 @@ def _scaling(scaling: ChannelScaling) -> list[str]:
 
 
 def _channel_name(entry: CdpChannel) -> str:
-    """The bare signal name, else the placeholder `<kind><Nr>` (DO0, DI14)."""
+    """The bare signal name, else the channel's drawn pin label (DO3)."""
     name = entry.channel.signal_name
-    return _sanitise(name) if name else f"{entry.cdp_kind}{entry.nr}"
+    return _sanitise(name) if name else entry.channel.label
 
 
 def _channel(entry: CdpChannel) -> list[str]:

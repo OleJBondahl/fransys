@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.plc_wiring import plc_requests
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.vocab.tables import conductors, functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -110,12 +110,11 @@ def plc_channel_pairs(
         channel_devices(model),
         dict(plc_requests(model)),
     )
-    channel_of = plc_channel_facets(model)
     racks = plc_racks(model)
     keyed = []
-    for function in functions(model).values():
-        facet = channel_of.get(function.template)
-        if facet is None or (unit is not None and not _item_belongs(model, function.item, unit)):
+    for function_id, facet in function_channels(model).items():
+        function = functions(model)[function_id]
+        if unit is not None and not _item_belongs(model, function.item, unit):
             continue
         key = plc_channel_key(model, racks, function.item, facet.channel, function)
         keyed.extend((key, function.item, row) for row in _plc_pin_rows(scope, function, facet))

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_kernel import require_origin
 from fransys_model.derive.facts.plc_wiring import plc_requests, requested_signal
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.derive.lookups import unit_chain
 from fransys_model.derive.order import (
     ChannelTie,
@@ -25,7 +25,7 @@ from fransys_model.derive.passes._plc_wired import (
     unit_of,
     wired_requests,
 )
-from fransys_model.kernel import Finding, Model, evolve, make_id
+from fransys_model.kernel import Finding, Model, evolve, findings_sorted, make_id
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref
@@ -50,13 +50,10 @@ def _ranked(model: Model) -> list[tuple[Function, PlcChannelFacet]]:
     The order is `plc_rack_key`, `plc_module_key`, `plc_channel_tie`.
     No designation is read; `_channels` cuts it into one queue per (unit, signal).
     """
-    channel_of = plc_channel_facets(model)
     modules = items(model)
     ranked: list[tuple[_Order, Function, PlcChannelFacet]] = []
-    for function in functions(model).values():
-        facet = channel_of.get(function.template)
-        if facet is None:
-            continue
+    for function_id, facet in function_channels(model).items():
+        function = functions(model)[function_id]
         module = modules[function.item]
         rack = _NO_RACK if module.parent is None else plc_rack_key(modules[module.parent])
         order = (rack, plc_module_key(module), plc_channel_tie(facet.channel, function))
@@ -209,7 +206,7 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         *contested_findings(model, pick.contested),
         *unservable,
     ]
-    ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
+    ordered = findings_sorted(findings)
     if not served:
         return model, ordered
     return _bound(model, served, origins), ordered

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
-from fransys_model.derive.facts.closure import net_of, net_on_one_board, physical_nets, port_item
+from fransys_model.derive.facts.closure import board_of_ports, net_of, physical_nets, port_item
 from fransys_model.derive.facts.net_crossings import net_crossings
 from fransys_model.derive.facts.net_facts import declared_nets_of, is_earth_net
 from fransys_model.derive.facts.potentials import physical_potentials
@@ -35,7 +35,7 @@ def _unrealised(model: Model) -> list[Finding]:
         if is_earth_net(model, net.id) or net.id in net_crossings(model):
             continue
         pieces = {net_of(model, port) for port in net.ports}
-        if len(pieces) > 1 and not net_on_one_board(model, net.ports):
+        if len(pieces) > 1 and board_of_ports(model, net.ports) is None:
             message = f"net {_label(net)} falls into {len(pieces)} physical nets"
             found.append(finding(NET_UNREALISED, (net.id,), message))
     return found

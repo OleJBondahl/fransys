@@ -4,16 +4,12 @@ A port is connected when a kept connection or net group ends on it, a connection
 undrawn far end strands it, or it is a rail end (model-0325, amended). It is not `port_is_reached`.
 """
 
-lazy from collections.abc import Iterable
-
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.roles import conductor_role, function_role
 from fransys_model.derive.facts.units import (
     boundary,
     crosses_unit,
-    enclosing_boards,
-    is_sole_unit_root,
     units,
 )
 from fransys_model.derive.power import is_rail_terminal, port_power_kind
@@ -29,17 +25,6 @@ __all__ = ["boundary_rail_wires", "connected_ports"]
 
 def _item(model: Model, port: Id[Port]) -> Id[Item]:
     return functions(model)[ports(model)[port].function].item
-
-
-def _on_board(model: Model, items: Iterable[Id[Item]]) -> bool:
-    """Whether one opaque board is an ancestor-or-self of every item: its nets are not drawn."""
-    common: frozenset[Id[Item]] | None = None
-    for item in items:
-        boards = frozenset(b for b in enclosing_boards(model, item) if not is_sole_unit_root(model, b))
-        common = boards if common is None else common & boards
-        if not common:
-            return False
-    return bool(common)
 
 
 def _undrawn(model: Model, drawn: frozenset[Id[Function]]) -> frozenset[Id[Function]]:
@@ -104,13 +89,13 @@ def _split(model: Model, sets: tuple[frozenset[Id[Function]], frozenset[Id[Funct
 
 
 def _group_ends(model: Model, undrawn: frozenset[Id[Function]], rail: set[Id[Port]]) -> set[Id[Port]]:
-    """The kept net groups' ports, less removed rail terminals and rail ends; none on a board."""
+    """The kept net groups' ports, less removed rail terminals and rail ends."""
     found: set[Id[Port]] = set()
     for net in nets(model).values():
         left = [p for p in net.ports if ports(model)[p].function not in undrawn and p not in rail]
         whole = len(left) == len(net.ports)
         held = list(net.ports) if whole else left
-        if (whole or len(held) > 1) and not _on_board(model, (_item(model, p) for p in held)):
+        if whole or len(held) > 1:
             found |= set(held)
     return found
 
@@ -143,10 +128,9 @@ def boundary_rail_wires(model: Model) -> frozenset[Id[Conductor]]:
 def connected_ports(model: Model) -> frozenset[Id[Port]]:
     """Every port a kept connection or net group ends on, a stranded end, or a rail end.
 
-    A connection or net group wholly on one opaque board is not drawn, so its ports are not
-    connected by it. A net group loses the ports of removed rail terminals and rail ends first.
+    A net group loses the ports of removed rail terminals and rail ends first.
     """
     sets, undrawn, _ = _sets(model)
     rail, kept = _split(model, sets)
-    wired = {p for c in kept for p in (c.a, c.b) if not _on_board(model, (_item(model, c.a), _item(model, c.b)))}
+    wired = {p for c in kept for p in (c.a, c.b)}
     return frozenset(rail | wired | _group_ends(model, undrawn, rail))

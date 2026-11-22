@@ -74,3 +74,6 @@ def test_the_fan_out_draws_every_connection_and_no_shorted_nets() -> None:
 
 def test_the_fan_out_build_has_no_error() -> None:
     assert [f.code for f in _findings() if f.severity is fr.Severity.ERROR] == []
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

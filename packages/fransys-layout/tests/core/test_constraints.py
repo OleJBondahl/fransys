@@ -10,14 +10,21 @@ from fransys_layout.core import constraints
 from fransys_layout.core.constraints import Graph
 
 
-def test_longest_path() -> None:
-    """after(a, b, 8) and after(b, c, 8) put c at 16, with a at its default 0."""
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        (8, 8, (0, 8, 16)),
+        pytest.param(13, -3, (0, 13, 10), marks=pytest.mark.rule("ROW-ON-GRID")),
+    ],
+)
+def test_longest_path_keeps_each_distance_as_given(first: int, second: int, expected: tuple[int, int, int]) -> None:
+    """after(a, b, first) and after(b, c, second) put c at the sum, a at its default 0; R1693: the graph rounds nothing (13, -3 give 0, 13, 10)."""
     g = Graph()
-    g.after("a", "b", 8)
-    g.after("b", "c", 8)
+    g.after("a", "b", first)
+    g.after("b", "c", second)
     y = g.solve()
     assert y is not None
-    assert (y["a"], y["b"], y["c"]) == (0, 8, 16)
+    assert (y["a"], y["b"], y["c"]) == expected
 
 
 def test_equal_and_after_conflict_gives_no_solution() -> None:
@@ -85,14 +92,3 @@ def test_solve_accepts_an_after_edge_inside_a_class_that_the_offsets_satisfy() -
     y = g.solve()
     assert y is not None
     assert y["b"] - y["a"] == 10
-
-
-@pytest.mark.rule("ROW-ON-GRID")
-def test_after_keeps_its_distance_as_given_for_the_layer_to_have_made_it_whole() -> None:
-    """R1693: the graph rounds nothing; after 13 and -3 solve to 0, 13, 10."""
-    g = Graph()
-    g.after("a", "b", 13)
-    g.after("b", "c", -3)
-    y = g.solve()
-    assert y is not None
-    assert (y["a"], y["b"], y["c"]) == (0, 13, 10)

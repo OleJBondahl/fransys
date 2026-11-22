@@ -26,18 +26,19 @@ from .solve_fixtures import ring_beside_a_tall_chain
 
 ENDS = (PinRef("b", "s"), PinRef("c", "n"))
 widen_stage = importlib.import_module("fransys_layout.core.widen")
+loop_stage = importlib.import_module("fransys_layout.core.route_loop")
 
 
 def _refusing(monkeypatch, ends):
     """The router loses n3 in the first round, while no conductor is yet lost; later rounds route as they do."""
-    real = widen_stage.route_pages
+    real = loop_stage.route_pages
 
     def refuse(placement, cut, problem, options, laid):
         routes = real(placement, cut, problem, options, laid)
         handed = any(n.id == "n3" and ends in n.tagged for n in problem.nets)  # the router loses n3 once; round 2 routes what the cut leaves in page
         return routes if laid.lost or handed else replace(routes, failed=(*routes.failed, Refused("n3", ends)))
 
-    monkeypatch.setattr(widen_stage, "route_pages", refuse)
+    monkeypatch.setattr(loop_stage, "route_pages", refuse)
 
 
 OPTIONS = core_options(marker=MARKER, flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W"))
@@ -68,16 +69,16 @@ def _rounds(monkeypatch, *, lose_first: bool) -> int:
     if lose_first:
         _refusing(monkeypatch, ENDS)
     rounds: list[int] = []
-    stand = widen_stage._stand
+    stand = loop_stage._stand
 
     def counting(*args):
         rounds.append(len(args[-1]))
         return stand(*args)
 
-    monkeypatch.setattr(widen_stage, "_stand", counting)
+    monkeypatch.setattr(loop_stage, "_stand", counting)
     prob = ring_beside_a_tall_chain()
     cut = cut_of(prob, OPTIONS)
-    widen_stage.route_round(cut, placed_from(cut, prob, OPTIONS), prob, OPTIONS)
+    loop_stage.route_round(cut, placed_from(cut, prob, OPTIONS), prob, OPTIONS)
     return len(rounds)
 
 
@@ -98,16 +99,16 @@ def test_a_reference_made_for_a_wire_lost_in_round_one_is_placed_before_round_tw
     """A21: round 2's markers are placed from a plan that holds round 1's loss; round 1's plan does not."""
     _refusing(monkeypatch, (PinRef("b", "s"), PinRef("c", "n")))
     plans: list[set[str]] = []
-    real = widen_stage.placed_marks
+    real = loop_stage.placed_marks
 
     def spy(cut, *args):
         plans.append({r.net for r in cut.spec.reference_plan if r.kind is RefKind.TAG})
         return real(cut, *args)
 
-    monkeypatch.setattr(widen_stage, "placed_marks", spy)
+    monkeypatch.setattr(loop_stage, "placed_marks", spy)
     prob = ring_beside_a_tall_chain()
     cut = cut_of(prob, OPTIONS)
-    widen_stage.route_round(cut, placed_from(cut, prob, OPTIONS), prob, OPTIONS)
+    loop_stage.route_round(cut, placed_from(cut, prob, OPTIONS), prob, OPTIONS)
     assert "n3" not in plans[0]
     assert "n3" in plans[1]
 
@@ -119,7 +120,7 @@ def test_widen_hands_a_lost_link_to_the_cut_as_tagged_and_the_next_round_loses_n
     prob = ring_beside_a_tall_chain()
     cut = cut_of(prob, OPTIONS)
     placement = placed_from(cut, prob, OPTIONS)
-    first = widen_stage.route_round(cut, placement, prob, OPTIONS)
+    first = loop_stage.route_round(cut, placement, prob, OPTIONS)
     assert [r.net for r in first.lost] == ["n3"]
     cut2, _, rnd2, prob2, _ = widen_stage.widen(cut, placement, first, prob, OPTIONS)
     assert [n.tagged for n in prob2.nets if n.id == "n3"] == [(ends,)]

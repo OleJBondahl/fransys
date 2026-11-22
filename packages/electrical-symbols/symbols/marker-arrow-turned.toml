@@ -7,7 +7,7 @@ status = "unverified"
 reference = { standard = "IEC 60617", number = "marker-arrow-turned" }
 
 elements = [
-  { polyline = [[0, 0], [-0.75, 0.375], [-0.75, 2.25], [0.75, 2.25], [0.75, 0.375]], closed = true, fill = "tint" },
+  { polyline = [[-0.125, 0], [-0.75, 0.375], [-0.75, 2.25], [0.75, 2.25], [0.75, 0.375], [0.125, 0]], closed = true, fill = "tint" },
 ]
 
 stretch = [{ axis = "y", at = 1.125 }, { axis = "x", at = 0 }]

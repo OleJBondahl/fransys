@@ -4,12 +4,7 @@ Layout problems of a half-finished design are not here: a stage returns a kernel
 `Finding` instead of raising.
 """
 
-from typing import TYPE_CHECKING
-
 from fransys_model.kernel import ModelError
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Id, Record
 
 
 class LayoutError(ModelError):
@@ -27,12 +22,3 @@ class UnknownSymbolError(LayoutError):
 
 class GeometryError(LayoutError):
     """A library coordinate is off the drawing grid (0.125 M), or a box has a negative size."""
-
-
-class HintError(LayoutError):
-    """An authored layout hint contradicts the model or another hint."""
-
-    def __init__(self, message: str, *, subjects: tuple[Id[Record], ...]) -> None:
-        """Record the hint and the records it contradicts."""
-        super().__init__(message)
-        self.subjects = subjects

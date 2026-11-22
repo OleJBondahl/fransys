@@ -1,6 +1,7 @@
 """A set's restriction names its cut nets and the nets it drops for want of a carrier (R520 B1)."""
 
 import tempfile
+from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -8,7 +9,10 @@ import fransys as fr
 import pytest
 from _model_build_cover import unit_document
 from conventions_fixtures import house
-from fransys_el.placement_sets import DrawingScope, restriction
+from fransys_el.restrict import restriction
+from fransys_el.scopes import DrawingScope
+from hypothesis import given
+from hypothesis import strategies as st
 from test_placement_sets_annexes import _problem
 
 from fransys_model import derive
@@ -43,6 +47,32 @@ def test_a_scope_holding_every_symbol_cuts_and_drops_nothing() -> None:
     problem = _problem()
     result = restriction(problem, DrawingScope(None, None, frozenset(s.id for s in problem.symbols)), options=house().options, tags={})
     assert result.dropped == frozenset()
+
+
+_cached_problem = cache(_problem)
+
+
+@given(data=st.data())
+def test_a_scope_keeps_every_net_it_touches_cut_exactly_when_it_crosses_or_names_it_dropped(data: st.DataObject) -> None:
+    """SG-EL C2 half 2: each net with a pin in the scope is kept or dropped, never both nor neither."""
+    problem = _cached_problem()
+    ids = [s.id for s in problem.symbols]
+    scope = DrawingScope(None, None, frozenset(data.draw(st.sets(st.sampled_from(ids), min_size=1))))
+    inside = [(n, [p for p in n.pins if p.sym in scope.symbols]) for n in problem.nets]
+    bare = data.draw(st.sets(st.sampled_from([p for _, ins in inside for p in ins])))
+    result = restriction(problem, scope, bare, options=house().options, tags={})
+    kept = {n.id: n for n in result.problem.nets}
+    for net, ins in inside:
+        crosses = len(ins) < len(net.pins)
+        assert (net.id in kept) != (net.id in result.dropped) or not ins  # 1 kept xor dropped
+        if net.id in kept:
+            assert bool(kept[net.id].cut) == crosses  # 2 cut exactly when it crosses
+        if net.id in result.dropped:
+            assert crosses  # 3 a dropped net crosses, its inside pins all bare
+            assert set(ins) <= bare
+    if scope.symbols == frozenset(ids):
+        assert result.dropped == frozenset()  # 4 the whole scope cuts and drops nothing
+        assert not any(n.cut for n in result.problem.nets)
 
 
 _REL: dict[str, Any] = {"revision": 1, "interface_version": 1, "date": "2026-01-01", "text": "x", "by": "AB"}

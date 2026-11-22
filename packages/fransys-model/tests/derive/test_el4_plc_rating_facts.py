@@ -17,7 +17,7 @@ from fransys_model.derive.facts.plc_wiring import (
     request_functions,
 )
 from fransys_model.derive.facts.rail_reach import function_reach
-from fransys_model.derive.facts.roles import function_channel
+from fransys_model.derive.facts.roles import function_channel, function_channels
 from fransys_model.elecdef import Current, Unit
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Operating, OperatingFacet
@@ -69,6 +69,7 @@ def test_function_channel_is_the_facet_of_a_channel_template_only() -> None:
     assert found is not None
     assert found.signal is SignalType.DI
     assert function_channel(model, request) is None
+    assert function_channels(model) == {channel: found}
 
 
 def test_requests_and_channels_are_told_apart() -> None:

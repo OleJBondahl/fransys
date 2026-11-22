@@ -24,6 +24,7 @@ from .document_subject import unit_label
 from .drawing_text import page_title_groups
 from .facts.house_settings import word
 from .lookups import black_box_unit, unit_chain
+from .order_groups import function_groups_in_order
 from .tag_text import strip_tag_text, tag_text
 from .unit_nodes import own_nodes_by_unit
 
@@ -67,20 +68,18 @@ def _nested_unit(model: Model, set_unit: Id[Unit], node: Id[AspectNode]) -> Id[U
 
 
 def _block_entries(model: Model, page: Page) -> tuple[tuple[str, Id[Unit] | None], ...]:
-    """The page's block texts, each with its unit; a nested unit's groups print its title.
+    """The page's block texts in the authored group order (`function_groups_in_order`), each with its unit; a nested unit's groups print its title.
 
     A group the set's unit owns, or any group of a set with no unit, has unit `None` (model-0256).
     """
     nodes = aspect_nodes(model)
     set_unit = layout_of(model, DrawingSet)[page.drawing_set].unit
-    found: list[tuple[str, Id[Unit] | None]] = []
-    for group in page_title_groups(model, page):
-        nested = None if set_unit is None else _nested_unit(model, set_unit, group.group)
-        if nested is None:
-            found.append((nodes[group.group].description, None))
-        else:
-            found.append((unit_label(model, nested), nested))
-    return tuple(found)
+    found: dict[str, Id[Unit] | None] = {}
+    for group in function_groups_in_order(model, {one.group for one in page_title_groups(model, page)}):
+        nested = None if set_unit is None else _nested_unit(model, set_unit, group)
+        text, unit = (nodes[group].description, None) if nested is None else (unit_label(model, nested), nested)
+        found[text] = found.pop(text, unit)  # one label under two unit prefixes stands where its last key does (PAGE-TITLE-ORDER)
+    return tuple(found.items())
 
 
 def _entries(model: Model, page: Page) -> tuple[tuple[str, Id[Unit] | None], ...]:

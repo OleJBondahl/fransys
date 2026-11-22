@@ -5,18 +5,12 @@ from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.placement_reads import function_item
 from fransys_model.derive.structure import schematic_functions
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.layout import GroupHint, layout_of
 from fransys_model.vocab import Aspect, FunctionKind
 from fransys_model.vocab.tables import conductors, functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import AspectNode, Function
 
 __all__ = ["function_group", "function_moves", "group_draws", "group_members_drawn_in"]
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _hinted(model: Model) -> dict[Id[Function], Id[AspectNode]]:
-    return {h.function: h.group for h in layout_of(model, GroupHint).values()}
 
 
 def _placed(model: Model, function: Id[Function]) -> Id[AspectNode] | None:
@@ -62,9 +56,8 @@ def _wired_group(model: Model, function: Id[Function], blocks: tuple[Id[AspectNo
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def function_moves(model: Model) -> dict[Id[Function], Id[AspectNode]]:
-    """Each function drawn away from its home: the block its wires were authored in, then its `GroupHint` (which wins)."""
-    wired = {f: g for f, blocks in _wired_blocks(model).items() if (g := _wired_group(model, f, blocks)) is not None}
-    return wired | _hinted(model)
+    """Each function drawn away from its home: the block its wires were authored in."""
+    return {f: g for f, blocks in _wired_blocks(model).items() if (g := _wired_group(model, f, blocks)) is not None}
 
 
 def function_group(model: Model, function: Id[Function]) -> Id[AspectNode] | None:
@@ -84,5 +77,5 @@ def group_draws(model: Model, group: Id[AspectNode]) -> bool:
 
 
 def group_members_drawn_in(model: Model, group: Id[AspectNode]) -> tuple[Id[AspectNode], ...]:
-    """The other groups the functions placed in `group` are drawn in (by a `GroupHint`), first seen first."""
+    """The other groups the functions placed in `group` are drawn in (by the block their wires were authored in), first seen first."""
     return tuple(dict.fromkeys(drawn for placed, drawn in _drawn(model) if placed == group and drawn not in (None, group)))

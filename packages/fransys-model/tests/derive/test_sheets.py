@@ -40,7 +40,7 @@ def _document(preset: DocumentPreset, unit: Id[Unit] | None) -> Document:
     key = ("document", preset.value)
     return Document(
         id=make_id(Document, key), key=key, preset=preset,
-        location=None, item=None, cover="c", notes=None, unit=unit,
+        location=None, cover="c", notes=None, unit=unit,
     )  # fmt: skip
 
 

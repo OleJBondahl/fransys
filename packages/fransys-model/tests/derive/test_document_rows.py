@@ -40,11 +40,10 @@ def test_rows_equal_the_record_fields_in_table_order(model):
     rows = document_rows(model)
     assert len(rows) == 2
     for row, rec in zip(rows, records, strict=True):
-        assert (row.id, row.preset, row.location, row.item) == (
+        assert (row.id, row.preset, row.location) == (
             rec.id,
             rec.preset,
             rec.location,
-            rec.item,
         )
         assert (row.cover, row.notes, row.logo) == (rec.cover, rec.notes, rec.logo)
         assert document_row(model, rec.id) == row

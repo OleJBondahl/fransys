@@ -12,11 +12,10 @@ from fransys_author.instantiate import instantiate
 
 from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Origin, make_id
+from fransys_model.layout import Profile as ModelProfile
 from fransys_model.layout import (
-    GroupHint,
     SymbolChoice,
 )
-from fransys_model.layout import Profile as ModelProfile
 from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
     AspectNode,
@@ -433,9 +432,9 @@ def _pump(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet, n: int) -> No
 
 
 def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
-    """Group `=ES`: e-stop `S0`, whose second contact is hinted into `=P1`; plus the signal.
+    """Group `=ES`: e-stop `S0`; plus the signal.
 
-    The contact string runs rail, `S0` contact 1, `S0` contact 2 (drawn in `=P1`), then the
+    The contact string runs rail, `S0` contact 1, `S0` contact 2, then the
     auxiliary contact of `K1`, and on to the auxiliary contact of `K2` in `=P2` with no
     """
     estop = b.stamp(parts["estop"], ("cabinet", "s0"), "S0", "es")
@@ -444,15 +443,6 @@ def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     b.wire(estop.port("nc_1", "12"), estop.port("nc_2", "21"), label=False)
     b.wire(estop.port("nc_2", "22"), k1.port("aux", "13"), label=False)
     b.wire(k1.port("aux", "14"), k2.port("aux", "13"), label=False)
-    key = (*estop.key, "nc_2", "group_hint")
-    b.add(
-        GroupHint(
-            id=make_id(GroupHint, key),
-            key=key,
-            function=estop.functions["nc_2"],
-            group=make_id(AspectNode, ("p1",)),
-        )
-    )
 
 
 def _extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:

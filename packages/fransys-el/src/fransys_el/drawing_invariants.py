@@ -50,6 +50,7 @@ def _pairs(drawing: Drawing, ports: Mapping[str, XY]) -> Iterator[str]:
             yield f"{a.key} / {b.key}"
 
 
+# KI-1142: the stock of corpus:legacy_shape and example:board_cab, which no test file anchors (R2647, R2667).
 def page_overlaps(drawing: Drawing, ports: Mapping[str, XY] | None = None) -> list[str]:
     """What meets what on one page: body pairs, then the texts' counts."""
     texts = page_texts(drawing)

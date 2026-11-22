@@ -27,20 +27,14 @@ def _empty():
     return number_pass(freeze(merge(parts, d.draft())))[0]
 
 
-def test_an_empty_model_places_no_view_and_no_finding():
-    """Breaks if an empty model raises, places a view, or reports a finding."""
-    out, findings = lay_out_overview(_empty(), LIBRARY)
-    assert findings == ()
-    assert out.views == ()
-
-
-def test_a_single_box_with_no_line_places_nothing():
-    """Breaks if a lineless box is drawn at the system level or raises.
+@pytest.mark.parametrize("model", [_empty, one_box], ids=["empty-model", "single-box-with-no-line"])
+def test_a_model_with_no_line_places_no_view_and_no_finding(model):
+    """Breaks if an empty model, or a lineless box, raises, places a view or reports a finding.
 
     The system level draws only boxes joined by a cable; the one core of `one_box` joins two
     ports of the same motor, so it draws neither a box nor a line.
     """
-    out, findings = lay_out_overview(one_box(), LIBRARY)
+    out, findings = lay_out_overview(model(), LIBRARY)
     assert findings == ()
     assert out.views == ()
 

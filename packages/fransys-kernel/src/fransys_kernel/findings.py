@@ -7,6 +7,7 @@ Reported engineering problems, returned rather than raised (design/kernel-model.
 import re
 from enum import Enum
 from typing import Any
+lazy from collections.abc import Iterable
 
 from .errors import SchemaError
 from .ids import Id
@@ -74,3 +75,8 @@ class Finding:
             msg = f"finding {self.code!r} ({self.severity.value}) has no fix"
             raise SchemaError(msg, kind=type(self).__qualname__)
         object.__setattr__(self, "subjects", tuple(sorted(set(self.subjects))))
+
+
+def findings_sorted(findings: Iterable[Finding], *, by_message: bool = True) -> tuple[Finding, ...]:
+    """`findings` ordered by code, then subjects, then message (`by_message=False`: code and subjects only)."""
+    return tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message) if by_message else (f.code, f.subjects)))

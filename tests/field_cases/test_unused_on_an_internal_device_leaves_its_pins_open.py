@@ -20,7 +20,7 @@ def _sense(*, unused: bool, wired: bool) -> Any:
         board = u.device("A1", "DEMO-PCB-IO")
         holder = u.device("F1", "DEMO-FUSE-HOLDER-PCB", parent=board, unused=unused)
         if wired:
-            lamp = u.device("H1", "DEMO-LAMP-24")
+            lamp = u.device("H1", "DEMO-LAMP-24", parent=board)
             u.series(holder["1"], lamp["1"], wire=("RD", 50))
             u.series(holder["2"], lamp["2"], wire=("BU", 50))
         return _Io()

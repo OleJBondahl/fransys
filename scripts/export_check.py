@@ -53,8 +53,11 @@ def parts() -> list[tuple[str, list[list[str]]]]:
     ]
 
 
-def main() -> int:
+def main(only: str = "") -> int:
+    """Run the parts, or only the one whose letter is ONLY (the release runs `b` before the tag, R3536)."""
     for name, commands in parts():
+        if only and not name.startswith(only):
+            continue
         for command in commands:
             if subprocess.run(command, cwd=ROOT, check=False).returncode != 0:  # noqa: S603  fixed argument lists
                 sys.stdout.write(f"EXPORT CHECK RED: part {name}\n")
@@ -64,4 +67,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(*sys.argv[1:]))

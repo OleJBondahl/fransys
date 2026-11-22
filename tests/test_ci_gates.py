@@ -56,11 +56,11 @@ def test_the_workers_follow_the_load_unless_set(monkeypatch, env, load, cpus, wa
 
 def test_the_internal_gate_joins_only_where_the_full_repo_has_its_recipes(tmp_path: Path) -> None:
     """R1348: the export has no internal/internal.just and runs the public groups alone."""
-    assert ci_gates.all_groups(tmp_path) == ci_gates._GROUPS
+    assert ci_gates.all_groups(tmp_path) == ci_gates.tiered(ci_gates._GROUPS)
     (tmp_path / "internal").mkdir()
     (tmp_path / "internal" / "internal.just").write_text("", encoding="utf-8")
-    assert ci_gates.all_groups(tmp_path) == (*ci_gates._GROUPS, (("just", "internal-gate"),))
-    assert not ci_gates.runs_pytest((ci_gates._RATCHETS,))  # R2270: the ratchets run in the cheap phase
+    assert ci_gates.all_groups(tmp_path) == ci_gates.tiered((*ci_gates._GROUPS, (("just", "internal-gate"),)))
+    assert not ci_gates.runs_pytest((ci_gates.RATCHETS,))  # R2270: the ratchets run in the cheap phase
 
 
 def test_the_pytest_group_starts_only_after_the_cheap_gates_are_green(tmp_path: Path, capfd) -> None:
@@ -77,3 +77,10 @@ def test_the_pytest_group_starts_only_after_the_cheap_gates_are_green(tmp_path: 
     out = capfd.readouterr().out
     assert started.exists()
     assert out.index("pytest block") < out.index("ruff block")
+
+
+def test_every_tier_session_reports_its_xpass_ids() -> None:
+    """R3469: -rX is in each session's pytest options, so a run log names its XPASS ids."""
+    both = [argv for group in ci_gates.tiered(((ci_gates.COV,),)) for argv in group]
+    assert len(both) == 2
+    assert all("-rX" in argv[1].split() for argv in both)

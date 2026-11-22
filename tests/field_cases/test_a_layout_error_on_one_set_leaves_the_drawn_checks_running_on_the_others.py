@@ -2,13 +2,14 @@
 The bug (KI-779, consumer 0.23.1): after KI-773 any layout ERROR skipped every drawn-page check, so a real CONNECTION_NOT_DRAWN went unreported.
 Fixed (R1977, R1978, R1991): the checks run on every set with a complete drawing, the skipped set's ERROR says so; fr.write still refuses."""
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1375 (R3538).
 from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
 from _model_build_cover import cabinet_document, unit_document
-from fransys_el import placement_sets
+from fransys_el import restrict
 from test_a_many_function_device_wired_once_is_never_a_reference_cell_crash import _crash_wide
 from test_core_path_lays_out_a_unit_document import _box
 
@@ -36,20 +37,20 @@ def _build(tmp_path: Path, *, crash: bool) -> fr.BuildResult:
 
 
 def _force_drop(monkeypatch: pytest.MonkeyPatch, symbol: str = "H1") -> None:
-    real = placement_sets._net
+    real = restrict._net
 
     def drop(net: Any, symbols: Any, *rest: Any) -> Any:
         made = real(net, symbols, *rest)
         hit = made is not None and (bool(made.cut) or symbol != "H1") and any(s.startswith(symbol) for s in symbols)
         return None if hit else made
 
-    monkeypatch.setattr(placement_sets, "_net", drop)
+    monkeypatch.setattr(restrict, "_net", drop)
 
 
 def test_a_forced_drop_on_a_good_set_is_reported_beside_a_layout_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_drop(monkeypatch)
     result = _build(tmp_path, crash=True)
-    expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "CONNECTION_NOT_DRAWN")
+    expect_codes(result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "CONNECTION_NOT_DRAWN", "DRAWN_READ_INCOMPLETE")
     skipped = [f for f in fr.check(result) if f.code in {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}]
     assert skipped
     assert {f.code for f in skipped} == {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}
@@ -69,7 +70,9 @@ def test_a_set_whose_write_skipped_its_output_steps_is_not_checked(tmp_path: Pat
     """a set is checked when its drawing is complete; crash-wide's ERROR makes write skip its steps, so its dropped net gives no CND."""
     _force_drop(monkeypatch, "B1")
     result = _build(tmp_path, crash=True)
-    expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW")
+    expect_codes(
+        result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "DRAWN_READ_INCOMPLETE"
+    )  # R3470: the skipped set is reported unread
     assert not any(f.code == "CONNECTION_NOT_DRAWN" and "B1" in f.message for f in fr.check(result))
     wide = [(d, r) for d in result.drawings.values() for r in d.rows if r.width > d.area.w]  # R1996: the skipped set's pages and rows are returned
     assert len(wide) == 1

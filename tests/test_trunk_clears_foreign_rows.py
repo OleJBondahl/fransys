@@ -4,23 +4,15 @@ The 16-input and the machine panel of the placement corpus share a net whose tru
 sensors in a late row. Without the clearance each trunk stood at the page top and the sensors had
 """
 
-import importlib.util
+import importlib
 from collections import Counter
-from pathlib import Path
 
 import pytest
 
-_RUN = Path(__file__).parent.parent / "internal" / "placement_corpus" / "run.py"
-
 
 def _codes(case: str) -> Counter[str]:
-    spec = importlib.util.spec_from_file_location("corpus_run_r369", _RUN)
-    assert spec is not None
-    assert spec.loader is not None
-    run = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(run)
-    (circuit,) = (c for c in run.circuits("standard") if c[0] == case)
-    return Counter(f.code for f in run.build(case, circuit).findings)
+    run = importlib.import_module("placement_corpus.run")  # internal/ is not exported
+    return Counter(f.code for f in run.observed(case).result.findings)
 
 
 @pytest.mark.private_input  # reads internal/ (R462)

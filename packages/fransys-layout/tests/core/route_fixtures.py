@@ -31,7 +31,7 @@ from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
 from .conftest import MARKER
 from .cut_fixtures import AREA, elem
 from .cycle_fixtures import ring_problem
-from .flow_builders import net, poles
+from .flow_builders import conductors, net, poles
 from .pipeline_fixtures import cut_of, placed_from
 from .place_fixtures import all_pins
 
@@ -64,7 +64,7 @@ def two_links_one_gap() -> PlacementProblem:
     rings = (("a", ring_problem()), ("b", ring_problem()))
     syms = tuple(replace(s, id=f"{k}{s.id}") for k, p in rings for s in p.symbols)
     nets = tuple(replace(n, id=f"{k}{n.id}", pins=tuple(replace(r, sym=f"{k}{r.sym}") for r in n.pins)) for k, p in rings for n in p.nets)
-    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=conductors(nets)))
 
 
 def _wires(routes: Routes) -> list[Wire]:
@@ -160,6 +160,7 @@ def link_env(
             marker=MARKER,
         ),
         sides={(sym, "p", "R0"): cast("Side", side) for sym, (_, _, side) in pins.items()},
+        ink=frozenset((PinRef(a, "p"), PinRef(b, "p")) for ends in links.values() for a, b in pairwise(ends)),
     )
 
 

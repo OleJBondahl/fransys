@@ -130,11 +130,15 @@ def test_a_lane_end_walks_past_another_fans_trunk_line_its_marker_would_touch() 
     assert _free(148, 1, WALK_KEY, walk_stand(8, 100, tuple(k for k in stand.keeps)), ("mine",)) == 256
 
 
-def test_a_walked_end_with_no_stand_stays_at_its_hull_and_records_it() -> None:
-    """layout-0507: the right end's box leaves the page, so it stays at 60 and `stood` says so; the left end has no arrow and stands."""
-    foot = Keep("", Box(40, 90, 20, 20), "footprint", "other")
+@pytest.mark.parametrize(("at", "end"), [(40, 60), (60, 68)], ids=["records-it", "not-at-its-bare-end"])
+def test_a_walked_end_with_no_stand_stays_at_its_hull(at: int, end: int) -> None:
+    """layout-0507, R1488: the right end's box (stepped out to `end`) leaves the page, so the lane ends at its hull 60.
+
+    `stood` says so; the left end stands.
+    """
+    foot = Keep("", Box(at, 90, 20, 20), "footprint", "other")
     stand = walk_stand(8, 100, (foot,), poles=(frozenset[int](), frozenset({0})), limits=Limits(Size(64, 200)))
-    assert _walked((0, (20, 60), (20, 60)), 100, stand, ("other",)) == ((20, 60), (True, False))
+    assert _walked((0, (20, end), (20, 60)), 100, stand, ("other",)) == ((20, 60), (True, False))
 
 
 def test_an_end_whose_walk_out_leaves_the_content_box_stands_back_toward_the_page_down_to_its_hull() -> None:
@@ -145,13 +149,6 @@ def test_an_end_whose_walk_out_leaves_the_content_box_stands_back_toward_the_pag
     assert _free(60, 1, WALK_KEY, stand, ("other",)) is None
     assert _standing((60, 0), 1, lane, ("other",), 44) == 44
     assert _standing((60, 0), 1, lane, ("other",), 52) is None
-
-
-def test_a_walked_end_with_no_stand_stays_at_its_hull_not_at_its_bare_end() -> None:
-    """R1488: the right end stepped out to 68 finds no stand, so the lane ends at its hull 60."""
-    foot = Keep("", Box(60, 90, 20, 20), "footprint", "other")
-    stand = walk_stand(8, 100, (foot,), poles=(frozenset[int](), frozenset({0})), limits=Limits(Size(64, 200)))
-    assert _walked((0, (20, 68), (20, 60)), 100, stand, ("other",)) == ((20, 60), (True, False))
 
 
 @pytest.mark.rule("BUNDLE-LANE-END")

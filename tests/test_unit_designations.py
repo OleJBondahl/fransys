@@ -111,3 +111,6 @@ def test_a_top_level_cable_in_a_units_location_leaves_that_location_own() -> Non
     model = fr.build(parts, *printed(d.draft())).model
     (cabinet,) = units(model)
     assert "C1" in {aspect_nodes(model)[node].label for node in own_nodes(model, cabinet)}
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

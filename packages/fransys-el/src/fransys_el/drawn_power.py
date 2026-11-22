@@ -6,7 +6,7 @@ A power symbol is joined to its pin by ink; the model's hidden net no longer car
 
 from typing import TYPE_CHECKING
 
-from electrical_symbols import power_symbol_key
+from electrical_symbols import marking_slot, power_symbol_key
 from fransys_model.derive import (
     PowerKind,
     is_rail_terminal,
@@ -14,7 +14,6 @@ from fransys_model.derive import (
     item_unit,
     net_of,
     port_power_kind,
-    port_power_text,
     port_rails,
     rail_scope,
     rail_source_unit,
@@ -36,6 +35,7 @@ __all__ = ["PE_KEY", "POWER_KEYS", "inked_power", "join_power", "port_nets", "po
 
 POWER_KEYS = frozenset(power_symbol_key(kind) for kind in ("supply", "ground", "pe"))
 _SUPPLY = power_symbol_key("supply")
+_MARKING = marking_slot("")
 PE_KEY = power_symbol_key("pe")
 Identity = str | tuple[frozenset[str], "Id[Unit] | None"] | None
 RailClass = tuple["Id[Unit]", str, Identity]
@@ -68,28 +68,27 @@ def port_nets(model: Model, ids: Mapping[str, Id[Port]]) -> dict[str, str]:
     return {port: held.get(key, key) for port, key in keys.items()}
 
 
-def _symbols(net: Netlist, model: Model) -> Iterator[tuple[Id[Page], PagePart, str, str, str | None]]:
+def _symbols(net: Netlist) -> Iterator[tuple[Id[Page], PagePart, str, str, str | None]]:
     """Each port drawn as a power symbol that names its potential (R1631): (page, part, port, symbol key, printed text).
 
-    A ground or PE symbol names it by its kind; a supply symbol only with a printed text.
+    A ground or PE symbol names it by its kind; a supply symbol only with a text its marking slot prints (the page, never the model).
     """
     for page, part in net.pages.items():
-        for symbol in part.drawing.symbols:
-            for port in symbol.ports if symbol.key in POWER_KEYS else ():
-                text = port_power_text(model, net.ids[port])
-                if symbol.key != _SUPPLY or text is not None:
-                    yield page, part, port, symbol.key, text
+        for symbol in (s for s in part.drawing.symbols if s.key in POWER_KEYS):
+            text = next((t for slot, t in symbol.slots if t and slot.startswith(_MARKING)), None)
+            for port in symbol.ports if symbol.key != _SUPPLY or text is not None else ():
+                yield page, part, port, symbol.key, text
 
 
-def _inked(part: PagePart, port: str) -> bool:
-    """True when the symbol of `port` is joined to its pin by ink: the pin stands on a node, or the lead is zero-length (R4)."""
+def _inked(net: Netlist, page: Id[Page], part: PagePart, port: str) -> bool:
+    """True when the symbol of `port` is joined to its pin by ink: its own port point and the pin lie in one inked piece (R4)."""
     pin = part.ports.get(port)
-    return pin is not None and (pin in part.nodes or part.powers.get(port) == pin)
+    return pin is not None and net.union.find((page, pin)) == net.union.find((page, part.powers.get(port)))
 
 
-def inked_power(net: Netlist, model: Model) -> set[str]:
+def inked_power(net: Netlist) -> set[str]:
     """The ports drawn as a power symbol that names its potential and is joined to its pin by ink: R4 replaces the model-net read."""
-    return {port for _, part, port, _, _ in _symbols(net, model) if _inked(part, port)}
+    return {port for page, part, port, _, _ in _symbols(net) if _inked(net, page, part, port)}
 
 
 def _class(model: Model, port: Id[Port], key: str, text: str | None) -> RailClass | None:
@@ -100,9 +99,9 @@ def _class(model: Model, port: Id[Port], key: str, text: str | None) -> RailClas
 
 def symbol_classes(net: Netlist, model: Model) -> Iterator[tuple[str, RailClass, bool]]:
     """Each power symbol that names its potential and stands in a cabinet: (port, join class, inked)."""
-    for _, part, port, key, text in _symbols(net, model):
+    for page, part, port, key, text in _symbols(net):
         if (joined := _class(model, net.ids[port], key, text)) is not None:
-            yield port, joined, _inked(part, port)
+            yield port, joined, _inked(net, page, part, port)
 
 
 def rail_flagged(model: Model, joined: RailClass) -> bool:
@@ -114,7 +113,7 @@ def rail_flagged(model: Model, joined: RailClass) -> bool:
 
 def _strip_classes(net: Netlist, model: Model) -> set[RailClass]:
     """The classes of the power symbols standing at a flagged rail terminal: the flagged strip's own sources (R2590)."""
-    held = ((port, key, text) for _, _, port, key, text in _symbols(net, model) if is_rail_terminal(model, item_of_port(model, net.ids[port])))
+    held = ((port, key, text) for _, _, port, key, text in _symbols(net) if is_rail_terminal(model, item_of_port(model, net.ids[port])))
     return {joined for port, key, text in held if (joined := _class(model, net.ids[port], key, text)) is not None}
 
 
@@ -131,19 +130,19 @@ def join_power(net: Netlist, model: Model) -> None:
     """
     first: dict[RailClass, tuple[Id[Page], tuple[int, int]]] = {}
     strip = _strip_classes(net, model)
-    for page, part, port, key, text in _symbols(net, model):
-        if _inked(part, port):
+    for page, part, port, key, text in _symbols(net):
+        if _inked(net, page, part, port):
             at = (page, part.ports[port])
             if (joined := _class(model, net.ids[port], key, text)) is not None and _joins(model, joined, strip):
                 net.union.join(first.setdefault(joined, at), at)
 
 
-def power_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:
+def power_findings(net: Netlist) -> tuple[Finding, ...]:
     """POWER_SYMBOL_NOT_JOINED per power symbol that names its potential and has no ink to its pin (R4)."""
     return tuple(
         drawn_finding(
             "POWER_SYMBOL_NOT_JOINED", (net.ids[port],), "a power symbol has no wire to its pin: report it as a Fransys defect with the model"
         )
-        for _, part, port, _, _ in _symbols(net, model)
-        if not _inked(part, port)
+        for page, part, port, _, _ in _symbols(net)
+        if not _inked(net, page, part, port)
     )

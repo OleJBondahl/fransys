@@ -73,3 +73,6 @@ def test_every_drawing_page_of_the_example_is_a_destination_landing_on_that_page
             assert index == pdf_page(result.model, page) - 1
     finally:
         pdf.close()
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

@@ -6,14 +6,11 @@ layouts caught. It returns, per build, the findings and the references whose end
 
 import importlib
 import re
-import sys
 from collections import defaultdict
 from contextlib import nullcontext
 from typing import Any
 
 import fransys as fr
-import pytest
-from _core_solves import caught_solves
 
 from fransys_model.kernel import id_namespace
 
@@ -33,43 +30,28 @@ def _split_references(problem: Any, layout: Any) -> list[str]:
     return [f"{k}: {sorted(map(str, v))}" for k, v in ends.items() if len(v) != 1 or None in v]
 
 
-def _cases() -> dict[str, Any]:
-    run = importlib.import_module("placement_corpus.run")
-    cases: dict[str, Any] = {c[0]: (lambda c=c: run.build(c[0], c, fresh=True)) for c in run.circuits("standard")}
-    skid: Any = (run.SKID.name, run.load(run.SKID, "demo_skid_lane"), {}, {})
-    cases["demo-skid"] = lambda: run.build("demo-skid", skid, fresh=True)
-    return cases
+def _cases() -> list[str]:
+    """The names of the reference-lane cases: the standard circuits and the demo skid."""
+    return [*(c[0] for c in importlib.import_module("placement_corpus.run").circuits("standard")), "demo-skid"]
 
 
-def _lanes(build: Any) -> tuple[Any, list[Any], list[Any], list[tuple[str, bool]]]:
-    """`build()` with its solves caught, the lane cells of every flow, and the TAG and STUB ends stage 4 made, pinless or not (R2041 G1)."""
-    solve = sys.modules["fransys_layout.core.solve"]
-    cut = sys.modules["fransys_layout.core.cut"]
-    made: list[Any] = []
-    marked: list[tuple[str, bool]] = []
-    flow, references = solve.build_flow, cut.references
+def observation(case: str) -> Any:
+    """The corpus build of `case` under the current id namespace, with what its run caught (R3302)."""
+    return importlib.import_module("placement_corpus.run").observed("skid" if case == "demo-skid" else case)
 
-    def building(*args: Any) -> Any:
-        made.append(flow(*args))
-        return made[-1]
 
-    def noting(*args: Any) -> Any:
-        refs = references(*args)
-        marked.extend((f"{r.net} {r.kind}", e.pin is None) for r in refs if str(r.kind) in ("tag", "stub") for e in r.ends)
-        return refs
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(solve, "build_flow", building)
-        patch.setattr(cut, "references", noting)
-        built, caught = caught_solves(build)
+def _lanes(case: str) -> tuple[Any, list[Any], list[Any], list[tuple[str, bool]]]:
+    """The build of `case`, its solves, the lane cells of every flow, and the TAG and STUB ends stage 4 made, pinless or not (R2041 G1)."""
+    seen = observation(case)
     hexid = re.compile(r"[0-9a-f]{32}")
-    return built, caught, [[hexid.sub("", c.sym) for col in f.columns for lane in col.lanes for c in lane.cells] for f in made], marked
+    lanes = [[hexid.sub("", sym) for sym in flow] for flow in seen.caught("flows")]
+    return seen.result, seen.caught("solves"), lanes, [mark for call in seen.caught("references") for mark in call]
 
 
 def run(salt: str, case: str) -> dict[str, Any]:
     """One case built under `salt`, as plain values."""
     with id_namespace(salt) if salt != "-" else nullcontext():
-        built, caught, lanes, marked = _lanes(_cases()[case])
+        built, caught, lanes, marked = _lanes(case)
     return {
         "shorts": sum(f.code == "DRAWING_SHORTS_NETS" for f in built.findings),
         "errors": [f.code for f in built.findings if f.severity == fr.Severity.ERROR],

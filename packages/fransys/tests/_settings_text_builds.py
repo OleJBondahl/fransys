@@ -3,6 +3,7 @@
 import importlib.util
 from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 import fransys as fr
@@ -30,11 +31,20 @@ def _skid_design() -> tuple[Any, ...]:
     return made if isinstance(made, tuple) else (made,)
 
 
+@cache
+def _skid_built(text: str | None) -> fr.BuildResult:
+    """The demo skid built once per process for each settings text; `None` is the house settings."""
+    if text is None:
+        return fr.build(*_skid_design(), settings=fr.settings(None))
+    with TemporaryDirectory() as folder:
+        return fr.build(*_skid_design(), settings=fr.settings(consumer_file(Path(folder), text)))
+
+
 def skid_model(path: Path | None = None) -> Model:
     """The demo skid built with `fr.settings(path)`; `None` is the house settings."""
-    return fr.build(*_skid_design(), settings=fr.settings(path)).model
+    return skid_result(path).model
 
 
 def skid_result(path: Path | None = None) -> fr.BuildResult:
-    """The demo skid built and numbered with `fr.settings(path)`."""
-    return fr.build(*_skid_design(), settings=fr.settings(path))
+    """The demo skid built and numbered with `fr.settings(path)`: a result is immutable, so a repeat of one text is the stored build."""
+    return _skid_built(None if path is None else path.read_text(encoding="utf-8"))

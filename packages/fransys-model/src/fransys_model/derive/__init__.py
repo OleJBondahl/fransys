@@ -152,6 +152,7 @@ from .facts.children import child_items, item_parents
 from .facts.closure import (
     LinkGroup,
     PhysicalNet,
+    board_of_ports,
     link_groups,
     net_of,
     physical_nets,
@@ -521,7 +522,6 @@ from .rows_sheet_pages import (
     SheetPage,
     TitleBlockOverflow,
 )
-from .schematic_subject import has_schematic_subject
 from .series_pairs import series_pairs
 from .series_parallel import series_parallel
 from .sheet_frame import sheet_frame
@@ -539,7 +539,7 @@ from .unit_racks import unit_racks
 from .unprinted_set_findings import check_unprinted_sets
 from .unused import function_is_idle_terminal, function_is_reached, function_is_unused, port_is_reached, port_is_unused
 from .view_rollup import place_members, subject_marks, view_lookup
-from .wiring_ends import ends_without_jumpers, strip_side_headings
+from .wiring_ends import strip_side_headings
 
 __all__ = [
     "ALL_VALIDATORS",
@@ -741,6 +741,7 @@ __all__ = [
     "aspect_nodes",
     "black_box_unit",
     "board_netlist",
+    "board_of_ports",
     "board_pins",
     "boards",
     "bom_lines",
@@ -845,7 +846,6 @@ __all__ = [
     "draws_as_line",
     "effective_placement",
     "enclosing_boards",
-    "ends_without_jumpers",
     "error_count",
     "errors_of",
     "export_bytes",
@@ -902,7 +902,6 @@ __all__ = [
     "has_documents",
     "has_function",
     "has_project",
-    "has_schematic_subject",
     "hidden_pins",
     "implied_rest",
     "ink_net",

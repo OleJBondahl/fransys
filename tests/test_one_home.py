@@ -219,7 +219,6 @@ LAYOUT_FOR_INPUTS = frozenset(
         "Side",
         "SheetFormat",
         "Profile",
-        "GroupHint",
         "OrderHint",
         "PoleGroup",
         "SymbolChoice",
@@ -942,6 +941,16 @@ def gate(section: str, *, done: bool = False) -> list[str]:
 
 def test_no_library_twin_grows_or_stays_after_its_deletion():
     assert compare(library_twins(), load_allowlist()["library_twins"]) == []
+
+
+def test_the_plc_channel_template_facets_are_read_only_in_roles():
+    """ "Is a channel" is `function_channels`: no other module reads the template-keyed `plc_channel_facets`."""
+    readers = {
+        path.name
+        for path in (ROOT / "packages").glob("*/src/**/*.py")
+        if path.name not in {"roles.py", "part.py"} and "plc_channel_facets" in path.read_text(encoding="utf-8")
+    }
+    assert not readers, readers
 
 
 def test_no_field_read_outside_its_fact_module():

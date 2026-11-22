@@ -99,9 +99,10 @@ def test_a_declared_net_realised_by_a_link_gives_no_finding() -> None:
 def test_a_declared_net_realised_by_a_board_gives_no_finding() -> None:
     """Catches a net on the items of one board still warning."""
     plant = Plant()
-    board = plant.item("board", part=plant.board_part())
-    a = plant.port(plant.function(plant.item("a", parent=board), "f"), "1")
-    b = plant.port(plant.function(plant.item("b", parent=board), "f"), "1")
+    unit = plant.unit("u1")  # a board is its unit's only root (a shared-unit board is refused, R2484)
+    board = plant.item("board", part=plant.board_part(), unit=unit)
+    a = plant.port(plant.function(plant.item("a", parent=board, unit=unit), "f"), "1")
+    b = plant.port(plant.function(plant.item("b", parent=board, unit=unit), "f"), "1")
     _net_over(plant, a, b)
     assert _of(plant, NET_UNREALISED) == []
 

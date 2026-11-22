@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from fransys_kernel import WHO_ACTS, CodeInfo, SchemaError, Severity
+from fransys_kernel import WHO_ACTS, CodeBook, CodeInfo, Finding, Id, SchemaError, Severity, findings_sorted
 
 _GOOD = CodeInfo(
     code="LONE_CELL",
@@ -63,3 +63,21 @@ def test_finding_refuses_a_fix_value_the_template_needs():
     with pytest.raises(SchemaError, match="LONE_CELL"):
         info.finding([], "m")
     assert info.finding([], "m", call="x()").fix == "Write: x()"
+
+
+def test_a_code_book_builds_the_finding_of_a_code_and_refuses_an_unknown_one():
+    fix = dataclasses.replace(_GOOD, fix="Wire {port}.")
+    found = CodeBook(fix).finding("LONE_CELL", [], "m", port="P1")
+    assert (found.code, found.severity, found.message, found.fix) == ("LONE_CELL", Severity.WARNING, "m", "Wire P1.")
+    with pytest.raises(KeyError):
+        CodeBook(fix).finding("NOPE", [], "m")
+
+
+def test_findings_sorted_orders_by_code_subjects_and_message():
+    def one(code, message, *subjects):
+        return Finding(code=code, severity=Severity.INFO, subjects=subjects, message=message)
+
+    a, b, c = (Id(kind="x", value=v) for v in "abc")
+    rows = [one("B", "m", a), one("A", "z", b), one("A", "y", b), one("A", "q", a, c)]
+    assert [(f.code, f.message) for f in findings_sorted(rows)] == [("A", "q"), ("A", "y"), ("A", "z"), ("B", "m")]
+    assert [f.message for f in findings_sorted([one("A", "z", b), one("A", "y", b)], by_message=False)] == ["z", "y"]

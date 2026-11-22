@@ -29,7 +29,7 @@ def test_a_hint_name_is_never_a_block_id() -> None:
     assert ids(build(syms, cols, hints=hints)) == ["c1", "c2", "c3"]
 
 
-def test_order_pairs_cycle_ends_with_a_finding() -> None:
+def test_order_pairs_cycle_settles_with_no_finding() -> None:
     syms, cols = loose("A", "B", "C")
     hints = Hints(group_order=("A", "B", "C"), order_pairs=(("A", "B"), ("B", "A")))
-    assert [f.code for f in build(syms, cols, hints=hints)[0].findings] == ["ORDER_HINT_UNMET"]
+    assert build(syms, cols, hints=hints)[0].findings == ()

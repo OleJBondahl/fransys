@@ -21,7 +21,6 @@ EXPECTED = {
             "bom_scope": "TOP_LEVEL",
             "strips": (),
             "connector_items": [],
-            "boards": (),
         },
         "location:location/L0": {
             "unit": None,
@@ -30,7 +29,6 @@ EXPECTED = {
             "bom_scope": "location/L0",
             "strips": ("X1",),
             "connector_items": ["LOOSE/LA1", "LOOSE/LA2"],
-            "boards": (),
         },
         "location:group/LOOSE": {
             "unit": None,
@@ -39,25 +37,6 @@ EXPECTED = {
             "bom_scope": "group/LOOSE",
             "strips": (),
             "connector_items": ["LOOSE/LA1", "LOOSE/LA2"],
-            "boards": (),
-        },
-        "item:LOOSE/cc": {
-            "unit": None,
-            "cables": (),
-            "harnesses": (),
-            "bom_scope": "LOOSE/cc",
-            "strips": (),
-            "connector_items": [],
-            "boards": (),
-        },
-        "item:X1": {
-            "unit": None,
-            "cables": (),
-            "harnesses": (),
-            "bom_scope": "X1",
-            "strips": (),
-            "connector_items": [],
-            "boards": (),
         },
     }
 }
@@ -108,12 +87,6 @@ def test_strips_matches_the_old_pdf_selection(models, model_name, label, want):
 def test_connector_items_matches_the_old_pdf_selection(models, model_name, label, want):
     """`DocumentScope.connector_items` equals the pdf sites' former selection (RO-1 part A)."""
     check(models, model_name, label, "connector_items", want)
-
-
-@pytest.mark.parametrize(("model_name", "label", "want"), cases(EXPECTED, "boards", BUILT))
-def test_boards_matches_the_old_pdf_selection(models, model_name, label, want):
-    """`DocumentScope.boards` equals the pdf sites' former selection (RO-1 part A)."""
-    check(models, model_name, label, "boards", want)
 
 
 def test_a_system_document_has_no_unit_and_the_top_level_scope(models):

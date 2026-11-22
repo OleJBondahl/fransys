@@ -32,9 +32,9 @@ from fransys_model.vocab import (
 from . import _connection, _ratings, _toml
 from ._errors import PartLibraryError
 from ._function_build import _build_function, _PartContext
-from .lint import SUPPORTED_SCHEMAS, lint
+from .lint import lint
 
-__all__ = ["SUPPORTED_SCHEMAS", "PartLibraryError", "library_root", "load", "load_path"]
+__all__ = ["PartLibraryError", "library_root", "load", "load_path"]
 
 
 def _loaded_libraries() -> list[str]:

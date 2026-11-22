@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from options_fixtures import core_options
 
-import fransys_layout.core.widen as widen_stage
+import fransys_layout.core.route_loop as loop_stage
 from fransys_layout.core.route import route_pages
 from fransys_layout.core.solve import solve
 from fransys_layout.core.text_markers import placed_marks
@@ -78,7 +78,7 @@ def test_the_markers_are_marked_before_each_route_and_never_after_widen(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     order: list[str] = []
-    real_mark, real_route = widen_stage.placed_marks, widen_stage.route_pages
+    real_mark, real_route = loop_stage.placed_marks, loop_stage.route_pages
 
     def mark(*args: Any) -> Any:
         order.append("mark")
@@ -88,8 +88,8 @@ def test_the_markers_are_marked_before_each_route_and_never_after_widen(
         order.append("route")
         return real_route(*args)
 
-    monkeypatch.setattr(widen_stage, "placed_marks", mark)
-    monkeypatch.setattr(widen_stage, "route_pages", route)
+    monkeypatch.setattr(loop_stage, "placed_marks", mark)
+    monkeypatch.setattr(loop_stage, "route_pages", route)
     solved_of(ring_beside_a_tall_chain())
     assert order[:2] == ["mark", "route"]
     assert order[-1] == "route"

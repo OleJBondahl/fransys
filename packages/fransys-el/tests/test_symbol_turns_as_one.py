@@ -60,8 +60,7 @@ def _bank() -> Any:
 
 def _corpus(name: str) -> Any:
     """A standard placement-corpus design (R538: the whole class over the builds the tests have)."""
-    module = importlib.import_module(f"placement_corpus.standard.{name}")
-    model = fr.build(*module.design()).model
+    model = importlib.import_module("placement_corpus.run").observed(name).result.model
     return model, symbol_kit(model, LIBRARY)
 
 

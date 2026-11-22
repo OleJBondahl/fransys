@@ -5,6 +5,7 @@ One small invented document carries a marked word in every text role (`HEKone` i
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 from __future__ import annotations
 
 from dataclasses import replace
@@ -120,7 +121,6 @@ def _model(*, module_mm: str = "2.5"):
         key=("document", "d1"),
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=location.id,
-        item=None,
         cover="# HEKone\n\n## HEKtwo\n\n### HEKthree\n\nHEKbody",
         notes="HEKnotes",
     )
@@ -274,3 +274,6 @@ def test_a_multi_unit_set_prints_only_the_line_widths_and_the_one_face(units_pdf
         widths = stroke_widths(pdf)
         assert [w for w in widths if all(abs(w - one) > 0.005 for one in allowed)] == []
         assert _faces(pdf) <= {"DejaVuSansCondensed", "DejaVuSansCondensed-Bold"}
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

@@ -2,10 +2,10 @@
 The bug (v0.8.0): the instance check compared each item's unit, which differs per instance, so a duplicate tag passed.
 Fixed by model-0145, a duplicate tag is checked under one parent, as it is for two items."""
 
-from typing import Any, NamedTuple
+from functools import cache
+from typing import NamedTuple
 
 import fransys as fr
-import pytest
 from _expected_codes import expect_codes
 
 
@@ -31,24 +31,22 @@ def _cabinet(d: fr.Design) -> _Open:
     return _Open()
 
 
-@pytest.fixture(scope="module")
-def built() -> dict[tuple[str, str], fr.BuildResult]:
-    out = {}
-    for pair in (("U1", "U1"), ("U1", "U2")):
-        d = fr.design("demo_parts", place="C1")
-        for block, tag in zip(("RUN", "LAMPS"), pair, strict=True):
-            with d.function(block, block):
-                d.add(_board, tag)
-        out[pair] = fr.build(d)
-    return out
+@cache
+def _built(pair: tuple[str, str]) -> fr.BuildResult:
+    """The design's build for one pair of tags, made by the test that reads it: another test's expected codes never cover it."""
+    d = fr.design("demo_parts", place="C1")
+    for block, tag in zip(("RUN", "LAMPS"), pair, strict=True):
+        with d.function(block, block):
+            d.add(_board, tag)
+    return fr.build(d)
 
 
-def test_one_tag_in_two_function_blocks_is_a_duplicate(built: dict[Any, Any]) -> None:
-    expect_codes(built[("U1", "U1")], "DESIGNATION_DUPLICATE", "PRODUCT_DESIGNATION_DUPLICATE")
+def test_one_tag_in_two_function_blocks_is_a_duplicate() -> None:
+    expect_codes(_built(("U1", "U1")), "DESIGNATION_DUPLICATE", "PRODUCT_DESIGNATION_DUPLICATE")
 
 
-def test_distinct_tags_are_no_duplicate(built: dict[Any, Any]) -> None:
-    assert "DESIGNATION_DUPLICATE" not in [f.code for f in built[("U1", "U2")].findings]
+def test_distinct_tags_are_no_duplicate() -> None:
+    assert "DESIGNATION_DUPLICATE" not in [f.code for f in _built(("U1", "U2")).findings]
 
 
 def test_one_tag_in_two_function_blocks_inside_a_cabinet_unit_is_a_duplicate() -> None:

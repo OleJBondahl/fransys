@@ -219,7 +219,6 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "CableLayout",
         "DiagramLayout",
         "Facing",
-        "HintError",
         "OverviewLayout",
         "OverviewPlacedBox",
         "OverviewPlacedHead",

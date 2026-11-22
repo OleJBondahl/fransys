@@ -94,3 +94,6 @@ def test_the_container_draws_a_rail_boundary_terminal_as_it_draws_a_plain_one(
     plain = _drawn(result.model, "-U1-X1:SIG:1")
     assert rail == [("symbol", "marker-arrow-turned", 1, "R180", (), ())]  # the stub of its far end -U1-P3:1, inside the unit
     assert plain == [("symbol", "marker-arrow-turned", 1, "R180", (), ())]  # the stub stands at the terminal's other pin
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

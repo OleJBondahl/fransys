@@ -7,11 +7,10 @@ Neither is ever silent: each is a WARNING naming the net or the set.
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import connected_ports, item_designation, item_unit
+from fransys_model.derive import connected_ports
 from fransys_model.vocab import FINDING_CODES
 lazy from fransys_model.kernel import Finding, natural_join
 
-from .board_findings import undrawn_board_nets
 from .codes import FINDING_CODES as EL_CODES
 from .drawn_ids import core_symbol_id
 from .drawn_netlist import pin_owner
@@ -21,13 +20,14 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import PlacementProblem
     from fransys_model.kernel import Id, Model
+    from fransys_model.layout import Page
     from fransys_model.vocab import Port
 
     from .drawn_netlist import Netlist
     from .placement_kit import SymbolKit
-    from .placement_sets import DrawingScope
+    from .scopes import DrawingScope
 
-__all__ = ["set_failure_finding", "set_without_page_findings", "skipped_ports"]
+__all__ = ["read_incomplete_finding", "set_failure_finding", "set_without_page_findings", "skipped_ports"]
 
 _INFO = {info.code: info for info in (*FINDING_CODES, *EL_CODES)}
 
@@ -36,18 +36,6 @@ def _symbols(problem: PlacementProblem, scope: DrawingScope) -> str:
     """The printed designations of the set's symbols, in the problem's order."""
     names = (s.id.partition(" ")[0] for s in problem.symbols if s.id in scope.symbols)
     return ", ".join(dict.fromkeys(names))
-
-
-def _board_cause(model: Model, scope: DrawingScope) -> str:
-    """The boards of the set's unit with nets drawn nowhere, as the clause that says why."""
-    boards = [
-        f"{item_designation(model, b)} ({natural_join(names)})"
-        for b, names in undrawn_board_nets(model).items()
-        if item_unit(model, b) == scope.of_unit
-    ]
-    if not boards:
-        return ""
-    return f"; board {', '.join(boards)} is a black box, so its nets are drawn nowhere (BOARD_NETS_NOT_DRAWN)"
 
 
 def _nets_drawn(model: Model, owners: Mapping[str, Mapping[str, Id[Port]]], net: Netlist, scope: DrawingScope, drawn: Collection[str]) -> bool:
@@ -74,10 +62,17 @@ def set_without_page_findings(model: Model, kit: SymbolKit, net: Netlist, pagele
         found.append(
             _INFO["SET_WITHOUT_PAGE"].finding(
                 subjects,
-                f"drawing set {number} holds {held} but has no page and its nets are drawn on no other page" + _board_cause(model, scope),
+                f"drawing set {number} holds {held} but has no page and its nets are drawn on no other page",
             )
         )
     return tuple(found)
+
+
+def read_incomplete_finding(pages: Collection[Id[Page]], ports: Collection[str]) -> Finding:
+    """The DRAWN_READ_INCOMPLETE ERROR: the pages and the count of ports no drawn-page check covered (R3470)."""
+    return _INFO["DRAWN_READ_INCOMPLETE"].finding(
+        tuple(pages), f"{len(pages)} pages were not read by the drawn-page checks and {len(ports)} ports were skipped"
+    )
 
 
 def set_failure_finding(error: Exception, problem: PlacementProblem, scope: DrawingScope, number: int) -> Finding:

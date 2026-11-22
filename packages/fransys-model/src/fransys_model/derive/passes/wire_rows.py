@@ -10,7 +10,7 @@ import dataclasses
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.facts.closure import net_of, port_rails
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.derive.lookups import item_of_port, unit_chain
 from fransys_model.kernel import Finding, Model, evolve, make_id
 from fransys_model.vocab.codes import finding
@@ -22,7 +22,6 @@ from fransys_model.vocab.supply_system import supply_rail_row
 from fransys_model.vocab.tables import (
     conductors,
     facets_of,
-    functions,
     items,
     nets,
     ports,
@@ -50,9 +49,8 @@ def _sourced(model: Model, net_ports: tuple[Id[Port], ...]) -> set[WiringRow]:
 
 
 def _signal_on(model: Model, net_ports: tuple[Id[Port], ...]) -> bool:
-    channels = {t: f.signal for t, f in plc_channel_facets(model).items()}
-    fns, table = functions(model), ports(model)
-    return any(channels.get(fns[table[p].function].template) in _DC_SIGNALS for p in net_ports if fns[table[p].function].template is not None)
+    channels, table = function_channels(model), ports(model)
+    return any((facet := channels.get(table[p].function)) is not None and facet.signal in _DC_SIGNALS for p in net_ports)
 
 
 def _in_scope(model: Model, wire_unit: Id[Unit] | None, supply_unit: Id[Unit] | None) -> bool:

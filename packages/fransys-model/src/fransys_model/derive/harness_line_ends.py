@@ -82,16 +82,15 @@ def plug_of(
     model: Model,
     item: Id[Item],
     connector: Id[Function] | None,
-    parents: set[Id[Item]],
 ) -> Id[Function] | None:
-    """`connector` when `item` is a plug: a non-cable direct child of a line, a connector landed.
+    """`connector` when `item` is a plug: a non-cable direct child of a cable or harness, a connector landed.
 
-    The line is one of `parents` (model-0175).
+    The line is the parent (model-0175).
     """
     parent = parent_item(model, item)
     if connector is None or parent is None or is_cable(model, item):
         return None
-    return connector if parent in parents else None
+    return connector if is_cable(model, parent) or is_harness(model, parent) else None
 
 
 def _sort_key(model: Model, end: _End, plug: Id[Function] | None) -> tuple[object, ...]:
@@ -114,9 +113,8 @@ def harness_line_ends(model: Model, subject: Id[Item]) -> tuple[HarnessLineEnd, 
         SchemaError: `subject` is neither a harness nor a cable.
     """
     cables = _cables_of(model, subject)
-    parents = {subject, *(cable.cable for cable in cables)}
     ends = _merged(model, subject, cables)
-    plugs = {end.item: plug_of(model, end.item, end.connector, parents) for end in ends}
+    plugs = {end.item: plug_of(model, end.item, end.connector) for end in ends}
     ordered = sorted(ends, key=lambda end: _sort_key(model, end, plugs[end.item]))
     return tuple(
         HarnessLineEnd(

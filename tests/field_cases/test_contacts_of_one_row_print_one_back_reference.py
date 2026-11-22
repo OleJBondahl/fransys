@@ -88,3 +88,6 @@ def test_a_fold_wider_than_the_page_wraps_at_a_lane(relays: int) -> None:
     assert not {"WIDER_THAN_PAGE", "PAGE_OVERFLOW", "PLACEMENT_PROBLEM", "CONNECTION_NOT_DRAWN"} & {f.code for f in result.findings}
     drawn = {t.text for drawing in drawn_pages(result.model).values() for t in drawing.texts}
     assert {f"-R{i}" for i in range(relays)} <= drawn
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

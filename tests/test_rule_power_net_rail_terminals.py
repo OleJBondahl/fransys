@@ -4,22 +4,27 @@ Six cases: the demo skid and the standard placement corpus (machine_panel, panel
 distribution_board, mcc). Four have rail terminals; distribution_board and mcc have none and assert
 """
 
+import functools
+import importlib
 import importlib.util
 from collections import Counter
 from pathlib import Path
 from typing import Any
+lazy from collections.abc import Sequence
 
 import fransys as fr
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+from plant import Plant
 
-from fransys_model.derive import ConductorEnd, conductor_ends, far_pins, is_rail_terminal, required_drawn, stands, terminal_items
+from fransys_model.derive import ConductorEnd, FunctionSymbol, conductor_ends, is_rail_terminal, required_drawn, stands, terminal_items
 from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.lookups import item_of_port
 from fransys_model.vocab.tables import conductors, ports
 
 _ROOT = Path(__file__).parent.parent
 _SKID = _ROOT / "examples" / "demo-skid" / "skid.py"
-_RUN = _ROOT / "internal" / "placement_corpus" / "run.py"
 
 
 def _load(path: Path, name: str) -> Any:
@@ -31,13 +36,20 @@ def _load(path: Path, name: str) -> Any:
     return module
 
 
+@functools.cache
 def _model(case: str) -> fr.Model:
+    if case == "mated":  # the pool's one model with a MateEnd (mates are refused at the check, so no consumer case has one)
+        plant = Plant()
+        plant.item("plug", designation="X1")
+        plant.item("socket", designation="X2")
+        plant.pin("plug", "J1", "1")
+        plant.pin("socket", "J1", "1")
+        plant.mate(Plant.function_id("plug", "J1"), Plant.function_id("socket", "J1"))
+        return plant.model()
     if case == "demo-skid":
         design, document = _load(_SKID, "demo_skid_rule").design()
         return fr.build(design, document).model
-    run = _load(_RUN, "corpus_run_rule")
-    (circuit,) = (c for c in run.circuits("standard") if c[0] == case)
-    model = run.build(case, circuit).model
+    model = importlib.import_module("placement_corpus.run").observed(case).result.model  # internal/ is not exported
     assert isinstance(model, fr.Model)
     return model
 
@@ -66,16 +78,35 @@ def test_no_rail_terminal_is_drawn_or_stands_a_power_symbol(case: str) -> None:
     assert not {p for p in stands(model) if item_of_port(model, p) in rail}
 
 
+@pytest.fixture(scope="module")
+def pool_model(request: pytest.FixtureRequest) -> fr.Model:
+    return _model(request.param)
+
+
+def _ends(model: fr.Model, scope: Sequence[Any]) -> list[Any]:
+    return [r for r in required_drawn(model, scope) if not isinstance(r, FunctionSymbol)]
+
+
 @pytest.mark.rule("DRAWN-LEDGER")
-@pytest.mark.parametrize("case", _CASES)
-def test_the_end_rows_equal_far_pins_and_read_each_conductor_twice(case: str) -> None:
-    model = _model(case)
-    ends = [r for r in required_drawn(model, tuple(ports(model))) if isinstance(r, ConductorEnd)]
-    assert [(e.port, e.far) for e in ends] == list(far_pins(model, tuple(ports(model))))
-    assert Counter(e.conductor for e in ends) == dict.fromkeys(
-        (c for c in conductors(model) if not is_bridge(model, c)), 2
-    )  # a bridge is no wire (R885)
-    assert all({e.port, e.far} == set(conductor_ends(model, e.conductor)) for e in ends)
+@pytest.mark.parametrize("pool_model", [*_CASES, "mated"], indirect=True)
+@given(data=st.data())
+def test_the_required_ends_are_local_unordered_and_read_each_conductor_by_its_ends(pool_model: fr.Model, data: st.DataObject) -> None:
+    """C1: each end at a scope port is one row; a function symbol is one row whatever the scope."""
+    model = pool_model
+    scope = data.draw(st.lists(st.sampled_from(tuple(ports(model))), unique=True, max_size=60))
+    cut = data.draw(st.integers(0, len(scope)))
+    ends = _ends(model, scope)
+    assert Counter(ends) == Counter(_ends(model, scope[:cut]) + _ends(model, scope[cut:]))  # 1 locality
+    assert Counter(ends) == Counter(_ends(model, data.draw(st.permutations(scope))))  # 2 order
+    for e in (e for e in ends if isinstance(e, ConductorEnd)):  # 3 each end names its conductor's two ports
+        assert {e.port, e.far} == set(conductor_ends(model, e.conductor))
+        assert not is_bridge(model, e.conductor)  # a bridge is no wire (R885)
+    rows = Counter(e.conductor for e in ends if isinstance(e, ConductorEnd))
+    for c in conductors(model):  # 4 both ends in scope, two rows
+        assert rows[c] == (0 if is_bridge(model, c) else sum(p in scope for p in conductor_ends(model, c)))
+    symbols = [r for r in required_drawn(model, scope) if isinstance(r, FunctionSymbol)]
+    assert symbols == [r for r in required_drawn(model, ()) if isinstance(r, FunctionSymbol)]  # 5 the same for every scope
+    assert len(symbols) == len(set(symbols))
 
 
 def _strip_model(*, rail: bool) -> fr.Model:

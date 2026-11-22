@@ -598,3 +598,6 @@ def test_a_mixed_modules_channels_list_in_natural_order_of_the_part_function_nam
     (csv_path,) = (p for p in written if p.name.endswith("plc.csv"))
     rows = csv_path.read_text(encoding="utf-8").splitlines()[1:]
     assert [row.split(",")[0].split(":")[1] for row in rows] == ["I1", "O1", "I2", "O2", "I10"]
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

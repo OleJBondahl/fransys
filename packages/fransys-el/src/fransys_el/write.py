@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import export_set_name, refuses
 from fransys_model.kernel import Origin, evolve
 
+from .codes import FINDING_CODES
 from .write_findings import kernel_findings
 from .write_ids import group_ids, symbol_subjects
 from .write_markers import link_markers
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
 
 __all__ = ["write_layout"]
 
+_INFO = next(info for info in FINDING_CODES if info.code == "DRAWING_SET_REFUSED")
 _ORIGIN = Origin(file="fransys_el/write.py", line=0, note="the placement core layout")
 
 
@@ -55,7 +57,12 @@ def write_layout(  # noqa: PLR0913 - the library and the place join the five inp
     paged = evolve(model, put=(*sets, *pages.values()), remove=own, origin=_ORIGIN)
     found = kernel_findings(paged, layout.findings, symbol_subjects(model, kit), pages)
     if refuses(found):  # no output step runs for this set (KI-773, R1945); the other sets are checked (KI-779, R1978)
-        return paged, tuple(_named_skip(f, export_set_name(model, unit)) for f in found), True
+        name = export_set_name(model, unit)
+        return (
+            paged,
+            (*(_named_skip(f, name) for f in found), _INFO.finding((), f"drawing set {name!r} is not drawn: a layout ERROR refused it")),
+            True,
+        )
     records = (
         *power_symbols(model, layout, pages, kit, (STAMP, sets[0].number)),
         *link_markers(written),

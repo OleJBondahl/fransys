@@ -9,15 +9,17 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+import symdef
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn
 from fransys_el.drawing_invariants import drawing_invariant_findings, page_overlaps
 from fransys_el.drawn_graph import Union
-from fransys_el.drawn_netlist import Netlist, _part
+from fransys_el.drawn_identity import ink_of, inked
+from fransys_el.drawn_netlist import Netlist, _part, drawn_netlist
 from ring_cases import bank_model, box_kit
 
-from electrical_symbols import LIBRARY
-from fransys_layout.core import Box, Size
+from electrical_symbols import LIBRARY, drawn_symbol
+from fransys_layout.core import Box, CoreError, Size
 from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnText, DrawnWire
 from fransys_model.kernel import Id, Severity, id_namespace
 
@@ -97,13 +99,17 @@ def test_a_text_beyond_or_touching_the_content_box_edge_raises_out_of_page(box):
     assert _codes(_drawing(texts=(DrawnText("T1", box, "designation", "NW"),))) == ["OUT_OF_PAGE"]
 
 
-@pytest.fixture(scope="module")
-def laid():
-    model = bank_model(8)
+def _laid_bank(count):
+    model = bank_model(count)
     conventions, kit = house(), box_kit(model)
     problem, _ = build(model, kit, conventions, LIBRARY)
     _, found, drawn = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
-    return found, drawn
+    return found, drawn, model, kit
+
+
+@pytest.fixture(scope="module")
+def laid():
+    return _laid_bank(8)
 
 
 @pytest.mark.rule("KEEP-OUT")
@@ -130,7 +136,7 @@ def test_an_annex_tag_on_a_body_raises_overlap_and_beyond_the_page_out_of_page()
 
 def test_a_laid_out_model_draws_its_annexes_as_tag_texts_the_checks_read(laid):
     """The annex boxes of the core layout stand in each page's Drawing as TAG texts."""
-    _, drawn = laid
+    _, drawn, *_ = laid
     assert any(t.kind == "TAG" for d in drawn.values() for t in d.texts)
 
 
@@ -272,3 +278,85 @@ def test_a_where_line_two_pitches_off_its_stack_raises_where_text_far():
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+
+def test_a_wire_from_its_own_pin_across_its_own_body_raises_overlap_and_one_leaving_the_pin_outward_is_clear():
+    """KI-1283 (R3120): a wire that ends at the body's pin but runs back across the body is a body hit, as layout's route check says."""
+    body = DrawnSymbol("t", "k-a", 20, 20, "R0", outline=Box(20, 20, 20, 10), ports=("P",))
+
+    def codes(*points: tuple[int, int]) -> list[str]:
+        drawing = Drawing(Size(100, 100), (body,), (DrawnWire("w", points, "signal"),), (), (), "v")
+        part = replace(_portless_part(drawing), ports={"P": (30, 20)})
+        return [f.code for f in drawing_invariant_findings(Netlist({PAGE: part}, Union(), {}, {}, {}, {}))]
+
+    assert codes((30, 20), (30, 0)) == []
+    assert codes((30, 20), (30, 60)) == ["OVERLAP"]
+
+
+def _ink(symbol: DrawnSymbol) -> Box:
+    """The body symdef measures of the symbol as the writer built it, at its place (render's build, no stretch: a core symbol has none)."""
+    made = drawn_symbol(symbol.key, symbol.texts, library=LIBRARY, offsets=dict(symbol.offsets), sides=dict(symbol.sides), turn=symbol.turn)
+    built = symdef.repeat(made, symbol.poles, port_format=LIBRARY.port_format) if symbol.poles > 1 else made
+    body = symdef.measure(symdef.orient(symdef.leads(built, symbol.leads), symdef.Orientation[symbol.orient]), symdef.Orientation.R0, LIBRARY).body
+    return Box(symbol.x + body.min.x, symbol.y + body.min.y, body.width, body.height)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "operating-device",
+        "lamp",
+        "change-over-contact",
+        "generic-box",
+    ],
+)  # terminal is left out: its stamp is the 16 x 16 cell, its ink 4 x 16 (READER-OUTLINE P2 reads the ink, not the stamp)
+def test_the_outline_a_core_symbol_carries_is_the_body_symdef_measures_of_it(laid, key):
+    """READER-OUTLINE W4: the reader's box is ink; a stamp that differs from the measured body is the writer's defect (KI-1366)."""
+    drawn = [s for d in laid[1].values() for s in d.symbols if s.key == key]
+    assert drawn
+    assert [s.id for s in drawn if s.outline != _ink(s)] == []
+
+
+@pytest.mark.parametrize("count", [16, 40])
+def test_a_generic_box_is_stamped_as_wide_as_symdef_draws_it_at_every_bank_size(count):
+    """KI-1366 (R3492): the core packs a box's width from the ends symdef draws, so stamp and ink agree on bank 16 and 40 too."""
+    drawn = [s for d in _laid_bank(count)[1].values() for s in d.symbols if s.key == "generic-box"]
+    assert drawn
+    assert [s.id for s in drawn if s.outline != _ink(s)] == []
+
+
+def test_the_page_checks_read_the_ink_symdef_measures_not_the_box_the_writer_stamped():
+    """READER-OUTLINE: a stamp that hides ink past the page edge or over a neighbour is still reported."""
+    lamp = DrawnSymbol("a", "lamp", 0, 50, "R0", outline=Box(0, 50, 2, 2))
+    ink = _ink(lamp)
+    edge = replace(lamp, x=100 - ink.x - ink.w // 2, outline=Box(40, 50, 2, 2))
+    mid = replace(lamp, x=50, outline=Box(10, 10, 2, 2))
+    twin = replace(mid, id="b", x=50 + ink.w // 2, outline=Box(80, 80, 2, 2))
+
+    def codes(*symbols: DrawnSymbol) -> list[str]:
+        return [
+            f.code
+            for f in drawing_invariant_findings(
+                Netlist({PAGE: _part(inked(_drawing(*symbols)[PAGE], LIBRARY), {}, LIBRARY)}, Union(), {}, {}, {}, {})
+            )
+        ]
+
+    assert codes(edge) == ["OUT_OF_PAGE"]
+    assert codes(mid, twin) == ["OVERLAP"]
+
+
+def test_a_stretch_along_another_axis_than_x_or_y_is_refused_naming_it():
+    """READER-OUTLINE review (b): `ink_of` does not drop a stretch axis it cannot measure."""
+    odd = DrawnSymbol("a", "lamp", 0, 0, "R0", outline=Box(0, 0, 2, 2), stretch=(("z", 4),))
+    with pytest.raises(CoreError, match="'z'"):
+        ink_of(odd, LIBRARY)
+
+
+def test_the_drawn_netlist_hands_the_checks_the_ink_of_every_symbol(laid):
+    """READER-OUTLINE: whatever outline a writer stamps, the netlist's drawings carry the measured one."""
+    _, drawn, model, kit = laid
+    stamped = {p: replace(d, symbols=tuple(replace(s, outline=Box(0, 0, 1, 1)) if s.outline else s for s in d.symbols)) for p, d in drawn.items()}
+    net = drawn_netlist(model, kit, stamped, [], LIBRARY)
+    held = [s for part in net.pages.values() for s in part.drawing.symbols if s.outline]
+    assert held
+    assert all(s.outline == _ink(s) for s in held if s.key in {"lamp", "operating-device", "change-over-contact"})

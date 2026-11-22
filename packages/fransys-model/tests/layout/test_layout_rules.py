@@ -93,7 +93,6 @@ _ENUMS = {
 
 _COMMON = {"id", "key", "ext"}
 _FIELDS: dict[type, set[str]] = {
-    layout.GroupHint: {"function", "group"},
     layout.OrderHint: {"before", "after"},
     layout.PoleGroup: {"functions", "selector"},
     layout.SymbolChoice: {"function", "template", "part", "kind", "symbol", "port_map"},

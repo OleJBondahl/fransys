@@ -27,7 +27,7 @@ from placement_fixtures import kit_for, planted_model
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Finding, PinRef, Size, Wire, solve
-from fransys_model.derive import drawn_designations, net_of, pdf_page, refuses, unit_label
+from fransys_model.derive import drawn_designations, drawn_net_of, net_of, pdf_page, refuses, unit_label
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -165,6 +165,7 @@ def test_writing_twice_gives_one_model_and_a_refused_set_names_its_skip_once(wri
     assert written.short_skipped
     assert any(refuses((f,)) for f in written.short_found)
     assert all(f.message.count("is not drawn, its drawn-page checks did not run") == refuses((f,)) for f in written.short_found)
+    assert [f.code for f in written.short_found].count("DRAWING_SET_REFUSED") == 1
 
 
 def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: Written) -> None:
@@ -179,7 +180,7 @@ def test_a_core_finding_keeps_its_code_text_and_the_registry_severity(written: W
         ("WIRE_THROUGH_BODY", "no path"),
         ("NO_CELL", "nowhere"),
     ]
-    assert [f.severity for f in found] == [Severity.ERROR, Severity.WARNING]
+    assert [f.severity for f in found] == [Severity.ERROR, Severity.ERROR]
     assert [s.kind for s in found[0].subjects] == ["port"]
     assert found[1].subjects == ()
     assert all(f.fix for f in found)
@@ -377,9 +378,9 @@ def test_a_fill_under_min_text_names_the_unit_label_not_its_id(written: Written)
 
 
 def test_the_drawn_net_text_is_the_net_key_of_its_port_not_the_first_port_value(written: Written) -> None:
-    """R1615: `net_text` spells a port's net as `Net.id` does (`net_key`), so power leads and markers name the core's net."""
+    """R1615: `net_text` spells a port's drawn net as `Net.id` does (`net_key`), so power leads and markers name the core's net."""
     model = written.model
     for port in list(ports(model))[:20]:
-        net = net_of(model, port)
+        net = drawn_net_of(model, port)
         assert net is not None
         assert net_text(model, port) == net_key(model, net.ports) != net.ports[0].value

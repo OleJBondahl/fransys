@@ -13,10 +13,11 @@ from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.placement_env import make_env
 from fransys_el.placement_markers import facing_views, stub_fit
 from fransys_el.placement_options import options
-from fransys_el.placement_sets import bare_pins, cut_lines, drawing_scopes, restriction
 from fransys_el.placement_syms import strip_tags
 from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
+from fransys_el.restrict import restriction
+from fransys_el.scopes import bare_pins, cut_lines, drawing_scopes
 from fransys_el.write_stubs import far_port
 from kit_instances import INSTANCES
 

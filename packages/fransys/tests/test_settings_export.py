@@ -1,9 +1,11 @@
 """`[export]`: which reports are written, how files are named, placed and encoded (SO-C part B)."""
 
+import functools
 import io
 import itertools
 import xml.etree.ElementTree as ET
 import zipfile
+from tempfile import TemporaryDirectory
 from typing import NamedTuple
 lazy from pathlib import Path
 
@@ -192,7 +194,14 @@ def _ring_io(d: fr.Design) -> _Io:
     return _Io(d.terminal_strip("X3", "DEMO-TB-2.5", 2, interface=(1, 2)))
 
 
-def _ring_cab_result(tmp_path: Path, *, ship: bool = False, text: str = _RING) -> fr.BuildResult:
+@functools.cache
+def _ring_cab_result(*, ship: bool = False, text: str = _RING) -> fr.BuildResult:
+    """The ring-out cabinet built once per process for each ship flag and settings text."""
+    with TemporaryDirectory() as folder:
+        return _build_ring_cab(Path(folder), ship=ship, text=text)
+
+
+def _build_ring_cab(tmp_path: Path, *, ship: bool, text: str) -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Ring", number="R-1", customer="Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-15", text="First issue", created="XX")
@@ -212,7 +221,7 @@ def _ring_cab_result(tmp_path: Path, *, ship: bool = False, text: str = _RING) -
 
 
 def test_every_join_of_the_model_is_one_row_of_the_sheet(tmp_path: Path) -> None:
-    result = _ring_cab_result(tmp_path)
+    result = _ring_cab_result()
     model = result.model
     (record,) = document_rows(model)
     unit = document_unit(model, record.id)
@@ -246,7 +255,7 @@ def test_a_ring_out_word_is_the_consumers(tmp_path: Path) -> None:
 
 
 def _ship_sheet(tmp_path: Path, text: str = _RING) -> tuple[fr.BuildResult, dict[str, list[list[str]]]]:
-    result = _ring_cab_result(tmp_path, ship=True, text=text)
+    result = _ring_cab_result(ship=True, text=text)
     fr.write(result, tmp_path / "out")
     sheets = {p.stem: [r for r in _sheet_rows(p.read_bytes()) if r[0].isdigit()] for p in (tmp_path / "out").glob("*.xlsx")}
     return result, sheets
@@ -272,13 +281,13 @@ def test_ring_out_skip_leaves_a_preset_without_a_sheet(tmp_path: Path) -> None:
     assert not sheets
 
 
-def test_ring_out_skip_refuses_a_value_that_is_no_preset(tmp_path: Path) -> None:
+def test_ring_out_skip_refuses_a_value_that_is_no_preset() -> None:
     with pytest.raises(fr.SettingsError, match=r'"ring_out_skip" is \'nope\'; known: cabinet_schematic, system'):
-        _ring_cab_result(tmp_path, text=_RING + 'ring_out_skip = ["nope"]\n')
+        _ring_cab_result(text=_RING + 'ring_out_skip = ["nope"]\n')
 
 
 def test_a_wire_with_both_ends_in_the_units_own_strip_is_a_row_of_its_sheet(tmp_path: Path) -> None:
-    fr.write(_ring_cab_result(tmp_path), tmp_path / "out")
+    fr.write(_ring_cab_result(), tmp_path / "out")
     (path,) = (tmp_path / "out").glob("*.xlsx")
     wires = [r for r in _sheet_rows(path.read_bytes()) if r[0].isdigit() and r[1] == "Wire"]
     assert wires == [["1", "Wire", "-X1:2", "-X1:3", "-X1:2 -X1:3", "BK", "2.5", "p2:2A", "", "", ""]]

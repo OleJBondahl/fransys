@@ -5,6 +5,7 @@ a per-rack export is named from the rack's designation printed for that unit (`w
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import csv
 import io
 import tempfile
@@ -624,3 +625,6 @@ def test_two_units_of_one_release_give_the_second_document_the_keep_one_hint(tmp
     result, _units = _released_units_with_documents(tmp_path, (("a", "shared-cabinet", 1, 1), ("b", "shared-cabinet", 1, 1)))
     rows = [r for r in export_set(result.model, None) if r.export_kind == "pdf"]
     assert [r.hint for r in rows] == [None, "shared-cabinet"]
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

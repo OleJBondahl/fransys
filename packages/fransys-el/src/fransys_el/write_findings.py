@@ -8,6 +8,7 @@ import re
 from typing import TYPE_CHECKING, cast
 
 from fransys_layout import FINDING_CODES as LAYOUT_CODES
+from fransys_model.kernel import CodeBook
 lazy from fransys_model.derive import pdf_page, tag_text, unit_label
 lazy from fransys_model.kernel import Finding as KernelFinding
 
@@ -28,7 +29,7 @@ __all__ = ["kernel_findings"]
 
 _DEVICES = re.compile(r"\(devices ([^)]*)\)")  # a row's devices as designations: a relay's contacts print its tag once
 
-_BY_CODE = {info.code: info for info in (*LAYOUT_CODES, *FINDING_CODES)}
+_BY_CODE = CodeBook(*LAYOUT_CODES, *FINDING_CODES)
 
 
 def _subjects(known: Mapping[str, Id[object]], text: str | None) -> tuple[tuple[Id[object], ...], tuple[str, ...]]:

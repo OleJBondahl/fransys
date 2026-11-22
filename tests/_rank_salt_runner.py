@@ -12,7 +12,7 @@ from typing import Any
 
 from _core_solves import caught_solves
 from _rank_outcome import outcome
-from _reference_lane_runner import _cases
+from _reference_lane_runner import observation
 
 from fransys_model.kernel import id_namespace
 
@@ -38,7 +38,8 @@ def _run(salt: str, name: str) -> list[Any]:
 
 
 def _salted(name: str) -> list[Any]:
-    ring = importlib.import_module("ring_cases")
-    builds = {**_cases(), "bank40": lambda: ring.bank_model(40)}
-    _, caught = caught_solves(builds[name])
+    if name == "bank40":  # fresh: not a corpus build, so no store serves it
+        caught = caught_solves(lambda: importlib.import_module("ring_cases").bank_model(40))[1]
+    else:
+        caught = observation(name).caught("solves")  # R3302: a corpus build is stored, its solves recorded
     return [{k: _plain(v) if hasattr(v, "items") else v for k, v in outcome(lay).items()} for _, _, lay in caught]

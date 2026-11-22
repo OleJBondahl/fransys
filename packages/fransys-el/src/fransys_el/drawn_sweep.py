@@ -26,7 +26,7 @@ def drawing_sweep(model: Model, net: Netlist) -> tuple[Finding, ...]:
         *not_drawn_findings(model, net),
         *short_findings(net),
         *ink_findings(net),
-        *power_findings(net, model),
+        *power_findings(net),
         *rail_findings(net, model),
         *marking_findings(net, model),
         *loop_findings(net),

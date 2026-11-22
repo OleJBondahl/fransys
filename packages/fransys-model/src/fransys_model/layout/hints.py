@@ -13,28 +13,9 @@ from fransys_model.vocab.templates import FunctionTemplate, Part
 from .order import holder_of
 
 
-@record(kind="layout.group_hint", subject="function", unique=True)
-class GroupHint:
-    """Draw this function with that `=` group, whatever the placement of its item says.
-
-    Example: the e-stop permissive contact that gates the pump contactor is placed
-    under `=SAFETY` and hinted into `=PUMP1`. At most one per function.
-    """
-
-    id: Id[GroupHint]
-    key: AuthoringKey
-    function: Id[Function]
-    group: Id[AspectNode]
-    ext: frozendict[str, Value] = frozendict()
-
-
 @record(kind="layout.order_hint")
 class OrderHint:
-    """Draw group `before` ahead of group `after`, overriding the profile convention.
-
-    Hints that contradict each other across records are the layout engine's
-    `HintError`, not a model rule.
-    """
+    """Draw group `before` ahead of group `after`, overriding the profile convention."""
 
     id: Id[OrderHint]
     key: AuthoringKey

@@ -21,7 +21,7 @@ from fransys.pipeline import (
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramLayout
 from fransys_model.kernel import Draft, Finding, Id, Origin, Severity, make_id
-from fransys_model.vocab import Document, DocumentPreset
+from fransys_model.vocab import Aspect, AspectNode, Document, DocumentPreset
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, PartCategory, PortBoundary
@@ -419,22 +419,25 @@ _FUNCTION_ORIGIN = Origin(file=_PART_FILE, line=10, note="invented")
 _DESIGN_ORIGIN = Origin(file="packages/fransys/tests/test_acceptance.py", line=1, note="invented")
 
 
-def _schematic_document(name: str, item: Id[Any]) -> Document:
-    """A `CABINET_SCHEMATIC` document of `item`: PS1/PS2's "layout runs only on a model with a
+def _schematic_document(name: str) -> tuple[AspectNode, Document]:
+    """A `CABINET_SCHEMATIC` document of a location: PS1/PS2's "layout runs only on a model with a
     document" gate (MODEL-BUILD, decision 0037) needs one before `fr.build` will call
     `lay_out_schematic` at all -- these symbol-port tests fail inside that call,
     so without this the error never fires and `SYMBOL_PORT_MISSING` never appears.
     """
     key = ("document", name)
-    return Document(
+    node = AspectNode(
+        id=make_id(AspectNode, ("location", name)), key=("location", name), aspect=Aspect.LOCATION, parent=None, label="C1", description="Invented"
+    )
+    document = Document(
         id=make_id(Document, key),
         key=key,
         preset=DocumentPreset.CABINET_SCHEMATIC,
-        location=None,
-        item=item,
+        location=node.id,
         cover="Invented cover text.",
         notes=None,
     )
+    return node, document
 
 
 def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id[Any], Id[Any]]:
@@ -501,7 +504,7 @@ def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id[Any], Id[Any]]:
     draft = Draft()
     draft.add(part, origin=_PART_HEADER_ORIGIN)
     draft.extend([function_template, port_template], origin=_FUNCTION_ORIGIN)
-    draft.extend([item, function, port, _schematic_document("symbol-port-mismatch", item.id)], origin=_DESIGN_ORIGIN)
+    draft.extend([item, function, port, *_schematic_document("symbol-port-mismatch")], origin=_DESIGN_ORIGIN)
     # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.
     _wired_to_a_partner(draft, port, _DESIGN_ORIGIN)
     return draft, part.id, port_template.id
@@ -577,7 +580,7 @@ def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id[Any]]:
 
     draft = Draft()
     draft.extend(
-        [item, function, port, _schematic_document("part-less-symbol-mismatch", item.id)],
+        [item, function, port, *_schematic_document("part-less-symbol-mismatch")],
         origin=_DESIGN_ORIGIN,
     )
     # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.

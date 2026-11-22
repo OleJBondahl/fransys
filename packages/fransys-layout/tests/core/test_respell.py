@@ -366,7 +366,7 @@ CASES_align: dict[str, Callable[[], PlacementProblem]] = {
 def _mates(prob: PlacementProblem, maps: dict[str, str]) -> Facts:
     return Facts(
         mates=tuple((PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.mates),
-        far_ends=(),
+        far_ends=tuple((PinRef(maps[a.sym], a.pin), PinRef(maps[b.sym], b.pin)) for a, b in prob.facts.far_ends),
     )
 
 

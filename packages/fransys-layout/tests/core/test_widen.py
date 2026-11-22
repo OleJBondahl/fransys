@@ -11,6 +11,7 @@ from fransys_layout.core import Annex, Box, Facts, PinRef, PlacementProblem, Siz
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_costs import with_wires
 from fransys_layout.core.cut_measured import Measured, RowKey
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import overlaps
 from fransys_layout.core.outputs import Demand, PagePlacement
 from fransys_layout.core.place import place_pages
@@ -261,13 +262,16 @@ def test_block_reserves_hold_only_the_stub_box_below_the_row_content_on_a_card_a
     from fransys_layout.core.arrow_reserve import block_reserves
     from fransys_layout.core.cut_costs import item_height
 
-    pin, far = PinRef("a", "out"), PinRef("x", "1")
-    refs = (Ref("n", RefKind.STUB, (RefEnd(1, "c", pin, 0, StandClass.LEG, far=(far,)),)),)
+    far = PinRef("x", "1")
     for box_h in (472, 8):
-        options = replace(PLAIN, stub_lines={(pin, far): (2,)}, stub_table={(2, 1): {"R0": Box(0, -8, 71, box_h)}})
         for prob in (card_with_coils(), three_columns()):
+            first = next(b for lst in cut_of(prob, PLAIN).blocks for b in lst.blocks)
+            pin = PinRef(first.anchor or "a", "out")
+            options = replace(PLAIN, stub_lines={(pin, far): (2,)}, stub_table={(2, 1): {"R0": Box(0, -8, 71, box_h)}})
             cut = cut_of(prob, options)
-            cut = replace(cut, spec=replace(cut.spec, reference_plan=refs))
+            fan = Fan("f", ("n",), (Attach(None if first.is_card else first.columns[0], 0, 0, pin, net="n"),), (), None, 2, "S")
+            refs = (Ref("n", RefKind.STUB, (RefEnd(1, first.columns[0] if not first.is_card else None, pin, 0, StandClass.TRUNK_END, far=(far,)),)),)
+            cut = replace(cut, flow=replace(cut.flow, fans=(fan,)), spec=replace(cut.spec, reference_plan=refs))
             reserves = block_reserves(cut, (), options)
             columns = {c.id: c for c in cut.flow.columns}
             blocks = [b for lst in cut.blocks for b in lst.blocks]

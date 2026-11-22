@@ -155,3 +155,5 @@ def test_the_bank_of_54_draws_every_connection() -> None:
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1131 (R2647, TEXT-WIRE P0).

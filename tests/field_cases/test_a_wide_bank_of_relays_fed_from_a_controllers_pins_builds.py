@@ -69,6 +69,19 @@ def test_a_bank_draws_every_connection(n: int) -> None:
     assert [f for f in (*built.findings, *fr.check(built)) if f.code == "CONNECTION_NOT_DRAWN"] == []
 
 
+# CUTNET-INK-ONLY (layout-0634): a link's wire joins only what the ledger's ink joins; a cut net's tree on bank 50 joined pins no conductor does.
+def test_the_bank_of_fifty_draws_no_ink_without_a_conductor() -> None:
+    built = built_bank(50)
+    assert [f for f in (*built.findings, *fr.check(built)) if f.code == "INK_WITHOUT_CONDUCTOR"] == []
+
+
+# CUTNET-INK-ONLY (layout-0635): apart pairs on one controller pin are one tag pair, so no tag box stands on no wire (R3008).
+@pytest.mark.parametrize("n", [75, 77])
+def test_apart_pairs_on_one_pin_leave_no_marker_on_no_wire(n: int) -> None:
+    built = built_bank(n)
+    assert [f.code for f in built.findings if f.code == "REFERENCE_NOT_READABLE"] == []
+
+
 # KI-640 (R1731): bank of 40, loop-placed reference markers overlap on page 4f2c6ea0 (CH09 / -K41); gap row GAP-FLIP-640.
 def test_no_reference_marker_overlaps_another_on_the_bank_of_forty() -> None:
     drawings = ring_cases.built_bank(40).drawings.values()
@@ -76,3 +89,12 @@ def test_no_reference_marker_overlaps_another_on_the_bank_of_forty() -> None:
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).
+
+
+# CUTNET-INK-ONLY (layout-0569, R3016): at three recut rounds bank 80 kept a row wider than its page,
+# since the fan legs stand in the page-edge rows the cut makes.
+def test_a_bank_of_eighty_has_no_row_wider_than_the_page() -> None:
+    built = built_bank(80)
+    assert [f.code for f in (*built.findings, *fr.check(built)) if f.code in {"PAGE_OVERFLOW", "WIDER_THAN_PAGE"}] == []

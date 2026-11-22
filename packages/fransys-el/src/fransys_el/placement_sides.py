@@ -30,11 +30,11 @@ __all__ = ["box_sides", "half_split"]
 
 
 def _by_rank(model: Model, ports: Sequence[Id[Port]]) -> dict[Id[Port], str]:
-    """The ports N when their function ranks first, else S; `{}` when every function ties."""
+    """The ports N when their function ranks first, else S; `{}` when every function ties, as when there are no ports."""
     fn = {p: cast("Id[Function]", port_function(model, p)) for p in ports}  # a box port has one
     rank = {p: side_order_key(model, fn[p]) for p in ports}
-    first = min(rank.values())
-    if all(r == first for r in rank.values()):
+    first = min(rank.values(), default=None)
+    if all(r == first for r in rank.values()):  # no ports, or every function ties: no split
         return {}
     return {p: NORTH if r == first else SOUTH for p, r in rank.items()}
 

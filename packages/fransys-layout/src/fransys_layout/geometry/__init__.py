@@ -2,13 +2,13 @@
 
 from .adapter import text_width_g
 from .boxes import Box, contains, overlaps, translate
-from .errors import GeometryError, HintError, LayoutError, UnknownSymbolError
+from .errors import GeometryError, LayoutError, UnknownSymbolError
 from .exits import FACING_STEP, port_exit
 from .facing import OPPOSITE, Facing
 from .flow import flow
 from .follow import follow
 from .legs import legs
-from .meet import Span, contains_point, meets, through
+from .meet import Span, contains_point, meets
 from .units import (
     PAGE_PAD,
     WIRING_GRID,
@@ -23,7 +23,6 @@ __all__ = (
     "Box",
     "Facing",
     "GeometryError",
-    "HintError",
     "LayoutError",
     "Point",
     "Span",
@@ -37,6 +36,5 @@ __all__ = (
     "overlaps",
     "port_exit",
     "text_width_g",
-    "through",
     "translate",
 )

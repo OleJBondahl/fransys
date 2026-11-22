@@ -4,6 +4,9 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 # 6 test workers unless PYTEST_WORKERS is set; scripts/ci_gates.py sets it from the load (R2270)
 pytest_workers := env_var_or_default("PYTEST_WORKERS", "6")
 
+# the cloud recipes run on Google Compute unless FRANSYS_RUNNER says otherwise (designer R2729)
+export FRANSYS_RUNNER := env("FRANSYS_RUNNER", "gce")
+
 check:
     uv run ruff check .
     uv run ruff format --check .
@@ -45,11 +48,11 @@ fmt:
     uv run ruff format .
     uv run ruff check --fix .
 
-# tests only, in parallel, on a fresh AWS spot instance (decision 0134); ARGS narrows them (paths, -k, ...).
-# No local fallback; PYTEST_WORKERS applies to the local `just ci` only
+# tests only: local, one process, when the named test files are estimated at 300 s or less and vmstat shows no swap IO, else in parallel on a fresh AWS spot instance (decision 0134, R3147); ARGS narrows them (paths, -k, ...).
+# The line RUN-LOCAL says which; no silent fallback; PYTEST_WORKERS applies to the local `just ci` only
 [positional-arguments]
 test *ARGS:
-    uv run python internal/scripts/aws_run.py run -- pytest -n auto --dist worksteal "$@"
+    uv run python internal/scripts/run_local.py "$@"
 
 # rewrite the tracked model, layout, render and listing goldens on a work branch, then their diff stat; refused on main
 regen-goldens *PKG:

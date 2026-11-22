@@ -23,7 +23,7 @@ from .outputs import Demand, Marker
 from .ref_kind import kind_of
 from .stand_fit import Limits, fit
 from .text_cells import cell_of
-from .text_ends import bundle_nets, end_stand, hub_xy, mark_env, pin_keeps, who
+from .text_ends import bundle_nets, end_stand, hub_xy, legless_pins, mark_env, pin_keeps, who
 from .values import Box, Finding, RefKind
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from .outputs import Placement
     from .route_fixed import Fixed
     from .text_ends import MarkEnv, Stand
-    from .values import Options, PlacementProblem, Ref, RefEnd, Size
+    from .values import Options, PinRef, PlacementProblem, Ref, RefEnd, Size
 
 _LONE = frozenset({RefKind.STUB, RefKind.COPY})  # kinds whose ends stand and fail alone; any other keeps all its ends or none (R1566)
 
@@ -132,13 +132,8 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     mine = frozenset({m.net, net_of_key(m.net), m.end.sym})  # a sibling fan's lane is exempt beside the box, never under it (R1063)
     fed, moved, first = _fed(m, st, keeps), False, m  # the wire that feeds a marker belongs to its stand; `first` sizes the Demand, not the last step
     bounds = Limits(area, st.band)
-    if st.walked:  # walked clear of every keep at placement, the one fit test (R1331, R1338); no stand: no room (layout-0507)
-        anchors = [k for k in here if k.kind == "anchor"]  # anchors stand after the placement that walked this stand (ANCHOR-FIRST)
-        return (
-            m
-            if st.stood and inside(marker_drawn_box(m, options), area) and fit(marker_box(m, options), anchors, owner, None) == ()
-            else _room(m, st, options)
-        )
+    if not st.stood:  # the lane end found no stand at placement: no room (layout-0507)
+        return _room(m, st, options)
     while (
         hit := fit(marker_box(m, options), here if moved else stand, owner, bounds._replace(drawn=marker_drawn_box(m, options)), (m.x, m.y))
     ) is not None:
@@ -189,11 +184,11 @@ def _all_keeps(env: MarkEnv, placement: Placement, problem: PlacementProblem, op
 
 def placed_marks(
     cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options, fixed: Mapping[int, Fixed]
-) -> tuple[tuple[Marker, ...], tuple[Finding, ...], tuple[Demand, ...]]:
+) -> tuple[tuple[Marker, ...], tuple[Finding, ...], tuple[Demand, ...], tuple[PinRef, ...]]:
     """The markers inside the page, in the plan's order, MARKER_UNPLACED for each other and the room Demand of each (layout-0559).
 
     A slot on a fixed wire is refused as on another net's pin (R872). A pair (not a stub or copy) keeps all its ends or none and raises one
-    MARKER_UNPLACED: an arrow by `Trunk.stood` (R1488), a tag or star here (R1566).
+    MARKER_UNPLACED: an arrow, a tag or a star here (R1488, R1566).
     """
     env = mark_env(cut, placement, problem, options)
     keeps = _all_keeps(env, placement, problem, options, fixed)
@@ -202,21 +197,19 @@ def placed_marks(
     own = {r.net: bundle_nets(env, r.net) for r in cut.spec.reference_plan}
     for key, members in problem.hints.frames:
         own.update({sym: own.get(sym, frozenset()) | {key} for sym in members})
-    out = iter(stagger([p for ps in per_ref for p in ps], options, problem.area, keeps, own))
+    out = iter(placed := stagger([p for ps in per_ref for p in ps], options, problem.area, keeps, own))
     kept: list[Marker] = []
     missed: list[Finding] = []
-    asks: list[Demand] = []
     for ref, ps in zip(cut.spec.reference_plan, per_ref, strict=True):
         got = [next(out) for _ in ps]
         missed += _missed(ref, ps, got)
-        asks += [k for k in got if isinstance(k, Demand)]
         if kind_of(ref) in _LONE or all(isinstance(k, Marker) for k in got):
             kept += [k for k in got if isinstance(k, Marker)]
-    return tuple(kept), tuple(missed), tuple(asks)
+    return tuple(kept), tuple(missed), tuple(k for k in placed if isinstance(k, Demand)), legless_pins(env, cut.spec.reference_plan)
 
 
 def _missed(ref: Ref, ps: Sequence[tuple[Marker, Stand]], got: Sequence[Marker | Demand]) -> list[Finding]:
-    """MARKER_UNPLACED for each end of a stub or copy that found no slot, and one for an arrow or star whatever its unstood ends (R1488)."""
+    """MARKER_UNPLACED for each end of a stub or copy that found no slot, and one for an arrow or star (R1488)."""
     lone = [_unplaced(m, k, alone=kind_of(ref) in _LONE) for (m, _), k in zip(ps, got, strict=True) if isinstance(k, Demand)]
     return lone if kind_of(ref) in _LONE else lone[:1]
 

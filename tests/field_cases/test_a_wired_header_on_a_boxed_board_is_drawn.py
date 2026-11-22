@@ -53,3 +53,20 @@ def test_an_unwired_boxed_header_is_not_wired_and_not_undrawn(built: fr.BuildRes
     assert len(unwired) == 4  # positive half: one per pin of the second header
     assert all(fr.derive.port_designation(built.model, s) in f.message and "port:" not in f.message for f in unwired for s in f.subjects)  # KI-598
     assert [f for f in findings if f.code == "FUNCTION_NOT_DRAWN" and "U2-J2" in f.message] == []
+
+
+@fr.unit("demo-led-board", revision=1, interface_version=1, date="2026-11-16", text="first", by="XX")
+def _led_board(u: fr.Design) -> _Headers:
+    pcb = u.device("U9", "FC-PCB-LED")
+    return _Headers(pcb, pcb)
+
+
+def test_a_port_naming_a_connector_pin_prints_its_own_designation() -> None:
+    """KI-1042: a port with `connector = "j1.1"` is the header's pin 1 and prints its one designation (R2488)."""
+    d = fr.design("demo_parts", "board_pin_parts")
+    d.add(_led_board, "U2")
+    result = fr.build(d, unit_document("demo-led-board"))
+    found = list(fr.check(result))
+    assert [f for f in found if f.code == "PORT_DESIGNATION_DUPLICATE"] == []
+    assert found  # positive half: the build reports its other findings, and none is an error
+    assert [f for f in found if f.severity is fr.Severity.ERROR] == []

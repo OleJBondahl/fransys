@@ -148,11 +148,26 @@ def _resolve_name(
     return None
 
 
+def _is_code_name(node: ast.expr | None) -> bool:
+    """A name `code`: a `CodeInfo.finding` call takes `subjects` first, so only a book call passes a code there."""
+    return isinstance(node, ast.Name) and node.id == "code"
+
+
+def _book_code_node(call: ast.Call) -> ast.expr | None:
+    """The code of a `CodeBook` call: its bound `finding(code, ...)`, or `book.finding("LITERAL" or code, ...)`."""
+    func, first = call.func, (call.args[0] if call.args else None)
+    if isinstance(func, ast.Name) and func.id == "finding":
+        return first
+    if isinstance(func, ast.Attribute) and func.attr == "finding" and (isinstance(first, ast.Constant) or _is_code_name(first)):
+        return first
+    return None
+
+
 def _finding_code_node(call: ast.Call) -> ast.expr | None:
     """The code expression of a call that builds a finding, else None.
 
-    The shapes: `Finding(code=...)`; `X[code].finding(...)` (a registry lookup); and
-    `_INFO.finding(...)` (a module's one `CodeInfo`, returned as the `_INFO` `Name` itself).
+    Shapes: `Finding(code=...)`; `X[code].finding(...)`; `_INFO.finding(...)` (returns the `_INFO` `Name`);
+    a `CodeBook`'s `finding(code, ...)` or `book.finding("LITERAL" or code, ...)` (`CodeInfo.finding` takes `subjects` first).
     """
     func = call.func
     if isinstance(func, ast.Name) and func.id == "Finding":
@@ -165,7 +180,7 @@ def _finding_code_node(call: ast.Call) -> ast.expr | None:
             return func.value.slice
         if isinstance(func.value, ast.Name) and func.value.id == "_INFO":
             return func.value
-    return None
+    return _book_code_node(call)
 
 
 def _is_finding_call(node: ast.AST) -> bool:
@@ -283,6 +298,8 @@ def _direct_codes(
             arg = _code_arg(node)
             if isinstance(arg, ast.Attribute):
                 continue  # `CodeInfo.finding` builds from its own `self.code`
+            if enclosing is not None and enclosing.name == "finding" and _passed_param(arg, enclosing) is not None:
+                continue  # `CodeBook.finding` forwards its `code`: resolved at its callers
             if isinstance(arg, ast.Name) and arg.id == "_INFO":
                 codes |= _single_info_codes(info)
                 continue

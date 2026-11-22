@@ -9,8 +9,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from .values import Finding
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -28,15 +26,15 @@ def block_names(block: Block, env: Env) -> frozenset[str]:
     return frozenset(n for n in (block.group, block.anchor, *cells) if n)
 
 
-def apply_hints(blocks: Sequence[Block], hints: Hints, env: Env) -> tuple[list[Block], list[Finding]]:
-    """order_pairs and its findings."""
+def apply_hints(blocks: Sequence[Block], hints: Hints, env: Env) -> list[Block]:
+    """The blocks after `order_pairs`."""
     return order_pairs(blocks, hints.order_pairs, {b.id: block_names(b, env) for b in blocks})
 
 
-def order_pairs(blocks: Sequence[Block], pairs: Sequence[Pair], names: Names) -> tuple[list[Block], list[Finding]]:
+def order_pairs(blocks: Sequence[Block], pairs: Sequence[Pair], names: Names) -> list[Block]:
     """While a pair (a before b) is violated, move b's blocks right after a's last block.
 
-    The passes are bounded: a cycle across hints cannot settle and ends in ORDER_HINT_UNMET.
+    The passes are bounded: a cycle across hints cannot settle (ORDER_HINT_CYCLE refuses it before layout).
     """
     out: list[Block] = list(blocks)
     for _ in range(len(pairs) * len(out) + 1):
@@ -48,8 +46,7 @@ def order_pairs(blocks: Sequence[Block], pairs: Sequence[Pair], names: Names) ->
                 moved = True
         if not moved:
             break
-    text = "{} before {} cannot hold with the other order hints"
-    return out, [Finding("ORDER_HINT_UNMET", text.format(a, b), None, f"{a},{b}") for a, b in pairs if _bad_sides(out, (a, b), names)]
+    return out
 
 
 def _bad_sides(blocks: Sequence[Block], pair: Pair, names: Names) -> tuple[list[int], list[int]] | None:

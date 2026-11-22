@@ -111,7 +111,7 @@ def test_the_cable_and_core_lists_fill_both_ends(written: _Written) -> None:
     (cable,) = _rows(written.system, "cables.csv")
     assert (cable["from_label"], cable["to_label"]) == ("-C1-X9", "+F1-M9")
     (core,) = _rows(written.system, "cores.csv")
-    assert (core["end_a"], core["end_b"]) == ("-C1-X9:1", "-M9:U")
+    assert (core["end_a"], core["end_b"]) == ("-C1-X9:1", "+F1-M9:U")
 
 
 def test_the_units_own_cable_and_core_lists_name_nothing_outside(written: _Written) -> None:
@@ -147,3 +147,6 @@ def test_a_unit_owned_cable_is_in_its_units_cables_csv_not_the_system_list(
     list, which holds the top-level cables only (the top-level `W9` is the system row)."""
     assert [r["designation"] for r in _rows(written_unit_cable.unit, "*-cables.csv")] == ["-W1"]
     assert [r["designation"] for r in _rows(written_unit_cable.system, "cables.csv")] == ["-W9"]
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

@@ -66,3 +66,6 @@ def test_every_drawing_set_keeps_its_membership_rows() -> None:
     kept = {m.key[3] for m in layout_of(model, Membership).values()}
     assert len(sets) >= 2
     assert kept == {str(s.number) for s in sets.values()}
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

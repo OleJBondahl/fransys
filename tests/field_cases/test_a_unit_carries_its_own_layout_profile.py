@@ -284,3 +284,6 @@ def test_a_unit_reference_box_is_sized_from_the_units_own_sets(tmp_path: Path) -
     for sub in ("alone", "inside"):
         (tmp_path / sub).mkdir()
     assert _star_pdf(tmp_path / "alone", parent_sets=False) == _star_pdf(tmp_path / "inside", parent_sets=True)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

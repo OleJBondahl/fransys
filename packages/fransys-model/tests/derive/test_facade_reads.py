@@ -88,7 +88,6 @@ def _document(key: tuple[str, str], unit: Id[Unit]) -> Document:
         key=key,
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
-        item=None,
         cover="",
         notes=None,
         unit=unit,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from options_fixtures import core_options
@@ -93,3 +94,10 @@ def test_a_blocks_pin_pitches_are_the_same_in_every_window_of_its_columns() -> N
     assert whole
     assert one_row(("c1",), (block,), flow, prob, options).pin_pitch == whole
     assert one_row(("c3",), (block,), flow, prob, options).pin_pitch == whole
+
+
+def test_a_reserve_of_a_pair_the_row_now_orders_the_other_way_is_skipped() -> None:
+    """layout-0634: a re-cut may swap two columns a gap was reserved between; the stale reserve must not contradict the row's order."""
+    flow, prob = world([elem("a"), elem("b")], [column("c2", lane("b")), column("c1", lane("a"))])
+    spec = one_row(("c2", "c1"), (free_block("f", ("c2", "c1")),), flow, prob, core_options())
+    assert row_width(replace(spec, reserves={("c1", "c2"): 3})) == row_width(spec)

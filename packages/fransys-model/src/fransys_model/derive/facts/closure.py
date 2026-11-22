@@ -18,7 +18,6 @@ from fransys_model.vocab.tables import (
     conductors,
     functions,
     internal_links,
-    items,
     nets,
     ports,
     supply_of_potential,
@@ -125,13 +124,21 @@ def mate_joins(model: HasTables) -> Iterator[Sequence[Id[Port]]]:
     yield from ((a, b) for _, a, b in mate_pairs(model))
 
 
-def _on_sole_root_board(model: HasTables, net_ports: Iterable[Id[Port]]) -> bool:
-    """Whether one board that is the only top-level device of its own unit holds every port's item: its declared net is its traces."""
-    common: frozenset[Id[Item]] | None = None
+def board_of_ports(model: HasTables, net_ports: Iterable[Id[Port]]) -> Id[Item] | None:
+    """The innermost board that is the whole content of its own unit and holds every port's item; `None` when none does.
+
+    The one board intersection: a declared net on it is its traces, and a net across it needs no conductor.
+    """
+    common: list[Id[Item]] | None = None
     for port in net_ports:
-        mine = frozenset(b for b in enclosing_boards(model, port_item(model, port)) if is_sole_unit_root(model, b))
-        common = mine if common is None else common & mine
-    return bool(common)
+        mine = [b for b in enclosing_boards(model, port_item(model, port)) if is_sole_unit_root(model, b)]
+        common = mine if common is None else [b for b in common if b in mine]
+    return common[-1] if common else None
+
+
+def board_nets(model: HasTables) -> tuple[tuple[Id[Port], ...], ...]:
+    """The declared nets on a board that is the whole of its unit: each is the board's traces and needs no conductor."""
+    return tuple(n.ports for n in nets(model).values() if board_of_ports(model, n.ports) is not None)
 
 
 def required_groups(model: HasTables) -> tuple[tuple[Id[Port], ...], ...]:
@@ -142,7 +149,7 @@ def required_groups(model: HasTables) -> tuple[tuple[Id[Port], ...], ...]:
     groups: list[tuple[Id[Port], ...]] = [(c.a, c.b) for c in conductors(model).values()]
     groups += [g.ports for g in link_groups(model, _physical)]
     groups += [tuple(m) for m in mate_joins(model)]
-    groups += [n.ports for n in nets(model).values() if _on_sole_root_board(model, n.ports)]
+    groups += board_nets(model)
     return tuple(groups)
 
 
@@ -425,18 +432,3 @@ def port_groups(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]
 def port_item(model: HasTables, port: Id[Port]) -> Id[Item]:
     """The item that owns `port`, through its function."""
     return functions(model)[ports(model)[port].function].item
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _boards_of(model: Model) -> frozendict[Id[Item], frozenset[Id[Item]]]:
-    return frozendict({item: frozenset(enclosing_boards(model, item)) for item in items(model)})
-
-
-def net_on_one_board(model: Model, net_ports: Iterable[Id[Port]]) -> bool:
-    """Whether one board item is an ancestor-or-self of every port's item (model-0040)."""
-    boards = _boards_of(model)
-    common = None
-    for port in net_ports:
-        mine = boards[port_item(model, port)]
-        common = mine if common is None else common & mine
-    return bool(common)

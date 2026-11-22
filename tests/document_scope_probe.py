@@ -25,16 +25,13 @@ def names(model: Model, ids: Iterable[Id[Any]]) -> tuple[str | None, ...]:
     return tuple(name(model, i) for i in ids)
 
 
-def document(
-    label: str, preset: DocumentPreset, *, location: Id[Any] | None = None, item: Id[Any] | None = None, unit: Id[Any] | None = None
-) -> Document:
+def document(label: str, preset: DocumentPreset, *, location: Id[Any] | None = None, unit: Id[Any] | None = None) -> Document:
     key = ("probe", label)
     return Document(
         id=make_id(Document, key),
         key=key,
         preset=preset,
         location=location,
-        item=item,
         cover="",
         notes=None,
         unit=unit,
@@ -42,17 +39,16 @@ def document(
 
 
 def subject(model: Model, label: str) -> Document:
-    """The probe's `Document` for `label`: `system`, or `unit:`, `location:`, `item:` + key."""
+    """The probe's `Document` for `label`: `system`, or `unit:`, `location:` + key."""
     kind, _, key = label.partition(":")
     if kind == "system":
         return document(label, DocumentPreset.SYSTEM)
-    table = {"unit": units, "location": aspect_nodes, "item": items}[kind]
+    table = {"unit": units, "location": aspect_nodes}[kind]
     found = next(i for i, r in table(model).items() if "/".join(str(k) for k in r.key) == key)
     return document(
         label,
         DocumentPreset.CABINET_SCHEMATIC,
         location=found if kind == "location" else None,
-        item=found if kind == "item" else None,
         unit=found if kind == "unit" else None,
     )
 

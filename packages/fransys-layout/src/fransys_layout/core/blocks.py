@@ -112,9 +112,8 @@ def _unit_list(unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env
     rank = env.rank
     ranks = {s.id: s.rank for s in env.problem.symbols if s.rank is not None}
     ordered = sorted(blocks, key=lambda b: (rank.get(b.group or "", len(rank)), *_tie(b, ranks)))
-    out, findings = apply_hints(ordered, env.problem.hints, env)
-    out = _spilled_last(out, spill)
-    return BlockList(unit, tuple(out), (*notes, *findings))
+    out = _spilled_last(apply_hints(ordered, env.problem.hints, env), spill)
+    return BlockList(unit, tuple(out), tuple(notes))
 
 
 def _tie(block: Block, ranks: Mapping[str, int]) -> tuple[int, int, tuple[tuple[int, int | str], ...]]:

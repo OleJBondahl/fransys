@@ -14,13 +14,14 @@ from typing import Any
 
 import fransys as fr
 import pytest
-from _direct_case import SHEET, built_with_unlaid, laid_again
-from fransys_el import build, drawn_power, house_conventions, lay_out_core, symbol_kit
+from _direct_case import SHEET
+from fransys_el import build, house_conventions, symbol_kit
+from fransys_el.drawn_graph import Union
 from fransys_el.drawn_power import inked_power
 from fransys_el.placement_env import port_pins
 from test_drawn_symbols_placed_by_core import R825_STUBS
 
-from electrical_symbols import LIBRARY, power_symbol_key
+from electrical_symbols import LIBRARY, marking_slot, power_symbol_key
 from fransys_layout.core.cut_drawn import stand_pins
 from fransys_layout.core.values import PinRef
 from fransys_model.derive import far_pins
@@ -43,10 +44,8 @@ def model_conductors(model: Any, pins: Any) -> tuple[tuple[Any, Any], ...]:
 @functools.cache
 def _both(name: str) -> tuple[Any, Any]:
     """(the build result, the model its layout step gets) of corpus build `name`."""
-    run = importlib.import_module("placement_corpus.run")  # internal/ is not exported
-    every = [*run.circuits("standard"), ("skid", run.load(run.SKID, "demo_skid"), {}, {})]
-    circuit = next(c for c in every if c[0] == name)
-    return built_with_unlaid(lambda: run.build(name, circuit, fresh=True))
+    seen = importlib.import_module("placement_corpus.run").observed(name)  # internal/ is not exported
+    return seen.result, seen.caught("unlaid")[0]
 
 
 def _built(name: str) -> Any:
@@ -63,21 +62,13 @@ def _unlaid(name: str) -> tuple[Any, tuple[tuple[PinRef, PinRef], ...], Any]:
 
 @functools.cache
 def _solved(name: str) -> list[tuple[Any, Any]]:
-    """(problem, CoreLayout) of every core solve the build's layout step makes, the problem's `far_ends` the model's conductors (KI-600)."""
-    unlaid, every_conductor, _ = _unlaid(name)
+    """(problem, CoreLayout) of every core solve the build makes, the problem's `far_ends` the model's conductors (KI-600)."""
+    _, every_conductor, _ = _unlaid(name)
     solved = []
-    real = lay_out_core.solve
-
-    def spy(problem, options, *args, **kwargs):
-        layout = real(problem, options, *args, **kwargs)
+    for problem, _, layout in importlib.import_module("placement_corpus.run").observed(name).caught("solves"):
         held = {sym.id for sym in problem.symbols}  # a drawing set owes every conductor end it holds, its far end in the set or not (R1573)
         owed = tuple(c for c in every_conductor if c[0].sym in held)
         solved.append((dataclasses.replace(problem, facts=dataclasses.replace(problem.facts, far_ends=owed)), layout))
-        return layout
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(lay_out_core, "solve", spy)
-        laid_again(unlaid)
     return solved
 
 
@@ -251,13 +242,12 @@ def test_port_pins_hold_every_pin_the_planner_has_a_conductor_at() -> None:
 @pytest.mark.private_input
 @pytest.mark.rule("G01-CONNECTED")
 @pytest.mark.parametrize(("key", "text"), [("ground", None), ("pe", None), ("supply", "24V"), ("supply", None)])
-def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_carried_end(monkeypatch: pytest.MonkeyPatch, key: str, text: str | None):
+def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_carried_end(key: str, text: str | None):
     """R1631, R4: ground, PE and a texted supply with ink to their pin carry its end; a supply with no printed text names no potential."""
-    symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",))]
-    part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, nodes={(0, 0)}, powers={})
-    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"})
-    monkeypatch.setattr(drawn_power, "port_power_text", lambda *_: text)
-    assert (inked_power(net, None) == {"a"}) is (key != "supply" or text is not None)  # ty: ignore[invalid-argument-type] the read is monkeypatched
+    symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",), slots=((marking_slot("1"), text),) if text else ())]
+    part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, powers={"a": (0, 0)})  # the symbol stands on its pin
+    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, union=Union())
+    assert (inked_power(net) == {"a"}) is (key != "supply" or text is not None)
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

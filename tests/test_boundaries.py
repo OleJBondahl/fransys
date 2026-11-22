@@ -167,8 +167,8 @@ def test_inputs_import_no_layout_name_beyond_the_frozen_list():
 
 
 def test_the_frozen_layout_list_check_can_fail():
-    assert len(LAYOUT_FOR_INPUTS) == 7
-    ok = "from fransys_model.layout import Side, GroupHint\n"
+    assert len(LAYOUT_FOR_INPUTS) == 6
+    ok = "from fransys_model.layout import Side, OrderHint\n"
     assert extra_layout_names(ok) == []
     bad = "x = 1\nfrom fransys_model.layout import Side, Page\n"
     assert extra_layout_names(bad) == [(2, "Page")]

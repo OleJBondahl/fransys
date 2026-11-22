@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, override
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._pairing import End, Ends, SeriesElement
+from fransys_author.surface._unit_strip import is_unit_strip
 
 if TYPE_CHECKING:
     from fransys_author.surface._strip import TerminalStrip
@@ -16,7 +17,7 @@ _MARK_AND_NUMBER = 2  # a mark and a number
 
 def take(design: Design, terminal: Terminal) -> None:
     """Mark a terminal a container named by number: a whole-strip take skips it."""
-    if terminal._scope is not None and terminal._scope is not design._engine:
+    if is_unit_strip(terminal, design):
         object.__setattr__(terminal, "_fixed", True)  # frozen, init=False field
 
 

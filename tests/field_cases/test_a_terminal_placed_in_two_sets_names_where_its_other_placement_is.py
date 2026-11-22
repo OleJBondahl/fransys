@@ -172,3 +172,6 @@ def test_a_terminal_in_four_sets_keeps_every_wire_end_on_a_port() -> None:
         ]
         assert ends, symbol
         assert all(end in ports for end in ends), (ends, ports)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

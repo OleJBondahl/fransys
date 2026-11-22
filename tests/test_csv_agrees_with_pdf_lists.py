@@ -13,18 +13,20 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _pdf_lists import terminal_list_page
 from fransys._exports import _Export, _exports
 from fransys_pdf._lists import (
-    connector_rows_for,
+    _connector_rows_for_page,
     terminal_rows_for,
     wire_rows_for,
 )
+from fransys_render import bridge_pieces
 
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramLayout
-from fransys_model.derive import cell_text, ends_without_jumpers, pin_lines
+from fransys_model.derive import cell_text, document_row, pin_lines
 from fransys_model.kernel import make_id
-from fransys_model.vocab import DocumentPreset, Mate
+from fransys_model.vocab import ConductorKind, DocumentPreset, Mate
 
 # `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`, and
 # ty cannot resolve a `sys.path` insert; `fransys_pdf`'s own hand-built model helpers are
@@ -55,6 +57,11 @@ wire_facet = _build.wire_facet
 @pytest.fixture(scope="module")
 def built():
     """(model, unit id, the unit's document, strip id, board id), exports not yet written."""
+    return _built(bridged=False)
+
+
+def _built(*, bridged):
+    """`built`'s tuple; `bridged` adds a second terminal of the strip joined to the first by a jumper."""
     c1 = location("C1", "Demo cabinet")
     ext = location("EXT", "Outside the cabinet")
     u = unit("u1", name="pump-cabinet")
@@ -94,6 +101,9 @@ def built():
     records = (c1, ext, u, strip, child, facet, fn, internal, external)
     records += (b12, b12_fn, b12_port, m1, m1_fn, m1_port, w1, w2, *labels)
     records += (board_part, board, pcb_facet("board1", subject=board_part.id), h1, h2, doc)
+    if bridged:
+        t2, facet2, fn2, port2 = bridged_terminal("t2", strip=strip.id, group="T", index=2)
+        records += (replace(t2, unit=u.id), facet2, fn2, port2, conductor("jmp", a=internal.id, b=port2.id, kind=ConductorKind.JUMPER))
     m = model(*records, *connectors, *mates, *places)
     return m, u.id, doc, strip.id, board.id
 
@@ -117,11 +127,7 @@ def _all_exports(built):
 def _pdf_terminal_cells(built):
     """The (designation, Side A, Side B) cells the PDF terminal list of the unit document prints."""
     m, _unit_id, doc, strip, _board = built
-    cells = []
-    for row in terminal_rows_for(m, doc, strip):
-        side_a, side_b = ends_without_jumpers(m, row)
-        cells.append((row.designation, cell_text(side_a), cell_text(side_b)))
-    return cells
+    return [(row.designation, cell_text(row.internal_ends), cell_text(row.external_ends)) for row in terminal_rows_for(m, doc, strip)]
 
 
 def test_a_units_terminal_csv_ends_equal_the_pdf_terminal_list_cell_for_cell(built):
@@ -132,6 +138,18 @@ def test_a_units_terminal_csv_ends_equal_the_pdf_terminal_list_cell_for_cell(bui
     csv_cells = [(row["designation"], row["side_a"], row["side_b"]) for row in rows]
     assert csv_cells == _pdf_terminal_cells(built)
     assert csv_cells == [("-X3:T:1", "-B12:2/T1", "+EXT-M1:U1")]
+
+
+def test_a_bridged_terminal_prints_no_neighbour_in_a_side_in_csv_or_pdf():
+    """TERMINAL-TABLE: bridge neighbours stand in `jumper_group` only; the CSV and the PDF page agree.
+    Can-fail: a bridge conductor left in a side puts `-X3:T:2` into row 1's `side_a` and into the PDF twice."""
+    built = _built(bridged=True)
+    rows = _read(_unit_exports(built), "terminals.csv")
+    assert [(r["designation"], r["side_a"], r["side_b"], r["jumper_group"]) for r in rows] == [
+        ("-X3:T:1", "-B12:2/T1", "+EXT-M1:U1", "1"),
+        ("-X3:T:2", "", "", "1"),
+    ]
+    assert terminal_list_page(built[0], built[2], bridge_pieces(LIBRARY)).count("-X3:T:2") == 1
 
 
 def test_out_all_terminal_csv_prints_the_full_text_of_the_no_unit_context(built):
@@ -155,10 +173,10 @@ def test_a_units_wire_label_csv_equals_the_pdf_wire_label_list_row_for_row(built
 
 def test_a_units_connector_csv_mate_pins_equal_the_pdf_connector_list_cell_for_cell(built):
     """Both mate pins are outside the board: each prints its whole path."""
-    m, _unit_id, doc, _strip, board = built
+    m, _unit_id, doc, _strip, _board = built
     rows = _read(_unit_exports(built), "connectors.csv")
     csv_cells = [(r["designation"], r["marking"], r["mate_port_designation"]) for r in rows]
-    pdf_cells = [(line[0], line[5], line[7]) for line in pin_lines(m, connector_rows_for(m, doc, board))]
+    pdf_cells = [(line[0], line[5], line[7]) for line in pin_lines(m, _connector_rows_for_page(m, document_row(m, doc.id)))]
     assert csv_cells == pdf_cells
     assert {cell[2] for cell in csv_cells} == {"+EXT-H1:1", "+C1-H2:1"}
 

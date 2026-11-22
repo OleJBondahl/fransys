@@ -88,16 +88,16 @@ def _sharing(texts: Mapping[tuple[PinRef, PinRef], list[str]]) -> list[set[PinRe
 
 
 def _sized(
-    library: Library, texts: Mapping[tuple[PinRef, PinRef], list[str]], pins: list[PinRef], stands: Iterable[Sequence[PinRef]]
+    library: Library, texts: Mapping[tuple[PinRef, PinRef], list[str]], stands: Iterable[Sequence[PinRef]]
 ) -> tuple[dict[str, Mapping[Orientation, Box]], StubLines, StubTable]:
-    """Each line text's box, each conductor's line width, and the box by (widest width, line count) up to the count a stub can reach."""
+    """Each line text's box, each conductor's line width, and the box by (widest width, line count) a sharing group's stub can reach."""
     fits = {text: marker_boxes(library, text) for lines in texts.values() for text in lines}
     widths = {text: box["R90"].h for text, box in fits.items()}
     lines = frozendict({k: tuple(widths[t] for t in v) for k, v in texts.items() if v})
     sample = {w: t for t, w in widths.items()}
-    own = {p: [t for (n, _), v in texts.items() if n == p for t in v] for p in set(pins)}
-    reach = max((sum(len(own.get(p, ())) for p in g) for g in (*_sharing(texts), *stands)), default=0)
-    table = frozendict({(w, n): marker_boxes(library, "\n".join([t] * n)) for w, t in sample.items() for n in range(1, reach + 1)})
+    groups = [[t for (n, _), v in texts.items() if n in g for t in v] for g in (*_sharing(texts), *stands)]
+    sized = {(w, n): marker_boxes(library, "\n".join([sample[w]] * n)) for g in groups for w in {widths[t] for t in g} for n in range(1, len(g) + 1)}
+    table = frozendict(sized)
     return fits, lines, table
 
 
@@ -116,7 +116,7 @@ def stub_fit(
     ports = pin_ports(model, kit)
     plain = marker_boxes(library)
     pins = list(pins)
-    fits, lines, table = _sized(library, _lines(model, unit, ports, pins), pins, stands)
+    fits, lines, table = _sized(library, _lines(model, unit, ports, pins), stands)
     found = {}
     for pin in set(pins):
         pin_text = _texts(model, unit, ports[pin]) if pin in ports else []

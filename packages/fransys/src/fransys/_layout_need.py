@@ -2,15 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_author import AuthorError
-
-from fransys_layout import DiagramLayout, HintError, lay_out_diagrams
+from fransys_layout import DiagramLayout, lay_out_diagrams
 from fransys_model.derive import (
     DiagramSheet,
     document_ids,
     document_page_kinds,
 )
-from fransys_model.kernel import describe
 from fransys_model.vocab import PageKind
 
 from ._layout_core import NO_DRAWINGS, Laid, lay_out_on_core
@@ -37,28 +34,17 @@ def needs_diagram_layout(model: Model) -> bool:
     return PageKind.BLOCK_DIAGRAM in kept_page_kinds(model)
 
 
-def hint_error_to_author_error(model: Model, error: HintError) -> AuthorError:
-    """The `AuthorError` for a layout hint error, its subjects shown as `file:line (key)` (0184)."""
-    return AuthorError(describe(error, model))
-
-
 def _schematic_if_needed(model: Model, library: Library, layout: Mapping[str, object] | None) -> Laid:
     if not needs_schematic_layout(model):
         return model, (), NO_DRAWINGS, {}
-    try:
-        return lay_out_on_core(model, library, layout)
-    except HintError as error:
-        raise hint_error_to_author_error(model, error) from error
+    return lay_out_on_core(model, library, layout)
 
 
 def lay_out_diagrams_if_needed(model: Model, library: Library) -> tuple[DiagramLayout, tuple[Finding, ...]]:
     """`lay_out_diagrams` when a document keeps a BLOCK_DIAGRAM page, else nothing: run once, before the page numbers are written."""
     if not needs_diagram_layout(model):
         return DiagramLayout(diagrams=()), ()
-    try:
-        return lay_out_diagrams(model, library)
-    except HintError as error:
-        raise hint_error_to_author_error(model, error) from error
+    return lay_out_diagrams(model, library)
 
 
 def lay_out_if_needed(

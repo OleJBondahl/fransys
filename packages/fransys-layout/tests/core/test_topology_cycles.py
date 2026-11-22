@@ -19,40 +19,23 @@ def _cuts(edges: list[tuple[str, str, frozenset[str]]], **cost: int) -> frozense
     return y_cycle_cuts(edges, cost, keys)
 
 
-def test_a_two_node_ring_closed_by_one_owned_edge_cuts_that_owner() -> None:
-    """The one owned edge of a two-node ring is the owner cut."""
-    edges = [("a", "b", FIXED), ("b", "a", frozenset({"n1"}))]
-    assert _cuts(edges, n1=1) == frozenset({"n1"})
-
-
-def test_a_three_node_ring_with_one_owned_edge_cuts_that_owner() -> None:
-    """A ring a, b, c with one owned edge is broken by cutting its owner."""
-    edges = [
-        ("a", "b", FIXED),
-        ("b", "c", frozenset({"n1"})),
-        ("c", "a", FIXED),
-    ]
-    assert _cuts(edges, n1=1) == frozenset({"n1"})
-
-
-def test_the_cheaper_owner_is_cut_first() -> None:
-    """Of two owners on one ring, the one losing fewer drivers (cost 1 against 2) is cut."""
-    edges = [
-        ("a", "b", FIXED),
-        ("b", "c", frozenset({"n1"})),
-        ("c", "a", frozenset({"n2"})),
-    ]
-    assert _cuts(edges, n1=1, n2=2) == frozenset({"n1"})
-
-
-def test_a_cost_tie_is_broken_by_the_natural_key() -> None:
-    """Owners n2 and n10 cost the same, and natural order puts n2 first (text order would not)."""
-    edges = [
-        ("a", "b", FIXED),
-        ("b", "c", frozenset({"n10"})),
-        ("c", "a", frozenset({"n2"})),
-    ]
-    assert _cuts(edges, n2=1, n10=1) == frozenset({"n2"})
+@pytest.mark.parametrize(
+    ("edges", "cost", "cut"),
+    [
+        ([("a", "b", FIXED), ("b", "a", frozenset({"n1"}))], {"n1": 1}, {"n1"}),  # the one owned edge of a two-node ring
+        ([("a", "b", FIXED), ("b", "c", frozenset({"n1"})), ("c", "a", FIXED)], {"n1": 1}, {"n1"}),  # a ring of three, one owned edge
+        ([("a", "b", FIXED), ("b", "c", frozenset({"n1"})), ("c", "a", frozenset({"n2"}))], {"n1": 1, "n2": 2}, {"n1"}),  # cost 1 against 2
+        (
+            [("a", "b", FIXED), ("b", "c", frozenset({"n10"})), ("c", "a", frozenset({"n2"}))],
+            {"n2": 1, "n10": 1},
+            {"n2"},
+        ),  # tie: natural order, not text
+    ],
+    ids=["two-node-ring", "three-node-ring", "cheaper-owner-first", "tie-by-natural-key"],
+)
+def test_the_owner_that_breaks_a_ring_is_cut(edges: list[tuple[str, str, frozenset[str]]], cost: dict[str, int], cut: set[str]) -> None:
+    """A ring is broken at its one owned edge, else at the cheaper owner, else at the first by natural order."""
+    assert _cuts(edges, **cost) == frozenset(cut)
 
 
 def test_an_acyclic_graph_cuts_nothing() -> None:

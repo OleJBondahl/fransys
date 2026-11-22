@@ -71,8 +71,7 @@ class Stand:
     orient: Orientation
     side: Side  # the side the marker's box lies on: the turn `Options.marker_facing` gives it
     band: tuple[int, int] | None = None  # the row band a pin's marker box stays in (R1333)
-    walked: bool = False  # the end of a lane placement walked clear of every keep: the one fit test (R1331, R1338)
-    stood: bool = True  # False: the arrow's lane end found no stand at placement (Trunk.stood); the marker is MARKER_UNPLACED (layout-0507)
+    stood: bool = True  # False: the lane end found no stand at placement (Trunk.stood); the marker is MARKER_UNPLACED (layout-0507)
 
 
 def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options) -> MarkEnv:
@@ -189,7 +188,7 @@ def _trunk_of(env: MarkEnv, fan: str, end: RefEnd, ref: Ref) -> tuple[Trunk, ...
 
 
 def _named(ref: Ref, end: RefEnd) -> PinRef:
-    """The pin an arrow or copy end names; stage 4 fills it, so none is a plan it cannot make."""
+    """The pin an arrow, copy or stub end names; stage 4 fills it, so none is a plan it cannot make."""
     if end.pin is None:
         msg = f"marks: {who(ref)} page {end.page}: the end names no pin; stage 4 fills it"
         raise CoreError(msg)
@@ -198,9 +197,6 @@ def _named(ref: Ref, end: RefEnd) -> PinRef:
 
 def arrow_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:
     """The right end of the fan's trunk in the end's row for the first end, else its left end."""
-    if end.row is None:
-        msg = f"marks: {who(ref)} page {end.page}: the end names no row; stage 4 fills it"
-        raise CoreError(msg)
     trunks = [t for t in _trunk_of(env, ref.net, end, ref) if t.row == end.row]
     if not trunks:
         msg = f"marks: {who(ref)} page {end.page}: no trunk in row {end.row}"
@@ -213,7 +209,7 @@ def _lane_stand(env: MarkEnv, t: Trunk, key: tuple[PinRef, str], index: int) -> 
     side = env.options.arrow_sides[int(index != 0)]
     fan = env.fans.get(t.fan)
     x0, x1, y, stood = lane_line(t, pole_of(fan, key[0]) if fan is not None else 0, fan.lanes if fan is not None else 1, env.options.wiring_grid)
-    return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), walked=True, stood=stood[side == "E"])
+    return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), stood=stood[side == "E"])
 
 
 def _own_lane_stand(env: MarkEnv, ref: Ref, end: RefEnd, trunk: Trunk, key: tuple[PinRef, str]) -> Stand:
@@ -245,22 +241,34 @@ def leg_stand(env: MarkEnv, ref: Ref, end: RefEnd, row: int) -> Stand:
     return abut(env.options, "S", x, y, (pin, str(kind_of(ref))))
 
 
+def _end_trunk(env: MarkEnv, at: tuple[int, str | None], row: int | None) -> Trunk | None:
+    """The fan's trunk in the end's own row, else its first trunk on the page."""
+    found = env.trunks.get(at, ())
+    return next((t for t in found if t.row == row), next(iter(found), None))
+
+
 def pinned_stand(env: MarkEnv, ref: Ref, end: RefEnd) -> Stand:
-    """A stub stands below its lane (LEG), else at the trunk end of its fan (LEG with no leg, TRUNK_END), else at its boundary pin (ONE-SIDED-PIN)."""
-    if end.pin is None:
-        msg = f"marks: {who(ref)} page {end.page}: the end names no pin"
-        raise CoreError(msg)
+    """A stub stands below its lane (LEG), else at the trunk end of its fan (TRUNK_END), else at its boundary pin (ONE-SIDED-PIN)."""
     fan = next((f.id for f in env.fans.values() if ref.net in f.nets), None)
     bundled = kind_of(ref) in (RefKind.STUB, RefKind.COPY) and fan is not None and laned_stub(env.fans[fan])
     match end.stand:
         case StandClass.LEG if end.row is not None and end.pin in env.legs.get(end.page, {}):
             return leg_stand(env, ref, end, end.row)
-        case StandClass.LEG | StandClass.TRUNK_END if (
-            trunk := next(iter(env.trunks.get((end.page, fan), ())), None)
-        ) is not None and end.pin not in env.leads:
-            key = (end.pin, str(kind_of(ref)))
+        case StandClass.TRUNK_END if (trunk := _end_trunk(env, (end.page, fan), end.row)) is not None and end.pin not in env.leads:
+            key = (_named(ref, end), str(kind_of(ref)))
             return _own_lane_stand(env, ref, end, trunk, key) if bundled else _trunk_end_stand(env, trunk, key)
-    return pin_stand(env, end.pin, end.page, ref)
+    return pin_stand(env, _named(ref, end), end.page, ref)
+
+
+def legless_pins(env: MarkEnv, refs: Sequence[Ref]) -> tuple[PinRef, ...]:
+    """The pins of the stub ends of class LEG that no leg line reaches: the loop hands them to the next cut as trunk ends (MARKER-FREE-SIDE)."""
+    return tuple(
+        e.pin
+        for r in refs
+        if kind_of(r) is RefKind.STUB
+        for e in r.ends
+        if e.pin and e.stand is StandClass.LEG and e.row is not None and e.pin not in env.legs.get(e.page, {})
+    )
 
 
 def end_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:

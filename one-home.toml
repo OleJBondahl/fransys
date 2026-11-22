@@ -54,7 +54,7 @@
 "fransys_author.surface.design::parent" = 1
 "fransys_el.connection_findings::kind" = 1
 "fransys_el.block_findings::unit" = 1
-"fransys_el.placement_sets::unit" = 1
+"fransys_el.restrict::unit" = 1
 "fransys_el.symbol_kit::kind" = 4
 "fransys_el.symbol_rules::kind" = 3
 "fransys_kernel.checks::kind" = 6
@@ -232,7 +232,6 @@
 "fransys_model.derive.facts.part_pins::kind" = 2
 "fransys_model.derive.facts.part_pins::pin_role" = 1
 [table_walks]
-"fransys_el.board_findings::nets" = 1
 "fransys_el.connection_findings::conductors" = 1
 "fransys_el.connection_findings::ports" = 1
 "fransys_el.symbol_kit::function_templates" = 1
@@ -406,16 +405,12 @@
 "fransys_kernel.schema::annotations_of" = 1
 "fransys_kernel.schema::field_info" = 1
 "fransys_kernel.unionfind::union" = 1
-"fransys_kicad.check::check" = 1
 "fransys_layout.engines.cable.place::_core_wire" = 2
 "fransys_layout.engines.cable.read.facts::_cores_of" = 1
 "fransys_layout.engines.cable.route::_nets_of" = 1
-"fransys_layout.engines.diagram.engine::lay_out_diagrams" = 1
 "fransys_layout.engines.diagram.read.facts::diagram_reading" = 1
-"fransys_layout.engines.diagram.read::read_findings" = 1
 "fransys_layout.engines.overview.columns::_reaches" = 1
 "fransys_layout.engines.overview.compose::_halves" = 1
-"fransys_layout.engines.overview.engine::lay_out_overview" = 1
 "fransys_layout.engines.overview.lanes.arrange::place_ends" = 1
 "fransys_layout.engines.overview.lanes.channels::_planned" = 1
 "fransys_layout.engines.overview.lanes.channels::_stagger" = 1
@@ -449,13 +444,10 @@
 "fransys_layout.engines.overview.wrap::_leaves_east" = 1
 "fransys_layout.engines.overview.wrap::_oriented" = 1
 "fransys_layout.engines.overview.wrap::_tracks" = 1
-"fransys_layout.lint.diagram::lint_diagram" = 1
 "fransys_layout.routing.cell_index::_cells" = 2
 "fransys_layout.routing.cell_index::meeting" = 1
 "fransys_layout.routing.grid_path::_walk" = 1
-"fransys_model.checks._finding::ordered" = 1
-"fransys_model.checks.part_conformance::check_part_conformance" = 1
-"fransys_model.checks.part_library::check_part_library" = 2
+"fransys_model.checks.part_library::check_part_library" = 1
 "fransys_model.checks.ratings_current::_together" = 1
 "fransys_model.checks.strip_without_tag::_why" = 1
 "fransys_model.checks.structure::_aspect_findings" = 1
@@ -608,11 +600,9 @@
 "fransys_model.derive.passes._plc_wired::left" = 1
 "fransys_model.derive.passes.numbering::_harness_end_ambiguities" = 1
 "fransys_model.derive.passes.numbering::_port_duplicates" = 1
-"fransys_model.derive.passes.numbering::number" = 1
 "fransys_model.derive.passes.numbering_assigned::assigned_facets" = 1
 "fransys_model.derive.passes.plc_allocation::_ranked" = 1
 "fransys_model.derive.passes.plc_allocation::_requests" = 1
-"fransys_model.derive.passes.plc_allocation::allocate_plc" = 1
 "fransys_model.derive.passes.wire_rows::_row" = 2
 "fransys_model.derive.plc_channel_text::channel_pin_designations" = 1
 "fransys_model.derive.plc_list::_wired_to" = 1
@@ -656,9 +646,7 @@
 "fransys_parts.lint::lint" = 1
 "fransys_parts.loader::_loaded_libraries" = 1
 "fransys_parts.loader::load_path" = 1
-"fransys_pdf.checks::check" = 1
 "fransys_render._cable_ink::body" = 1
-"fransys_render.sheet_check::sheet_check" = 1
 "fransys_reports.changes::_bullet" = 2
 
 [core_order_sites]
@@ -870,7 +858,6 @@
 "fransys_render.sheet_check::_no_room" = 2
 "fransys_render.sheet_check::_stack_overlap" = 1
 "fransys_reports.changes::changes_markdown" = 2
-"fransys_wago.modules::_channel_name" = 1
 "fransys_wago.modules::_module_name" = 1
 
 [library_twins]

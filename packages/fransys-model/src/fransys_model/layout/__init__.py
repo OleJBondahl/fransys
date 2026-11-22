@@ -28,7 +28,6 @@ from .formats import (
     default_sheet_format,
 )
 from .hints import (
-    GroupHint,
     OrderHint,
     PoleGroup,
     SymbolChoice,
@@ -97,7 +96,6 @@ __all__ = [
     "ExportForm",
     "FrameCell",
     "FrameForm",
-    "GroupHint",
     "HarnessText",
     "HouseProfile",
     "LayoutSheet",

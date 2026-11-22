@@ -5,6 +5,7 @@ Does not modify `test_units_worked_example.py`'s shared fixture functions
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import re
 import tempfile
 from pathlib import Path
@@ -185,6 +186,7 @@ def test_write_unit_none_and_pump2_also_succeed(built, tmp_path):
     `BOUNDARY_UNCONNECTED` in this fixture for any of the three to trip over.
     """
     result, _pump1_cabinet, pump2_cabinet, _pump1_board = built
+    assert [f.code for f in fr.check(result)].count("INK_WITHOUT_CONDUCTOR") == 0  # a board trace is a conductor (R2626)
     written_all = fr.write(result, tmp_path / "all", unit=None)
     assert {p.name for p in written_all} == _ALL_WRITE_FILES
     written_pump2 = fr.write(result, tmp_path / "pump2", unit=pump2_cabinet)
@@ -209,7 +211,6 @@ def test_document_subject_none_is_the_system_preset(tmp_path):
     draft = fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover)
     record = _only_record(draft)
     assert record.location is None
-    assert record.item is None
     assert record.unit is None
 
 
@@ -231,7 +232,6 @@ def test_document_subject_a_unit(tmp_path, subject):
     record = _only_record(draft)
     assert record.unit == u.unit_id
     assert record.location is None
-    assert record.item is None
 
 
 def test_document_subject_a_plain_scope_or_bare_design_raises_type_error(tmp_path):
@@ -335,3 +335,6 @@ def test_write_unit_str_two_instances_of_the_same_name_raises_value_error(tmp_pa
     with pytest.raises(ValueError, match=re.escape(expected)) as excinfo:
         fr.write(result, tmp_path, unit="dup-name")
     assert str(excinfo.value) == expected
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

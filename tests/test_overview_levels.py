@@ -4,6 +4,7 @@ The system level is the block diagram's rows, and no designation inside an opene
 that unit's own tag.
 """
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 from typing import Any
 
 import fransys as fr

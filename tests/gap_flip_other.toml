@@ -3,7 +3,7 @@
 [gaps]
 # Covered by: GROUP-RANKS order - fransys_el placement_hints (trace why a rank change moves -S5 text off page)
 "packages/fransys-layout/tests/engines/test_tall_cut.py::test_a_middle_fuses_pin_wired_past_the_cut_gets_one_marker_pair" = "GAP-FLIP-434"
-# R753.7 P7, re-keyed by R869: the four build a unit set that has no path (the third terminal's inner wire), and the pair build draws no branch marker; the marker side is covered by tests/test_rule_marker_free_side.py A2. KI-252 (RT3-FOLLOW router part) holds them.
+# R3405, re-anchored: the four still fail under --runxfail on marker side and count (inner-side marker, two where one is wanted, no marker at a tap); the marker side is covered by tests/test_rule_marker_free_side.py A2. KI-252 holds them.
 "packages/fransys-layout/tests/test_dd_marker_at_marked_port.py::test_a_marker_stands_at_its_ports_side_though_its_wire_is_drawn_in_another_set" = "GAP-FLIP-434"
 "packages/fransys-layout/tests/test_dd_marker_at_marked_port.py::test_a_terminal_whose_inner_wire_is_drawn_on_the_page_leaves_by_the_outer_port" = "GAP-FLIP-434"
 "packages/fransys-layout/tests/test_dd_marker_at_marked_port.py::test_control_a_port_with_no_other_wire_stands_at_its_own_side" = "GAP-FLIP-434"
@@ -145,3 +145,5 @@
 "tests/test_placement_corpus_distribution_board.py::test_the_board_has_no_error_and_no_warning" = "GAP-FLIP-974"  # KI-974 (CHAIN-FROM-HEAD)
 # KI-1122 (MCC-ARROW-LOSS, FIX-0.23): a forced lone loss at a pin whose conductors ride an arrow leaves its ends undrawn (designer R2618).
 "tests/test_placement_corpus_mcc.py::test_a_forced_lone_loss_at_a_pin_whose_conductors_ride_an_arrow_draws_every_end" = "GAP-FLIP-1122"
+# KI-1304 (UNIT-CABLE-LISTS): a cable a unit owns is in the BOM and in no cable list of a default write (designer R3172).
+"tests/test_corpus_drawing_invariants.py::test_every_cable_the_bom_names_is_in_a_default_cable_list" = "GAP-FLIP-1304"

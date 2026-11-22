@@ -56,3 +56,6 @@ def test_every_link_of_the_page_lands_on_the_drawing_page_it_names(
             assert index == pdf_page(result.model, drawn) - 1, link
         finally:
             pdf.close()
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

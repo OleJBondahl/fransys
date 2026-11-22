@@ -14,7 +14,6 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from _direct_case import built_with_unlaid, laid_again
-from fransys_el import draw_write
 
 from electrical_symbols import power_symbol_key
 
@@ -115,7 +114,7 @@ def _corpus(name: str):
     return build
 
 
-BUILDS = {"skid": _skid, **{n: _corpus(n) for n in [*list(r308_unplaced_symbols)[1:], "mcc"]}}
+BUILDS = {"skid": _skid, **{n: _corpus(n) for n in [*list(r308_unplaced_symbols)[1:], "mcc"]}}  # read by the other rule tests, which watch the build
 # The corpus cases read internal/, so the export skips them (R462); the skid case runs there.
 CASE_PARAMS = [n if n == "skid" else pytest.param(n, marks=pytest.mark.private_input) for n in BUILDS]
 
@@ -123,23 +122,18 @@ CASE_PARAMS = [n if n == "skid" else pytest.param(n, marks=pytest.mark.private_i
 @cache
 def _built_with_unlaid(name: str):
     """(the build, the model its layout step gets) of case `name`, built once per process (R2158)."""
-    return built_with_unlaid(BUILDS[name])
+    if name == "skid":
+        return built_with_unlaid(_skid)
+    seen = importlib.import_module("placement_corpus.run").observed(name)  # internal/ is not exported
+    return seen.result, seen.caught("unlaid")[0]
 
 
 @cache
 def _drawn_and_layouts(name: str):
     """(all page Drawings, each drawing set's core layout, each set's layout with its pages)."""
     unlaid = _built_with_unlaid(name)[1]
-    sets = []
-    real = draw_write.draw_set
-
-    def spy(w):
-        sets.append((w.layout, w.pages))
-        return real(w)
-
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(draw_write, "draw_set", spy)
-        _, drawn = laid_again(unlaid)
+    sets = importlib.import_module("placement_corpus.run").observed(name).caught("draw_sets")
+    _, drawn = laid_again(unlaid)
     return drawn, [lo for lo, _ in sets], sets
 
 

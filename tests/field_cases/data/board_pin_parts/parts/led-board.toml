@@ -1,0 +1,47 @@
+schema = 2
+
+# A board whose LED load ports name their pins on the board's one header (`connector`, parts-0025).
+[part]
+mpn = "FC-PCB-LED"
+manufacturer = "Demo"
+description = "24 V DC LED indicator board, 2.4 W LED load on one 2-pin pluggable pin-header, rated 30 V DC and 0.5 A per pin"
+category = "board"
+class_code = "U"
+
+[pcb]
+revision = "A"
+
+[[function]]
+name = "j1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in", marking = "P01" },
+    { name = "2", role = "generic", symbol_port = "out", marking = "P02" },
+]
+
+[function.rating]
+voltage = [{ nom = "30 V", at = ["DC"] }]
+current = [{ nom = "0.5 A", at = ["DC"] }]
+
+[function.connector]
+style = "header-2p"
+poles = 2
+gender = "male"
+marking = "J1"
+
+[[function]]
+name = "led"
+kind = "load"
+symbol = "lamp"
+ports = [
+    { name = "A", role = "generic", side = "line", symbol_port = "in", connector = "j1.1" },
+    { name = "B", role = "generic", side = "load", symbol_port = "out", connector = "j1.2" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V", at = ["DC"] }]
+nominal_power = "2.4 W"
+
+[function.rating]
+voltage = [{ nom = "24 V", at = ["DC"] }]

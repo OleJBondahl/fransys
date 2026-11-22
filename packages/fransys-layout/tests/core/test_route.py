@@ -8,9 +8,11 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import Box, PinRef, PlacementProblem, Size, route_astar
+from fransys_layout.core.flow_values import Cell, Column, Lane
 from fransys_layout.core.junctions import page_junctions
+from fransys_layout.core.occupancy import cells_between
 from fransys_layout.core.outputs import Placed, Routes, Wire
-from fransys_layout.core.route import route_page, route_pages
+from fransys_layout.core.route import _links_here, route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
 from fransys_layout.core.route_fixed import Laid
 
@@ -135,31 +137,37 @@ def test_a_boxed_in_link_is_refused_with_no_wire_and_the_others_still_route() ->
     assert {w.net for w in page.wires} >= {"n1", "n2", "n4", "n5"}
 
 
-def test_a_cut_net_is_still_joined_among_its_ends_on_one_page() -> None:
-    """The cut adds references and removes no wire among one page's ends (R417)."""
-    (env,) = envs_of(link_across_box())
-    page, failed, findings = route_page(replace(env, cut_nets=frozenset({"n3"})))
-    assert (failed, findings) == ((), ())
-    assert [w for w in page.wires if w.net == "n3"]
-
-
-def test_a_cut_three_end_net_joins_all_three_ends_on_its_page() -> None:
-    env = three_end_env()
-    page, failed, _ = route_page(replace(env, cut_nets=frozenset({"t"})))
+@pytest.mark.parametrize(("ink", "wired"), [("", set()), ("ab", {"a", "b"}), ("ab bc", {"a", "b", "c"})])
+def test_a_links_ends_here_get_a_wire_only_where_the_cut_ink_joins_them(ink: str, wired: set[str]) -> None:
+    """layout-0634: the three ends of a referenced net are wired along the ink pairs alone, and left unwired where the ink joins none."""
+    pairs = frozenset((PinRef(x, "p"), PinRef(y, "p")) for x, y in ink.split())
+    page, failed, _ = route_page(replace(three_end_env(), referenced=frozenset({"t"}), ink=pairs))
+    ends = {xy for w in page.wires if w.net == "t" for xy in (w.points[0], w.points[-1])}
     assert failed == ()
-    ends = {(x, y) for w in page.wires if w.net == "t" for x, y in (w.points[0], w.points[-1])}
-    assert {(40, 40), (200, 40), (120, 40)} <= ends
+    assert {s for s, xy in {"a": (40, 40), "b": (200, 40), "c": (120, 40)}.items() if xy in ends} == wired
 
 
-def test_a_link_with_an_end_on_another_page_is_refused_unless_it_is_cut() -> None:
-    (env,) = envs_of(link_across_box())
-    page, failed, findings = route_page(
-        replace(env, placed={s: p for s, p in env.placed.items() if s != "s"}, columns=tuple(c for c in env.columns if c.id != "c:s"))
-    )
-    assert [r.net for r in failed] == ["n3"]
-    assert not [f for f in findings if f.subject == "n3"]
-    assert failed[0].ends == (PinRef("b", "s"), PinRef("c", "n"))
-    assert not [w for w in page.wires if w.net == "n3"]
+def test_a_link_end_on_the_other_pin_of_a_through_cell_is_joined_by_the_conductor_on_that_pin() -> None:
+    """layout-0635: the ink pair stands on a.q, the link end on a.p; the cell's through pair joins them, so b is wired to a."""
+    pair, nets = frozenset({(PinRef("a", "q"), PinRef("b", "p"))}), {PinRef("a", "p"): "t", PinRef("a", "q"): "t"}
+    column = Column("c", (Lane((Cell("a", "R0", "p", "q"),), 0),), (), (), 0, 0)
+    env = replace(three_end_env(), ink=pair, net_of=nets, columns=(column,))
+    assert [[a.pin.sym for a in ln.ends] for ln in _links_here(env)] == [["a", "b"]]
+    assert not _links_here(replace(env, columns=()))
+
+
+def test_two_ink_parts_of_one_net_share_no_cell() -> None:
+    """layout-0635: parts of a net are foreign wires to each other on the map, so the second never runs along the first."""
+    pins = {"a": (40, 40, "S"), "b": (200, 40, "S"), "c": (80, 40, "S"), "d": (160, 40, "S")}
+    env = link_env(pins, {"t": ("a", "b", "c", "d")})
+    pairs = frozenset({(PinRef("a", "p"), PinRef("b", "p")), (PinRef("c", "p"), PinRef("d", "p"))})
+    page, failed, _ = route_page(replace(env, bands=((16, 64),), ink=pairs))
+    first, second = ([w for w in page.wires if w.net == "t" and {w.points[0], w.points[-1]} & {p}] for p in ((40, 40), (80, 40)))
+    cells = [{c for w in ws for a, b in zip(w.points, w.points[1:], strict=False) for c in cells_between(a, b, 8)} for ws in (first, second)]
+    assert failed == ()
+    assert first
+    assert second
+    assert not cells[0] & cells[1]
 
 
 def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> None:
@@ -195,7 +203,7 @@ def test_route_page_writes_the_dots_of_its_wires() -> None:
     """R535 H10: `PageRoutes.dots` is the page's junctions, over the wires it returns."""
     env = three_end_env()
     page = route_page(env)[0]
-    assert page.dots == page_junctions(env, page.wires)
+    assert page.dots == page_junctions(env, page.wires)[0]
     assert page.dots
 
 

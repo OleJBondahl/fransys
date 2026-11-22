@@ -2,12 +2,12 @@
 
 from fransys_model.kernel import CodeInfo, Severity
 
-from . import codes_block, codes_netlist
+from . import codes_account, codes_block, codes_netlist, codes_set
 
 _CORE: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="MARKER_UNPLACED",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
@@ -37,12 +37,9 @@ _CORE: tuple[CodeInfo, ...] = (
         cause=(
             "Two drawn boxes (symbol bodies, and symbols drawn at a pin end such as a power "
             "symbol), a text and a body, two texts, or a wire and a text meet on one page; the "
-            "message names the first of them."
+            "message names the page and the first of them."
         ),
-        fix=(
-            "No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. "
-            "The message names the page and the members."
-        ),
+        fix="No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.",
         page="findings-render",
     ),
     CodeInfo(
@@ -51,17 +48,15 @@ _CORE: tuple[CodeInfo, ...] = (
         stage="render",
         who="Fransys",
         cause=(
-            "A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the first of them."
+            "A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; "
+            "the message names the page and the first of them."
         ),
-        fix=(
-            "No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it. "
-            "The message names the page and the members."
-        ),
+        fix="No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.",
         page="findings-render",
     ),
     CodeInfo(
         code="OUT_OF_PAGE",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause="A symbol body or a text lies outside the content box of its page.",
@@ -82,7 +77,7 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="OUTLINE_NO_ROOM",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
@@ -165,7 +160,7 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="NO_CELL",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
@@ -189,7 +184,7 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="WIRE_MEETS_NET",
-        severity=Severity.WARNING,
+        severity=Severity.ERROR,
         stage="render",
         who="consumer",
         cause=(
@@ -295,7 +290,13 @@ _CORE: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
 )
-FINDING_CODES: tuple[CodeInfo, ...] = (*_CORE, *codes_netlist.FINDING_CODES, *codes_block.FINDING_CODES)
+FINDING_CODES: tuple[CodeInfo, ...] = (
+    *_CORE,
+    *codes_netlist.FINDING_CODES,
+    *codes_block.FINDING_CODES,
+    *codes_set.FINDING_CODES,
+    *codes_account.FINDING_CODES,
+)
 """The `CodeInfo` rows of the codes only the placement core emits (layout-0358, el-0041).
 
 The mapper `write_findings.kernel_findings` reads them beside `fransys_layout.FINDING_CODES`;

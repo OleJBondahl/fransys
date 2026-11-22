@@ -82,8 +82,8 @@ def test_a_stored_version_1_document_is_refused_naming_both_versions() -> None:
 
 
 def test_the_previous_revision_is_refused_with_a_rebuild_text_and_no_migration() -> None:
-    """A model stored one revision back (CONNECTOR-FACET-2: 26, before the Connector) is refused, never migrated."""
-    stored = dict(to_data(model_of(_ORIGIN, make_owner("1"))))
+    """A model stored one revision back (HINT-DEAD: schema 34, a `layout.group_hint` folder) is refused, never migrated."""
+    stored: dict[str, Any] = dict(to_data(model_of(_ORIGIN, make_owner("1")))) | {"tables": {"layout.group_hint": {"layout.group_hint:x": {}}}}
     stored["schema_version"] = SCHEMA_VERSION - 1
     with pytest.raises(SchemaVersionError, match="rebuild the release") as excinfo:
         from_data(stored)

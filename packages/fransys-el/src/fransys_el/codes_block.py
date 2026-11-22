@@ -12,7 +12,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "A wire drawn in a cable or harness block page differs from the harness-wire row of the model: another core, "
             "other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends."
         ),
-        fix="No call clears this: send the smallest model that shows it. The message names the cable and the core.",
+        fix="No call clears this: send the smallest model that shows it.",
         page="findings-render",
     ),
 )

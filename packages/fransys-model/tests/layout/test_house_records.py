@@ -164,7 +164,7 @@ def test_the_paper_builders_build_what_the_facade_writes() -> None:
 
 def _document(name: str) -> Document:
     key = ("document", name)
-    return Document(id=make_id(Document, key), key=key, preset=DocumentPreset.SYSTEM, location=None, item=None, cover="c", notes=None, unit=None)
+    return Document(id=make_id(Document, key), key=key, preset=DocumentPreset.SYSTEM, location=None, cover="c", notes=None, unit=None)
 
 
 def test_a_documents_front_count_is_its_stored_value_and_a_missing_one_raises_naming_it() -> None:

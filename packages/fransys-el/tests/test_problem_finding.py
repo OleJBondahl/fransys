@@ -9,7 +9,7 @@ from conventions_fixtures import house
 from fransys.colours import BU
 from fransys_el import ProblemError, build, problem_finding, symbol_kit
 from fransys_el.placement_ids import pin_names, symbol_ids
-from fransys_el.placement_sets import DrawingScope
+from fransys_el.scopes import DrawingScope
 from fransys_el.set_findings import set_without_page_findings
 
 from electrical_symbols import LIBRARY

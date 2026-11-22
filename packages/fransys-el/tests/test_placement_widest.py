@@ -10,10 +10,10 @@ from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.placement_ids import symbol_ids
 from fransys_el.placement_markers import LONE
-from fransys_el.placement_sets import drawing_scopes
 from fransys_el.placement_views import marker_boxes
 from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
+from fransys_el.scopes import drawing_scopes
 from kit_instances import INSTANCES
 from ring_cases import box_kit, channels_model
 

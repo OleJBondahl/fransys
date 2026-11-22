@@ -100,3 +100,6 @@ def test_a_blocked_earth_run_draws_its_symbols(
 ) -> None:
     """The wire is refused, so each earth end takes its symbol, and nothing is left to fix."""
     assert _earth_symbols(blocked) > 0
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

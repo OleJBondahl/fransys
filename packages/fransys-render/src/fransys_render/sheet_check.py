@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from electrical_symbols import TITLE_BLOCK_MIN_BAND_MM, TITLE_BLOCK_MIN_WIDTH_MM
 from fransys_model.derive import documents, title_block_forms
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 from ._sheet_draw import notice_room, title_rooms, title_symbol
 from .codes import finding
@@ -101,4 +101,4 @@ def sheet_check(model: Model, listings: Mapping[Id[Document], DocumentSheets]) -
             notice = _notice(subject, chars)
     if notice is not None:
         found.append(notice)
-    return tuple(sorted(found, key=lambda one: (one.code, one.subjects, one.message)))
+    return findings_sorted(found)

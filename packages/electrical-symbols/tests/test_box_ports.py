@@ -5,10 +5,8 @@ import pytest
 from electrical_symbols import (
     G_PER_MODULE,
     GENERIC_BOX_KEY,
-    PORT_PITCH,
     PORT_PITCH_G,
     WIRING_GRID,
-    box_port_marking,
     box_port_name,
     default_order,
     default_sides,
@@ -17,6 +15,7 @@ from electrical_symbols import (
     is_generic_box,
     marking_slot,
 )
+from electrical_symbols.box_ports import PORT_PITCH, box_port_marking
 
 
 def test_a_marking_slot_is_marking_dot_the_port():

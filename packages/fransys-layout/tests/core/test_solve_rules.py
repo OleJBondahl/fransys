@@ -6,17 +6,21 @@ A rule a plant misses is a strict xfail with its reason: the designer rules it, 
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import PinRef
+from fransys_layout.core import PinRef, PlacementProblem
+from fransys_layout.core.cut_account_check import account_findings
+from fransys_layout.core.outputs import Marker
 from fransys_layout.core.solve import solve
-from fransys_layout.core.values import Finding
+from fransys_layout.core.values import Facts, Finding, Hints, RefKind, Size
 
 from . import solve_checks
 from .conftest import MARKER
+from .cut_fixtures import elem, net
+from .flow_builders import conductors
 from .pipeline_fixtures import solved_of
 from .solve_checks import (
     check_every_net,
@@ -33,7 +37,7 @@ from .test_solve import PLANTS
 from .text_fixtures import tag_chain
 
 if TYPE_CHECKING:
-    from fransys_layout.core import Options, PlacementProblem
+    from fransys_layout.core import Options
     from fransys_layout.core.outputs import CoreLayout
 
 OPTIONS = core_options(
@@ -188,3 +192,67 @@ def test_is3_exempts_only_the_end_a_marker_unplaced_names_r449() -> None:
     narrow = replace(layout, annotations=bare, findings=(_unplaced_note(f"{first.end.sym},other"),))
     assert check_every_net(replace(layout, annotations=bare, findings=(_unplaced_note(f"{first.end.sym},{first.net}"),)), prob, OPTIONS) == []
     assert any("marker(s)" in m for m in check_every_net(narrow, prob, OPTIONS))
+
+
+# ---- CORE-ACCOUNT: each end is ink or named, never neither and never both (R2650) ------------------
+
+A, B, C = PinRef("a", "e"), PinRef("b", "e"), PinRef("c", "e")
+NETS = ({A: "n", B: "n", C: "n"}, {"a": 1, "b": 1, "c": 1})
+
+
+def _marker(pin: PinRef, far: PinRef, also: tuple[PinRef, ...] = ()) -> Marker:
+    return Marker("n", RefKind.STUB, 1, "a", 0, 0, pin, also=also, far=(far,))
+
+
+@pytest.mark.rule("CORE-ACCOUNT")
+@pytest.mark.parametrize(
+    ("pieces", "markers", "stood", "found"),
+    [
+        ((), (), (), ["not accounted"]),
+        ((), (_marker(A, B),), (A,), []),
+        ((), (_marker(C, B),), (C,), ["not accounted"]),
+        (((A, C),), (_marker(C, B),), (C,), []),
+        (((A, B),), (_marker(A, B),), (A,), ["accounted twice"]),
+        ((), (_marker(A, B), _marker(A, B)), (A,), ["accounted twice"]),
+        ((), (_marker(C, B, also=(A,)),), (C,), ["not accounted"]),
+    ],
+    ids=["neither", "named", "named-elsewhere", "named-through-a-piece", "wire-and-stub", "two-stubs", "also-not-stood"],
+)
+def test_core_account_names_an_end_no_carrier_stands_for(pieces: Any, markers: Any, stood: Any, found: list[str]) -> None:
+    got = account_findings([(A, B)], pieces, stood, markers, NETS)
+    assert [f.text.partition(" of net n ")[2].partition(":")[0] for f in got] == found
+    assert {f.code for f in got} <= {"CONNECTION_NOT_ACCOUNTED"}
+
+
+@pytest.mark.rule("CORE-ACCOUNT")
+def test_a_refused_link_the_loop_stands_as_a_pair_leaves_no_end_unaccounted(monkeypatch: pytest.MonkeyPatch) -> None:
+    _refusing(monkeypatch, (PinRef("b", "s"), PinRef("s", "s"), PinRef("c", "n")))
+    prob = ring_beside_a_tall_chain()
+    both = tuple(pair for a, b in conductors(prob.nets) for pair in ((a, b), (b, a)))
+    layout = solved_of(replace(prob, facts=replace(prob.facts, far_ends=both)), OPTIONS)
+    assert [f.text for f in layout.findings if f.code == "CONNECTION_NOT_ACCOUNTED"] == []
+
+
+SMALL_PAGE = [  # R3112: nets (x0, x1) over symbols a, b, c on a 240 x 120 page: the cases where the router drew no wire for x0 and said nothing
+    (("a.n", "b.n", "c.n"), ("a.s", "b.s")),
+    (("a.n", "b.n", "c.n"), ("a.s", "c.s")),
+    (("a.n", "b.n", "c.s"), ("a.s", "b.s")),
+    (("a.n", "b.n", "c.s"), ("a.s", "c.n")),
+    (("a.n", "b.s", "c.n"), ("a.s", "b.n")),
+    (("a.n", "b.s", "c.n"), ("a.s", "c.s")),
+    (("a.n", "b.n", "c.s"), ("b.s", "c.n")),
+    (("a.s", "b.n", "c.s"), ("b.s", "c.n")),
+    (("a.n", "b.s", "c.s"), ("a.s", "b.n")),
+    (("a.n", "b.s", "c.s"), ("a.s", "c.n")),
+    (("a.n", "b.n", "c.n"), ("b.s", "c.s")),
+    (("a.s", "b.n", "c.n"), ("b.s", "c.s")),
+]
+
+
+@pytest.mark.rule("CORE-ACCOUNT")
+@pytest.mark.parametrize("pins", SMALL_PAGE, ids=["+".join(",".join(n) for n in case) for case in SMALL_PAGE])
+def test_a_net_the_router_draws_no_wire_for_is_flagged_or_given_its_fallback(pins: tuple[tuple[str, ...], ...]) -> None:
+    nets = [net(f"x{i}", *p) for i, p in enumerate(pins)]
+    prob = PlacementProblem(Size(240, 120), tuple(elem(s) for s in "abc"), tuple(nets), Facts(far_ends=conductors(nets)), Hints())
+    layout = solved_of(prob)
+    assert check_every_net(layout, prob, OPTIONS) == [] or any(f.code == "CONNECTION_NOT_ACCOUNTED" for f in layout.findings)

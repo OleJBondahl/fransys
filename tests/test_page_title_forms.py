@@ -4,10 +4,12 @@ Built through the public API on invented parts; the model is read with `fransys_
 One build per module: three blocks on one page, and a page with no block.
 """
 
-from typing import TYPE_CHECKING
+# INK_WITHOUT_CONDUCTOR: an old finding of this file's builds, on KI-1377 (R3538).
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from fransys.colours import BU
 
 from fransys_model.derive import page_title, page_title_forms
 from fransys_model.layout import Page, layout_of
@@ -97,3 +99,47 @@ def test_a_terminal_stands_as_its_strip_once(tmp_path: Path) -> None:
 
 def test_two_strips_and_a_device_read_each_strip_once(tmp_path: Path) -> None:
     assert _forms(_strip_model(tmp_path, strips=2))[0] == "-X1, -X2, -H1"
+
+
+class _Strips(NamedTuple):
+    X1: fr.TerminalStrip
+    X2: fr.TerminalStrip
+
+
+@fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB", title="Cabinet")
+def _cabinet(u: Any) -> _Strips:
+    """Alpha and Charlie, each with an interface strip and a lamp; the system holds Alpha, Bravo and Charlie too."""
+    strips = []
+    for key, text, tag in (("A", "Alpha", "H1"), ("C", "Charlie", "H3")):
+        with u.function(key, text):
+            strip = u.terminal_strip(f"X{len(strips) + 1}", "DEMO-TB-2.5", 2, interface=(1, 2))
+            lamp = u.device(tag, "DEMO-LAMP-24")
+            u.series(strip[1].inner, lamp.lamp["1"], wire=(BU, 0.5))
+            u.series(strip[2].inner, lamp.lamp["2"], wire=(BU, 0.5))
+        strips.append(strip)
+    return _Strips(*strips)
+
+
+def test_one_label_under_two_unit_prefixes_stands_in_one_place_on_every_sheet(tmp_path: Path) -> None:
+    """PAGE-TITLE-ORDER: the system sheet holds U1's Alpha and Charlie before its own Alpha, Bravo and Charlie; the title reads A, B, C."""
+    d = fr.design("demo_parts", place="EXT")
+    d.location("EXT", "External")
+    d.project(title="Plant", number="P-1", customer="Demo Co", revision=1, author="d")
+    d.revision(1, date="2026-01-01", text="first", created="AB")
+    cab = d.add(_cabinet, "U1", place=None)
+    lamps = []
+    for key, text in (("A", "Alpha"), ("B", "Bravo"), ("C", "Charlie")):
+        with d.function(key, text):
+            lamps.append(d.device(f"H{len(lamps) + 1}", "DEMO-LAMP-24"))
+    h1, h2, h3 = lamps
+    d.series(cab.X1[1].outer, h1.lamp["1"], wire=(BU, 0.5))
+    d.series(h1.lamp["2"], h2.lamp["1"], wire=(BU, 0.5))
+    d.series(h2.lamp["2"], h3.lamp["1"], wire=(BU, 0.5))
+    d.series(h3.lamp["2"], cab.X1[2].outer, wire=(BU, 0.5))
+    d.series(cab.X2[1].outer, h2.lamp["1"], wire=(BU, 0.5))
+    d.series(cab.X2[2].outer, h3.lamp["1"], wire=(BU, 0.5))
+    cover = tmp_path / "cover.md"
+    cover.write_text("# Plant\n", encoding="utf-8")
+    model = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover)).model
+    titles = [page_title(model, page) for page in layout_of(model, Page).values()]
+    assert "Alpha, Bravo, Charlie" in titles, titles

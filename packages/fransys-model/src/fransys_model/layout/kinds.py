@@ -6,7 +6,6 @@ by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 
 from .formats import Profile, SheetFormat
 from .hints import (
-    GroupHint,
     OrderHint,
     PoleGroup,
     SymbolChoice,
@@ -33,7 +32,6 @@ from .results import DrawingSet, LinkMarker, Page, PowerSymbol
 from .sheets import LayoutSheet
 
 AUTHORED_KINDS: tuple[type, ...] = (
-    GroupHint,
     OrderHint,
     PoleGroup,
     Profile,

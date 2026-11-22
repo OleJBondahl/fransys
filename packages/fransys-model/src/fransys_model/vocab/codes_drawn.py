@@ -79,7 +79,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=("A drawing set has pages but no document prints it, so its items are not in any export. The message names the set and its items."),
+        cause=("A drawing set has pages but no document prints it, so its items are not in any export."),
         fix=(
             "Add a document for the set's unit or location, passing its handle as the subject, "
             "or nest the unit in one that has one. "

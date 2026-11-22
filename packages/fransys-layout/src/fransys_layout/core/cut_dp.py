@@ -104,8 +104,8 @@ def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
             b = cut.by_id[item.block]
             spans.append((b.rise, b.rise + b.height_est + (cut.arrows[b.anchor].y if b.anchor is not None and b.anchor in cut.arrows else 0)))
     height = max(b for _, b in spans) - min(a for a, _ in spans) if spans else 0
-    lead = lead_reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options)
-    tail = lead_reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options)
+    lead = lead_reserve(reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options), cut.options)
+    tail = lead_reserve(reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options), cut.options)
     taps = max(0, _cards_x(cut, i, j) - lead - tail, _legs_x(cut, i, j))  # card taps the cut ends do not count; legs do
     return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail + lead + tail + taps, height
 

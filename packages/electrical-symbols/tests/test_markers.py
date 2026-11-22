@@ -5,7 +5,7 @@ what render draws today: sizes in module units (8 G), text points under `text_bl
 """
 
 import pytest
-from symdef import Orientation, Polyline, Weight, body_box, fitted_symbol, orient, slot_lines, wire
+from symdef import Orientation, Polyline, Weight, body_box, fitted_symbol, orient, slot_lines, stretch, wire
 
 from electrical_symbols import LIBRARY
 
@@ -76,3 +76,17 @@ def test_a_box_holds_one_or_several_lines_centred() -> None:
     assert (box.width, box.height) == (16.0, 2.5)
     rows = [y for _, y, _, _ in _text_points(_fitted("marker-box", two), two)]
     assert rows == pytest.approx([1.0003749, 2.0003749])
+
+
+@pytest.mark.rule("BUNDLE-ARROW")
+@pytest.mark.parametrize(("key", "axis"), [("reference-marker", "y"), ("marker-arrow-turned", "x")])
+@pytest.mark.parametrize("lanes", [1, 2, 3])
+def test_every_lane_of_a_bundle_ends_on_the_arrows_flat_edge(key, axis, lanes) -> None:
+    """The wire-facing edge is one straight edge from the first lane to the last (R2392, R3544)."""
+    box = body_box(LIBRARY.symbols[key], LIBRARY.font)
+    grown = stretch(LIBRARY.symbols[key], axis, (box.height if axis == "y" else box.width) + lanes - 1, grid=LIBRARY.grid)
+    first, last = _outline(grown)[0], _outline(grown)[-1]
+    across, along = (0, 1) if axis == "y" else (1, 0)  # the edge lies on the wire's line; lanes stand 1 apart from 0
+    assert first[across] == last[across] == 0
+    assert first[along] <= 0
+    assert last[along] >= lanes - 1

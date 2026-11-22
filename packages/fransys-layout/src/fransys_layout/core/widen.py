@@ -8,28 +8,22 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import count
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
-from .anchors import Stood, anchor_leads, anchor_pages, page_keeps
 from .arrow_reserve import block_reserves, keep_legs
 from .blocks import assign_blocks
 from .cut import cut_pages
 from .cut_costs import with_wires
-from .cut_ledger import restood, whole
 from .cut_measured import Measured, placed_rows
 from .errors import CoreError
-from .fallback import fallback
 from .geometry import union
 from .order import order_blocks
-from .outputs import Demand, Placement, Refused, Routes
+from .outputs import Demand, Placement, Routes
 from .place import place_pages
-from .route import route_pages
-from .route_env import LostKey, lost_key
-from .route_fixed import Laid, fixed_wires
 from .route_labels import roomed
+from .route_loop import Round, route_round
 from .row_measure import page_rows
 from .row_names import row_where
-from .text_markers import placed_marks
 from .topology import build_flow
 from .values import Finding, g_text
 from .widen_rounds import settled, unspent
@@ -37,13 +31,10 @@ from .widen_rounds import settled, unspent
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from .annex_values import AnnexBox
     from .arrow_reserve import RowReserve
     from .flow_values import BlockList, CutResult, FlowGraph
-    from .outputs import Marker, PagePlacement, RowMeasure
-    from .route import RouteMemo
-    from .route_fixed import Fixed
-    from .values import Options, PinRef, PlacementProblem, Ref
+    from .outputs import PagePlacement, Refused, RowMeasure
+    from .values import Options, PinRef, PlacementProblem
 
 
 def reserves_of(placement: Placement, routes: Routes) -> Mapping[tuple[str, str], int]:
@@ -205,114 +196,25 @@ def _recut(
     return best[1], best[2]
 
 
-class Standing(NamedTuple):
-    """What stands before the A* round: the markers, the fixed wires of stage 6a, and the conductors withheld."""
+def tagged_by(problem: PlacementProblem, lost: Iterable[Refused], apart: Iterable[Refused] = (), legless: Iterable[PinRef] = ()) -> PlacementProblem:
+    """The problem whose nets hold each lost link as a tagged one (layout-0508) and each apart pair as an apart one (layout-0635).
 
-    markers: Sequence[Marker]
-    fixed: Mapping[int, Fixed]
-    lost: frozenset[LostKey] = frozenset[LostKey]()
-    memo: RouteMemo | None = None
-
-
-def routed(
-    placement: Placement,
-    cut: CutResult,
-    problem: PlacementProblem,
-    options: Options,
-    standing: Standing,
-) -> Routes:
-    """Stage 6 once per page, each with that page's marker and anchor keeps as obstacles."""
-    anchored, found = anchor_pages(placement, problem, options)
-    parts = []
-    for page in placement.pages:
-        keeps = page_keeps(page, Stood(standing.markers, anchored), problem, options)
-        leads = anchor_leads(anchored)
-        parts.append(
-            route_pages(
-                Placement((page,), outlines=placement.outlines),
-                cut,
-                problem,
-                options,
-                Laid(keeps, standing.fixed, standing.lost, standing.markers, leads, standing.memo),
-            )
-        )
-    return Routes(
-        tuple(p for r in parts for p in r.pages),
-        tuple(n for r in parts for n in r.failed),
-        (*found, *(f for r in parts for f in r.findings)),
-    )
-
-
-class Round(NamedTuple):
-    """What the loop leaves: the markers with their MARKER_UNPLACED findings and room demands.
-
-    Also the routes, and the references of the lost conductors.
+    The cut plans their tag pairs, so placement reserves their room.
+    A pin whose leg stood no line is `legless`: the next cut ends it at the trunk end.
     """
-
-    markers: tuple[Marker, ...]
-    missed: tuple[Finding, ...]
-    routes: Routes
-    refs: tuple[Ref, ...]
-    lost: tuple[Refused, ...] = ()
-    asks: tuple[Demand, ...] = ()
-    memo: RouteMemo | None = None
-
-
-def _stand(
-    cut: CutResult,
-    placement: Placement,
-    problem: PlacementProblem,
-    options: Options,
-    held: tuple[Mapping[LostKey, Refused], Sequence[AnnexBox], RouteMemo | None],
-) -> Round:
-    """One round of the loop: fixed wires, the references (planned and fallback) as markers, then labels and A* round their boxes (E11).
-
-    `held` is what the rounds before left: the conductors lost, the labels, which do not move, and the page routes already made.
-    """
-    lost, labels, memo = held
-    groups = whole(lost.values(), problem.facts.far_ends, cut.spec.drawn)
-    keys, refs = frozenset(lost), fallback(cut, placement, (*groups, *(Refused(n, pair) for n, pair in cut.spec.unjoined)))
-    cut = replace(cut, spec=replace(cut.spec, reference_plan=restood(cut.spec.reference_plan, lost.values(), cut.spec.drawn)))
-    fixed = {
-        pg: f._replace(labels=tuple(a for a in labels if a.page == pg)) for pg, f in fixed_wires(placement, cut, problem, options, lost=keys).items()
-    }
-    planned = replace(cut, spec=replace(cut.spec, reference_plan=(*cut.spec.reference_plan, *refs)))
-    markers, missed, asks = placed_marks(planned, placement, problem, options, fixed)
-    return Round(
-        markers, missed, routed(placement, cut, problem, options, Standing(markers, fixed, keys, memo)), refs, tuple(lost.values()), asks, memo
-    )
-
-
-def route_round(cut: CutResult, placement: Placement, problem: PlacementProblem, options: Options, memo: RouteMemo | None = None) -> Round:
-    """The routing and reference loop (R1222): round k routes what no earlier round lost; round k's losses stand as references in round k+1.
-
-    It stops after the first round that loses nothing (R1245), or at `route_fallback_rounds`, where the
-    last round's losses still become references (R1244).
-    """
-    # KI-1120: the closing stand at the cap is unread (A6-CAP-STAND, after FALLBACK-PROPERTY)
-    lost: dict[LostKey, Refused] = {}
-    labels: Sequence[AnnexBox] = ()
-    memo = {} if memo is None else memo
-    for _ in range(options.route_fallback_rounds):
-        rnd = _stand(cut, placement, problem, options, (lost, labels, memo))
-        new = {k: r for r in rnd.routes.failed if r.ends and (k := lost_key(r.net, r.ends)) not in lost}
-        if not new:
-            return rnd
-        lost |= new
-        labels = rnd.routes.labels
-    return _stand(cut, placement, problem, options, (lost, labels, memo))
-
-
-def tagged_by(problem: PlacementProblem, lost: Iterable[Refused]) -> PlacementProblem:
-    """The problem whose nets hold each lost link as a tagged one (layout-0508): the cut plans its tag pair, placement reserves its room."""
-    held = {n.id: set(n.tagged) for n in problem.nets}
-    by_net: dict[str, list[tuple[PinRef, ...]]] = {}
-    for r in lost:
-        if r.ends and len(r.ends) > 1 and r.ends not in held.get(r.net, ()) and r.ends not in by_net.get(r.net, ()):
-            by_net.setdefault(r.net, []).append(r.ends)
-    if not by_net:
-        return problem
-    return replace(problem, nets=tuple(replace(n, tagged=(*n.tagged, *by_net[n.id])) if n.id in by_net else n for n in problem.nets))
+    out = problem
+    for field, refused in (("tagged", lost), ("apart", apart)):
+        held = {n.id: set(getattr(n, field)) for n in out.nets}
+        by_net: dict[str, list[tuple[PinRef, ...]]] = {}
+        for r in refused:
+            if r.ends and len(r.ends) > 1 and r.ends not in held.get(r.net, ()) and r.ends not in by_net.get(r.net, ()):
+                by_net.setdefault(r.net, []).append(r.ends)
+        if by_net:
+            out = replace(out, nets=tuple(replace(n, **{field: (*getattr(n, field), *by_net[n.id])}) if n.id in by_net else n for n in out.nets))
+    new = {p for p in legless if all(p not in n.legless for n in out.nets)}
+    if new:
+        out = replace(out, nets=tuple(replace(n, legless=(*n.legless, *(p for p in n.pins if p in new))) for n in out.nets))
+    return out
 
 
 def _floored(routes: Routes) -> Routes:
@@ -404,7 +306,7 @@ def widen(
         problem, risen, rose = _digits(placement, problem, risen)
         tried, needs = unspent(tried, rnd.routes, options)
         asked, roomed_for = _asked(needs, roomed_for)
-        problem2 = roomed(tagged_by(problem, rnd.lost), asked, options.outline)
+        problem2 = roomed(tagged_by(problem, rnd.lost, rnd.apart, rnd.legless), asked, options.outline)
         # a marker's ask is the last resort, tried before a quiet pass settles the loop (layout-0559, KI-1004)
         marker_only = problem2 is problem and not rose and (i > 0 or not _grew(placement, rnd.routes))
         if marker_only:

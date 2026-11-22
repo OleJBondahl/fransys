@@ -3,6 +3,7 @@ The bug (v0.22.4): the unit built alone drew a trunk through a terminal body (WI
 Fixed by layout-0554 (KI-702, KI-699, R1793): the foreign clearance reads the y the page is drawn at, with the kept levels."""
 
 from contextlib import nullcontext
+from functools import cache
 from itertools import pairwise
 from typing import Any, NamedTuple
 
@@ -44,23 +45,24 @@ def _unit(d: Any) -> _Io:
     return _Io()
 
 
-@pytest.mark.timeout(600)  # KI-1097: the unit builds in about 375 s alone (KI-702); one salt, the fix is salt-independent
-@pytest.mark.parametrize("salt", ["-"])
-def test_the_unit_built_alone_draws_no_trunk_through_a_terminal_and_none_over_another_net(salt: str) -> None:
+@cache
+def _codes(salt: str) -> list[str]:
     d = fr.design("demo_parts", "chain_parts")
     d.add(_unit, "U1")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "chain", cover=_COVER)
     with id_namespace(salt) if salt != "-" else nullcontext():
-        codes = [f.code for f in fr.check(fr.build(d, doc))]
+        return [f.code for f in fr.check(fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "chain", cover=_COVER)))]
+
+
+@pytest.mark.timeout(600)  # KI-1097: the unit builds in about 375 s alone (KI-702); one salt, the fix is salt-independent; built once for both tests
+@pytest.mark.parametrize("salt", ["-"])
+def test_the_unit_built_alone_draws_no_trunk_through_a_terminal_and_none_over_another_net(salt: str) -> None:
+    codes = _codes(salt)
     assert codes.count("WIRE_THROUGH_BODY") == 0
     assert codes.count("WIRE_MEETS_NET") == 0
 
 
-@pytest.mark.timeout(600)  # KI-706: the same build; one salt per test, as the first
+@pytest.mark.timeout(600)  # KI-706: the same build, shared with the first test
 def test_the_unit_built_alone_draws_every_connection_and_places_every_marker() -> None:
-    d = fr.design("demo_parts", "chain_parts")
-    d.add(_unit, "U1")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "chain", cover=_COVER)
-    codes = [f.code for f in fr.check(fr.build(d, doc))]
+    codes = _codes("-")
     assert codes.count("CONNECTION_NOT_DRAWN") == 0
     assert codes.count("MARKER_UNPLACED") == 0

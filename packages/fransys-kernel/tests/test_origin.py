@@ -93,7 +93,7 @@ def test_describe_shows_the_record_that_holds_a_schema_or_value_error() -> None:
 
 
 def test_describe_shows_the_subjects_of_an_error_that_carries_them() -> None:
-    """A layout `HintError` is not known here: `describe` reads any `subjects` it carries."""
+    """`describe` reads any `subjects` it carries."""
 
     class _SubjectsError(ModelError):
         subjects = (_HOLDER, _MISSING)

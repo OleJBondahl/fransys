@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from .cut_bundle import bundled, leg_stubs
 from .cut_drawn import stand_pins
+from .cut_end_rooms import cut_ends, pole_of
 from .cut_pieces import hole_pin, join, joined, key, pairs, split, trunked
 from .keys import natural_key
 from .net_keys import is_lone_cut
@@ -24,11 +25,11 @@ if TYPE_CHECKING:
     from collections.abc import Set as AbstractSet
 
     from .flow_values import Fan, FlowGraph
-    from .outputs import Refused
+    from .outputs import Marker, Refused
     from .unionfind import UnionFind
     from .values import PagePlan, PlacementProblem
 
-__all__ = ("Account", "account", "copies", "restood", "whole")
+__all__ = ("Account", "account", "copies", "restood", "standing", "whole")
 
 type Pair = tuple[PinRef, PinRef]
 _PAIR = 2
@@ -42,9 +43,7 @@ class Account:
     refs: tuple[Ref, ...]
     stubbed: frozenset[PinRef] = frozenset()
     leads: frozenset[PinRef] = frozenset()  # no field holds lead membership: `stubbed` lacks the held lead pins and holds crossing pins (R1577)
-    unjoined: tuple[
-        tuple[str, Pair], ...
-    ] = ()  # (net, (near, far)): pieces the loop must join, stood by `widen._stand` through the route fallback, no reserve and no re-cut (R1713)
+    unjoined: tuple[tuple[str, Pair], ...] = ()  # (net, (near, far)): pieces the loop must join, handed to the cut by `widen.tagged_by` (layout-0634)
 
 
 def _ink(far_ends: Collection[Pair], where: Mapping[str, int], severed: Collection[Pair]) -> frozenset[Pair]:
@@ -296,7 +295,7 @@ def account(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int]
     lead = _leads(problem, flow, where)
     made, unjoined = _made(problem, where, ink, (planned, laned, {s: piece.get(s, (p, None)) for s, p in where.items()}), (lead, flow))
     carried = {p for _, (a, b) in unjoined for p in ((a, b), (b, a))}  # a join the loop stands carries its conductor: no leg beside it (KI-710)
-    kept, legs = _legs(problem, flow, where, pages, (ink | carried, made))
+    kept, legs = _legs(problem, flow, where, pages, (ink | carried, made, planned))
     refs = _named([*_merged([*kept, *fanned]), *legs], far_ends, ink)
     return Account(ink, tuple(refs), frozenset(e.pin for r in made for e in r.ends if e.pin), frozenset(lead), tuple(unjoined))
 
@@ -330,15 +329,50 @@ def _far_pages(far_ends: Collection[Pair], ink: Collection[Pair], where: Mapping
     return far
 
 
+def _pole_carried(fan: Fan, pin: PinRef, at: tuple[PagePlan, int], arrows: Sequence[Ref]) -> bool:
+    """True when an arrow's end at the right end of the fan's trunk in row `at` stands for the pole of `pin` (one pole, one end at a cut)."""
+    plan, row = at
+    return any(c.right and (pole := pole_of(fan, pin)) in c.poles and pole != c.lead for c in cut_ends(arrows, plan, [fan], row))
+
+
+def _fan_ends(
+    fan: Fan,
+    at: tuple[Mapping[str, int], Mapping[tuple[int, str], int]],
+    held: tuple[AbstractSet[PinRef], AbstractSet[PinRef], Sequence[Ref], Mapping[int, PagePlan]],
+) -> tuple[dict[int, list[RefEnd]], set[PinRef]]:
+    """The leg ends of the fan's `legged` pins by page, and the pins an arrow end already stands for (one pole, one end at a cut, R3484).
+
+    A pin whose leg found no line (`legless`) stands as a trunk end.
+    """
+    where, rows = at
+    legged, legless, arrows, plans = held
+    by_page: dict[int, list[RefEnd]] = {}
+    dropped: set[PinRef] = set()
+    for a in (*fan.drivers, *fan.legs):
+        if a.pin not in legged or a.column is None or a.column not in where or (where[a.column], a.column) not in rows:
+            continue
+        page, row = where[a.column], rows[where[a.column], a.column]
+        if a.pin in legless and _pole_carried(fan, a.pin, (plans[page], row), arrows):
+            dropped.add(a.pin)
+            continue
+        end = RefEnd(page, a.column, a.pin, row, StandClass.TRUNK_END if a.pin in legless else stand_class(0, leg=True))
+        by_page.setdefault(page, []).append(end)
+    return by_page, dropped
+
+
 def _legs(
-    problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int], pages: Sequence[PagePlan], wired: tuple[Collection[Pair], Sequence[Ref]]
+    problem: PlacementProblem,
+    flow: FlowGraph,
+    where: Mapping[str, int],
+    pages: Sequence[PagePlan],
+    wired: tuple[Collection[Pair], Sequence[Ref], Sequence[Ref]],
 ) -> tuple[list[Ref], list[Ref]]:
     """`wired` is the ink and the stubs `made`, split into the stubs that stand as they are and the LEG stubs of one-sided fan pins (ONE-SIDED-PIN).
 
     A leg stands at the trunk end of its pin's lane, with that row. The pins of a fan whose undrawn conductors all go to one
     far page and device are a bundle: one leg per page covers them (CL1 covered rule, R866; `cut_bundle`).
     """
-    ink, made = wired
+    ink, made, arrows = wired
     sided = {
         p
         for p, at in stand_pins(problem.facts.far_ends, (ink, flow.fans, {e.pin for r in made for e in r.ends if e.pin}), problem.symbols).items()
@@ -348,16 +382,13 @@ def _legs(
     far = _far_pages(problem.facts.far_ends, ink, where)
     undrawn = {a for a, b in problem.facts.far_ends if (a, b) not in ink}
     legged = sided & undrawn  # MARKER-FREE-SIDE (R1308, R1541): a leg stands only at a pin with an undrawn conductor
-    net_of = {p: n.id for n in problem.nets for p in n.pins}
+    held = (legged, {p for n in problem.nets for p in n.legless}, arrows, {plan.page: plan for plan in pages})  # legless: no leg line, a trunk end
     legs: list[Ref] = []
     carried: set[PinRef | None] = set()
+    net_of = {p: n.id for n in problem.nets for p in n.pins}
     for fan in flow.fans:
-        by_page: dict[int, list[RefEnd]] = {}
-        for a in (*fan.drivers, *fan.legs):
-            if a.pin in legged and a.column is not None and a.column in where and (where[a.column], a.column) in rows:
-                by_page.setdefault(where[a.column], []).append(
-                    RefEnd(where[a.column], a.column, a.pin, rows[where[a.column], a.column], stand_class(0, leg=True))
-                )
+        by_page, dropped = _fan_ends(fan, (where, rows), held)
+        carried |= dropped
         for ends in by_page.values():
             legs += leg_stubs(ends, far, net_of)
             carried |= {e.pin for e in ends}
@@ -392,6 +423,12 @@ def _again(end: RefEnd, kept: Mapping[PinRef, int], gone: AbstractSet[PinRef]) -
         return end
     stand = stand_class(kept[end.pin])
     return replace(end, column=None, row=None, stand=stand) if stand is StandClass.PIN else replace(end, stand=stand)
+
+
+def standing(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int], markers: Iterable[Marker]) -> set[PinRef]:
+    """The pins a placed marker, an anchor, a fan lane or a join stands at or for: `_covered` over the markers the core placed."""
+    ends = tuple(RefEnd(m.page, None, p) for m in markers for p in (m.end, *m.also))
+    return _covered(problem, [Ref("", RefKind.STUB, ends)], (_fan_refs(problem, flow, where)[1], _joins(flow)))
 
 
 def restood(plan: Iterable[Ref], lost: Iterable[Refused], ink: Collection[Pair]) -> tuple[Ref, ...]:

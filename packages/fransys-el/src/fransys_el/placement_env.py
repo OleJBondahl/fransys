@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    board_of_ports,
+    enclosing_boards,
+    far_pins,
     function_item,
+    item_of_port,
     item_parents,
     port_designation,
     schematic_functions,
@@ -24,12 +28,12 @@ if TYPE_CHECKING:
     from electrical_symbols import Library
     from fransys_layout.core import PinRef
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item, Port
+    from fransys_model.vocab import Function, Item, Port
 
     from .placement_kit import SymbolKit
     from .placement_options import Conventions
 
-__all__ = ["Env", "drawn_pins", "make_env", "pin_ref", "port_pins"]
+__all__ = ["Env", "drawn_pins", "make_env", "pin_ref", "port_pins", "refuse_inside_board"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,14 +102,27 @@ def drawn_pins(env: Env, ports: Iterable[Id[Port]]) -> tuple[PinRef, ...]:
     return tuple(pin_ref(env, p) for p in ports if p not in env.undrawn)
 
 
+def _wired_out_of_its_board(env: Env, port: Id[Port], owner: Id[Function]) -> bool:
+    """Whether `port`, a pin of a board's own function that is no interface pin, has a conductor to a port outside the board."""
+    item = item_of_port(env.model, port)
+    if not enclosing_boards(env.model, item) or owner in schematic_functions(env.model):
+        return False
+    return any(board_of_ports(env.model, pair) is None for pair in far_pins(env.model, [port]))
+
+
+def refuse_inside_board(env: Env, ports: Iterable[Id[Port]]) -> None:
+    """`ProblemError` when a pin of a board's own function is wired out of the board: a board is a black box (R2627)."""
+    for port in ports:
+        owner = function_of(env.model, port)
+        if _wired_out_of_its_board(env, port, owner):
+            refuse(f"port {port_designation(env.model, port)}", "wire a connector of its board: a board is a black box", symbol_key(env.model, owner))
+
+
 def pin_ref(env: Env, port: Id[Port]) -> PinRef:
     """The `PinRef` of `port`; `ProblemError` when its function has no pick in the kit."""
     found = env.pins.get(port)
     if found is None:
         text = port_designation(env.model, port)
         owner = function_of(env.model, port)
-        key = symbol_key(env.model, owner)
-        if owner in schematic_functions(env.model):
-            refuse(f"port {text}", "add a pick for its function to the SymbolKit", key)
-        refuse(f"port {text}", "wire a connector of its board: a board is a black box", key)
+        refuse(f"port {text}", "add a pick for its function to the SymbolKit", symbol_key(env.model, owner))
     return found

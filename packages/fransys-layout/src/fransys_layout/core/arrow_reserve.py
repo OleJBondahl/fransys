@@ -12,11 +12,11 @@ from itertools import count, takewhile
 from typing import TYPE_CHECKING
 
 from .band import arrow_box, arrow_hang, lane_line, lane_offset, lane_rows, trunk_room
-from .clearance import Keep, clear
+from .clearance import Keep, clear, through_keeps
 from .cut_costs import item_height
 from .cut_end_rooms import arrow_ends, arrow_room, cut_ends, stub_room
 from .errors import CoreError
-from .geometry import inside, marker_box_at, stub_views
+from .geometry import inside, marker_box_at, sized, stub_views
 from .ref_kind import kind_of
 from .values import Box, RefKind, StandClass
 
@@ -95,9 +95,29 @@ def reserve(arrows: int, options: Options) -> int:
     return (options.link_fit or options.marker)["R0"].w
 
 
-def lead_reserve(arrows: int, options: Options) -> int:
-    """The `reserve` of a row end plus the grid step the walk leaves clear of a footprint (R1362); the right end holds it as the left does."""
-    return reserve(arrows, options) + options.wiring_grid * bool(arrows)
+def end_widths(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], row: int, options: Options) -> tuple[int, int]:
+    """The x the cut ends of `fans` keep free at the (left, right) end of a row: the widest of their measured keepout boxes and the arrow's.
+
+    A stub's box is the one its ledger lines size (R1597), read through `marker_box_at`.
+    The arrow's `reserve` is the floor: a later cut may stand an arrow there.
+    """
+    out: list[int] = [0, 0]
+    for c in cut_ends(refs, plan, fans, row):
+        side, (pin, kind) = int(not c.right), c.key
+        measured = (
+            0
+            if pin is None or kind == str(RefKind.ARROW)
+            else marker_box_at(
+                0, 0, sized(options, (pin, kind), c.end.also, c.end.far), options.marker_facing[options.arrow_sides[side]], (pin, kind)
+            ).w
+        )
+        out[side] = max(out[side], measured, reserve(1, options))
+    return out[1], out[0]
+
+
+def lead_reserve(width: int, options: Options) -> int:
+    """The `width` a row end keeps free plus the grid step the walk leaves clear of a footprint (R1362); the right end holds it as the left does."""
+    return width + options.wiring_grid * bool(width)
 
 
 def leg_rows(refs: Iterable[Ref], page: int) -> dict[PinRef, int]:
@@ -164,11 +184,6 @@ def leg_offsets(legs: Sequence[tuple[int, PinRef]], options: Options) -> dict[in
     return {j: (sum(1 for i, (q, _) in enumerate(legs) if (q, i) < (p, j)) + 1) * step for j, (p, _) in enumerate(legs)}
 
 
-def legged_offsets(legs: Sequence[tuple[int, PinRef]], options: Options) -> dict[int, int]:
-    """Per pole that stands legs, the offset past `leg_cut` of its last leg's start: where its lane ends (R1684)."""
-    return {legs[j][0]: o for j, o in leg_offsets(legs, options).items()}
-
-
 def leg_hull(trunk: Trunk, reach: int) -> int:
     """The x of the trunk end's last tap: the hull for a many-lane trunk, the arrow's step-out `reach` back for a one-lane one."""
     return trunk.x1 if len(trunk.lane_ends) > 1 else trunk.x1 - reach
@@ -191,13 +206,20 @@ def leg_cut(trunk: Trunk, legs: Sequence[tuple[int, PinRef]], reach: int, grid: 
 
 
 def _clear(c: int, mark: Box, start: XY, room: tuple[Sequence[Keep], frozenset[int], Size | None]) -> bool:
-    """True when a leg dropping at x `c` with its marker box `mark` is inside `room` = (keeps, drop xs of its trunk, page) and meets none."""
+    """True when a leg dropping at x `c` with its marker box `mark` is inside `room` = (keeps, drop xs of its trunk, page) and meets none.
+
+    The marker box and a run past a non-body keep touch open; a run past a body is `through_keeps` (no pins: an outline run is refused).
+    """
     keeps, drops, area = room
     y = start[1]
     if (area is not None and not inside(mark, area)) or c in drops or any(mark.x < d < mark.x + mark.w for d in drops):
         return False
-    probes = (mark, Box(start[0], y, c - start[0], 0), Box(c, y, 0, mark.y - y))
-    return not any(clear(p, keeps, {}, edge="open") for p in probes)
+    runs = [r for r in (Box(start[0], y, c - start[0], 0), Box(c, y, 0, mark.y - y)) if r.w or r.h]
+    bodies = [k for k in keeps if k.kind == "body"]
+    return not (
+        any(clear(mark, keeps, {}, edge="open"))
+        or any(clear(r, [k for k in keeps if k.kind != "body"], {}, edge="open") or through_keeps(r, bodies, (), frozenset(), {}) for r in runs)
+    )
 
 
 def _arrow_keeps(trunk: Trunk, lines: Sequence[Trunk], arrowed: ArrowEnds, options: Options) -> list[Keep]:
@@ -236,9 +258,6 @@ def leg_line(
     span, grid = leg_unit(legs, options), options.wiring_grid
     pole, pin = legs[leg]
     reach = (grid + span) * ((trunk.page, trunk.fan, trunk.row) in arrowed)
-    others = (
-        legged_offsets(legs, options).keys() - {pole} - {p for p, _ in arrowed.get((trunk.page, trunk.fan, trunk.row), ())}
-    )  # lanes that end at their leg
     cut = leg_cut(trunk, legs, reach, grid)
     end, y = (trunk.lane_ends[pole] or (0, cut))[1] if len(trunk.lane_ends) > 1 else cut, _lane_y(trunk, grid, pole)
     x = cut + leg_offsets(legs, options)[leg]
@@ -252,9 +271,7 @@ def leg_line(
             *(Keep("", Box(t.x0 - 1, t.y - 1, t.x1 - t.x0 + 2, 2), "foot", "") for t in lines if t.fan != trunk.fan and y < t.y <= low),
             *_arrow_keeps(trunk, lines, arrowed, options),
         ],
-        frozenset(
-            d for i, e in enumerate(trunk.lane_ends) if e for d in e if not reach or d <= leg_hull(trunk, reach) or i in others
-        ),  # an arrow's step-out is no drop; another legged lane's end is one (R1684)
+        frozenset(d for e in trunk.lane_ends if e for d in e if not reach or d <= leg_hull(trunk, reach)),  # an arrow's step-out is no drop
         area,
     )
     runs = takewhile(
@@ -355,13 +372,14 @@ def column_legs(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], at: tu
     return RowReserve(legs=units, tail=max(rooms, default=0))
 
 
-def row_arrows(refs: Iterable[Ref], plan: PagePlan, blocks: Mapping[str, Block], fans: Iterable[Fan], r: int) -> tuple[int, int]:
-    """The arrow ends row r keeps free: its own, and a fan's whose trunk in another row reaches a card of row r.
+def row_arrows(refs: Iterable[Ref], plan: PagePlan, blocks: Mapping[str, Block], fans: Iterable[Fan], at: tuple[int, Options]) -> tuple[int, int]:
+    """The x the cut ends of row `at[0]` keep free: its own, and a fan's whose trunk in another row reaches a card of row r.
 
     An arrow stands at the end of its trunk's hull, so a card pin of this row is a tap of that trunk.
     """
     fans = tuple(fans)
-    left, right = arrow_ends(refs, plan, fans, r)
+    r, options = at
+    left, right = end_widths(refs, plan, fans, r, options)
     cards = {blocks[b].anchor for b in plan.rows[r].blocks if blocks[b].is_card}
     for fan in fans:
         ends = (*fan.drivers, *fan.legs)
@@ -369,8 +387,8 @@ def row_arrows(refs: Iterable[Ref], plan: PagePlan, blocks: Mapping[str, Block],
             continue
         for k, row in enumerate(plan.rows):
             if k != r and any(a.column in row.columns for a in ends):
-                more = arrow_ends(refs, plan, (fan,), k)
-                left, right = left + more[0], right + more[1]
+                more = end_widths(refs, plan, (fan,), k, options)
+                left, right = max(left, more[0]), max(right, more[1])
     return left, right
 
 
@@ -386,7 +404,7 @@ def block_reserves(cut: CutResult, annexes: Sequence[Annex], options: Options) -
     out: dict[str | tuple[str, str], RowReserve] = {}
     for plan in cut.spec.pages:
         for r, row in enumerate(plan.rows):
-            left, right = row_arrows(cut.spec.reference_plan, plan, blocks, cut.flow.fans, r)
+            left, right = row_arrows(cut.spec.reference_plan, plan, blocks, cut.flow.fans, (r, options))
             wide = lead_reserve(left, options) + lead_reserve(right, options)
             legs = row_legs(cut.spec.reference_plan, plan, cut.flow.fans, r, options)
             stubs = stub_room(cut.spec.reference_plan, plan, cut.flow.fans, r, options)

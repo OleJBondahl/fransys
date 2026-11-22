@@ -5,7 +5,7 @@ the conventions of IEC 60617. They are not IEC's drawings, and this repo is not 
 endorsed by IEC. The geometry is our own and has not been checked against the standard's drawings,
 so every symbol carries `status = "unverified"`.
 
-Status: alpha, under construction. Nothing is released.
+Status: version 0.23.11, shipped only inside its workspace's GitHub release; not published on PyPI.
 
 ## What is here
 

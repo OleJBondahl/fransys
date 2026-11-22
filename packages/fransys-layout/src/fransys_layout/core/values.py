@@ -60,7 +60,6 @@ FindingCode = Literal[
     "NO_BLOCK",
     "BLOCK_NOT_PLACED",
     "CHAIN_REFUSED",
-    "ORDER_HINT_UNMET",
     "HEAD_OFF_LEGS",
     "ALIGN_DROPPED",
     "WIRE_AS_REFERENCE",
@@ -72,6 +71,7 @@ FindingCode = Literal[
     "WIDER_THAN_PAGE",
     "LANE_TURNED",
     "MARKER_UNPLACED",
+    "CONNECTION_NOT_ACCOUNTED",
     "WIRE_MEETS_NET",
     "TAG_ACROSS_BODY",
     "PLACEMENT_PROBLEM",
@@ -127,10 +127,11 @@ class Pin:
 
 @dataclass(frozen=True, slots=True)
 class BoxSpec:
-    """Fact 16: movable pins in printed-marking order; margin is body beyond the end pins."""
+    """Fact 16: movable pins in printed-marking order; `lead` and `tail` are the body beyond the first and last pin."""
 
     order: tuple[str, ...]
-    margin: int
+    lead: int
+    tail: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,7 +156,10 @@ class CutEnd:
 
 @dataclass(frozen=True, slots=True)
 class Net:
-    """A net: its id, pins, bundle, unit-crossing facts, `cut` ends off the set, and `tagged` links drawn as a tag pair (layout-0508)."""
+    """A net: its id, pins, bundle, unit-crossing facts, `cut` ends off the set, `tagged` links, `apart` pairs as tag pairs.
+
+    `legless` holds the pins whose leg found no line (R3472).
+    """
 
     id: str
     pins: tuple[PinRef, ...]
@@ -163,6 +167,8 @@ class Net:
     crosses_unit: bool = False
     cut: tuple[CutEnd, ...] = ()
     tagged: tuple[tuple[PinRef, ...], ...] = ()
+    apart: tuple[tuple[PinRef, ...], ...] = ()
+    legless: tuple[PinRef, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +283,6 @@ class Options:
     # round(score.WEIGHTS["b"] / WEIGHTS["d"]): the router trades as the scorer does
     bend_penalty: int = field(kw_only=True)
     crossing_penalty: int = field(kw_only=True)  # round(score.WEIGHTS["x"] / WEIGHTS["d"])
-    box_margin: int = field(kw_only=True)  # body beyond a box's end pins when its spec gives none
     column_wire_lanes: int = field(kw_only=True)  # grids a column's height holds past its cells
     jog_lanes: int = field(kw_only=True)  # grids a jog at level 0 takes between its two pins
     spare_cells: int = field(kw_only=True)  # grid cells an occupancy keeps past its extent
@@ -425,4 +430,4 @@ class PageSpec:
     leads: frozenset[PinRef] = field(kw_only=True, default=frozenset())
     unjoined: tuple[tuple[str, tuple[PinRef, PinRef]], ...] = field(
         kw_only=True, default=()
-    )  # (net, (near, far)): pieces the loop must join; `widen._stand` stands each through the route fallback, no reserve and no re-cut (R1713)
+    )  # (net, (near, far)): pieces the loop must join; `route_loop._stand` stands each through the route fallback, no reserve and no re-cut (R1713)

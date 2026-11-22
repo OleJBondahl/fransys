@@ -10,11 +10,9 @@ import fransys_render
 from _build import (
     document,
     drawing_set,
-    item,
     layout_page,
     location,
     model,
-    part,
     project,
 )
 from fransys_pdf._geometry import document_heading
@@ -63,14 +61,6 @@ def test_a_nested_locations_subject_label_stays_as_main_printed_it():
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=cabinet, cover="# Cover")
     m = model(room, cabinet, doc)
     assert subject_label(m, doc.id) == "C1 Demo cabinet"
-
-
-def test_an_item_documents_subject_label_has_no_sign():
-    demo_part = part("relay", description="Invented relay")
-    board = item("a1", description="", part=demo_part.id)
-    doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=board, cover="# Cover")
-    m = model(demo_part, board, doc)
-    assert subject_label(m, doc.id) == "A1 Invented relay"
 
 
 def test_a_drawing_pages_scope_cell_reads_the_signed_location_path():

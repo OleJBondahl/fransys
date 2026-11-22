@@ -53,7 +53,8 @@ def _runs(points: Sequence[XY], box: Box, ports: Sequence[XY]) -> bool:
 def through_bodies(part: PagePart) -> list[str]:
     """One member per (wire, box) sharing interior where the wire ends at none of the box's own ports.
 
-    A wire may end inside a box only at its own pin; a table head counts too (R1055, R1058). A marker is `over_markers`'s.
+    A wire may end inside a box only at its own pin, and a run from the pin across the body counts (KI-1283); a table head counts too (R1055, R1058).
+    A marker is `over_markers`'s.
     """
     found: list[str] = []
     for symbol in part.drawing.symbols:
@@ -61,11 +62,7 @@ def through_bodies(part: PagePart) -> list[str]:
             continue
         box = symbol.outline
         ports = [(symbol.x, symbol.y), *(part.ports[p] for p in symbol.ports if p in part.ports)]
-        found += [
-            f"wire / {symbol.key}"
-            for w in part.drawing.wires
-            if not any(own_end(q, e) for q in ports for e in (w.points[0], w.points[-1])) and _runs(w.points, box, ports)
-        ]
+        found += [f"wire / {symbol.key}" for w in part.drawing.wires if _runs(w.points, box, ports)]
     return found
 
 

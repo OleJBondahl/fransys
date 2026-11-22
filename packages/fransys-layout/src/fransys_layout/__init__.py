@@ -1,6 +1,6 @@
 """Layout engines for Fransys: geometry <- stages <- lint <- engines."""
 
-from .geometry import Facing, HintError
+from .geometry import Facing
 lazy from .engines.cable import CableLayout, PlacedBlock, PlacedEnd, PlacedWire, lay_out_cables
 lazy from .engines.diagram import (
     DiagramBox,
@@ -30,7 +30,6 @@ __all__ = (
     "DiagramLine",
     "DiagramTab",
     "Facing",
-    "HintError",
     "OverviewLayout",
     "OverviewPlacedBox",
     "OverviewPlacedHead",

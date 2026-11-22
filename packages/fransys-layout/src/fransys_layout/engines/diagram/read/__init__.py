@@ -8,7 +8,7 @@ from fransys_layout.engines.diagram.read.findings import reading_findings
 from fransys_layout.engines.overview.read.readings import readings
 lazy from fransys_layout.engines.overview.sheet_values import DiagramFacts
 lazy from fransys_layout.symbols import SymbolLibrary
-lazy from fransys_model.kernel import Finding, Model
+lazy from fransys_model.kernel import Finding, Model, findings_sorted
 
 __all__ = ("read_diagrams", "read_findings")
 
@@ -22,4 +22,4 @@ def read_diagrams(model: Model, library: SymbolLibrary) -> tuple[DiagramFacts, .
 def read_findings(model: Model) -> tuple[Finding, ...]:
     """The diagram findings of every reading, system and units, sorted by code and subjects."""
     found = (finding for unit in readings(model) for finding in reading_findings(model, unit))
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects)))
+    return findings_sorted(found, by_message=False)

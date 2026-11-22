@@ -17,7 +17,12 @@ _ORIGIN = Origin(file="packages/fransys/tests/_board_and_rack.py", line=1, note=
 
 
 def build_board_and_rack_model() -> Model:
-    """A board `PCB1` (one function of its own) and a PLC rack `R1` with one (channel-less)
+    """The model of `build_board_and_rack`."""
+    return build_board_and_rack().model
+
+
+def build_board_and_rack() -> fr.BuildResult:
+    """A board `PCB1` (one function of its own, with no pin) and a PLC rack `R1` with one (channel-less)
     module, via `fr.build`.
     """
     board_part = Part(
@@ -122,4 +127,4 @@ def build_board_and_rack_model() -> Model:
         ],
         origin=_ORIGIN,
     )
-    return fr.build(draft, system_document()).model
+    return fr.build(draft, system_document())

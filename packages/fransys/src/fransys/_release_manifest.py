@@ -97,7 +97,10 @@ def _warning_entries(model: Model, unit: Id[ModelUnit] | None, findings: tuple[F
     owned = None if unit is None else unit_owned_ids(model, unit)
     selected = sorted(
         (finding for finding in findings if finding.severity is Severity.WARNING and (owned is None or _concerns(finding, owned))),
-        key=lambda finding: (finding.code, finding.message),
+        key=lambda finding: (
+            finding.code,
+            finding.message,
+        ),  # (code, message) differs from findings_sorted where subjects differ: keeps its key (R2711)
     )
     return [
         {

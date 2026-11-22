@@ -11,6 +11,9 @@ from _model_build_cover import cabinet_build
 from fransys_el import drawn_nets
 from fransys_el.set_findings import _INFO
 
+from fransys_layout import FINDING_CODES
+from fransys_model.derive import ports
+
 
 def test_write_refuses_on_connection_not_drawn_and_writes_nothing(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
     monkeypatch.setattr(drawn_nets, "_carried", lambda *_: False)  # no end is drawn: CONNECTION_NOT_DRAWN per end (CP-S2c-1)
@@ -23,15 +26,18 @@ def test_write_refuses_on_connection_not_drawn_and_writes_nothing(monkeypatch: p
     assert not out.exists() or not any(out.iterdir())
 
 
-def test_write_refuses_on_dangling_wire_end(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
-    """KI284-FLIP (R1669): DANGLING_WIRE_END is an ERROR too; a forced finding of it makes `fr.write` raise and write nothing."""
-    codes = ("DANGLING_WIRE_END",)
-    monkeypatch.setattr("fransys_el.lay_out_core.drawing_sweep", lambda *_: tuple(_INFO[c].finding((), "forced") for c in codes))
+@pytest.mark.parametrize(
+    "code", ["DANGLING_WIRE_END", "CONNECTION_TO_UNDRAWN", "WIRE_MEETS_NET", "MARKER_UNPLACED", "OUTLINE_NO_ROOM", "OUT_OF_PAGE", "NO_CELL"]
+)
+def test_write_refuses_on_each_error_code_that_read_zero(code: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+    """KI284-FLIP (R1669), SEVERITY-FLIP-1 (R3133): each is an ERROR; a forced finding of it makes `fr.write` raise and write nothing."""
+    info = {c.code: c for c in FINDING_CODES} | _INFO
+    monkeypatch.setattr("fransys_el.lay_out_core.drawing_sweep", lambda model, _: (info[code].finding(tuple(ports(model))[:1], "forced"),))
     built = cabinet_build()
-    expect_codes(built, *codes)
+    expect_codes(built, code)
     with pytest.raises(fr.BuildFailedError) as raised:
         fr.write(built, tmp_path / "out")
-    assert {f.code for f in raised.value.findings} == set(codes)
+    assert {f.code for f in raised.value.findings} == {code}
     assert not any((tmp_path / "out").rglob("*"))
 
 

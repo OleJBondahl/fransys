@@ -53,6 +53,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="DRAWN_READ_INCOMPLETE",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause=(
+            "A drawing set failed to lay out or its output steps were skipped, so the drawn-page checks did not read it: "
+            "no CONNECTION_NOT_DRAWN or DANGLING_WIRE_END result covers its pages and ports. "
+            "The message names the pages and the count of ports not read."
+        ),
+        fix="No call clears this: fix the refusing ERROR: LABEL_NO_ROOM, WIDER_THAN_PAGE, PAGE_OVERFLOW, LANE_WIRE_DROPPED or PLACEMENT_PROBLEM.",
+        page="findings-render",
+    ),
+    CodeInfo(
         code="INK_WITHOUT_CONDUCTOR",
         severity=Severity.WARNING,
         stage="render",
@@ -116,8 +129,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=(
             "A reference marker is not drawn as the model gives it: it prints a text other than the one derived, "
-            "stands in another cell than the stored one, stands on no wire of its net, or one reference number names two groups in one drawing set. "
-            "A reader of the page then cannot find the other end."
+            "stands in another cell than the stored one, stands on no wire of its net, or one reference number names two groups in one drawing set."
         ),
         fix=_REPORT,
         page="findings-render",
@@ -127,10 +139,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="render",
         who="consumer",
-        cause=(
-            "Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential), "
-            "so the page would join nets the model keeps apart."
-        ),
+        cause=("Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential)."),
         fix=(
             "No call clears this: two nets of one supply print one name in a cabinet. For a supply name with no unique protective device "
             "between them: put a fuse or breaker between them. For a ground: bond the nets, or declare each supply in its own unit, "

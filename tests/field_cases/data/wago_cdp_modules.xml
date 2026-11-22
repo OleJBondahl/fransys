@@ -13,12 +13,12 @@
         <ScalingPoint InValue="32767" OutValue="100" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint1" Type="double"></ScalingPoint>
       </Operator>
     </Channel>
-    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="AI3" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="7" NetworkConvert="1" Type="short" Value="0" Description="Analog input channel"></Channel>
   </Module>
   <Module Model="WagoIOModules.IOModule" Name="DEMO-PLC-DIO-MIXED" Description="PLC module of mixed inputs and outputs, declared out of order: di_1, di_2, di_10, do_1, do_2">
     <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="Fan" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital output channel"></Channel>
     <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Door" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
     <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="Gate" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
-    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="DI2" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="I10" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
   </Module>
 </Modules>

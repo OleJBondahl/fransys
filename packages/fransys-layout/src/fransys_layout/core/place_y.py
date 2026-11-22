@@ -5,10 +5,9 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import reserve
+from .arrow_reserve import end_widths
 from .clearance import Keep, reach
 from .constraints import Graph
-from .cut_end_rooms import arrow_ends
 from .errors import CoreError
 from .geometry import cell_footprint, pin_xy, union, view_of
 from .keys import natural_key
@@ -223,8 +222,8 @@ def _spans(env: PageEnv, x: Mapping[str, int]) -> list[Span]:
             drivers, legs = _xs(env, x, (fan, roles[0]), r), _xs(env, x, (fan, roles[1]), r)
             if drivers or legs:
                 xs = (*drivers, *legs)
-                left, right = arrow_ends(env.refs, env.plan, (fan,), r)
-                lo, hi = min(xs) - reserve(left, env.options), max(xs) + reserve(right, env.options)
+                left, right = end_widths(env.refs, env.plan, (fan,), r, env.options)
+                lo, hi = min(xs) - left, max(xs) + right
                 out.append(Span(fan.id, r, lo, hi, fan.lanes, side, drivers, legs))
     return out
 

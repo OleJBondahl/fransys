@@ -180,6 +180,8 @@ class PageRoutes:
     """The page's annexes, placed after its fixed wires and before its A* round, in the order the problem gives them (TAG-CORNERS)."""
     needs: tuple[Demand, ...]
     """The tracks the gap beside each label blocked at every candidate must hold for it: widen's first try, never a demand of a wire."""
+    pieces: tuple[tuple[PinRef, ...], ...] = ()
+    """The pins each connected piece of this page's wires reaches (CORE-ACCOUNT): wires and anchor leads that meet, and the pins on them."""
 
 
 @dataclass(frozen=True, slots=True)

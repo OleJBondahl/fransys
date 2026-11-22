@@ -10,7 +10,7 @@ from fransys_model.derive import (
     pin_text,
     port_designation,
 )
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 from .codes import finding
 
@@ -160,4 +160,4 @@ def check(model: Model, board: ItemId) -> tuple[Finding, ...]:
         *_pin_id_collision(model, pins.part_pins),
         *_unconnected_pin(pins.unconnected),
     ]
-    return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))
+    return findings_sorted(found)

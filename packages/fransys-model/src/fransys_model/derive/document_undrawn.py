@@ -18,9 +18,9 @@ __all__ = ["undrawn_items"]
 def undrawn_items(model: Model, document: Document, unit: Id[Unit] | None, drawn: tuple[Id[Item], ...]) -> tuple[Id[Item], ...]:
     """The harness items a location document does not draw, with all they own, sorted.
 
-    Only a location document has any: a unit or item document draws its own harnesses.
+    Only a location document has any: a unit document draws its own harnesses.
     """
-    if unit is not None or document.item is not None or document.location is None:
+    if unit is not None or document.location is None:
         return ()
     children = build_indexes(model).children_by_item
     found: set[Id[Item]] = set()

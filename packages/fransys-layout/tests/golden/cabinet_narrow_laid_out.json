@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 34,
+  "schema_version": 35,
   "tables": {
     "aspect_node": [
       {
@@ -2002,20 +2002,6 @@
         "number": 1,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "unit": null
-      }
-    ],
-    "layout.group_hint": [
-      {
-        "ext": {},
-        "function": "function:6cb0cfe586a453c1860667b7533ec101",
-        "group": "aspect_node:e63d1d18292b584b90ef567d8da62af9",
-        "id": "layout.group_hint:1bf1916dd734558780edf53a7317f110",
-        "key": [
-          "cabinet",
-          "s0",
-          "nc_2",
-          "group_hint"
-        ]
       }
     ],
     "layout.link_marker": [

@@ -126,7 +126,7 @@ def test_every_row_name_is_its_value(row: WiringRow) -> None:
 def test_a_stored_text_holds_source_row_as_null_and_writes_back_byte_identical() -> None:
     """Fails if a `None` `source_row` is left out: canonical JSON writes every value (R2299)."""
     stored = (Path(__file__).resolve().parent.parent / "golden" / "cabinet.json").read_text(encoding="utf-8")
-    assert '"schema_version": 34' in stored
+    assert '"schema_version": 35' in stored
     assert '"source_row": null' in stored
     assert dumps(loads(stored)) == stored
 

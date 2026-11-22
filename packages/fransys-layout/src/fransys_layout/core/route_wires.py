@@ -145,7 +145,7 @@ def _box_wire(env: RouteEnv, col: Column, slot: tuple[bool, int], end: End) -> D
             f"{col.id}, so no wire is drawn from it: wire it to a pin of that lane's end cell"
         )
         return _refused(text)
-    if net in env.cut_nets and box.sym not in env.placed:
+    if net in env.referenced and box.sym not in env.placed:
         return Drawn()  # a spilled column's box stands on another page: the tag pair is the join
     return _box_pair(env, net, box, PinRef(cell.sym, pin)) or _refused(f"box {box.sym} is not placed on page {env.page}; place it or cut its net")
 

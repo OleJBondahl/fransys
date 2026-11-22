@@ -6,6 +6,8 @@ proof that `build` is the real pipeline. Root tests may import every workspace p
 """
 
 import importlib
+import importlib.util
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -14,6 +16,11 @@ import fransys as fr
 import fransys_parts
 import pytest
 from fransys_author.design import Design
+from hypothesis import settings
+
+# Decision 0020: the one hypothesis profile for every test dir: derandomized, no deadline, bounded examples (R2609 J1).
+settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
+settings.load_profile("fransys")
 
 _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
@@ -32,6 +39,9 @@ _INTERNAL_LIST = _ROOT / "internal" / "search-paths.txt"
 for _line in _INTERNAL_LIST.read_text("utf-8").split() if _INTERNAL_LIST.is_file() else ():
     if str(_ROOT / _line) not in sys.path:
         sys.path.insert(0, str(_ROOT / _line))
+
+if importlib.util.find_spec("placement_corpus"):  # the full repo's corpus store: its run directory is made and deleted by these hooks
+    from placement_corpus.store import pytest_configure, pytest_unconfigure  # noqa: F401 - pytest finds the hooks by name
 
 from _expected_codes import REFUSED  # noqa: E402
 from _export_signature import SKIP_REASON, is_export  # noqa: E402
@@ -144,9 +154,17 @@ def demo_cabinet_document(tmp_path: Path) -> BuildResult:
     return fr.build(parts, design.draft(), document_draft)
 
 
-pytest_plugins = ("_gap_flip_hook",)  # the strict xfails of the tests still red on the core (FLIP-NOW F4)
+# the strict xfails of the tests still red on the core (FLIP-NOW F4); a recording run (REL_SWEEP_RECORD) adds the sweep's plugin here, after
+# coverage has started: `-p rel_sweep` would import the whole workspace first and `just ci` would measure 50% (GATE-SWEEP, R2698)
+# FRANSYS_TIERS selects and orders the test tiers (internal/scripts/tier_plan.py, TIER-ORDER); it is set only by the maintainers' gate
+pytest_plugins = (
+    "_gap_flip_hook",
+    *(("rel_sweep",) if "REL_SWEEP_RECORD" in os.environ else ()),
+    *(("tier_plan",) if os.environ.get("FRANSYS_TIERS") else ()),
+)
 
 HEAVY_MODULES = ("test_scale_call_counts.py", "test_render_scale_counts.py")
+SALTED = frozenset("abcde")  # the id salts the daily sweep covers; the gate runs the default ("-") only
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
@@ -155,7 +173,12 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     Each module holds a worker for a `build_scale(16)`. xdist gives worker k the k-th slice of
     `len(items) // workers` tests and runs it in order. Order only; the rest keep theirs.
     In the export (no `internal/` root) a `private_input` test is skipped (R462).
+    A test parametrized by `salt` a to e is marked `salted`: `addopts` leaves it out, and the daily sweep runs it (`-m ""`).
     """
+    for item in items:
+        spec = getattr(item, "callspec", None)
+        if spec is not None and spec.params.get("salt") in SALTED:
+            item.add_marker(pytest.mark.salted)
     workers = getattr(config, "workerinput", {}).get("workercount", 1)
     names = [Path(str(item.path)).name for item in items]
     groups = [[i for i, n in zip(items, names, strict=True) if n == m] for m in HEAVY_MODULES]

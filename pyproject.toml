@@ -175,8 +175,8 @@ pythonpath = [
     "packages/fransys-pdf/tests",
     "packages/fransys-render/tests",
 ]
-addopts = "-ra --strict-markers --import-mode=importlib"
-markers = ["wp(name): the work package that implements this acceptance test", "rule(id): the docs/rules.toml row this test holds (RR3)", "private_input: reads internal/ or rules/, skipped in the export (R462)"]
+addopts = "-ra --strict-markers --import-mode=importlib -m 'not salted'"
+markers = ["wp(name): the work package that implements this acceptance test", "rule(id): the docs/rules.toml row this test holds (RR3)", "private_input: reads internal/ or rules/, skipped in the export (R462)", "salted: a test run under id salt a to e, left out of the gate and run by the daily sweep (owner 2026-11-16, GATE-TRIM)"]
 # A hung test stops itself (decision 0222): 180 s; a build that needs more carries timeout(600) (slowest call 561.81 s under load ~20, R2270).
 timeout = 180
 # The cap charges the test function only, so a module fixture's build is not charged; a hung fixture is not covered.

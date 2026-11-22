@@ -38,7 +38,7 @@ def _part(
 def tree3(*, one_leaf: bool = False) -> PlacementProblem:
     """Hub H with four S pins, children C1 and C2 (one node, two S pins each), leaves G1 to G4; one_leaf: G1 and G3 only."""
     hub_pins = tuple(Pin(f"s{i}", "S", 16 * i, 32, i - 1) for i in range(1, 5))
-    hub_spec = BoxSpec(tuple(p.id for p in hub_pins), 16)
+    hub_spec = BoxSpec(tuple(p.id for p in hub_pins), 16, 16)
     hub = _part("H", Box(0, 0, 80, 32), hub_pins, box=hub_spec)
     child_body, child_pins = Box(-16, 0, 32, 32), (Pin("n", "N", 0, 0, 0), Pin("s1", "S", -8, 32, 1), Pin("s2", "S", 8, 32, 2))
     children = [
@@ -110,7 +110,7 @@ def fan_in1() -> PlacementProblem:
 def tree2() -> PlacementProblem:
     """Hub H with two S pins, children C1 and C2, one leaf each."""
     hub_pins = tuple(Pin(f"s{i}", "S", 16 * i, 32, i - 1) for i in (1, 2))
-    hub = _part("H", Box(0, 0, 48, 32), hub_pins, box=BoxSpec(("s1", "s2"), 16))
+    hub = _part("H", Box(0, 0, 48, 32), hub_pins, box=BoxSpec(("s1", "s2"), 16, 16))
     kids = [_part(n, Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0), Pin("s", "S", 0, 32, 1))) for n in ("C1", "C2")]
     leaves = [_part(f"G{i}", Box(-8, 0, 16, 32), (Pin("n", "N", 0, 0, 0),)) for i in (1, 2)]
     nets = [

@@ -1,5 +1,7 @@
 """Row order in the stage columns: one pass down, one pass up, on abstract graphs."""
 
+import pytest
+
 from fransys_layout.engines.overview.order import order_columns
 
 
@@ -8,27 +10,23 @@ def _rank(*columns: tuple[str, ...]) -> dict[str, int]:
     return {b: i for i, b in enumerate(sorted(b for c in columns for b in c))}
 
 
-def test_down_pass_reorders_a_column() -> None:
-    """Lines p-y, q-x: y has mean row 0, x has mean row 1, so column 1 becomes (y, x)."""
-    cols = (("p", "q"), ("x", "y"))
-    out = order_columns(cols, (("p", "y"), ("q", "x")), _rank(*cols))
-    assert out == (("p", "q"), ("y", "x"))  # kills: no down pass
+_PASSES = [  # (columns, lines, expected, id): the id names the pass or fallback a wrong order would kill
+    ((("p", "q"), ("x", "y")), (("p", "y"), ("q", "x")), (("p", "q"), ("y", "x")), "down-pass"),  # y mean row 0, x mean row 1
+    ((("p", "q", "r"), ("x", "y")), (("p", "x"), ("p", "y"), ("q", "x"), ("r", "y")), (("q", "p", "r"), ("x", "y")), "up-pass"),  # p 1/2, q 0, r 1
+    (
+        (("a", "b"), ("m", "n"), ("z",)),
+        (("a", "n"), ("b", "m"), ("m", "z"), ("n", "z")),
+        (("b", "a"), ("m", "n"), ("z",)),
+        "up-pass-reads-next-column",
+    ),
+    ((("p", "q", "r"), ("x", "w", "y")), (("r", "x"), ("p", "y")), (("p", "q", "r"), ("y", "w", "x")), "no-previous-neighbour-keeps-row-as-key"),
+]
 
 
-def test_up_pass_reorders_columns_before_the_last() -> None:
-    """Down keeps (x, y). Up: p = (0+1)/2, q = 0, r = 1, so column 0 becomes (q, p, r)."""
-    cols = (("p", "q", "r"), ("x", "y"))
-    lines = (("p", "x"), ("p", "y"), ("q", "x"), ("r", "y"))
-    out = order_columns(cols, lines, _rank(*cols))
-    assert out == (("q", "p", "r"), ("x", "y"))  # kills: no up pass
-
-
-def test_up_pass_uses_the_next_column_not_the_previous() -> None:
-    """Down gives (n, m); up re-sorts column 1 by z (tie: text order m, n), then column 0."""
-    cols = (("a", "b"), ("m", "n"), ("z",))
-    lines = (("a", "n"), ("b", "m"), ("m", "z"), ("n", "z"))
-    out = order_columns(cols, lines, _rank(*cols))
-    assert out == (("b", "a"), ("m", "n"), ("z",))  # kills: up pass reading the previous column
+@pytest.mark.parametrize(("cols", "lines", "expected"), [pytest.param(*row[:3], id=row[3]) for row in _PASSES])
+def test_a_down_pass_then_an_up_pass_orders_the_columns(cols, lines, expected) -> None:
+    """Down pass orders by mean row of the previous column, up pass by the next; text rank breaks ties."""
+    assert order_columns(cols, lines, _rank(*cols)) == expected
 
 
 def test_parallel_lines_weight_the_mean() -> None:
@@ -44,13 +42,6 @@ def test_ties_go_to_text_rank_and_same_column_lines_are_ignored() -> None:
     cols = (("p",), ("b", "a"))
     out = order_columns(cols, (("p", "a"), ("p", "b"), ("a", "b")), {"p": 0, "a": 1, "b": 2})
     assert out == (("p",), ("a", "b"))  # kills: tie by reverse text rank
-
-
-def test_box_without_previous_neighbour_keeps_its_row_as_key() -> None:
-    """w (row 1) has no line to column 0: key 1, between y (key 0 via p) and x (key 2 via r)."""
-    cols = (("p", "q", "r"), ("x", "w", "y"))
-    out = order_columns(cols, (("r", "x"), ("p", "y")), _rank(*cols))
-    assert out == (("p", "q", "r"), ("y", "w", "x"))  # kills: fallback key at either end
 
 
 def test_single_column_is_unchanged() -> None:

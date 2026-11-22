@@ -80,8 +80,8 @@ def cut_ends(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], row: int)
     for fan in fans:
         out += (c for r in arrows.get(fan.id, ()) for c in _arrow_ends(r, fan, plan.page, row))
         if _first_row(fan, plan) == row:
-            kind = RefKind.STUB if laned_stub(fan) else RefKind.COPY
-            out += (c for r in by_kind.get(kind, ()) if r.net in fan.nets for c in _stub_ends(r, fan, kind, plan.page))
+            kinds = (RefKind.STUB,) if laned_stub(fan) else (RefKind.STUB, RefKind.COPY)
+            out += (c for k in kinds for r in by_kind.get(k, ()) if r.net in fan.nets for c in _stub_ends(r, fan, k, plan.page))
     return tuple(out)
 
 
@@ -106,11 +106,10 @@ def arrow_leads(fan: Fan, refs: Iterable[Ref], plan: PagePlan, row: int) -> tupl
 def stub_room(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], r: int, options: Options) -> int:
     """The y the stub boxes at row r's trunk ends take: the tallest, from the `stub_views` the legs' x reads (R1634).
 
-    A bundle's trunk-end stub and a leg-class stub with no clear leg line both stand at the trunk's `arrow_sides[0]` end.
+    A bundle's trunk-end stub stands at the trunk's `arrow_sides[0]` end.
     """
     refs = tuple(refs)
     ends = [c.end for c in cut_ends(refs, plan, fans, r) if c.right and c.key[1] == str(RefKind.STUB)]
-    ends += [e for rf in refs if kind_of(rf) is RefKind.STUB for e in rf.ends if e.stand is StandClass.LEG and (e.page, e.row) == (plan.page, r)]
     turned = options.marker_facing[options.arrow_sides[0]]
     heights = [views[turned].h for e in ends if e.pin and (views := stub_views(options.stub_lines, options.stub_table, e.pin, e.also, e.far))]
     return max(heights, default=0)

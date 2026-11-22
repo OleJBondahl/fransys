@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.designation_label import item_label
 from fransys_model.derive.facts.plc_wiring import requested_signal
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import functions
 lazy from fransys_model.kernel import Finding
@@ -33,8 +33,7 @@ def ambiguous_findings(
     if not ambiguous:
         return []
     all_functions = functions(model)
-    channel_of = plc_channel_facets(model)
-    number = {function.id: channel_of[function.template].channel for function in all_functions.values() if function.template in channel_of}
+    number = {function: facet.channel for function, facet in function_channels(model).items()}
     found: list[Finding] = []
     for request in requests:
         channels = ambiguous.get(request.subject)

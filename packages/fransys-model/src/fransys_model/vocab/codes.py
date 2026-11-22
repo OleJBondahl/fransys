@@ -1,9 +1,8 @@
 """The model's finding codes raised by its passes and the block diagram (BUILD-MESSAGES M1)."""
 
-from typing import Any, Final
-lazy from collections.abc import Iterable
+from typing import Final
 
-from fransys_model.kernel import CodeInfo, Finding, Id, Severity
+from fransys_model.kernel import CodeBook, CodeInfo, Severity
 
 from . import codes_drawn, codes_structure, codes_wiring, codes_wiring_more
 
@@ -195,9 +194,4 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     *codes_wiring_more.FINDING_CODES,
 )
 
-_BY_CODE: dict[str, CodeInfo] = {info.code: info for info in FINDING_CODES}
-
-
-def finding(code: str, subjects: Iterable[Id[Any]], message: str, **fix_values: str) -> Finding:
-    """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
-    return _BY_CODE[code].finding(subjects, message, **fix_values)
+finding = CodeBook(*FINDING_CODES).finding

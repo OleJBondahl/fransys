@@ -128,11 +128,16 @@ def test_from_plain_refuses_another_format_and_names_it(make, bad):
         jsonform.from_plain(type(make()), plain)
 
 
-def test_from_plain_refuses_a_missing_format():
-    plain = plain_of(problem())
-    del plain["format"]
-    with pytest.raises(CoreError, match="format None"):
-        jsonform.from_plain(PlacementProblem, plain)
+@pytest.mark.parametrize(
+    ("make", "cls", "key", "match"),
+    [(problem, PlacementProblem, "format", "format None"), (layout, CoreLayout, "wired", "missing required key 'wired'")],
+    ids=["format", "wired"],
+)
+def test_from_plain_refuses_a_missing_key_naming_it(make, cls, key, match):
+    plain = plain_of(make())
+    del plain[key]
+    with pytest.raises(CoreError, match=match):
+        jsonform.from_plain(cls, plain)
 
 
 def _put(data: Any, path: list[Any], value: object) -> None:
@@ -316,10 +321,3 @@ def test_options_without_a_convention_raises(name):
     del given[name]
     with pytest.raises(TypeError, match=name):
         Options(**given)
-
-
-def test_from_plain_refuses_a_layout_without_wired_naming_the_key():
-    plain = plain_of(layout())
-    del plain["wired"]
-    with pytest.raises(CoreError, match="missing required key 'wired'"):
-        jsonform.from_plain(CoreLayout, plain)

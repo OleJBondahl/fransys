@@ -31,8 +31,6 @@ A part states `power_loss` once; `POWER_LOSS_TWICE` refuses both the part and a 
   what `lint` already checked (no second, weaker validation, decision parts-0001).
 - `load(package)` finds an installed data package with `importlib.resources` and calls the same
   code as `load_path`.
-- `SUPPORTED_SCHEMAS: frozenset[int]` names the accepted `schema` values (`frozenset({2})`
-  today).
 
 ## Worked examples
 

@@ -37,7 +37,7 @@ def _build() -> fr.BuildResult:
 
 def test_an_external_device_cable_beside_a_failed_set_is_not_reported_undrawn() -> None:
     result = _build()
-    expect_codes(result, "WIDER_THAN_PAGE", "PAGE_OVERFLOW")
+    expect_codes(result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "DRAWN_READ_INCOMPLETE")
     codes = {f.code for f in fr.check(result)}
     assert {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"} <= codes
     assert "CONNECTION_NOT_DRAWN" not in codes

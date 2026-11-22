@@ -12,6 +12,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .band import lane_offset
+from .cut_pieces import joined, key, through
 from .flow_values import CrossLink
 from .geometry import row_of
 from .jog_rows import taken_rows
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .clearance import Keep
-    from .flow_values import CutResult
+    from .flow_values import Attach, CutResult
     from .jog_rows import Taken
     from .outputs import Placement, StripRun
     from .route_env import RouteEnv
@@ -136,52 +137,44 @@ def _row_wrapped(env: RouteEnv, linked: frozenset[str]) -> list[CrossLink]:
     for fan in env.fans.values():
         net, ends = fan.nets[0], (*fan.drivers, *fan.legs)
         pts = [pin_point(env, a.pin.sym, a.pin.pin) for a in ends]
-        if fan.lanes != 1 or fan.id in trunked or net in env.cut_nets or net in linked:
+        if fan.lanes != 1 or fan.id in trunked or net in env.referenced or net in linked:
             continue
         if all(pts) and len({row_of(env.bands, p[1]) for p in pts if p}) > 1:
             out.append(CrossLink(net, ends))
     return out
 
 
-def _links_here(env: RouteEnv) -> tuple[list[CrossLink], list[Refused]]:
-    """Cross-links with an end on this page; a cut one still joins its ends here (R417).
+def _links_here(env: RouteEnv) -> list[CrossLink]:
+    """Each link's ends here that the cut's ink and a cell's through pins join, one wire per ink part (layout-0634).
 
-    A link already lost is withheld; one with ends on another page and no reference is lost here.
+    A tag pair joins its ends (layout-0440); a part already lost is withheld, its pins carry a reference (ROUTE-FALLBACK-REFERENCE).
     """
-    todo: list[CrossLink] = _row_wrapped(env, frozenset(ln.net for ln in env.cross_links))
-    out: list[Refused] = []
-    for link in env.cross_links:
-        here = [a for a in link.ends if a.pin.sym in env.placed]
-        ends = tuple(a.pin for a in here)
-        if link.tagged or (here and lost_key(link.net, ends) in env.lost):
-            continue  # a tag pair joins its ends (layout-0440); a lost link's pins carry a reference (ROUTE-FALLBACK-REFERENCE)
-        if link.net in env.cut_nets and len(here) > 1:
-            todo.append(CrossLink(link.net, tuple(here)))
-        if not here or link.net in env.cut_nets:
-            continue
-        if len(here) == len(link.ends):
-            todo.append(link)
-        else:
-            out.append(Refused(link.net, ends))
-    return todo, out
+    ink = joined((*env.ink, *(p for col in env.columns for lane in col.lanes for p in through(lane.cells, env.net_of))))
+    todo = _row_wrapped(env, frozenset(ln.net for ln in env.cross_links))
+    for link in (ln for ln in env.cross_links if not ln.tagged):
+        parts: dict[str, list[Attach]] = {}
+        for a in (a for a in link.ends if a.pin.sym in env.placed):
+            parts.setdefault(ink.find(key(a.pin))[0], []).append(a)
+        todo += [CrossLink(link.net, tuple(p)) for p in parts.values() if len(p) > 1 and lost_key(link.net, tuple(a.pin for a in p)) not in env.lost]
+    return [replace(link, part=sum(o.net == link.net for o in todo[:k])) for k, link in enumerate(todo)]
 
 
-def _bare_routes(env: RouteEnv, todo: Sequence[CrossLink]) -> dict[str, tuple[Wire, ...]]:
+def _bare_routes(env: RouteEnv, todo: Sequence[CrossLink]) -> list[tuple[Wire, ...]]:
     """Each link routed alone on footprints and obstacles only: the wires `demand` is read from."""
     bare = _grid(env, ())
-    out: dict[str, tuple[Wire, ...]] = {}
+    out: list[tuple[Wire, ...]] = []
     for link in todo:
         wires = tree(env, bare, link)
         bare.remove_net(link.net)
         if wires:
-            out[link.net] = wires
+            out.append(wires)
     return out
 
 
-def _lost(env: RouteEnv, drawn: Drawn, todo: Sequence[CrossLink], nego: Negotiated) -> list[Refused]:
+def _lost(env: RouteEnv, drawn: Drawn, nego: Negotiated) -> list[Refused]:
     """A `Refused` for each rise and link no legal route was found for: a rise hands the pins of its trunk."""
     rises = [hand_rise(env, drawn, r) for r in nego.lost]
-    links = [Refused(ln.net, tuple(a.pin for a in ln.ends)) for ln in todo if ln.net in nego.failed]
+    links = [Refused(ln.net, tuple(a.pin for a in ln.ends)) for ln in nego.failed]
     return [*rises, *links]
 
 
@@ -209,25 +202,18 @@ def route_page(env: RouteEnv, fixed: Fixed | None = None) -> PageResult:
     """One page's routes, the nets it gave up on, and its findings; `fixed` is stage 6a's, laid before the markers."""
     drawn = guard(env, _grid(env, ()), _fixed_wires(env, fixed or fixed_page(env)))
     labels, standing, unplaced, needs = page_labels(env, drawn.wires)
-    todo, split = _links_here(env)
+    todo = _links_here(env)
     todo = sorted(todo, key=lambda ln: _span(env, ln))
     grid = _grid(env, drawn.wires, standing)
     for link in todo:
         mark_anchors(env, grid, link)
     nego = negotiate(env, grid, todo, drawn.rises)
-    lost = {lost_key(r.net, r.ends or ()): r for r in (*drawn.lost, *split, *_lost(env, drawn, todo, nego))}
-    wires = drawn.wires + nego.risen + tuple(w for ws in nego.routed.values() for w in ws)
+    lost = {lost_key(r.net, r.ends or ()): r for r in (*drawn.lost, *_lost(env, drawn, nego))}
+    wires = drawn.wires + nego.risen + tuple(w for ws in nego.routed for w in ws)
     bare = _bare_routes(env, todo)
-    wanted = drawn.wires + nego.risen + tuple(w for ws in bare.values() for w in ws)
-    page = PageRoutes(
-        env.page,
-        wires,
-        demand(wanted, env.gaps),
-        counts(wires, bundles(env.fans.values())),
-        page_junctions(env, wires),
-        labels,
-        needs,
-    )
+    wanted = drawn.wires + nego.risen + tuple(w for ws in bare for w in ws)
+    dots, pieces = page_junctions(env, wires)
+    page = PageRoutes(env.page, wires, demand(wanted, env.gaps), counts(wires, bundles(env.fans.values())), dots, labels, needs, pieces)
     return page, tuple(lost.values()), (*drawn.findings, *through_bodies(env, wires), *unplaced)
 
 

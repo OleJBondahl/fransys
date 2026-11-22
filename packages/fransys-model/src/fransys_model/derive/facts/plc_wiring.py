@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.closure import net_of
-from fransys_model.derive.facts.roles import plc_channel_facets
+from fransys_model.derive.facts.roles import function_channels
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import channel_devices
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
@@ -92,8 +92,7 @@ def request_functions(model: Model) -> frozenset[Id[Function]]:
 
 def channel_functions(model: Model) -> frozenset[Id[Function]]:
     """The functions whose template is a declared PLC channel."""
-    channels = plc_channel_facets(model)
-    return frozenset(f.id for f in functions(model).values() if f.template in channels)
+    return frozenset(function_channels(model))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

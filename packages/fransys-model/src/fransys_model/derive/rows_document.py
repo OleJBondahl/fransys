@@ -22,26 +22,24 @@ class DocumentScope:
     - `cables`: the `HarnessCable`s the drawings show (`SYSTEM`: the top-level ones, a unit: its
       own, an item: its cable children, a location: none); `harnesses`: the harness items with
       single wires the drawings add.
-    - `bom_location`, `bom_item` and `top_level` make `bom_scope`, the scope `bom_lines` takes:
-      the unit, else `TOP_LEVEL` for the system, else the location, else the item.
+    - `bom_location` and `top_level` make `bom_scope`, the scope `bom_lines` takes:
+      the unit, else `TOP_LEVEL` for the system, else the location.
     - `bom_without`: the harness items a location document does not draw, with all they own;
       `bom_lines` leaves them out (`without=`) and `connector_items` omits them.
     - `drawing_sets`: the drawing sets this document prints, each set printed by exactly one
       document (`set_printers`): a unit's, the nested undocumented units', the fed items' ones.
     - `strips`: the terminal strips a terminal list covers; `connector_items`: the items a
-      connector list covers for a unit or a location; `boards`: a board document's board.
+      connector list covers for a unit or a location.
     """
 
     unit: Id[Unit] | None
     cables: tuple[HarnessCable, ...]
     harnesses: tuple[Id[Item], ...]
     bom_location: Id[AspectNode] | None
-    bom_item: Id[Item] | None
     bom_without: tuple[Id[Item], ...]
     top_level: bool
     strips: tuple[Id[Item], ...]
     connector_items: tuple[Id[Item], ...]
-    boards: tuple[Id[Item], ...]
     drawing_sets: tuple[Id[DrawingSet], ...] = ()
 
     @property
@@ -51,4 +49,4 @@ class DocumentScope:
             return unit
         if self.top_level:
             return TOP_LEVEL
-        return self.bom_location if self.bom_location is not None else self.bom_item
+        return self.bom_location

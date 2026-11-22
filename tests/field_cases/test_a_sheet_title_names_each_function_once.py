@@ -58,6 +58,6 @@ def test_a_sheet_title_names_each_function_once(built: tuple[Any, Path]) -> None
 
 
 def test_the_cable_between_two_same_named_strips_is_drawn(built: tuple[Any, Path]) -> None:
-    """KI-358: placement_sets._scoped joins the two homes of a strip pair with cut=(), so neither set draws a stub."""
+    """KI-358: restrict._scoped joins the two homes of a strip pair with cut=(), so neither set draws a stub."""
     undrawn = [f for f in built[0].findings if f.code == "CONNECTION_NOT_DRAWN"]
     assert not undrawn, [f.message for f in undrawn]

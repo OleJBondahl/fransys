@@ -24,7 +24,7 @@ from fransys_model.derive import (
     system_has_no_top_level_cables,
     unit_release,
 )
-lazy from fransys_model.kernel import Finding
+lazy from fransys_model.kernel import Finding, findings_sorted
 
 from ._cable_checks import harness_block_messages
 from ._cable_runs import body_size_mm
@@ -122,9 +122,7 @@ def _harness_no_drawings_messages(
             return []
         if document_unit(model, record.id) is not None:
             return ["HARNESS_DRAWING: the unit has no cable"]
-        if record.item is None:
-            return [_LOCATION_DRAWS_NO_HARNESS]
-        return ["HARNESS_DRAWING: the harness has no cable"]
+        return [_LOCATION_DRAWS_NO_HARNESS]
     body_mm = body_size_mm(document_sheet(model, record.id, pages), pdf)
     return harness_block_messages(model, cable_blocks(model, record.id, cables_found), svgs, laid, body_mm)
 
@@ -232,4 +230,4 @@ def check(
         findings.extend(_no_top_level_cables_findings(model, subject, record, pages))
         findings.extend(_replica_only_findings(model, subject, record, pages))
         findings.extend(_empty_list_findings(model, subject, record, pages))
-    return tuple(sorted(findings, key=lambda found: (found.code, found.subjects, found.message)))
+    return findings_sorted(findings)

@@ -3,6 +3,7 @@
 Each test names what breaks it.
 """
 
+# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 from functools import cache
 from typing import Any
 

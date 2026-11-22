@@ -21,7 +21,7 @@ def row_specs(env: PageEnv) -> tuple[RowSpec, ...]:
     out: list[RowSpec] = []
     for index, row in enumerate(env.plan.rows):
         spec = one_row(row.columns, [env.blocks[b] for b in row.blocks], env.flow, env.problem, env.options)
-        left, right = row_arrows(env.refs, env.plan, env.blocks, env.flow.fans, index)
+        left, right = row_arrows(env.refs, env.plan, env.blocks, env.flow.fans, (index, env.options))
         out.append(
             replace(
                 spec,

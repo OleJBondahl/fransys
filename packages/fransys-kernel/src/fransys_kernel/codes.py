@@ -1,7 +1,9 @@
 """Finding code registry entries (BUILD-MESSAGES M1, decision model-0223)."""
 
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
-lazy from collections.abc import Iterable
+from types import MappingProxyType
+from typing import override
 
 from .errors import SchemaError
 from .findings import CODE_SHAPE, Finding, Severity
@@ -14,7 +16,7 @@ WHO_ACTS: tuple[str, ...] = ("consumer", "part author", "Fransys", "note")
 class CodeInfo:
     """One finding code's single home: its severity, who acts, cause, fix and guide page.
 
-    Each package lists its codes as `CodeInfo` values in its codes module. The guide's
+    Each package lists its codes as `CodeInfo` values, in a codes module or a codes table it loads. The guide's
     findings rows are generated from them, and `fr.report` reads them. `who` is one of
     `WHO_ACTS`; `severity` is the one severity of every finding of the code (a code emitted at two
     severities is two codes), and `finding` builds that finding, so no emit site names a severity.
@@ -63,6 +65,32 @@ class CodeInfo:
     def see(self) -> str:
         """The guide anchor a message ends with, e.g. `findings-render#lone_cell`."""
         return f"{self.page}#{self.code.lower()}"
+
+
+@dataclass(frozen=True, slots=True, init=False)
+class CodeBook(Mapping[str, CodeInfo]):
+    """One package's codes as a read-only mapping from code to `CodeInfo`; `finding` builds a finding by code."""
+
+    _by_code: Mapping[str, CodeInfo]
+
+    def __init__(self, *infos: CodeInfo) -> None:
+        object.__setattr__(self, "_by_code", MappingProxyType({info.code: info for info in infos}))
+
+    @override
+    def __getitem__(self, code: str) -> CodeInfo:
+        return self._by_code[code]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._by_code)
+
+    @override
+    def __len__(self) -> int:
+        return len(self._by_code)
+
+    def finding[K](self, code: str, subjects: Iterable[Id[K]], message: str, **fix_values: str) -> Finding:
+        """The `Finding` of `code`: its one severity, its fix filled from `fix_values`."""
+        return self._by_code[code].finding(subjects, message, **fix_values)
 
 
 def _problem(info: CodeInfo) -> str | None:

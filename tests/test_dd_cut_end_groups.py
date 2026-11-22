@@ -75,3 +75,6 @@ def test_a_net_over_a_boundary_functions_replica_page_builds_and_is_cut_there() 
     # g stands in the unit's own set: the net's pair is in the top-level set only
     assert all(set_of(model, page).unit is None for page in on_page)
     assert not set(pages_of(model, "g")) & set(on_page)
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

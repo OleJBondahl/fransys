@@ -83,7 +83,9 @@ from fransys.colours import BK
 # BY-OTHERS-DRAWN-WITH (model-0464): SCHEMA_VERSION 33 -> 34 adds Item.drawn_with (45c5b94bac22... before).
 # DOC-SHORT-CODE (model-0466, R2448) adds `system_document_code` to [words]: it moves again (cc7411c1bbfc... before; R2489).
 # GAUGE-UNKNOWN (R2540) adds `unknown` to [words]: it moves again (814aa4649166... before).
-_DIGEST_BEFORE_THE_MOVE = "c17af9ef5a07fe955594452107dc940b86e23893baa02480f772a38314ce0063"
+# DOCUMENT-ITEM-DROP (R2922): SCHEMA_VERSION 34 -> 35 moves it once more (c17af9ef5a07... before).
+# HINT-DEAD (R2785): the same 34 -> 35 bump also drops GroupHint.
+_DIGEST_BEFORE_THE_MOVE = "0a2d57fc32889fbf9e75dfbfdd3030b29622ac19e4cd7f8c638825893f9a7fdc"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

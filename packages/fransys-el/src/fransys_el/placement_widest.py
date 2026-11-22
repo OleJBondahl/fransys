@@ -12,8 +12,8 @@ from fransys_model.derive import widest_target_line
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import PageKind
 
-from .placement_sets import drawing_scopes
 from .placement_views import marker_boxes
+from .scopes import drawing_scopes
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

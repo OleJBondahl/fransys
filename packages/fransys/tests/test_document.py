@@ -38,37 +38,24 @@ def test_location_handle_fills_location(design, tmp_path):
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path))
     record = _only_record(draft)
     assert record.location == c1.id
-    assert record.item is None
-
-
-def test_item_handle_fills_item(design, tmp_path):
-    item = design.item(None, tag="WH1")
-    draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, item, cover=_cover(tmp_path))
-    record = _only_record(draft)
-    assert record.item == item.id
-    assert record.location is None
 
 
 def test_aspect_node_id_subject_fills_location(tmp_path):
     subject = Id(kind="aspect_node", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=_cover(tmp_path))
-    record = _only_record(draft)
-    assert record.location == subject
-    assert record.item is None
+    assert _only_record(draft).location == subject
 
 
-def test_item_id_subject_fills_item(tmp_path):
-    subject = Id(kind="item", value="demo")
-    draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=_cover(tmp_path))
-    record = _only_record(draft)
-    assert record.item == subject
-    assert record.location is None
-
-
-def test_id_of_another_kind_raises_type_error(tmp_path):
-    subject = Id(kind="part", value="demo")
-    with pytest.raises(TypeError, match="part"):
+@pytest.mark.parametrize("subject", [Id(kind="item", value="demo"), Id(kind="part", value="demo")])
+def test_an_item_or_other_id_subject_raises_type_error(subject, tmp_path):
+    with pytest.raises(TypeError, match=subject.kind):
         fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=_cover(tmp_path))
+
+
+def test_an_item_handle_subject_raises_type_error(design, tmp_path):
+    item = design.item(None, tag="WH1")
+    with pytest.raises(TypeError, match="Item"):
+        fr.document(DocumentPreset.CABINET_SCHEMATIC, item, cover=_cover(tmp_path))
 
 
 def test_name_subject_fills_unit_name(tmp_path):
@@ -77,7 +64,6 @@ def test_name_subject_fills_unit_name(tmp_path):
     assert record.unit_name == "relay-board"
     assert record.unit is None
     assert record.location is None
-    assert record.item is None
 
 
 def test_two_names_get_distinct_keys(tmp_path):
@@ -109,7 +95,7 @@ def test_a_group_handle_raises_type_error(design, tmp_path):
 
 def test_missing_cover_names_the_path(tmp_path):
     cover = tmp_path / "does-not-exist.md"
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     with pytest.raises(FileNotFoundError, match=re.escape(cover.name)):
         fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
 
@@ -117,7 +103,7 @@ def test_missing_cover_names_the_path(tmp_path):
 def test_notes_file_present_is_read(tmp_path):
     cover = _cover(tmp_path)
     (tmp_path / "cabinet.notes.md").write_text("notes text", encoding="utf-8")
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     record = _only_record(draft)
     assert record.notes == "notes text"
@@ -125,7 +111,7 @@ def test_notes_file_present_is_read(tmp_path):
 
 def test_notes_file_and_logo_absent_are_none(tmp_path):
     cover = _cover(tmp_path)
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     record = _only_record(draft)
     assert record.notes is None
@@ -136,7 +122,7 @@ def test_logo_file_present_is_read(tmp_path):
     cover = _cover(tmp_path)
     logo = tmp_path / "logo.svg"
     logo.write_text("<svg></svg>", encoding="utf-8")
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, logo=logo)
     record = _only_record(draft)
     assert record.logo == "<svg></svg>"
@@ -145,14 +131,14 @@ def test_logo_file_present_is_read(tmp_path):
 def test_missing_logo_names_the_path(tmp_path):
     cover = _cover(tmp_path)
     logo = tmp_path / "does-not-exist.svg"
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     with pytest.raises(FileNotFoundError, match=re.escape(logo.name)):
         fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, logo=logo)
 
 
 def test_key_holds_the_cover_stem_the_preset_and_the_subject(tmp_path):
     cover = _cover(tmp_path, name="my-panel.md")
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     (record,) = draft.records()
     assert record.key == ("document", "my-panel", "CABINET_SCHEMATIC", "demo")
@@ -160,7 +146,7 @@ def test_key_holds_the_cover_stem_the_preset_and_the_subject(tmp_path):
 
 def test_two_documents_with_one_stem_and_equal_content_dedupe(tmp_path):
     cover = _cover(tmp_path)
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     first = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     second = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     merged = merge(first, second)
@@ -169,14 +155,14 @@ def test_two_documents_with_one_stem_and_equal_content_dedupe(tmp_path):
 
 def test_two_documents_with_one_stem_and_different_subjects_merge(tmp_path):
     cover = _cover(tmp_path)
-    first = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="item", value="a"), cover=cover)
-    second = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="item", value="b"), cover=cover)
+    first = fr.document(DocumentPreset.CABINET_SCHEMATIC, "a", cover=cover)
+    second = fr.document(DocumentPreset.CABINET_SCHEMATIC, "b", cover=cover)
     assert len(merge(first, second).records()) == 2
 
 
 def test_notice_defaults_to_empty_and_is_stored(tmp_path):
     cover = _cover(tmp_path)
-    subject = Id(kind="item", value="demo")
+    subject = Id(kind="aspect_node", value="demo")
     plain = _only_record(fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover))
     noted = _only_record(fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, notice="(c) Demo AS"))
     assert (plain.notice, noted.notice) == ("", "(c) Demo AS")

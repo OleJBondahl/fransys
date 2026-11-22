@@ -4,6 +4,19 @@ from fransys_model.kernel import CodeInfo, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
+        code="BOARD_SHARES_UNIT",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A board is not the only top-level device of its unit, so it has no unit of its own to draw on.",
+        fix=(
+            "Make the board its own unit's only top-level device, with its parts as children. "
+            'Write: @fr.unit(...) def board(d): b = d.device("A1", "DEMO-PCB-IO") and '
+            'd.device("J1", "DEMO-CONN-2P", parent=b) in a unit of their own.'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="DRAWN_WITH_UNIT_UNWIRED",
         severity=Severity.ERROR,
         stage="validators",

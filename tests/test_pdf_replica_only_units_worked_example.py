@@ -89,7 +89,6 @@ def _with_documents(model, *location_ids):
             key=("probe-doc", str(index)),
             preset=DocumentPreset.CABINET_SCHEMATIC,
             location=location_id,
-            item=None,
             cover="# Cover",
             notes=None,
         )
@@ -149,7 +148,6 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         key=("probe-doc", "title-block"),
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
-        item=None,
         unit=cabinet_unit_id,
         cover="# Cover",
         notes=None,
@@ -166,7 +164,6 @@ def _system_document(id_suffix: str) -> Document:
         key=("probe-doc", id_suffix),
         preset=DocumentPreset.SYSTEM,
         location=None,
-        item=None,
         cover="# Cover",
         notes=None,
     )
@@ -271,7 +268,6 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
         key=("probe-doc", "cabinet-bom"),
         preset=DocumentPreset.CABINET_SCHEMATIC,
         location=None,
-        item=None,
         unit=cabinet_unit_id,
         cover="# Cover",
         notes=None,

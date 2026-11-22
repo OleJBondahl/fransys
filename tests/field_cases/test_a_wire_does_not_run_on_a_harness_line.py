@@ -32,3 +32,6 @@ def test_a_cable_of_two_wired_cores_draws_one_trunk(built: fr.BuildResult) -> No
 def test_every_connection_of_the_build_is_drawn(built: fr.BuildResult) -> None:
     stock = tomllib.loads((Path(__file__).parents[1] / "ratchets.toml").read_text())["drawing_connection_not_drawn"]["board_cab"]
     assert [f.code for f in fr.check(built)].count("CONNECTION_NOT_DRAWN") == stock
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

@@ -324,7 +324,6 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
         key=key,
         preset=preset,
         location=subject.id if isinstance(subject, AspectNode) else None,
-        item=subject.id if isinstance(subject, Item) else None,
         unit=subject.id if isinstance(subject, Unit) else None,
         cover=cover,
         notes=notes,

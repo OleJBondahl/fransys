@@ -95,7 +95,7 @@ def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: s
 def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Union) -> list[tuple[str, str]]:
     """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws."""
     held = [net.ids[p] for p in net.placed if net.at_home(p)]
-    powered = inked_power(net, model)
+    powered = inked_power(net)
     return [(n.value, f.value) for n, f in far_pins(model, held) if not _carried(net, stubs, joined, powered, (n.value, f.value))]
 
 

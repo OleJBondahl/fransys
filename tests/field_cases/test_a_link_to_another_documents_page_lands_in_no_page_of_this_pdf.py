@@ -36,3 +36,6 @@ def test_a_marker_whose_partner_is_in_another_pdf_has_no_link() -> None:
     fr.write(dataclasses.replace(result, model=cut), root / "out")
     cab = next(r for r in documents(cut).values() if scope_path(cut, r.id) == "+CAB")
     assert _link_count(pypdfium2.PdfDocument(root / "out" / document_export_name(cut, None, cab))) == 0
+
+
+# TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

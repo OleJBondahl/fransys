@@ -4,6 +4,27 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.35
+
+0.23.34 was not published; this release carries its changes too.
+
+BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or `None`. A device handle, a harness and an item id are no longer accepted and raise `TypeError`; `DocumentRow` and `DocumentScope` lose `item`, `bom_item` and `boards`, and `has_schematic_subject` is gone.
+
+BREAKING: stored releases are rebuilt (schema 35); reading an old one gives `SchemaVersionError`.
+
+BREAKING: a board that shares its unit with another top-level device is refused with the ERROR `BOARD_SHARES_UNIT`, which replaces `BOARD_NETS_NOT_DRAWN`. Give the board a unit of its own.
+
+- A conductor whose ink is readable now counts as drawn, so a chain of tapped device pins no longer reports a false CONNECTION_NOT_DRAWN.
+- A link's wire joins only what the ledger's ink joins, so a cut net draws one wire per ink part.
+- A generic box is now as wide as symdef draws it, and the INK_WITHOUT_CONDUCTOR reader counts ink on more pages; some drawings move.
+- A board's traces are drawn from its pins, so board pages show the traces they should.
+- Every lane of a bundle now ends on the flat edge of its arrow.
+- New WARNING CONNECTION_NOT_ACCOUNTED: a conductor end that no wire or marker accounts for, or that two do.
+- CONNECTION_TO_UNDRAWN, MARKER_UNPLACED, NO_CELL, OUTLINE_NO_ROOM, OUT_OF_PAGE and WIRE_MEETS_NET are now ERRORs, so `fr.write` refuses a model that shows them.
+- New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.
+- An unnamed rack channel is named by its drawn pin label, for example `DO3`.
+- Page titles now state what the page draws.
+
 ## New in 0.23.33
 
 - A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.
@@ -64,6 +85,7 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 
 ## New in 0.23.21
 
+- BREAKING: a stored model of schema 34 or older is refused; the unused `layout.group_hint` record is gone (schema 35). Rebuild stored releases with `fr.release`.
 - BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with `fr.release`.
 - By-others sets print on the system drawing with no setting on your side: a by-others device wired to one unit no longer appears on that unit's PDF. The system document now holds a schematic section, and a reference into it reads `<design title> p<n>:<cell>`.
 - Also in 0.23.20: a page title and its title-page index row name only the groups drawn on that page. A group reached only through a copy or stub keeps its own page's title (KI-986).
@@ -219,7 +241,6 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 - KI-749: `CONNECTION_NOT_DRAWN` or `MARKER_UNPLACED` on a page that also has `PAGE_OVERFLOW`. Fix the overflow first; the others follow it.
 - KI-757: a wide marker on a page that does not overflow can leave `CONNECTION_NOT_DRAWN`.
 - KI-759: a very large two-pole switch fan (24 or more chains per pole) can leave `CONNECTION_NOT_DRAWN` and `DANGLING_WIRE_END`.
-- KI-762: a hub alone on a page or in a short row can lose a tag pair (`MARKER_UNPLACED`), and a `CONNECTION_NOT_DRAWN` can follow. A fix is in progress and ships in the release after it lands.
 - KI-746, KI-747: a tag or `WHERE` marker text can overlap a wire or a slot text (`OVERLAP`, looks only).
 - KI-748: the `OVERLAP` message does not name both elements yet.
 

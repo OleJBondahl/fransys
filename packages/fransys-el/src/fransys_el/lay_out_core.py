@@ -14,10 +14,11 @@ from .placement_env import make_env
 from .placement_kit import ProblemError, refuse
 from .placement_markers import facing_views, stub_fit
 from .placement_options import options
-from .placement_sets import bare_pins, cut_lines, drawing_scopes, restriction
 from .placement_syms import strip_tags
 from .placement_widest import link_fit
-from .set_findings import set_failure_finding, set_without_page_findings, skipped_ports
+from .restrict import restriction
+from .scopes import bare_pins, cut_lines, drawing_scopes
+from .set_findings import read_incomplete_finding, set_failure_finding, set_without_page_findings, skipped_ports
 from .write_pages import SetPlace
 from .write_tables import place_texts
 
@@ -32,7 +33,8 @@ if TYPE_CHECKING:
 
     from .placement_kit import SymbolKit
     from .placement_options import Conventions
-    from .placement_sets import DrawingScope, Restriction
+    from .restrict import Restriction
+    from .scopes import DrawingScope
 
 __all__ = ["lay_out_drawn"]
 
@@ -153,12 +155,16 @@ def lay_out_drawn(
     net = with_lines(drawn_netlist(laid, kit, checked, sink.markers, library), laid, kit, lines)
     net.texted.update(where_joined(laid, net))
     net.skipped.update(skipped_ports(laid, kit, sink.failed))
+    unread = (
+        (read_incomplete_finding(tuple(k for k in drawings if k in sink.refused_pages), net.skipped),) if sink.failed or sink.refused_pages else ()
+    )
     return (
         laid,
         (
             *found,
             *set_without_page_findings(laid, kit, net, sink.pageless),
             *drawing_sweep(laid, net),
+            *unread,
         ),
         drawings,
     )

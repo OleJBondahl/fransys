@@ -59,10 +59,10 @@ def test_motor_cable_cores(
     assert [core.index for core in cores] == [1, 2, 3, 4]
     # The ends keep the authored order: `-U1-X3` first, then the motor (model-0157).
     expected = [
-        (1, f"-U1-X3:U:{pump}", f"{motor}:U1"),
-        (2, f"-U1-X3:V:{pump}", f"{motor}:V1"),
-        (3, f"-U1-X3:W:{pump}", f"{motor}:W1"),
-        (4, f"-U1-X3:PE:{pump}", f"{motor}:PE"),
+        (1, f"-U1-X3:U:{pump}", f"+EXT{motor}:U1"),
+        (2, f"-U1-X3:V:{pump}", f"+EXT{motor}:V1"),
+        (3, f"-U1-X3:W:{pump}", f"+EXT{motor}:W1"),
+        (4, f"-U1-X3:PE:{pump}", f"+EXT{motor}:PE"),
     ]
     assert [(c.index, c.end_a_designation, c.end_b_designation) for c in cores] == expected
 

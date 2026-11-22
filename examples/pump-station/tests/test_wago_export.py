@@ -19,7 +19,7 @@ EXPECTED_DI_CHANNEL_NAMES = [
     "P2_OVERLOAD",
     "P2_RUNNING",
 ]
-EXPECTED_DO_CHANNEL_NAMES = ["P1_RUN", "P2_RUN", "DO2", "DO3"]
+EXPECTED_DO_CHANNEL_NAMES = ["P1_RUN", "P2_RUN", "DO3", "DO4"]
 
 
 def test_wago_export_lists_di_and_do_modules_and_channels(built: tuple) -> None:

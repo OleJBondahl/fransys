@@ -1,7 +1,6 @@
 """Field case: a net a set cannot carry on with a stub is a conductor not drawn, never silent (R828, R1611).
 The drop is forced, so the file's one build carries CONNECTION_NOT_DRAWN by its input (R1708); it was in test_core_path_lays_out_a_unit_document."""
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1375 (R3538).
 from typing import TYPE_CHECKING, Any
 
 from _expected_codes import expect_codes
@@ -23,4 +22,5 @@ def test_a_forced_drop_of_a_symbols_only_net_gives_connection_not_drawn(tmp_path
         return () if any(n.cut for n in made) and any(s.startswith("H1") for s in symbols) else made
 
     monkeypatch.setattr(restrict, "_net", drop)
-    expect_codes(build_room(tmp_path, beyond=True), "CONNECTION_NOT_DRAWN")
+    expect_codes(result := build_room(tmp_path, beyond=True), "CONNECTION_NOT_DRAWN", "CONNECTION_NOT_ACCOUNTED")
+    assert sum(f.code == "CONNECTION_NOT_ACCOUNTED" for f in result.findings) == 2  # the forced drop leaves 2 unaccounted

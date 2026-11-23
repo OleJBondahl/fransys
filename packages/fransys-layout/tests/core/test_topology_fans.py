@@ -79,12 +79,12 @@ def test_an_end_off_a_lane_end_is_a_cross_link_and_a_hub_is_a_through() -> None:
 def test_hub_with_no_driver_heads_the_first_leg_and_others_stay() -> None:
     l1, l2 = _lane("L1", "x"), _lane("L2", "y")
     fan = FanDraft("f", ["t"], [], [Att(l1, "head"), Att(l2, "head")])
-    new = deal(fan, [_thr("h#0", "x.n", "y.n")], {"h#0": _hub("h")}, "c:")
+    new = deal(fan, [_thr("g#0", "q.s"), _thr("h#0", "x.n", "y.n")], {"g#0": _hub("g"), "h#0": _hub("h")}, "c:")  # g: first, no hub (PUMP-ALIGN)
     assert [c.sym for c in l1.cells] == ["h", "x"]
     assert [c.sym for c in l2.cells] == ["y"]
-    assert (fan.hub, new) == ("h", ())
+    assert (fan.hub, [lane.column for lane in new]) == ("h", ["c:g"])
     assert fan.drivers == [Att(l1, "hub-head")]
-    assert fan.legs == [Att(l1, "after-hub"), Att(l2, "head")]
+    assert fan.legs == [Att(l1, "after-hub"), Att(l2, "head"), Att(new[0], "head")]
 
 
 def test_hub_with_no_leg_foots_the_first_driver() -> None:

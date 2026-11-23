@@ -1,11 +1,8 @@
 """Field case: the report of a build that drops a lane wire prints the fix, not a SchemaError.
 The bug: LANE_WIRE_DROPPED named no model record, so `fr.report(result)` raised SchemaError (kind Finding) for it.
 Fixed by `kernel_findings`; no design drops a lane wire since R868 (the core turns a free hub), so the drop is forced."""
-# The forced drop is a layout ERROR: write skips the set's output steps, so it is not checked and no CONNECTION_NOT_DRAWN follows (KI-773, R1991).
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1375 (R3538).
-# DRAWN_CHECKS_NOT_RUN: an old finding of this file's builds, on KI-1375 (R3538).
-# DRAWING_SET_REFUSED: an old finding of this file's builds, on KI-1375 (R3538).
+# The forced drop is a layout ERROR: write skips the set's output steps, so it is not checked and no CONNECTION_NOT_DRAWN follows (KI-773, R1991).
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
@@ -56,9 +53,10 @@ def _result(root: Path) -> fr.BuildResult:
 def test_a_dropped_lane_wire_names_its_cell_and_the_report_prints_the_fix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(route_wires, "_between", lambda env, col, i, cells: route_wires._dropped(env, col, i, cells, "has a facing pin on no net"))
     result = _result(tmp_path)
-    dropped = [f for f in result.findings if f.code == "LANE_WIRE_DROPPED"]
-    expect_codes(result, "LANE_WIRE_DROPPED", "DRAWN_READ_INCOMPLETE")
-    assert all(f.subjects for f in dropped)
+    expect_codes(result, "LANE_WIRE_DROPPED", "DRAWN_READ_INCOMPLETE", "CONNECTION_NOT_ACCOUNTED", "DRAWING_SET_REFUSED")
+    # 1 refused set = the sweep's 1 DRAWN_CHECKS_NOT_RUN
+    assert [sum(f.code == c for f in result.findings) for c in ("CONNECTION_NOT_ACCOUNTED", "DRAWING_SET_REFUSED")] == [6, 1]
+    assert all(f.subjects for f in result.findings if f.code == "LANE_WIRE_DROPPED")
     report = fr.report(result)
     assert "Put the facing pins of -U1-" in report
     assert "<subject>" not in report

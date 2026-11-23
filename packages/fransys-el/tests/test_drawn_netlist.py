@@ -1214,7 +1214,7 @@ def test_ink_between_ports_is_a_model_conductor(monkeypatch: pytest.MonkeyPatch,
 def test_ink_without_conductor_is_a_warning_and_the_write_goes_on(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """R2323: a build with ink stock reports the code at WARNING, so `fr.write` is not refused."""
     monkeypatch.setattr(drawn_nets_module, "ink_without_conductor", lambda _m, _n: (drawn_finding("INK_WITHOUT_CONDUCTOR", (), "planted"),))
-    result = _pe_build()
+    expect_codes(result := _pe_build(), "INK_WITHOUT_CONDUCTOR")
     assert [f.severity.name for f in fr.check(result) if f.code == "INK_WITHOUT_CONDUCTOR"] == ["WARNING"]
     assert fr.write(result, tmp_path / "out")
 

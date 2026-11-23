@@ -126,9 +126,9 @@ def deal(
     cells = [c for c in cells if c.sym not in apart]
     if not cells and not own:
         return ()
-    if cells and (
-        (not fan.drivers and fan.legs and _hub_at_head(fan, cells[0], far)) or (fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]))
-    ):
+    if cells and (hub := _hub_at_head(fan, cells, far)):
+        cells.remove(hub)
+    elif cells and fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]):
         cells.pop(0)
     rest = [*_deal_to_legs(fan, cells, far), *own]
     made = tuple(LaneDraft(f"{col_prefix}{cell.sym}", 0, [cell]) for cell in rest)
@@ -181,20 +181,21 @@ def _deal_to_legs(fan: FanDraft, cells: Sequence[Cell], far: Mapping[str, Abstra
     return left
 
 
-def _hub_at_head(fan: FanDraft, hub: Cell, far: Mapping[str, AbstractSet[PinRef]]) -> bool:
-    """Stand the hub over the first leg whose head pin it has a conductor to; False when every leg is a box pin or none is reached.
+def _hub_at_head(fan: FanDraft, cells: Sequence[Cell], far: Mapping[str, AbstractSet[PinRef]]) -> Cell | None:
+    """Stand the first of `cells` wired to a leg's head pin over that leg and return it; None when none is (or a driver is).
 
-    The fan hangs from the hub, so the leg's head pin stays on the trunk: one conductor is enough here, not in `_stands_over`.
+    One conductor is enough here, not in `_stands_over`: the first so wired, whatever its place in the net's order, so every lane of a fan
+    meets its trunk at one stack index (PUMP-ALIGN).
     """
-    for i, first in enumerate(fan.legs):
-        if first.lane is None or _head(first.lane) not in far[hub.sym]:
+    for i, first in enumerate(() if fan.drivers else fan.legs):
+        if (lane := first.lane) is None or not (hub := next((c for c in cells if _head(lane) in far[c.sym]), None)):
             continue
-        first.lane.cells.insert(0, hub)
-        fan.drivers.append(Att(first.lane, "hub-head"))
-        fan.legs[i] = Att(first.lane, "after-hub")
+        lane.cells.insert(0, hub)
+        fan.drivers.append(Att(lane, "hub-head"))
+        fan.legs[i] = Att(lane, "after-hub")
         fan.hub = hub.sym
-        return True
-    return False
+        return hub
+    return None
 
 
 # KI-1124

@@ -2,7 +2,6 @@
 The bug (KI-779, consumer 0.23.1): after KI-773 any layout ERROR skipped every drawn-page check, so a real CONNECTION_NOT_DRAWN went unreported.
 Fixed (R1977, R1978, R1991): the checks run on every set with a complete drawing, the skipped set's ERROR says so; fr.write still refuses."""
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1375 (R3538).
 from typing import TYPE_CHECKING, Any
 
 import fransys as fr
@@ -50,9 +49,11 @@ def _force_drop(monkeypatch: pytest.MonkeyPatch, symbol: str = "H1") -> None:
 def test_a_forced_drop_on_a_good_set_is_reported_beside_a_layout_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_drop(monkeypatch)
     result = _build(tmp_path, crash=True)
-    expect_codes(result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "CONNECTION_NOT_DRAWN", "DRAWN_READ_INCOMPLETE")
+    expect_codes(
+        result, "DRAWING_SET_REFUSED", "WIDER_THAN_PAGE", "PAGE_OVERFLOW", "CONNECTION_NOT_DRAWN", "DRAWN_READ_INCOMPLETE", "CONNECTION_NOT_ACCOUNTED"
+    )
+    assert sum(f.code == "CONNECTION_NOT_ACCOUNTED" for f in result.findings) == 2
     skipped = [f for f in fr.check(result) if f.code in {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}]
-    assert skipped
     assert {f.code for f in skipped} == {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}
     assert all("drawing set 'crash-wide' is not drawn, its drawn-page checks did not run" in f.message for f in skipped)
     assert "CONNECTION_NOT_DRAWN" in {f.code for f in fr.check(result)}
@@ -63,7 +64,8 @@ def test_a_forced_drop_on_a_good_set_is_reported_beside_a_layout_error(tmp_path:
 def test_the_same_forced_drop_without_the_layout_error_gives_connection_not_drawn(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert "CONNECTION_NOT_DRAWN" not in {f.code for f in _build(tmp_path, crash=False).findings}
     _force_drop(monkeypatch)
-    expect_codes(_build(tmp_path, crash=False), "CONNECTION_NOT_DRAWN")
+    expect_codes(result := _build(tmp_path, crash=False), "CONNECTION_NOT_DRAWN", "CONNECTION_NOT_ACCOUNTED")
+    assert sum(f.code == "CONNECTION_NOT_ACCOUNTED" for f in result.findings) == 2
 
 
 def test_a_set_whose_write_skipped_its_output_steps_is_not_checked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

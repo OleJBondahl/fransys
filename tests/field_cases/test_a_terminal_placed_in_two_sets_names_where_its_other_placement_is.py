@@ -1,4 +1,6 @@
-"""Field case (R1396, R1397, R1571): a terminal in several drawing sets draws one line per other placement under each tag; the checker joins on it."""
+"""Field case (R1396, R1397, R1571): a terminal in several drawing sets draws one line per other placement under each tag; the checker joins on it.
+
+KI-1374: a system page is asked to account a conductor that only the nested unit's set draws (its boundary terminal stands in both)."""
 
 import itertools
 import re
@@ -7,14 +9,18 @@ from typing import Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
+import fransys_parts
 import pypdfium2
-from _model_build_cover import cabinet_document, unit_document
+from _model_build_cover import cabinet_document, system_document, unit_document
+from _worked_wiring import wire_field_to_motor, wire_field_to_switch
+from fransys_author.design import Design
 from fransys_el.drawn_where import where_text
 from pypdfium2 import raw
+from test_units_worked_example import _PROJECT, pump_cabinet
 
 from electrical_symbols import LIBRARY
 from fransys_layout.drawing import port_points
-from fransys_model.derive import function_placements
+from fransys_model.derive import cable_list_rows, function_placements
 from fransys_model.derive.order import placement_key
 from fransys_model.kernel import Id
 from fransys_model.layout import Page
@@ -64,15 +70,22 @@ def _not_drawn(result: fr.BuildResult) -> list[Any]:
     return [f for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"]
 
 
+def _accounted(result: fr.BuildResult) -> bool:
+    """KI-1374: no conductor is left unaccounted and every cable's name prints on some page."""
+    lost = [f for f in result.findings if f.code == "CONNECTION_NOT_ACCOUNTED"]
+    return not lost and all(
+        any(re.search(rf"{re.escape(r.designation)}(?![0-9A-Za-z])", svg) for svg in result.page_svgs.values()) for r in cable_list_rows(result.model)
+    )
+
+
 def test_no_connection_is_left_undrawn() -> None:
     assert not _not_drawn(_built())
+    assert all(_accounted(r) for r in (_built(), _built3(), _built4()))
 
 
-def _origin(svg: str, text: str) -> tuple[float, float]:
-    """The (x, y) of the `<text>` element that prints `text` in a page SVG."""
-    found = re.search(rf'<text x="([\d.]+)" y="([\d.]+)"[^>]*>{re.escape(text)}<', svg)
-    assert found is not None
-    return float(found.group(1)), float(found.group(2))
+def _origin(svg: str, text: str) -> list[tuple[float, float]]:
+    """The (x, y) of every `<text>` element that prints `text` in a page SVG: equal texts may stand in one cell."""
+    return [(float(x), float(y)) for x, y in re.findall(rf'<text x="([\d.]+)" y="([\d.]+)"[^>]*>{re.escape(text)}<', svg)]
 
 
 def _groups(result: fr.BuildResult, page: Any) -> list[tuple[str, ...]]:
@@ -122,12 +135,12 @@ def test_where_lines_stand_in_their_boxes_in_the_compiled_page_without_overlap()
     result = _built3()
     for page, svg in result.page_svgs.items():
         texts = [t for t in result.drawings[Id[Page](kind="layout.page", value=page.split(":")[1])].texts if t.kind == "WHERE"]
-        scale = None
+        scale = next(_origin(svg, t.text)[0][0] / t.box.x for t in texts if len(_origin(svg, t.text)) == 1)
         for t in texts:
-            x, y = _origin(svg, t.text)
-            scale = scale or x / t.box.x
-            assert t.box.x * scale - 0.01 <= x <= (t.box.x + t.box.w) * scale
-            assert t.box.y * scale <= y <= (t.box.y + t.box.h) * scale + 0.01
+            assert any(
+                t.box.x * scale - 0.01 <= x <= (t.box.x + t.box.w) * scale and t.box.y * scale <= y <= (t.box.y + t.box.h) * scale + 0.01
+                for x, y in _origin(svg, t.text)
+            )
         boxes = [t.box for t in texts]
         for i, a in enumerate(boxes):
             assert not any(a.x < b.x + b.w and b.x < a.x + a.w and a.y < b.y + b.h and b.y < a.y + a.h for b in boxes[i + 1 :])
@@ -172,6 +185,21 @@ def test_a_terminal_in_four_sets_keeps_every_wire_end_on_a_port() -> None:
         ]
         assert ends, symbol
         assert all(end in ports for end in ends), (ends, ports)
+
+
+def test_a_boundary_terminal_wired_in_and_out_leaves_no_conductor_unaccounted() -> None:
+    """Terminals X2:1 and X2:2 take a field wire outside and a wire to the nested board inside: each conductor is drawn on one page."""
+    parts = fransys_parts.load("demo_parts")
+    d = Design(parts)
+    d.project(**_PROJECT)
+    d.revision(1, date="2026-09-22", text="First issue", created="XX")
+    field, _ = pump_cabinet(d.scope("pump1", at=d.location("ER", "Engine room")), name="C1")
+    fld, grp = d.location("FLD", "Field"), d.group("FLD", "Field wiring")
+    wire_field_to_motor(d, field, fld=fld, grp=grp, motor_tag="M1")
+    switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=grp)
+    wire_field_to_switch(d, field[1], switch.fn("x1")["1"], cable_tag="WM1S")
+    result = fr.build(parts, d.draft(), system_document())
+    assert _accounted(result)
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

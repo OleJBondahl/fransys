@@ -11,10 +11,11 @@ from collections import Counter, defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
+from fransys_model.kernel import natural_key
+
 from .flow_values import hop_wires
 from .geometry import cell_anchor, pin_xy, stair_room
 from .intervals import levels
-from .keys import natural_key
 from .node_names import col_node
 from .pack import cell_node
 from .values import PinRef

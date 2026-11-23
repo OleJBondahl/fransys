@@ -7,12 +7,22 @@ decides units and conditions, this decides which end of a figure a check reads.
 lazy from decimal import Decimal
 
 from fransys_model.elecdef import Block, Breaker, Current, Fuse, Quantity, Range, Unit
+from fransys_model.kernel import ModelError
 
 
 def value(item: Range, unit: Unit) -> Decimal | None:
     """The value, in `unit`, of a figure: its nom, else max, else typ; `None` for a min-only one."""
     end = item.nom or item.max or item.typ
     return None if end is None else end.to(unit).value
+
+
+def breaking_amps(point: Range) -> Decimal:
+    """The current a breaking point breaks, in A; the part reader refuses a point with none, so a model has none."""
+    amps = value(point, Unit.A)
+    if amps is None:
+        msg = "a breaking point states no nom, max or typ current"
+        raise ModelError(msg)
+    return amps
 
 
 def figure(ranges: tuple[Range, ...], current: Current | None, unit: Unit) -> Decimal | None:

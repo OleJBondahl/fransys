@@ -13,7 +13,6 @@ import symdef
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn
 from fransys_el.drawing_invariants import drawing_invariant_findings, page_overlaps
-from fransys_el.drawn_graph import Union
 from fransys_el.drawn_identity import ink_of, inked
 from fransys_el.drawn_netlist import Netlist, _part, drawn_netlist
 from ring_cases import bank_model, box_kit
@@ -21,7 +20,7 @@ from ring_cases import bank_model, box_kit
 from electrical_symbols import LIBRARY, drawn_symbol
 from fransys_layout.core import Box, CoreError, Size
 from fransys_layout.drawing import Drawing, DrawnSymbol, DrawnText, DrawnWire
-from fransys_model.kernel import Id, Severity, id_namespace
+from fransys_model.kernel import Id, Severity, UnionFind, id_namespace
 
 PAGE = Id(kind="page", value="page-1")
 
@@ -42,7 +41,7 @@ def _drawing(*symbols: DrawnSymbol, texts: tuple[DrawnText, ...] = ()) -> dict[I
 
 def _findings(drawings) -> tuple[Any, ...]:
     """The page invariants over drawings with no ports: a Netlist built from their geometry."""
-    return drawing_invariant_findings(Netlist({page: _portless_part(drawing) for page, drawing in drawings.items()}, Union(), {}, {}, {}, {}))
+    return drawing_invariant_findings(Netlist({page: _portless_part(drawing) for page, drawing in drawings.items()}, UnionFind(), {}, {}, {}, {}))
 
 
 def _codes(drawings) -> list[str]:
@@ -176,7 +175,7 @@ def _marker_codes(*wires: tuple[Any, ...], dots: tuple[Any, ...] = (), body: boo
     wired = tuple(DrawnWire(f"w{i}", pts, "signal") for i, pts in enumerate(wires))
     drawing = Drawing(Size(100, 100), tuple(symbols), wired, (), (), "v")
     part = replace(_portless_part(drawing), ports={"P": (10, 12)})
-    net = Netlist({PAGE: part}, Union(), {}, {}, {}, {})
+    net = Netlist({PAGE: part}, UnionFind(), {}, {}, {}, {})
     return [f.code for f in drawing_invariant_findings(net)]
 
 
@@ -286,7 +285,7 @@ def test_a_wire_from_its_own_pin_across_its_own_body_raises_overlap_and_one_leav
     def codes(*points: tuple[int, int]) -> list[str]:
         drawing = Drawing(Size(100, 100), (body,), (DrawnWire("w", points, "signal"),), (), (), "v")
         part = replace(_portless_part(drawing), ports={"P": (30, 20)})
-        return [f.code for f in drawing_invariant_findings(Netlist({PAGE: part}, Union(), {}, {}, {}, {}))]
+        return [f.code for f in drawing_invariant_findings(Netlist({PAGE: part}, UnionFind(), {}, {}, {}, {}))]
 
     assert codes((30, 20), (30, 0)) == []
     assert codes((30, 20), (30, 60)) == ["OVERLAP"]
@@ -336,7 +335,7 @@ def test_the_page_checks_read_the_ink_symdef_measures_not_the_box_the_writer_sta
         return [
             f.code
             for f in drawing_invariant_findings(
-                Netlist({PAGE: _part(inked(_drawing(*symbols)[PAGE], LIBRARY), {}, LIBRARY)}, Union(), {}, {}, {}, {})
+                Netlist({PAGE: _part(inked(_drawing(*symbols)[PAGE], LIBRARY), {}, LIBRARY)}, UnionFind(), {}, {}, {}, {})
             )
         ]
 

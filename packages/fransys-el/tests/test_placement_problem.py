@@ -4,6 +4,9 @@
 # WIRE_ROW_UNRESOLVED 6 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 
 import dataclasses
+import os
+import subprocess
+import sys
 
 import fransys as fr
 import pytest
@@ -230,6 +233,19 @@ def test_a_strip_named_like_a_symbol_is_refused_naming_the_strip(planted: tuple[
     sym = planted[1].symbols[0]
     with pytest.raises(ProblemError, match=sym.id):
         label_annexes((dataclasses.replace(sym, row_group=sym.id),), house().options, "", {sym.id: {"": Size(8, 8)}})
+
+
+CLASH = (
+    "from types import SimpleNamespace as S; from fransys_el.placement_annexes import label_annexes; n = 'abcde'; "
+    "label_annexes([S(id=c, row_group=c) for c in n], None, '', {c: {} for c in n})"
+)
+
+
+def test_the_clash_a_refusal_names_is_the_first_symbol_under_two_hash_seeds() -> None:
+    """SEED-ORDER R3392: the clash named is the first in the symbols' order, never a pick from a set (str hashes are seeded)."""
+    for seed in ("1", "3"):
+        run = subprocess.run([sys.executable, "-c", CLASH], env={**os.environ, "PYTHONHASHSEED": seed}, capture_output=True, text=True, check=False)  # noqa: S603 -- own interpreter
+        assert "strip a" in run.stderr
 
 
 def test_a_where_line_is_never_wider_than_its_reserve(planted: tuple[Model, PlacementProblem]) -> None:

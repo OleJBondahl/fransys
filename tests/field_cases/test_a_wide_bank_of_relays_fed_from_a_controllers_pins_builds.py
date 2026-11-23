@@ -82,7 +82,7 @@ def test_apart_pairs_on_one_pin_leave_no_marker_on_no_wire(n: int) -> None:
     assert [f.code for f in built.findings if f.code == "REFERENCE_NOT_READABLE"] == []
 
 
-# KI-640 (R1731): bank of 40, loop-placed reference markers overlap on page 4f2c6ea0 (CH09 / -K41); gap row GAP-FLIP-640.
+# KI-640 (R1731): bank of 40, loop-placed reference markers overlap on page 4f2c6ea0 (CH09 / -K41).
 def test_no_reference_marker_overlaps_another_on_the_bank_of_forty() -> None:
     drawings = ring_cases.built_bank(40).drawings.values()
     assert [m for d in drawings for m in page_overlaps(d) if m == "reference-marker / reference-marker"] == []

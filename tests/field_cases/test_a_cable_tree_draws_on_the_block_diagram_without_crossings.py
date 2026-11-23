@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import fransys as fr
+from _field_designs import fc_design
 from _field_shared import crossings, diagram_lines
 
 _EDGES = (("P7", "P2"), ("P1", "P7"), ("P5", "P1"), ("P3", "P1"), ("P4", "P1"), ("P6", "P1"))
@@ -25,9 +26,7 @@ def _built(external: tuple[str, ...] = ()) -> fr.BuildResult:
     with tempfile.TemporaryDirectory() as tmp:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Tree\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-        d.revision(1, date="2026-01-01", text="first", created="AB")
+        d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
         _wire(d, external)
         return fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
 

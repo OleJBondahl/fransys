@@ -4,7 +4,6 @@ The units spec's `demo_system` (two pump cabinets, four top-level cables, one sh
 switch `K1`, `DEMO-SWITCH-2P`, wired by cables `WM1S`/`WM2S` to the cabinets' field terminals)
 """
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import fransys as fr
 import fransys_parts
 import fransys_render

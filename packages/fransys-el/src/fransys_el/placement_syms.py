@@ -12,11 +12,8 @@ from fransys_model.derive import (
     printed_strip_tag,
     printed_tag,
     strip_of,
-    tag_text,
 )
-from fransys_model.derive.contact_rows import table_geometry
 
-from .footprints import footprints
 from .kit_keys import PickKey, function_of
 from .placement_groups import group_of
 from .placement_pins import box_of, narrows, nodes_of, pins_of, shape_of, symbol_of
@@ -29,10 +26,9 @@ if TYPE_CHECKING:
 
     from electrical_symbols import Library
     from fransys_layout.core import Size
-    from fransys_layout.symbols import LibrarySymbol, Shape
-    from fransys_model.derive import Footprints
+    from fransys_layout.symbols import LibrarySymbol
     from fransys_model.kernel import Id
-    from fransys_model.vocab import Function, Unit
+    from fransys_model.vocab import Unit
 
     from .placement_env import Env
     from .placement_kit import Pick
@@ -43,35 +39,17 @@ PLAIN: tuple[Orientation, ...] = ("R0", "R180")
 BOX: tuple[Orientation, ...] = ("R0",)
 
 
-def _foot(env: Env, lead: Id[Function], shape: Shape) -> Footprints:
-    """`footprints` for the lead over its shape, with the texts the model prints for it."""
-    c = env.conventions
-    no, nc = coil_cells(env.model, lead)
-    rows = max(len(no), len(nc))
-    return footprints(
-        env.library,
-        body=shape.body,
-        slots=dict(shape.slots),
-        tag=tag_text(env.model, lead),
-        tag_side=c.tag_side,
-        text_height=c.text_height,
-        cells=(no, nc),
-        table_height=table_geometry(rows, c.step, c.pad, headed=False).height,
-        step=c.step,
-        pad=c.pad,
-    )
-
-
-def _table(foot: Footprints, library: Library) -> TableAsk | None:
+def _table(cells: tuple[tuple[str, ...], tuple[str, ...]], library: Library) -> TableAsk | None:
     """The coil's one contact table: its cells, measured with its top-left at the origin."""
-    if not (foot.no_cells or foot.nc_cells):
+    no, nc = cells
+    if not (no or nc):
         return None
     texts = [
         {
-            **({"no": foot.no_cells[k]} if k < len(foot.no_cells) else {}),
-            **({"nc": foot.nc_cells[k]} if k < len(foot.nc_cells) else {}),
+            **({"no": no[k]} if k < len(no) else {}),
+            **({"nc": nc[k]} if k < len(nc) else {}),
         }
-        for k in range(max(len(foot.no_cells), len(foot.nc_cells)))
+        for k in range(max(len(no), len(nc)))
     ]
     return TableAsk(
         library_symbol(library, "contact-row"),
@@ -160,7 +138,7 @@ def _drawn(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | Non
     function = function_of(env.model, lead)
     item = function_item(env.model, function)
     strip = strip_of(env.model, item)
-    table = _table(_foot(env, function, shape), env.library)
+    table = _table(coil_cells(env.model, function), env.library)
     room = where_room(env, function)
     ask = replace(_ask(env, lead, pick, pins, box), table=table)
     drawn = symbol_views(symbol, env.library, ask)

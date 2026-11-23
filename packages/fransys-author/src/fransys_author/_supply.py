@@ -1,7 +1,4 @@
-"""A `SupplySystem` from `s.supply(...)`; phase rules run here first.
-
-A DC rail has no phase and an AC `max_v` is not negative: authoring's own checks.
-"""
+"""A `SupplySystem` from `s.supply(...)`; the phase rule is the model's (`rail_phase_problem`)."""
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal, InvalidOperation
@@ -46,7 +43,7 @@ def _rail(supply: str, potential: str, spec: object, kind: Current) -> Rail:
         raise AuthorError(msg)
     raw_v, phase = spec
     max_v = _max_v(where, raw_v)
-    _check_phase(where, kind, max_v, phase)
+    _check_phase(where, phase)
     rail = Rail(max_v=max_v, phase=phase)
     problem = rail_phase_problem(kind, rail)
     if problem is not None:
@@ -55,17 +52,10 @@ def _rail(supply: str, potential: str, spec: object, kind: Current) -> Rail:
     return rail
 
 
-def _check_phase(where: str, kind: Current, max_v: Decimal, phase: object) -> None:
-    """Refuse a phase that is not an int or None, a DC phase, or an AC negative max_v."""
+def _check_phase(where: str, phase: object) -> None:
+    """Refuse a phase that is not an int or None."""
     if phase is not None and (isinstance(phase, bool) or not isinstance(phase, int)):
         msg = f"{where} phase must be an int or None, not {phase!r}"
-        raise AuthorError(msg)
-    if kind is Current.DC:
-        if phase is not None:
-            msg = f"{where} is DC and cannot have a phase ({phase})"
-            raise AuthorError(msg)
-    elif max_v < 0:
-        msg = f"{where} is AC and max_v is an RMS value, so it cannot be negative ({max_v})"
         raise AuthorError(msg)
 
 

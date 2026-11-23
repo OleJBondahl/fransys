@@ -16,9 +16,9 @@ from fransys_el.placement_syms import syms_of
 from placement_fixtures import kit_for, planted_model, sid
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import Bundle, Net, PinRef, Sym, natural_key
+from fransys_layout.core import Bundle, Net, PinRef, Sym
 from fransys_model.derive import physical_nets, port_is_unused
-from fransys_model.kernel import Severity, id_namespace
+from fransys_model.kernel import Severity, id_namespace, natural_key
 
 
 @pytest.fixture(scope="module")

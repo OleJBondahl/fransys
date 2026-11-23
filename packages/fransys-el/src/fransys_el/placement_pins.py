@@ -9,10 +9,10 @@ from electrical_symbols import (
     generic_box,
     is_generic_box,
 )
-from fransys_layout.core import BoxSpec, CoreError, Pin, natural_key
+from fransys_layout.core import BoxSpec, CoreError, Pin
 from fransys_layout.symbols import library_symbol, symbol_shape
 from fransys_model.derive import drawn_stands, port_potential_rank
-from fransys_model.kernel import natural_key as kernel_key
+from fransys_model.kernel import natural_key
 
 from .placement_kit import refuse
 from .placement_sides import box_sides
@@ -43,12 +43,12 @@ def narrows(env: Env, pick: Pick) -> bool:
     """Whether turning the markings of `pick`'s generic box narrows its pitch: it then has a second drawing."""
     if not is_generic_box(pick.key):
         return False
-    return box_pitch(box_marking_widths(env.library, default_order(pick.ports.values(), kernel_key))) > box_pitch(())
+    return box_pitch(box_marking_widths(env.library, default_order(pick.ports.values(), natural_key))) > box_pitch(())
 
 
 def _box_symbol(env: Env, pick: Pick, *, turn: bool, offsets: tuple[float, ...] = ()) -> LibrarySymbol:
     """The generic box over the pick's port names; `offsets` (M) put its pins there and the body then ends past the last (model-0129)."""
-    names = default_order(pick.ports.values(), kernel_key)
+    names = default_order(pick.ports.values(), natural_key)
     return generic_box(names, box_sides(env.model, pick, names), offsets, marking_widths=box_marking_widths(env.library, names), turn=turn)
 
 
@@ -123,7 +123,7 @@ def box_of(env: Env, pick: Pick, pins: tuple[Pin, ...], *, turn: bool = False) -
     edge = [p for p in pins if p.side in EDGE]
     if not edge:
         return None
-    order = default_order((p.id for p in edge), kernel_key)
+    order = default_order((p.id for p in edge), natural_key)
     placed = symbol_shape(_box_symbol(env, pick, turn=turn, offsets=(0.0,) * len(pick.ports)), env.library)
     dx = [p.dx for p in placed.pins.values()]
     return BoxSpec(order, min(dx) - placed.body.x, placed.body.x + placed.body.w - max(dx))

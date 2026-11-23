@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Literal
 
-from fransys_model.derive.facts.figures import condition, value
+from fransys_model.derive.facts.figures import breaking_amps, condition
 from fransys_model.elecdef import Unit
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ def _fits_tau(point: Range, tau: Decimal | None) -> bool:
 
 
 def _rank(point: Range) -> tuple[Decimal | int, Decimal | int]:
-    return (condition(point, Unit.V) or 0, value(point, Unit.A) or 0)
+    return (condition(point, Unit.V) or 0, breaking_amps(point))
 
 
 def chosen_point(points: Sequence[Range], volts: Decimal, tau: Decimal | None) -> Range | Short:

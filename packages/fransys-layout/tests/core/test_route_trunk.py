@@ -8,9 +8,9 @@ import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import Box, PinRef
-from fransys_layout.core.arrow_reserve import leg_lines
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
+from fransys_layout.core.leg_lines import leg_lines
 from fransys_layout.core.outputs import PinXY, Placed, Trunk, Wire
 from fransys_layout.core.route import route_page
 from fransys_layout.core.route_counts import collinear, counts

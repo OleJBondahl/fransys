@@ -11,9 +11,10 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .errors import CoreError
 from .flow_values import Attach, CrossLink, Fan
-from .keys import natural_key
 from .topology_cycles import cyclic_parts, y_cycle_cuts
 from .unionfind import UnionFind
 

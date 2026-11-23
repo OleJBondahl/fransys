@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
+from _field_designs import fc_design
 from fransys.colours import BU
 
 from fransys_model.kernel import Origin, evolve
@@ -17,9 +18,7 @@ _CODE = "REFERENCE_OFF_DOCUMENT"
 
 
 def _built() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Docs", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    d = fc_design("Docs", place="CAB", date="2026-10-15")
     cab = d.location("CAB", "Cabinet")
     fld = d.location("FLD", "Field")
     psu = d.device("T1", "DEMO-PSU-24")

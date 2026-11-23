@@ -9,10 +9,7 @@ from typing import TYPE_CHECKING
 from electrical_symbols import marking_slot, power_symbol_key
 from fransys_model.derive import (
     PowerKind,
-    far_pins,
-    function_ports,
     is_rail_terminal,
-    item_functions,
     item_of_port,
     item_unit,
     net_of,
@@ -44,14 +41,6 @@ Identity = str | tuple[frozenset[str], "Id[Unit] | None"] | None
 RailClass = tuple["Id[Unit]", str, Identity]
 
 
-def _scope(model: Model, port: Id[Port]) -> Id[Unit] | None:
-    """The cabinet of `port`: the unit of its item, else the first unit a conductor of its terminal enters; `None` for a device that meets none."""
-    item = item_of_port(model, port)
-    near = [p for function in item_functions(model).get(item, ()) for p in function_ports(model, function)]
-    ends = (item_unit(model, item_of_port(model, far)) for _, far in far_pins(model, near))
-    return item_unit(model, item) or next(filter(None, ends), None)
-
-
 def _identity(model: Model, port: Id[Port], key: str, text: str | None) -> Identity:
     """What one symbol key prints as one potential: the text for supply, the rails and source unit for ground, `PE` for every PE symbol."""
     if key == _SUPPLY:
@@ -61,7 +50,7 @@ def _identity(model: Model, port: Id[Port], key: str, text: str | None) -> Ident
 
 def _pe_classes(model: Model, keys: dict[str, str], ids: Mapping[str, Id[Port]]) -> dict[str, str]:
     """The class of each earth-declared PE net: one per cabinet, bonded through its DIN rail (owner 10-29, R1962)."""
-    return {keys[p]: f"PE:{_scope(model, one)}" for p, one in ids.items() if port_power_kind(model, one) is PowerKind.PE}
+    return {keys[p]: f"PE:{item_unit(model, item_of_port(model, one))}" for p, one in ids.items() if port_power_kind(model, one) is PowerKind.PE}
 
 
 def port_nets(model: Model, ids: Mapping[str, Id[Port]]) -> dict[str, str]:
@@ -88,8 +77,8 @@ def _symbols(net: Netlist) -> Iterator[tuple[Id[Page], PagePart, str, str, str |
 
 def _inked(net: Netlist, page: Id[Page], part: PagePart, port: str) -> bool:
     """True when the symbol of `port` is joined to its pin by ink: its own port point and the pin lie in one inked piece (R4)."""
-    pin = part.ports.get(port)
-    return pin is not None and net.union.find((page, pin)) == net.union.find((page, part.powers.get(port)))
+    pin, power = part.ports.get(port), part.powers.get(port)
+    return pin is not None and power is not None and net.union.find((page, pin)) == net.union.find((page, power))
 
 
 def inked_power(net: Netlist) -> set[str]:
@@ -99,7 +88,7 @@ def inked_power(net: Netlist) -> set[str]:
 
 def _class(model: Model, port: Id[Port], key: str, text: str | None) -> RailClass | None:
     """The (cabinet, symbol key, printed identity) a power symbol joins by; `None` for a symbol in no cabinet."""
-    scope = _scope(model, port)
+    scope = item_unit(model, item_of_port(model, port))
     return None if scope is None else (scope, key, _identity(model, port, key, text))
 
 
@@ -140,7 +129,7 @@ def join_power(net: Netlist, model: Model) -> None:
         if _inked(net, page, part, port):
             at = (page, part.ports[port])
             if (joined := _class(model, net.ids[port], key, text)) is not None and _joins(model, joined, strip):
-                net.union.join(first.setdefault(joined, at), at)
+                net.union.union(first.setdefault(joined, at), at)
 
 
 def power_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:

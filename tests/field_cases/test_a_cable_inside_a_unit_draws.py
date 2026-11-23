@@ -7,7 +7,9 @@ from functools import cache
 from pathlib import Path
 
 import fransys as fr
+from _field_designs import fc_design
 from _field_shared import relay_cab
+from _model_build_cover import cabinet_document
 
 from fransys_model.derive import harness_line_ends
 from fransys_model.vocab.tables import items
@@ -17,16 +19,12 @@ from fransys_model.vocab.tables import items
 def _built() -> fr.BuildResult:
     """Built in the tests' bodies, so a build error is a test FAILURE, not a fixture error."""
     with tempfile.TemporaryDirectory() as tmp:
-        cover = Path(tmp) / "cover.md"
-        cover.write_text("# Cabinet\n", encoding="utf-8")
         looms_cover = Path(tmp) / "looms.md"
         looms_cover.write_text("# Looms\n", encoding="utf-8")
-        d = fr.design("demo_parts")
-        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-        d.revision(1, date="2026-01-01", text="first", created="AB")
+        d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
         d.location("CAB", "Cabinet")
         d.add(relay_cab, "U1", place="CAB")
-        schematic = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-cab", cover=cover)
+        schematic = cabinet_document("demo-cab")
         looms = fr.document(fr.DocumentPreset.SYSTEM, None, cover=looms_cover)
         return fr.build(d, schematic, looms)
 

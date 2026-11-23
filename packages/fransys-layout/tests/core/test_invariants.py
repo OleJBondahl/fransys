@@ -10,9 +10,10 @@ from collections import Counter
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.core import Box, natural_key
+from fransys_layout.core import Box
 from fransys_layout.core.clearance import Keep, clear
 from fransys_layout.core.geometry import inside, overlaps
+from fransys_model.kernel import natural_key
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

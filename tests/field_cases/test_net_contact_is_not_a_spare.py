@@ -29,8 +29,3 @@ def _built(*, wired: bool = False, hide: bool = True):
         d.series(q.aux_nc["21"], lamp["2"], wire=blue)
     doc = unit_document(cab)
     return fr.build(d, doc)
-
-
-def _built_net_contact():
-    """The model of `_built()` without hiding, which the cross-link study reads (study_cases.py) as a core measure."""
-    return _built(hide=False).model

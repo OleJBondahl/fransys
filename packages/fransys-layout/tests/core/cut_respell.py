@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.core import natural_key
+from fransys_model.kernel import natural_key
 
 if TYPE_CHECKING:
     from collections.abc import Callable

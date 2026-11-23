@@ -160,7 +160,7 @@ def _crossing(*, marked: bool) -> Scene:
         _wire("n2", 0, ((50, 0), (50, 100))),
     )
     boxes = (_box("A", 0, 0, 50, (_pin("o", 0, 50, "n1", node=0),)),)
-    markers = (SceneMarker("n1", RefKind.TAG, 0, 0, 0, "A", "o", "", "N"),) if marked else ()
+    markers = (SceneMarker("n1", RefKind.TAG, 0, 0, 0, "A", "o", "N"),) if marked else ()
     return _scene(boxes, wires, markers)
 
 

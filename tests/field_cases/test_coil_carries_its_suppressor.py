@@ -4,15 +4,14 @@ Fixed by model-0137 and layout-0115, the coil carries and the suppressor is the 
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 
 def _columns() -> dict[str, list[int]]:
     """The x of the coil K1, the suppressor D1 and the two terminals, by their drawn symbol."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Coil", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Coil", place="CAB", date="2026-10-02")
     _cabinet = d.location("CAB", "Cabinet")
     feed, back = d.terminal_strip("X1", "DEMO-TB-2.5", 1), d.terminal_strip("X2", "DEMO-TB-2.5", 1)
     with d.function("G", "Group"):

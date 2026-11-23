@@ -5,6 +5,7 @@ Fixed by model-0139 (amended by model-0235), the first target is a terminal of t
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -18,9 +19,7 @@ if TYPE_CHECKING:
 
 
 def _built() -> Model:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Star", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("Star", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     with d.function("G", "Group"):

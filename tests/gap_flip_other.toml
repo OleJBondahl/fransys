@@ -136,8 +136,6 @@
 # KI-738 (CORRECTNESS-PROOF S0 R6, R1861): the dangling-end check meets a wire end that lies along another wire by a dot further along the run
 "packages/fransys-el/tests/test_drawn_netlist.py::test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself" = "GAP-FLIP-738"  # KI-738
 
-# KI-1304 (UNIT-CABLE-LISTS): a cable a unit owns is in the BOM and in no cable list of a default write (designer R3172).
-"tests/test_corpus_drawing_invariants.py::test_every_cable_the_bom_names_is_in_a_default_cable_list" = "GAP-FLIP-1304"
 "tests/test_short_groups_corpus_pages.py::test_the_real_marker_boxes_keep_the_instance_within_its_bound[s01_skid_v16_m3]" = "GAP-FLIP-1281"  # KI-1281 MARKER-PAGES
 "tests/test_short_groups_corpus_pages.py::test_the_real_marker_boxes_keep_the_instance_within_its_bound[w01_series_to_plc]" = "GAP-FLIP-1281"  # KI-1281 MARKER-PAGES
 "tests/test_rule_rank_invariance.py::test_bank40_overflows_no_page_and_strands_no_leg_at_any_salt[-]" = "GAP-FLIP-1264"  # KI-1264: bank40 HEAD_OFF_LEGS 1 at salt "-"

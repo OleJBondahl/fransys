@@ -6,9 +6,9 @@ from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.plc_wiring import plc_requests
 from fransys_model.derive.facts.roles import function_channel
 from fransys_model.vocab.codes import finding
-from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.signal_types import SIGNAL_TYPES
 from fransys_model.vocab.tables import facets_of
 lazy from fransys_model.kernel import Finding
 
@@ -18,9 +18,6 @@ if TYPE_CHECKING:
 # SCALING-UNIT-TYPED (KI-681): the unit is a free string until elecdef `Unit` carries every unit an engineer prints.
 SCALING_RANGE_INVALID: Final[str] = "SCALING_RANGE_INVALID"
 SCALING_NOT_ANALOGUE: Final[str] = "SCALING_NOT_ANALOGUE"
-_ANALOGUE: Final[frozenset[SignalType]] = frozenset(
-    {SignalType.AI_CURRENT, SignalType.AI_VOLTAGE, SignalType.AO_CURRENT, SignalType.AO_VOLTAGE, SignalType.RTD}
-)
 
 
 def _findings(scale: ScalingFacet, *, analogue: bool) -> list[Finding]:
@@ -48,5 +45,5 @@ def check_scaling(model: Model) -> tuple[Finding, ...]:
         channel = function_channel(model, scale.subject)
         request = requests.get(scale.subject)
         signal = channel.signal if channel is not None else None if request is None else request.signal
-        found += _findings(scale, analogue=signal in _ANALOGUE)
+        found += _findings(scale, analogue=signal is not None and SIGNAL_TYPES[signal].analogue)
     return ordered(found)

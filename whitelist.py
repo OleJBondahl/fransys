@@ -220,7 +220,6 @@ _.labels  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:84
 _.export_kind  # OTHER fransys/src/fransys/_exports.py:211
 _.title_band_mm  # OTHER fransys-render/src/fransys_render/sheet_check.py:44
 # PLACEMENT-FACTS: read by the problem builder later
-_.in_strip_row  # FIELDS fransys-model/src/fransys_model/derive/rows_footprints.py:23
 # CORE-WAVE0: contract fields the stages read later; jsonform walks them with dataclasses.fields()
 _.D  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.Q  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
@@ -267,8 +266,6 @@ _.NW  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:131
 _.NE  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:132
 _.SW  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:133
 _.SE  # FIELDS packages/fransys-model/src/fransys_model/layout/enums.py:134
-_.no_cells  # FIELDS packages/fransys-model/src/fransys_model/derive/rows_footprints.py:29
-_.nc_cells  # FIELDS packages/fransys-model/src/fransys_model/derive/rows_footprints.py:30
 # KIT-FACTS: @value fields of derive/rows_pin_views.py,
 # read by fransys_layout's read package and generically via dataclasses.fields() (FIELDS).
 _.L1  # TESTS fransys-author/tests/surface/test_supplies.py:74

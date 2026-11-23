@@ -13,25 +13,23 @@ from turn_fixtures import marker_views, plain_boxes, turn_pin
 
 from fransys_layout.core import AnnexBox, Facts, PinRef, PlacementProblem, Size, Unit
 from fransys_layout.core.anchors import wire_keeps
-from fransys_layout.core.arrow_reserve import leg_feet, leg_lines
 from fransys_layout.core.clearance import Keep, clear
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import inside, marker_box, marker_box_at, overlaps
 from fransys_layout.core.hangings import hung_keeps
+from fransys_layout.core.leg_lines import leg_feet, leg_lines
 from fransys_layout.core.outline import outline_keeps
 from fransys_layout.core.outputs import Anchored, Demand, Marker, Outline, Trunk, Wire
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route_env import Drawn
 from fransys_layout.core.route_fixed import Fixed
-from fransys_layout.core.text_cells import cell_of
 from fransys_layout.core.text_ends import (
     MarkEnv,
     Stand,
     _trunk_end_stand,
     bundle_nets,
     end_stand,
-    hub_xy,
     legless_pins,
     mark_env,
     pin_keeps,
@@ -234,15 +232,6 @@ def test_one_stub_per_pin_stands_at_each_pin_that_reaches_an_outside_pin(built, 
     assert missed["unit_boundary_stubs"] == ()  # no pin of the net is left without a stub: no CONNECTION_NOT_DRAWN
 
 
-def test_an_arrow_across_pages_names_the_far_ends_cell(built) -> None:
-    _, _, markers = built["page_wrapped_fan"]
-    first, second = markers
-    assert (first.page, second.page) == (1, 2)
-    area = Size(1312, 854)
-    assert first.cell == cell_of(second.x, second.y, area, OPTIONS.cells)
-    assert second.cell == cell_of(first.x, first.y, area, OPTIONS.cells)
-
-
 def test_a_row_wrapped_fan_has_arrows_in_different_rows_of_one_page(built) -> None:
     cut, _, markers = built["row_wrapped_fan"]
     first, second = markers[0], markers[1]
@@ -250,14 +239,6 @@ def test_a_row_wrapped_fan_has_arrows_in_different_rows_of_one_page(built) -> No
     assert first.y != second.y
     assert first.x > second.x  # the right end of the first row, the left end of the next
     assert len(cut.spec.pages[0].rows) > 1
-
-
-def test_a_copy_names_the_cell_of_its_hub(built) -> None:
-    _, pl, markers = built["copied_hub"]
-    hub = next(p for g in pl.pages for p in g.placed if p.sym == "t2")
-    first = min(hub.pin_xy, key=lambda q: q.pin)
-    want = cell_of(first.x, first.y, Size(1312, 854), OPTIONS.cells)
-    assert {m.cell for m in markers} == {want}
 
 
 def test_a_tag_stands_at_a_pin_of_its_net(built) -> None:
@@ -295,37 +276,6 @@ def test_a_stub_end_with_no_pin_is_refused_by_stand_ref_with_the_fix() -> None:
 def test_a_stub_end_with_no_row_but_a_pin_is_not_refused() -> None:
     markers = stand_ref(_env("E", "R0"), STUB)
     assert len(markers) == 1
-
-
-def _hub_env(page: int) -> MarkEnv:
-    fan = Fan("f", ("fa", "fb"), (), (), "H", 1, "S")
-    return replace(_env("E", "R0"), pins={("H", "p"): (page, 10, 20, "R0")}, fans={"f": fan})
-
-
-def test_a_copys_hub_is_read_from_the_page_it_stands_on() -> None:
-    ref = Ref("fb", RefKind.COPY, (RefEnd(2, "c1", PIN),))
-    assert hub_xy(_hub_env(1), ref, ref.ends[0]) == (10, 20)
-
-
-@pytest.mark.parametrize(
-    ("page", "pins", "message"),
-    [
-        (
-            1,
-            {("H", "p"): (1, 10, 20, "R0")},
-            r"net fb \(copy\) page 1: the hub H stands on the copy's.*stage 4 copies\(\) plans a copy end only on a page other than the hub's",
-        ),
-        (2, {}, r"net fb \(copy\): the hub has no placed pin.*the placement must place a pin of the fan's hub"),
-    ],
-    ids=["on-its-hubs-own-page", "hub-has-no-placed-pin"],
-)
-def test_a_copy_whose_hub_cannot_be_read_raises_naming_the_net(
-    page: int, pins: dict[tuple[str, str], tuple[int, int, int, str]], message: str
-) -> None:
-    ref = Ref("fb", RefKind.COPY, (RefEnd(page, "c1", PIN),))
-    env = replace(_hub_env(1), pins=pins)
-    with pytest.raises(CoreError, match=message):
-        hub_xy(env, ref, ref.ends[0])
 
 
 # the stagger (I8.7) and the cyclic far end (I8.4)
@@ -426,27 +376,9 @@ def _pair_ref() -> Ref:
     return Ref("n", RefKind.TAG, (RefEnd(1, "c", PinRef("S", "p")), RefEnd(1, "c", PinRef("S", "q"))))
 
 
-def test_a_three_end_star_names_the_next_end_cyclically() -> None:
-    area = Size(1312, 854)
-    pins = {("S", f"p{k}"): (1, x, 200, "R0") for k, x in enumerate((100, 600, 1200), 1)}
-    env = replace(_env("E", "R0"), pins=pins, sides={(s, p, "R0"): "E" for s, p in pins})
-    star = Ref("m", RefKind.STAR, tuple(RefEnd(1, "c", PinRef("S", p), 0) for _, p in pins))
-    pairs = stand_ref(env, star)
-    assert len(pairs) == 3
-    assert len({m.cell for m, _ in pairs}) == 3  # three cells, so a wrong end shows
-    for i, (m, _) in enumerate(pairs):
-        nxt = pairs[(i + 1) % 3][1]
-        assert m.cell == cell_of(nxt.x, nxt.y, area, OPTIONS.cells)  # the cell of the next end's stand, from the same Stand that sets x,y
-
-
-def test_a_one_end_reference_names_its_own_cell() -> None:
-    ((m, _),) = stand_ref(_env("E", "R0"), STUB)
-    assert m.cell == cell_of(m.x, m.y, Size(1312, 854), OPTIONS.cells)
-
-
 def test_an_arrow_and_a_copy_of_two_sides_that_meet_stay_at_their_anchors() -> None:
-    arrow = Marker("f", RefKind.ARROW, 1, "1A", 120, 500, PIN, "R180")  # box west of x 120
-    copy = Marker("f", RefKind.COPY, 1, "1A", 96, 500, PIN)  # box east of x 96
+    arrow = Marker("f", RefKind.ARROW, 1, 120, 500, PIN, "R180")  # box west of x 120
+    copy = Marker("f", RefKind.COPY, 1, 96, 500, PIN)  # box east of x 96
     pairs = [(arrow, Stand(120, 500, PIN, "R180", "W")), (copy, Stand(96, 500, PIN, "R0", "E"))]
     assert overlaps(_box_of(arrow), _box_of(copy))
     got = _all(stagger(pairs, OPTIONS, AREA, {}, {}))
@@ -455,8 +387,8 @@ def test_an_arrow_and_a_copy_of_two_sides_that_meet_stay_at_their_anchors() -> N
 
 def test_a_crowded_wall_leaves_every_marker_at_its_anchor_inside_the_page() -> None:
     """Six west boxes and a late east box overlap: none steps off its wire end (R453)."""
-    wall = [Marker(f"w{k}", RefKind.ARROW, 3, "1A", 200 + 56 * k, 500, PIN, "R180") for k in range(6)]
-    late = Marker("late", RefKind.COPY, 3, "1A", 120, 500, PIN)
+    wall = [Marker(f"w{k}", RefKind.ARROW, 3, 200 + 56 * k, 500, PIN, "R180") for k in range(6)]
+    late = Marker("late", RefKind.COPY, 3, 120, 500, PIN)
     pairs = [(m, Stand(m.x, m.y, PIN, "R180", "W")) for m in wall] + [(late, Stand(120, 500, PIN, "R0", "E"))]
     assert not any(overlaps(_box_of(a), _box_of(b)) for a, b in itertools.pairwise(wall))
     got = _all(stagger(pairs, OPTIONS, AREA, {}, {}))
@@ -470,9 +402,6 @@ def test_a_two_end_star_tied_in_page_row_and_column_is_ordered_by_the_pin_id() -
     env = replace(_env("E", "R0"), pins=pins, sides={("S", "p2", "R0"): "E", ("S", "p10", "R0"): "E"})
     pairs = stand_ref(env, star_two_tied())
     assert [m.end.pin for m, _ in pairs] == ["p2", "p10"]  # natural order, not input or text order
-    first, second = (m for m, _ in pairs)
-    assert first.cell == cell_of(second.x, second.y, Size(1312, 854), OPTIONS.cells)
-    assert second.cell == cell_of(first.x, first.y, Size(1312, 854), OPTIONS.cells)
 
 
 def test_a_bundle_arrow_stands_at_the_hull_end_on_its_own_poles_lane() -> None:
@@ -609,7 +538,7 @@ def test_a_boundary_stub_steps_straight_out_until_its_box_is_clear_of_a_foreign_
 
 def test_a_wire_of_the_arrows_own_fan_does_not_block_it() -> None:
     """An arrow is no more exempt from a foreign wire: a wire of its own fan does not block it, another net's moves it."""
-    arrow = Marker("f", RefKind.ARROW, 1, "1A", 120, 500, PIN, "R180")
+    arrow = Marker("f", RefKind.ARROW, 1, 120, 500, PIN, "R180")
     stand = Stand(120, 500, PIN, "R180", "W")
 
     def keeps(net: str) -> dict[int, list[Keep]]:
@@ -710,7 +639,7 @@ def test_a_stub_slot_whose_lead_runs_through_a_body_is_refused() -> None:
 @pytest.mark.rule("MARKER-STAGGER")
 def test_markers_on_neighbouring_rows_whose_boxes_overlap_stand_one_box_apart() -> None:
     """KI-360: two markers whose across coordinate differs (200, 208) but whose boxes overlap are one group."""
-    a, b = (Marker(n, RefKind.TAG, 3, "1A", x, y, PIN, "R0") for n, x, y in (("a", 200, 500), ("b", 208, 508)))
+    a, b = (Marker(n, RefKind.TAG, 3, x, y, PIN, "R0") for n, x, y in (("a", 200, 500), ("b", 208, 508)))
     pairs = [(a, Stand(200, 500, PIN, "R0", "E")), (b, Stand(208, 508, PIN, "R0", "E"))]
     assert overlaps(_box_of(a), _box_of(b))
     got = _all(stagger(pairs, OPTIONS, AREA, {}, {}))

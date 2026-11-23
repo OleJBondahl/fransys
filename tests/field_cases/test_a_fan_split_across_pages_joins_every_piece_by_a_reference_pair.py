@@ -2,17 +2,15 @@
 KI-495 (R1553, part 0): every piece joins by a reference pair, so no connection is undrawn and a copy has an end per page beyond the hub's."""
 
 from contextlib import nullcontext
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import cabinet_document
 from fransys.colours import BK, BN, GY
 
 from fransys_layout.core import cut
 from fransys_model.kernel import id_namespace
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 _PH = (BN, BK, GY)
 _STARTERS = 40
@@ -40,7 +38,7 @@ def _cabinet(u: Any) -> _Io:
     return _Io(l1, l2, l3)
 
 
-def _built(tmp_path: Path, copied: list[tuple[int, int]], patch: pytest.MonkeyPatch) -> Any:
+def _built(copied: list[tuple[int, int]], patch: pytest.MonkeyPatch) -> Any:
     """Build the cabinet; `copied` gets (ends, pages beyond the hub's) for each copy reference planned."""
     plan = cut.copies
 
@@ -57,17 +55,13 @@ def _built(tmp_path: Path, copied: list[tuple[int, int]], patch: pytest.MonkeyPa
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
     cab = d.add(_cabinet, "U1", place=None)
-    cover = tmp_path / "cover.md"
-    cover.write_text("# Fan\n", encoding="utf-8")
     patch.setattr(cut, "copies", spy)
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    return fr.build(d, cabinet_document(cab))
 
 
 @pytest.mark.rule("WHERE-WIRED")
 @pytest.mark.parametrize("salt", ["-", "a", "b", "c", "d", "e"])
-def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connection_undrawn(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, salt: str
-) -> None:
+def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connection_undrawn(monkeypatch: pytest.MonkeyPatch, salt: str) -> None:
     """KI-495: the fan reaches 3 pages; its copy has 2 ends and CONNECTION_NOT_DRAWN is 0 at every salt.
 
     MARKER_UNPLACED is 0 (KI-604 closed); LABEL_NO_ROOM is 0 too (STRIP-TAG-ONCE: a run's tag is one annex).
@@ -75,7 +69,7 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
     copied: list[tuple[int, int]] = []
 
     with id_namespace(salt) if salt != "-" else nullcontext():
-        findings = _built(tmp_path, copied, monkeypatch).findings
+        findings = _built(copied, monkeypatch).findings
     assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
     assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "LABEL_NO_ROOM"}] == []
     assert len(copied) == 1

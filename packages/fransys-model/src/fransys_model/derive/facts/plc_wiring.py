@@ -7,21 +7,19 @@ with a function's ports. It is answered here, over `vocab.closure.net_of`, and n
 
 from typing import TYPE_CHECKING, cast
 
-from fransys_model.derive.facts.children import parent_item
 from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.facts.roles import function_channels
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.derive.lookups import channel_devices
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
-from fransys_model.vocab.tables import conductors, facets_of, functions, ports
+from fransys_model.vocab.tables import conductors, facets_of, ports
 lazy from fransys_model.vocab.enums import SignalType
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
 
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Item, Port
+    from fransys_model.vocab.core import Function, Port
 
 
 def owner_of_port(by_function: Mapping[Id[Function], tuple[Id[Port], ...]], owners: Collection[Id[Function]]) -> dict[Id[Port], Id[Function]]:
@@ -67,22 +65,6 @@ def plc_settings(model: Model) -> frozendict[Id[Function], PlcRequestFacet]:
 def plc_requests(model: Model) -> frozendict[Id[Function], PlcRequestFacet]:
     """Each function that asks for a PLC signal, mapped to its `plc_request` facet."""
     return frozendict({subject: facet for subject, facet in plc_settings(model).items() if facet.signal is not None})
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def controller_signal_names(model: Model) -> frozendict[tuple[Id[Item] | None, str], tuple[tuple[Id[Function], Id[Function]], ...]]:
-    """The (channel, bound device) pairs carrying each (controller, signal name); the controller is the rack of the channel's module.
-
-    A spare channel's own name and a placeholder are no signal names and are not listed.
-    """
-    requests, all_functions = plc_requests(model), functions(model)
-    found: dict[tuple[Id[Item] | None, str], list[tuple[Id[Function], Id[Function]]]] = {}
-    for channel, device in channel_devices(model).items():
-        request = requests.get(device)
-        if request is not None and request.signal_name is not None:
-            rack = parent_item(model, all_functions[channel].item)
-            found.setdefault((rack, request.signal_name), []).append((channel, device))
-    return frozendict({key: tuple(pairs) for key, pairs in found.items()})
 
 
 def request_functions(model: Model) -> frozenset[Id[Function]]:

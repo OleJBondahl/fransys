@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import NamedTuple
 
 import fransys as fr
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 from fransys.colours import BK, BU
 
@@ -18,10 +19,7 @@ class _Io(NamedTuple):
     pass
 
 
-@fr.unit(
-    "reversing", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB",
-    title="Reversing", number="R-1",
-)  # fmt: skip
+@fc_unit("reversing", title="Reversing", number="R-1")
 def _reversing(d):
     xp = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
     ac = d.ac_supply("400V", 230, xp[1], xp[2], xp[3])

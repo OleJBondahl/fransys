@@ -50,7 +50,7 @@ def test_pdf_lists_use_the_derive_object(name):
     assert _pdf_object(name) is getattr(derive, name)
 
 
-@pytest.mark.parametrize("name", ["cell_text", "column_rows", "pin_lines", "list_columns", "list_csv_header"])
+@pytest.mark.parametrize("name", ["cell_text", "column_rows", "pin_lines", "unit_list_columns", "list_csv_header"])
 def test_reports_csv_uses_the_derive_object(name):
     assert _is_derive_object(reports, name)
 
@@ -69,9 +69,9 @@ def test_a_module_holding_its_own_copy_fails_the_identity_check(monkeypatch):
     def copy(*args, **kwargs):
         return derive.list_columns(*args, **kwargs)
 
-    for module in (_lists, reports):
-        monkeypatch.setattr(module, "list_columns", copy)
-        assert not _is_derive_object(module, "list_columns")
+    for module, name in ((_lists, "list_columns"), (reports, "list_csv_header")):
+        monkeypatch.setattr(module, name, copy)
+        assert not _is_derive_object(module, name)
 
 
 def test_pdf_holds_no_second_heading_table():

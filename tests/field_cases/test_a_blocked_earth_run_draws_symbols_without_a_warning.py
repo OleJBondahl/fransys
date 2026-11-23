@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import BU, GNYE
 
@@ -45,9 +46,7 @@ def _cabinet(phases: int, *, rail: bool) -> Any:
 
 
 def _build(phases: int, *, rail: bool = False) -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="PE", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("PE", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     cab = d.add(_cabinet(phases, rail=rail), "U1", place=None)
     with d.function("IN", "Incoming"):

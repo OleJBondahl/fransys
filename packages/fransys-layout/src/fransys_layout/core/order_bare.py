@@ -13,7 +13,7 @@ from collections import Counter
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
+from fransys_model.kernel import NaturalKey, natural_key
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -105,7 +105,7 @@ def _peer_host(card: Block, peers: Mapping[str, frozenset[str]], by_anchor: Mapp
     return host if len(around) > 1 or host.id < card.id else None
 
 
-def _pin_key(card: Block, host: Block, flow: FlowGraph) -> tuple[tuple[int, int | str], ...]:
+def _pin_key(card: Block, host: Block, flow: FlowGraph) -> NaturalKey:
     """The first of the host's pins that a net of the card meets, by its id."""
     fans = [(*f.drivers, *f.legs) for f in flow.fans]
     keys = [natural_key(a.pin.pin) for att in fans if any(x.pin.sym == card.anchor for x in att) for a in att if a.pin.sym == host.anchor]

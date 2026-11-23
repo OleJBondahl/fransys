@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 from fransys.colours import BK, BU, RD
 
@@ -27,16 +28,7 @@ class _Io(NamedTuple):
     X1: fr.TerminalStrip
 
 
-@fr.unit(
-    "shape",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Shape",
-    number="S-1",
-)
+@fc_unit("shape", title="Shape", number="S-1")
 def _shape(d: fr.Design) -> _Io:
     """Ten relay circuits on two shared strips, five terminals reused."""
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 8, interface=True)

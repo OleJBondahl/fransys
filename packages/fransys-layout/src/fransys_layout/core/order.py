@@ -17,7 +17,8 @@ from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
+from fransys_model.kernel import natural_key
+
 from .order_bare import seat_bare_cards
 from .order_search import exact_search
 

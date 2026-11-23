@@ -75,6 +75,9 @@ def _breaking_point(item: object) -> Range:
     elif (current := figure.at.get(Current)) is None or (current is Current.AC and figure.at.get(Unit.MS.kind) is not None):
         msg = 'a breaking point is stated at "AC", or at "DC" with an optional time constant'
         raise PartTextError(msg)
+    elif figure.nom is None and figure.max is None and figure.typ is None:
+        msg = "a breaking point at a voltage states only min; give nom or max, the current it breaks at that voltage"
+        raise PartTextError(msg)
     return figure
 
 

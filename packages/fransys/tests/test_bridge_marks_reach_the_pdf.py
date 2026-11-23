@@ -43,7 +43,7 @@ def test_a_bridged_strip_writes_its_marks_as_placed_images(tmp_path: Path) -> No
     work.mkdir()
     written = fr.write(built, tmp_path / "out", intermediates=work)
     source = "".join(p.read_text(encoding="utf-8") for p in work.glob("*.typ"))
-    assert 'width=\\"3.0mm\\" height=\\"1.0mm\\"' in source  # render's lane line, placed
-    assert 'width=\\"2.0mm\\" height=\\"1.0mm\\"' in source  # and its tick
+    assert 'width=\\"3mm\\" height=\\"1mm\\"' in source  # render's lane line, placed
+    assert 'width=\\"2mm\\" height=\\"1mm\\"' in source  # and its tick
     assert "line(start" not in source
     assert any(path.suffix == ".pdf" for path in written)

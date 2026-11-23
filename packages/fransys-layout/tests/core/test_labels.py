@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import AnnexBox, Box, Size, natural_key
+from fransys_layout.core import AnnexBox, Box, Size
 from fransys_layout.core.anchors import HELD, Stood, anchor_leads, page_keeps
 from fransys_layout.core.annex import place_labels, spot_box
 from fransys_layout.core.annex_values import Annex, Spot
@@ -21,6 +21,7 @@ from fransys_layout.core.route_labels import roomed
 from fransys_layout.core.route_runs import alone_annexes, named, stand_runs
 from fransys_layout.core.values import Finding, Hints, OutlineRoom
 from fransys_layout.core.widen import route_round
+from fransys_model.kernel import natural_key
 
 from . import pipeline_fixtures
 from .conftest import MARKERS

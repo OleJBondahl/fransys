@@ -68,7 +68,7 @@ home = "vocab/enums.py power_literals"
 forbid_after = "KI-062, power_literals fold in vocab"
 
 [r12-union-find]
-stock = 13
+stock = 19
 mark = "count"
 home = "fransys_kernel, derive/indexes.py, fransys_layout/core"
 forbid_after = "KI-059, the UnionFind twin (KI-064)"

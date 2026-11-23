@@ -28,7 +28,6 @@ from fransys_el import drawn_nets as drawn_nets_module
 from fransys_el import read_markers as read_markers_module
 from fransys_el.drawn_ends import ink_without_conductor
 from fransys_el.drawn_finding import drawn_finding
-from fransys_el.drawn_graph import Union
 from fransys_el.drawn_identity import net_text
 from fransys_el.drawn_lanes import Lanes
 from fransys_el.drawn_netlist import Netlist, drawn_netlist, is_marker, with_lines
@@ -63,7 +62,7 @@ from fransys_model.derive import (
     required_groups,
     terminal_items,
 )
-from fransys_model.kernel import Id, make_id
+from fransys_model.kernel import Id, UnionFind, make_id
 from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Page, Side, StarKind, layout_of, sheet_format_of
 from fransys_model.vocab.tables import ports
 
@@ -348,7 +347,7 @@ def test_a_stub_on_a_line_ends_every_port_of_that_line_on_its_page():
     places: dict[Any, Any] = {"a": ((p1, (0, 0)),), "b": ((p2, (0, 0)),), "c": ((p1, (1, 1)),)}
     home = {"a": frozenset({p1}), "b": frozenset({p2}), "c": frozenset({p1})}
     pages: dict[Any, Any] = {p1: SimpleNamespace(nodes={(0, 0), (1, 1)}), p2: SimpleNamespace(nodes={(0, 0)})}
-    net = Netlist(pages, Union(), places, {}, {}, {}, lined={"a": "L", "b": "L", "c": "M"}, stub_lines={(p1, "L")}, home=home)
+    net = Netlist(pages, UnionFind(), places, {}, {}, {}, lined={"a": "L", "b": "L", "c": "M"}, stub_lines={(p1, "L")}, home=home)
     assert _lined(net, "a")
     assert not _lined(net, "b")
     assert not _lined(net, "c")
@@ -359,14 +358,14 @@ def test_a_stub_on_a_line_ends_every_port_of_that_line_on_its_page():
 def _homed(places: dict[Any, Any], joined: Sequence[Any] = (), bare: Sequence[Any] = ()) -> Netlist:
     """Ports `places` (first point of each is its home page, later ones copies) with every listed point a node; `joined` pairs are one piece."""
     pages: dict[Any, Any] = {}
-    union = Union()
+    union = UnionFind()
     for points in places.values():
         for page, at in points:
             pages.setdefault(page, SimpleNamespace(nodes=set())).nodes.add(at)
     for page, at in bare:
         pages[page].nodes.discard(at)
     for a, b in joined:
-        union.join(a, b)
+        union.union(a, b)
     net = Netlist(pages, union, places, {}, {}, {}, home={port: frozenset({points[0][0]}) for port, points in places.items()})
     net.live.update(union.find((p, at)) for p, part in pages.items() for at in part.nodes)
     return net
@@ -473,7 +472,7 @@ def _coincident(monkeypatch: pytest.MonkeyPatch, nets: dict[str, str]) -> Netlis
     monkeypatch.setattr(drawn_netlist_module, "port_points", lambda _s, _lib: [((7, 7), "p")])
     part = drawn_netlist_module._part(cast("Any", drawing), {"s1": {"p": ids["a"]}, "s2": {"p": ids["b"]}}, LIBRARY)
     page = Id[Page](kind="page", value="p")
-    net = Netlist({page: part}, Union(), drawn_netlist_module._placed({page: part}), ids, {}, {}, nets=nets)
+    net = Netlist({page: part}, UnionFind(), drawn_netlist_module._placed({page: part}), ids, {}, {}, nets=nets)
     net.live.update(net.union.find((page, at)) for at in part.nodes)
     return net
 
@@ -558,8 +557,8 @@ def test_a_lane_foot_whose_piece_holds_no_port_is_a_dangling_end_even_where_an_a
     """R2014: a foot with no port is never skipped silently; it raises DANGLING_WIRE_END where the wire end alone would be met."""
     lane = DrawnWire("lane", ((200, 108), (240, 108)), "trunk")
     pages = cast("Any", {P1: _page((lane,), {}, {(200, 108), (240, 108)})})
-    assert dangling_findings(Netlist(pages, Union(), {}, {}, {}, {})) == ()
-    bare = dangling_findings(Netlist(pages, Union(), {}, {}, {}, {}, lanes=Lanes(bare={(P1, (240, 108))})))
+    assert dangling_findings(Netlist(pages, UnionFind(), {}, {}, {}, {})) == ()
+    bare = dangling_findings(Netlist(pages, UnionFind(), {}, {}, {}, {}, lanes=Lanes(bare={(P1, (240, 108))})))
     assert [f.message for f in bare] == ["wire end at 240, 108"]
 
 
@@ -571,7 +570,7 @@ def test_a_wire_end_on_a_marker_origin_is_met_only_by_the_marker_of_its_own_net(
     part = _page((wire,), {"p": (0, 0)}, set())
     for net, found in (("a", []), ("b", ["wire end at 40, 0"])):
         part.drawing.symbols = (replace_net(marker, net),)
-        assert [f.message for f in dangling_findings(Netlist(cast("Any", {P1: part}), Union(), {}, {}, {}, {}))] == found
+        assert [f.message for f in dangling_findings(Netlist(cast("Any", {P1: part}), UnionFind(), {}, {}, {}, {}))] == found
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -670,7 +669,7 @@ def _powered(
         pages[Id[Page](kind="page", value=page)] = drawn_netlist_module._part(
             cast("Any", SimpleNamespace(symbols=(device, bar), wires=wires)), {device.id: {"p": ids[port]}}, LIBRARY
         )
-    monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
+    monkeypatch.setattr(drawn_power, "item_unit", lambda _m, port: stands[port][2])
     monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
     monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
     monkeypatch.setattr(drawn_power, "port_power_kind", lambda _m, port: PowerKind(stands[port.value][0]))
@@ -1044,7 +1043,7 @@ def test_one_number_naming_two_groups_in_one_drawing_set_is_reference_not_readab
 
 def _group_roots(built: Built) -> dict[Any, list[Any]]:
     """The roots of the drawn reference markers on a node, by reference group, in a union holding only `join_references`' joins."""
-    net, markers, union = built.netlist(), layout_of(built.model, LinkMarker), Union()
+    net, markers, union = built.netlist(), layout_of(built.model, LinkMarker), UnionFind()
     drawn_references.join_references(built.model, net.pages, LIBRARY, union)
     found: dict[Any, list[Any]] = {}
     for (page, _), ends in reference_targets(built.model).items():
@@ -1149,11 +1148,11 @@ def _ink_net(
     mark = [SimpleNamespace(x=x, y=y, key="marker-arrow", ports=("p",), net="n") for x, y in kw.get("markers", ())]
     part = _page(tuple(DrawnWire("n", e, "w") for e in edges), at, set())
     part.powers, part.drawing.symbols = kw.get("powers", {}), mark
-    union = Union()
+    union = UnionFind()
     for a, b in edges:
-        union.join((P1, a), (P1, b))
+        union.union((P1, a), (P1, b))
     for x, y in kw.get("markers", ()) if kw.get("partner") else ():  # the marker's far piece holds port h
-        union.join((P1, (x, y)), (P1, at["h"]))
+        union.union((P1, (x, y)), (P1, at["h"]))
     placed = {p: ((P1, xy),) for p, xy in at.items()}
     net = SimpleNamespace(
         pages={P1: part}, ids=ids, joins=kw.get("joins", ()), lanes=Lanes(bare={(P1, f) for f in kw.get("feet", ())}), union=union, placed=placed

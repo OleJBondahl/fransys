@@ -8,6 +8,7 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from fransys.colours import BK
 
 from fransys_model.layout import Page, layout_of
@@ -16,9 +17,7 @@ from fransys_model.layout import Page, layout_of
 @pytest.fixture(scope="module")
 def texts() -> list[str]:
     root = Path(tempfile.mkdtemp())
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="T", number="P-1", customer="E", revision=1, author="OJB")
-    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    d = fc_design("T", place="CAB", customer="E", date="2026-10-15")
     cab = d.location("CAB", "Cabinet")
     with d.function("G1", "Mains"):
         q0 = d.device("Q0", "DEMO-MCB-3P")

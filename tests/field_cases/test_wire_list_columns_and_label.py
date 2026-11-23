@@ -42,7 +42,7 @@ def _wire_list(tmp_path: Path) -> list[dict[str, str]]:
     d = fr.design("demo_parts")
     d.add(_cabinet, "CAB")
     written = fr.write(fr.build(d), tmp_path)
-    (path,) = (p for p in written if p.name.endswith("wires.csv"))
+    (path,) = (p for p in written if p.name.endswith("wires.csv") and "units" not in p.relative_to(tmp_path).parts)
     return list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8"))))
 
 

@@ -8,6 +8,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import system_document
 from fransys.colours import RD
 from fransys_overview._js_panels import JS_PANELS
@@ -38,9 +39,7 @@ def _rs(u: fr.Design) -> _Io:
 
 @pytest.fixture(scope="module")
 def data(tmp_path_factory) -> dict[str, Any]:
-    d = fr.design("demo_parts")
-    d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("FC")
     d.add(_rs, "U1")
     written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()

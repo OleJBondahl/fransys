@@ -3,15 +3,14 @@ The bug: the call found the minus pin again as the supply's mid, so a third rail
 Fixed by author-0026: the source gives the voltage and the pins the call did not name; a named pin is never also the mid."""
 
 import fransys as fr
+from _field_designs import fc_design
 from _model_build_cover import system_document
 
 from fransys_model.vocab.tables import supply_systems
 
 
 def _model() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Supply", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-07", text="First issue", created="XX")
+    d = fc_design("Supply", place="CAB", date="2026-10-07")
     d.location("CAB", "Cabinet")
     psu = d.device("T1", "DEMO-PSU-24-PM")
     lamp = d.device("H1", "DEMO-LAMP-24")

@@ -6,6 +6,7 @@ from typing import NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 
@@ -16,16 +17,7 @@ class _Io(NamedTuple):
 def _design() -> fr.Design:
     """The circuit above as one unit."""
 
-    @fr.unit(
-        "shape",
-        revision=1,
-        interface_version=1,
-        date="2026-01-01",
-        text="first",
-        by="AB",
-        title="Shape",
-        number="S-1",
-    )
+    @fc_unit("shape", title="Shape", number="S-1")
     def shape(u: fr.Design) -> _Io:
         g1 = u.device("G1", "DEMO-PSU-24")
         dc = u.dc_supply("24VDC", g1)

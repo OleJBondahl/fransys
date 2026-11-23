@@ -8,6 +8,7 @@ from typing import Any
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import system_document
 from fransys.colours import BU
 from fransys_overview._js_panels import JS_PANELS
@@ -23,9 +24,7 @@ def _rack(u: fr.Design) -> _Io:
 
 @pytest.fixture(scope="module")
 def data(tmp_path_factory) -> dict[str, Any]:
-    d = fr.design("demo_parts")
-    d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("FC")
     d.location("ER", "Engine room")
     d.location("FLD", "Field")
     first, second = d.add(_rack, "R1"), d.add(_rack, "R2")

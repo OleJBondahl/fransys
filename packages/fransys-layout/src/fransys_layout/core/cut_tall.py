@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 from .cut_costs import with_wires
 from .cut_dp import wide_room
+from .errors import CoreError
 from .flow_values import Attach, Block, Column, End, Lane, block_id
 from .geometry import lane_extent, marker_drawn_at, stack_lane
 from .row_extent import grid_up
@@ -167,7 +168,11 @@ def _wires(c: Column, lane: int, cut: int, env: Tall) -> tuple[Tag, ...]:
     if c.is_chain:
         return tuple((n, _pin_on(env, n, above.sym), _pin_on(env, n, below.sym)) for n in c.hops[cut - 1])
     pin_a, pin_b = PinRef(above.sym, above.bottom_pin or ""), PinRef(below.sym, below.top_pin or "")
-    return ((env.net_of.get(pin_a, ""), pin_a, pin_b),)
+    net = env.net_of.get(pin_a)
+    if net is None or net != env.net_of.get(pin_b):
+        msg = f"cells {above.sym} and {below.sym} of lane {lane} in column {c.id} share no net: no tag can carry a cut between them"
+        raise CoreError(msg)
+    return ((net, pin_a, pin_b),)
 
 
 def _pin_on(env: Tall, net: str, sym: str) -> PinRef:

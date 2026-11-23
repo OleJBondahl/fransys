@@ -41,9 +41,9 @@ def _exports(tag: str, tmp_path: Path, *, mpns: tuple[str, str], positions: bool
     """plc.csv and the Wago XML of one build, the block tag replaced by `@` in their text."""
     d = fr.design("demo_parts")
     d.add(_cabinet(mpns, positions=positions), tag)
-    written = fr.write(fr.build(d), tmp_path / tag)
+    out = tmp_path / tag
     found = {"csv": "", "xml": ""}
-    for path in written:
+    for path in (p for p in fr.write(fr.build(d), out) if "units" not in p.relative_to(out).parts):
         if path.name.endswith("plc.csv"):
             found["csv"] = path.read_text(encoding="utf-8").replace(tag, "@")
         elif path.name.endswith(".xml") and "wago" in path.name:

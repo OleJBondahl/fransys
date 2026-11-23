@@ -186,7 +186,7 @@ def _run(salt: str, root: Path) -> _Run:
     result = fr.build(d, cabinet_doc, system_doc, *others)
     out, inter = root / "out", root / "inter"
     fr.write(result, out_dir=out, intermediates=inter)
-    exports = sorted(path for path in out.rglob("*") if path.is_file())
+    exports = sorted(path for path in out.rglob("*") if path.is_file() and "units" not in path.relative_to(out).parts)  # the system set only
     return _Run(
         result=result,
         files={p.name: p.read_bytes() for p in exports if p.suffix != ".pdf"},
@@ -510,7 +510,8 @@ def _plc_exports(tag: str, root: Path) -> tuple[str, str]:
     """plc.csv and the Wago XML text of the rack under block `tag`, the tag replaced by `@`."""
     d = fr.design("demo_parts")
     d.add(_plc_rack, tag)
-    written = fr.write(fr.build(d), root / tag)
+    out = root / tag
+    written = [p for p in fr.write(fr.build(d), out) if "units" not in p.relative_to(out).parts]
     (csv_path,) = (p for p in written if p.name.endswith("plc.csv"))
     (xml_path,) = (p for p in written if p.suffix == ".xml" and "wago" in p.name)
     return (
@@ -541,7 +542,8 @@ def _two_rack_exports(tags: tuple[str, str], root: Path) -> dict[str, str]:
     d = fr.design("demo_parts")
     d.add(_plc_rack, tags[0])
     d.add(_plc_rack_b, tags[1])
-    written = fr.write(fr.build(d), root / "-".join(tags))
+    out = root / "-".join(tags)
+    written = [p for p in fr.write(fr.build(d), out) if "units" not in p.relative_to(out).parts]
     found: dict[str, str] = {}
     for path in written:
         if path.name.endswith("plc.csv") or (path.suffix == ".xml" and "wago" in path.name):
@@ -594,7 +596,7 @@ def test_a_mixed_modules_channels_list_in_natural_order_of_the_part_function_nam
     """di_2 comes before di_10 and di_1 before do_1, whatever the part declares (model-0259)."""
     d = fr.design("demo_parts")
     d.add(_plc_mixed, "AA")
-    written = fr.write(fr.build(d), tmp_path)
+    written = [p for p in fr.write(fr.build(d), tmp_path) if "units" not in p.relative_to(tmp_path).parts]
     (csv_path,) = (p for p in written if p.name.endswith("plc.csv"))
     rows = csv_path.read_text(encoding="utf-8").splitlines()[1:]
     assert [row.split(",")[0].split(":")[1] for row in rows] == ["I1", "O1", "I2", "O2", "I10"]

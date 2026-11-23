@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import cabinet_document, system_document
 from fransys.colours import BK
 
 if TYPE_CHECKING:
@@ -42,11 +43,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[Any, Path]:
         cable = d.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
         cable.core(1, up[1], cabinet.U[1])
         cable.core(2, up[2], cabinet.U[2])
-    cover = tmp_path / "cover.md"
-    cover.write_text("# Titles\n", encoding="utf-8")
-    result = fr.build(
-        d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover), fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
-    )
+    result = fr.build(d, system_document(), cabinet_document(cabinet))
     fr.write(result, out_dir=tmp_path / "out", intermediates=tmp_path / "inter")
     return result, tmp_path / "inter"
 

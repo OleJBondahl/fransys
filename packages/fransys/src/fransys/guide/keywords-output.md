@@ -95,7 +95,7 @@ The design calls are in `keywords-design.md`, the handle methods and layout hint
 | keyword | default | effect | example |
 |---|---|---|---|
 | `result` | required | The `BuildResult`. Returns the file name `fr.write` gives each export, keyed by kind and subject. Writes nothing. | `fr.export_names(result)` |
-| [`unit`](build.md#export-file-names) | `None` | Names only that unit's exports, as `fr.write(unit=)` would. `None` names the whole model's. | `fr.export_names(result, unit="pump-board")` |
+| [`unit`](build.md#export-file-names) | `None` | Names only that unit's exports, as `fr.write(unit=)` would. `None` names the whole model's, each unit set's files too, under the kind `"units/<unit name>/<kind>"`. | `fr.export_names(result, unit="pump-board")` |
 
 ## `fr.release`
 

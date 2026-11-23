@@ -52,7 +52,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "the message names the page and the first of them."
         ),
         fix="No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.",
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="OUT_OF_PAGE",
@@ -113,7 +113,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "the message names the net and the symbol."
         ),
         fix=("No call clears this: send the smallest model that shows it. A wire never passes a symbol's body, so the model shows a drawing fault."),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="CARD_OVERFULL",
@@ -180,7 +180,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "no net, so no wire is drawn between them; the message names the cells."
         ),
         fix=("Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b)."),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="WIRE_MEETS_NET",
@@ -195,7 +195,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "Move a symbol of <subject> or widen the gap beside it so the wire has a free path. "
             "Write: d.add(unit, tag) to move the device into a unit."
         ),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="NO_BLOCK",

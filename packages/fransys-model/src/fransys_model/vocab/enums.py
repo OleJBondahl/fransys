@@ -53,6 +53,11 @@ class FunctionKind(Enum):
     ACTUATOR = "actuator"
     GENERIC = "generic"
 
+    @property
+    def carries_energy(self) -> bool:
+        """Whether a function of this kind may declare an energy direction: a supply or a load."""
+        return self in (FunctionKind.SUPPLY, FunctionKind.LOAD)
+
 
 @register_enum
 class ItemKind(Enum):

@@ -5,6 +5,7 @@ Fixed by the rule, no record named: the outline keeps `marker_padding` on both s
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 from electrical_symbols import LIBRARY
@@ -19,16 +20,7 @@ class _Io(NamedTuple):
     X1: Any
 
 
-@fr.unit(
-    "demo-flags",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Flags",
-    number="F-1",
-)
+@fc_unit("demo-flags", title="Flags", number="F-1")
 def _flags(d: Any) -> _Io:
     x1 = d.terminal_strip("X" + _TAG, "DEMO-TB-2.5", 8, interface=True)
     x2 = d.terminal_strip("Y" + _TAG, "DEMO-TB-2.5", 8)

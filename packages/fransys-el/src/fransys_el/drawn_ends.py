@@ -13,9 +13,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import far_pins, port_designation, port_joins
+from fransys_model.kernel import UnionFind
 
 from .drawn_finding import drawn_finding
-from .drawn_graph import Union
 from .drawn_netlist import is_marker
 
 if TYPE_CHECKING:
@@ -28,39 +28,39 @@ __all__ = ["ink_without_conductor"]
 
 XY = tuple[int, int]
 _RUN = 2  # terminals of a run; a cluster holds more
-type _Pairs = set[frozenset[object]]
+type _Pairs = set[frozenset[str]]
 
 
-def _pairs(model: Model, net: Netlist, classes: Union) -> _Pairs:
+def _pairs(model: Model, net: Netlist, classes: UnionFind[str]) -> _Pairs:
     """The class pair of each conductor of the model: the ink may join these and no other classes."""
     return {frozenset((classes.find(near.value), classes.find(far.value))) for near, far in far_pins(model, net.ids.values())}
 
 
-def _run_stands(ends: list[set[object]], pairs: _Pairs) -> bool:
+def _run_stands(ends: list[set[str]], pairs: _Pairs) -> bool:
     """True when one conductor, or one symbol node, joins a class of the run's first end to a class of its second."""
     first, second = ends
     return any(a == b or frozenset((a, b)) in pairs for a in first for b in second)
 
 
-def _stands(ends: list[set[object]], pairs: _Pairs, *, read: bool, reach: set[object]) -> bool:
+def _stands(ends: list[set[str]], pairs: _Pairs, *, read: bool, reach: set[str]) -> bool:
     """A run needs a conductor; a cluster, conductors among its classes and those a marker reaches; a piece another rule reads, one net."""
     if len(ends) == _RUN and not read and not reach:
         return _run_stands(ends, pairs)
     held = set().union(*ends)
-    tree = Union()
+    tree = UnionFind()
     for pair in pairs:
         if read or pair <= held | reach:
-            tree.join(*pair)
+            tree.union(*pair)
     return len({tree.find(c) for c in held}) == 1
 
 
 def _pieces(part: PagePart, terminal: set[XY]) -> list[tuple[set[XY], set[XY]]]:
     """Each piece's terminals and nodes: a wire between two terminals, or the points of a cluster joined away from every terminal."""
     edges = [tuple(edge) for edge in part.graph.edges]
-    free = Union()
+    free = UnionFind()
     for a, b in edges:
         if a not in terminal and b not in terminal:
-            free.join(a, b)
+            free.union(a, b)
     ends: dict[object, set[XY]] = defaultdict(set)
     nodes: dict[object, set[XY]] = defaultdict(set)
     for a, b in edges:
@@ -82,7 +82,7 @@ def _finding(model: Model, net: Netlist, page: Id[Page], ports: list[str]) -> Fi
     return drawn_finding("INK_WITHOUT_CONDUCTOR", (page, *(net.ids[port] for port in ports)), f"the wires join {names} where no conductor runs")
 
 
-def _page_pieces(net: Netlist, page: Id[Page], classes: Union, pairs: _Pairs, by_root: dict[object, set[object]]) -> list[list[str]]:
+def _page_pieces(net: Netlist, page: Id[Page], classes: UnionFind[str], pairs: _Pairs, by_root: dict[object, set[str]]) -> list[list[str]]:
     """The ports of each piece of one page whose joined classes no conductor joins."""
     part = net.pages[page]
     by_point: dict[XY, list[str]] = defaultdict(list)
@@ -103,11 +103,11 @@ def _page_pieces(net: Netlist, page: Id[Page], classes: Union, pairs: _Pairs, by
 
 def ink_without_conductor(model: Model, net: Netlist) -> tuple[Finding, ...]:
     """One INK_WITHOUT_CONDUCTOR per drawn run or cluster that joins classes no conductor of the model joins (CONDUCTOR-INK)."""
-    classes = Union()
+    classes = UnionFind()
     for a, b in (*net.joins, *port_joins(model)):  # a part's own joins (`joins =`) are one pin, as a symbol node is
-        classes.join(a.value, b.value)
+        classes.union(a.value, b.value)
     pairs = _pairs(model, net, classes)
-    by_root: dict[object, set[object]] = defaultdict(set)
+    by_root: dict[object, set[str]] = defaultdict(set)
     for port, places in net.placed.items():
         for place in places:
             by_root[net.union.find(place)].add(classes.find(port))

@@ -14,8 +14,8 @@ from fransys_el.placement_ids import symbol_key
 from placement_fixtures import leads
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core import natural_key, solve
-from fransys_model.kernel import render_id
+from fransys_layout.core import solve
+from fransys_model.kernel import natural_key, render_id
 from fransys_model.vocab import functions, items
 
 _PAIRS = 12

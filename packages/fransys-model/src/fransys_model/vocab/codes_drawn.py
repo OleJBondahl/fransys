@@ -23,7 +23,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function."),
         fix=('Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True)'),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="NET_NOT_DRAWN",
@@ -32,7 +32,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("A net of two or more ends has under two drawn pins, so it is left out. A lone pin gives none. The message names the port."),
         fix="Give the net a second drawn pin. Write: d.series(a, <subject>)",
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="SET_WITHOUT_PAGE",

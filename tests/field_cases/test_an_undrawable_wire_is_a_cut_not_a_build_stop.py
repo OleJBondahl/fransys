@@ -5,6 +5,7 @@ Fixed by layout-0189 (LEGACY-B3 L1), an undrawable wire becomes a cut with a mar
 from typing import NamedTuple
 
 import fransys as fr
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 _FUNCTIONS = 4
@@ -19,16 +20,7 @@ class _Io(NamedTuple):
 def _shape() -> fr.Design:
     """The circuit above, as one unit, at the house profile."""
 
-    @fr.unit(
-        "shape",
-        revision=1,
-        interface_version=1,
-        date="2026-01-01",
-        text="first",
-        by="AB",
-        title="Shape",
-        number="S-1",
-    )
+    @fc_unit("shape", title="Shape", number="S-1")
     def shape(u: fr.Design) -> _Io:
         n = _FUNCTIONS * _RELAYS  # R1266: a feed point takes two conductors, so the run has a twin terminal for each pair
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", n + 1, interface=True)

@@ -1,11 +1,10 @@
-"""The placement core: plain values in, plain values out. It imports nothing outside the stdlib."""
+"""The placement core: plain values in, plain values out. It imports nothing outside the stdlib and `fransys_model.kernel` (layout-0269, R3668)."""
 
 from .annex_values import Annex, AnnexBox, Spot
 from .clearance import own_end, through
 from .errors import CoreError
 from .geometry import inside, overlaps, stub_views
 from .jsonform import from_plain, to_plain
-from .keys import natural_key
 from .order import order_blocks
 from .outline import outline_hull
 from .outputs import Anchored, CoreLayout, Marker, Placed, Placement, Wire
@@ -83,7 +82,6 @@ __all__ = (
     "grid_up",
     "inside",
     "leaves_of",
-    "natural_key",
     "order_blocks",
     "outline_hull",
     "overlaps",

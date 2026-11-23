@@ -22,13 +22,14 @@ from fransys_model.vocab import (
 from fransys_model.vocab import Item as ModelItem
 from fransys_model.vocab import Unit as ModelUnit
 
+from ._cable_handles import Cable
 from ._decimal import as_decimal
 from ._design_support import _as_function, _identity, _stamped, _strip_text
 from ._enums import member
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
 from .errors import AuthorError
-from .handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal, _item_from_stamped
+from .handles import Fn, Group, Item, Location, Port, Strip, Terminal, _item_from_stamped
 from .instantiate import instantiate
 from .wiring import WireHints, Wiring
 

@@ -3,7 +3,7 @@
   "body_box": [
     [
       -1,
-      -2
+      -7
     ],
     [
       3,
@@ -17,11 +17,11 @@
       "polyline": [
         [
           -1,
-          -2
+          -7
         ],
         [
           3,
-          -2
+          -7
         ],
         [
           3,
@@ -39,7 +39,7 @@
   "keepout_box": [
     [
       -1,
-      -2
+      -7
     ],
     [
       3,
@@ -48,6 +48,10 @@
   ],
   "kind": "element",
   "lint_allow": [
+    {
+      "reason": "the five lines are one above the other in a head that is drawn unrotated; a turned view is never built",
+      "rule": "slot-overlap-slot"
+    },
     {
       "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
       "rule": "slot-overlap-body"
@@ -63,7 +67,51 @@
   },
   "schema": 1,
   "slots": {
-    "lines": {
+    "description": {
+      "at": [
+        -0.75,
+        -2.25
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "designation": {
+      "at": [
+        -0.75,
+        -6
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "name": {
+      "at": [
+        -0.75,
+        -3.5
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "part": {
+      "at": [
+        -0.75,
+        -4.75
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "where": {
       "at": [
         -0.75,
         -1
@@ -75,11 +123,5 @@
       "side": "E"
     }
   },
-  "status": "unverified",
-  "stretch": [
-    {
-      "at": -1,
-      "axis": "y"
-    }
-  ]
+  "status": "unverified"
 }

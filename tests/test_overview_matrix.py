@@ -1,6 +1,5 @@
 """The unit matrix on the units worked example (OVERVIEW O7, model-0197)."""
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import fransys as fr
 import fransys_parts
 from _model_build_cover import system_document

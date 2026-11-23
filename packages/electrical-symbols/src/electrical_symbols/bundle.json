@@ -2803,7 +2803,7 @@
       "body_box": [
         [
           -1,
-          -2
+          -7
         ],
         [
           3,
@@ -2817,11 +2817,11 @@
           "polyline": [
             [
               -1,
-              -2
+              -7
             ],
             [
               3,
-              -2
+              -7
             ],
             [
               3,
@@ -2839,7 +2839,7 @@
       "keepout_box": [
         [
           -1,
-          -2
+          -7
         ],
         [
           3,
@@ -2848,6 +2848,10 @@
       ],
       "kind": "element",
       "lint_allow": [
+        {
+          "reason": "the five lines are one above the other in a head that is drawn unrotated; a turned view is never built",
+          "rule": "slot-overlap-slot"
+        },
         {
           "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
           "rule": "slot-overlap-body"
@@ -2863,7 +2867,51 @@
       },
       "schema": 1,
       "slots": {
-        "lines": {
+        "description": {
+          "at": [
+            -0.75,
+            -2.25
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "designation": {
+          "at": [
+            -0.75,
+            -6
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "name": {
+          "at": [
+            -0.75,
+            -3.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "part": {
+          "at": [
+            -0.75,
+            -4.75
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "where": {
           "at": [
             -0.75,
             -1
@@ -2875,13 +2923,7 @@
           "side": "E"
         }
       },
-      "status": "unverified",
-      "stretch": [
-        {
-          "at": -1,
-          "axis": "y"
-        }
-      ]
+      "status": "unverified"
     },
     "contact": {
       "anchors": [],
@@ -6463,6 +6505,105 @@
         }
       ]
     },
+    "mating-cell": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          0
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -1,
+          0
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a mating cell ends its circuit at the table; no path of this symbol continues it",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Mating cell (table row)",
+      "nodes": [
+        {
+          "ports": [
+            "mate"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            -1,
+            1
+          ],
+          "description": "mating side",
+          "dir": "W",
+          "id": "mate"
+        }
+      ],
+      "reference": {
+        "number": "mating-cell",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "reference": {
+          "at": [
+            -0.75,
+            1
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
     "motor-1ph": {
       "anchors": [],
       "body_box": [
@@ -7660,6 +7801,11 @@
           "ports": [
             "pin"
           ]
+        },
+        {
+          "ports": [
+            "mate"
+          ]
         }
       ],
       "paths": [],
@@ -7672,6 +7818,15 @@
           "description": "wire side",
           "dir": "W",
           "id": "pin"
+        },
+        {
+          "at": [
+            3,
+            1
+          ],
+          "description": "mating side",
+          "dir": "E",
+          "id": "mate"
         }
       ],
       "reference": {
@@ -11671,10 +11826,70 @@
       ],
       "elements": [
         {
+          "circle": [
+            0,
+            -1.5
+          ],
+          "fill": "none",
+          "r": 0.25,
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            1.5
+          ],
+          "fill": "none",
+          "r": 0.25,
+          "weight": "normal"
+        },
+        {
           "line": [
             [
               0,
               -2
+            ],
+            [
+              0,
+              -1.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1.25
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              1.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1.75
             ],
             [
               0,

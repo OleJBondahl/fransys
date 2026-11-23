@@ -7,7 +7,9 @@ from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from fransys_model.kernel import natural_key
+
+from .arrow_reserve import arrow_rows, leg_fit, leg_rows
 from .clearance import footprint_keeps
 from .flow_values import Lane
 from .geometry import (
@@ -19,7 +21,7 @@ from .geometry import (
     shift,
     view_of,
 )
-from .keys import natural_key
+from .leg_lines import leg_feet, leg_lines
 from .node_names import HIGH, LOW, box_node, box_y_node, col_node
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node

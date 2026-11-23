@@ -206,7 +206,7 @@ fr.write(result, Path("out"))
 
 ### Findings
 
-- `findings.md`: every finding code, what it means and the usual fix, on seven pages by source: `findings-validators.md`, `findings-build.md`, `findings-release.md`, `findings-render.md`, `findings-pdf.md`, `findings-kicad.md` and `findings-parts.md`.
+- `findings.md`: every finding code, what it means and the usual fix, on eight pages by source: `findings-validators.md`, `findings-build.md`, `findings-release.md`, `findings-render.md`, `findings-wires.md`, `findings-pdf.md`, `findings-kicad.md` and `findings-parts.md`.
 
 ### Reference
 

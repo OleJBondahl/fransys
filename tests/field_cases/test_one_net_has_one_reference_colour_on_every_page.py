@@ -9,6 +9,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _field_designs import fc_design
 from fransys.colours import BU
 
 _NUMBER = re.compile(r"#(\d+)")
@@ -18,9 +19,7 @@ _NUMBER = re.compile(r"#(\d+)")
 def tags() -> list[tuple[str, str]]:
     """(net number, tint) of every numbered reference marker the pages draw, in page order."""
     root = Path(tempfile.mkdtemp())
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Tints", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-15", text="First issue", created="XX")
+    d = fc_design("Tints", place="CAB", date="2026-10-15")
     cabinet = d.location("CAB", "Cabinet")
     with d.function("A", "Group A"):
         j1 = d.device("J1", "DEMO-CONN-2P")

@@ -42,13 +42,14 @@ from fransys_model.derive import (
     refuses,
     release_names,
     stale_patterns,
-    unit_name_unresolved,
-    units_named,
+    unit_design_of,
+    unit_list_names,
 )
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.kernel import (
     Finding,
     Id,
+    ModelError,
 )
 from fransys_model.layout import sheet_format_of
 lazy from fransys_model.kernel import Model
@@ -151,16 +152,16 @@ def _compile_pdf(drawn: _Drawn, document_id: Id[Any], settings: Settings) -> byt
 def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
     """`unit=` (`None` or a release name) as a unit id or `None`.
 
-    `units_named` is the one home of name matching; its message is used verbatim.
+    `unit_design_of` is the one home of name matching; its message is used verbatim.
     """
     unit = engine_subject(unit)
     if unit is None:
         return None
     if isinstance(unit, str):
-        matches = units_named(model, unit)
-        if len(matches) == 1:
-            return matches[0]
-        raise FransysError(unit_name_unresolved(model, unit))
+        try:
+            return unit_design_of(model, unit)
+        except ModelError as error:
+            raise FransysError(str(error)) from error
     if isinstance(unit, Id | _args.Scope):
         return _subjects.unit_of(unit, "write()'s unit=", "a unit Id instead")
     msg = f"unit= must be a release name or None, not {type(unit).__name__}"
@@ -181,6 +182,7 @@ class _Export:
     findings: tuple[Finding, ...] = ()
     changes: ListingDiff | None = None
     timer: Timer | None = None
+    design: str | None = None
 
 
 def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
@@ -209,11 +211,17 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
     }
 
 
+def _design(unit: object) -> str | None:
+    """`unit=` when it is a release name, else `None`."""
+    unit = engine_subject(unit)
+    return unit if isinstance(unit, str) else None
+
+
 def _ledger(job: _Export, *, names_only: bool = False) -> _ExportLedger:
-    model, unit = job.drawn.model, job.within
+    model = job.drawn.model
     ledger = _ExportLedger(model, names_only=names_only, timer=job.timer)
     made = _producers(job)
-    for row in export_set(model, unit):
+    for row in export_set(model, job.within, design=job.design is not None):
         ledger.add(
             row.export_kind,
             row.name,
@@ -234,14 +242,19 @@ def export_names(result: BuildResult, *, unit: object = None) -> dict[tuple[str,
 
     A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
     (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
-    `"pdf"` or `"ring_out"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
+    `"pdf"` or `"ring_out"` (the document id). `unit=` is `write`'s. Without it the names also hold each unit set's files, kind
+    `"units/<unit name>/<kind>"` and path `units/<unit name>/...`, as `write` puts them. Writes nothing and compiles no PDF; raises what
     `write` raises for a bad `unit` or a name two subjects share (`ExportNameClashError`).
 
     Does not write a file, compile a PDF or run `check`.
     """
     model = result.model
     drawn = _Drawn(model, {}, DiagramLayout(diagrams=()), _library(result), {})
-    return _ledger(_Export(drawn, result.settings, _resolve_unit(model, unit)), names_only=True).names
+    names = _ledger(_Export(drawn, result.settings, _resolve_unit(model, unit), design=_design(unit)), names_only=True).names
+    if unit is None:
+        for name in unit_list_names(model):
+            names |= {(f"units/{name}/{kind}", subject): f"units/{name}/{path}" for (kind, subject), path in export_names(result, unit=name).items()}
+    return names
 
 
 def _remove_prefixed(out_dir: Path, name: str) -> None:
@@ -277,11 +290,12 @@ def write(
     intermediates: Path | None = None,
     releases: Path | None = None,
 ) -> tuple[Path, ...]:
-    """Output: write a built model's exports into `out_dir` and return their paths, sorted.
+    """Output: write a built model's exports into `out_dir` and return their paths, the system set sorted, then each unit's.
 
     Writes CSV reports, WAGO XML, overview HTML, one PDF per document and, if `[export] reports` names
     `ring_out`, one `.xlsx` for each document with drawings, less `[export] ring_out_skip`;
-    `unit=` restricts them to that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
+    `unit=` restricts them to that unit's own set (no `overview.html`); without it each unit's own set is also
+    written into `units/<unit>/`. Intermediates (SVGs, netlists, `.typ`
     sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
     `into`: with a stored release of the system there, `overview.html` marks what changed since it
     (the release at the model's revision, else the previous one); `None` marks nothing. Any
@@ -308,11 +322,23 @@ def write(
             raw,
             _changes_since(model, releases, resolved_unit),
             timer,
+            _design(unit),
         )
     )
     if intermediates is not None:
         _put(intermediates / TIMES_FILE, timer.times().as_json().encode("utf-8"))
-    return _put_all(out_dir, exports)
+    paths = _put_all(out_dir, exports)
+    if resolved_unit is not None:
+        return paths
+    return (*paths, *_unit_sets(result, out_dir, releases))
+
+
+def _unit_sets(result: BuildResult, out_dir: Path, releases: Path | None) -> tuple[Path, ...]:
+    """Each unit's own set in `out_dir/units/<release name>/`, written by `write(unit=...)` itself (R3596).
+
+    A release name with several instances writes one set: the unit design's (`unit_design_of`).
+    """
+    return tuple(path for name in unit_list_names(result.model) for path in write(result, out_dir / "units" / name, unit=name, releases=releases))
 
 
 def _write_result_intermediates(result: BuildResult, svgs: dict[str, str], intermediates: Path | None) -> None:

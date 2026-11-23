@@ -7,6 +7,8 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _field_designs import fc_design, written_pdf
+from _model_build_cover import cabinet_document
 from _pdf_measure import has_page_title
 
 _HEADING = re.compile(r"X\d+\r\n")
@@ -16,22 +18,12 @@ _SIDE = 30  # the frame's side letters and top numbers, in points
 
 def _pdf(root: Path, strips: int, terminals: int) -> Path:
     """The cabinet's PDF: `strips` strips of `terminals` terminals, the terminal list only."""
-    d = fr.design("demo_parts")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     for number in range(1, strips + 1):
         d.terminal_strip(f"X{number}", "DEMO-TB-2.5", terminals, place="C1")
-    cover = root / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    document = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC,
-        cabinet,
-        cover=cover,
-    )
-    fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
-    return pdf
+    document = cabinet_document(cabinet)
+    return written_pdf(fr.build(d, document), root)
 
 
 def _list_pages(pdf: Path) -> list[tuple[float, list[tuple[float, float, str]], str]]:

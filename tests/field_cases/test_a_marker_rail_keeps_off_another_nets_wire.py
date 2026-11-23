@@ -4,7 +4,7 @@ and the shorts-around-markers property is held by the DRAWING_SHORTS_NETS check 
 
 from typing import NamedTuple
 
-import fransys as fr
+from _field_designs import fc_unit
 from fransys.colours import BK, BU
 
 
@@ -12,10 +12,7 @@ class _Io(NamedTuple):
     pass
 
 
-@fr.unit(
-    "starter", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB",
-    title="Starter", number="S-1",
-)  # fmt: skip
+@fc_unit("starter", title="Starter", number="S-1")
 def _starter(d):
     x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", 230, x0[1], x0[2], x0[3])

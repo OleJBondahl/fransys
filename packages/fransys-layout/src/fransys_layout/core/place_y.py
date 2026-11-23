@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .arrow_reserve import end_widths
 from .clearance import Keep, reach
 from .constraints import Graph
+from .cut_end_rooms import arrow_room
 from .errors import CoreError
 from .geometry import cell_footprint, pin_xy, union, view_of
-from .keys import natural_key
 from .marker_flags import pair_steps
 from .node_names import box_y_node, col_node
 from .pack import box_edge, cell_node
@@ -31,8 +33,9 @@ from .place_trunk import (
     tangled_trunks,
     trunk_constraints,
 )
+from .ref_kind import kind_of
 from .row_extent import grid_up, held
-from .values import Finding
+from .values import Finding, RefKind
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -42,7 +45,7 @@ if TYPE_CHECKING:
     from .pack import PlacedColumn
     from .place_align import Align
     from .place_env import PageEnv
-    from .values import Box
+    from .values import Box, Ref
 
 
 class YCycleError(CoreError):
@@ -213,18 +216,24 @@ def _xs(env: PageEnv, x: Mapping[str, int], ends: tuple[Fan, Sequence[Attach]], 
     return tuple(out)
 
 
+def _own_markers(refs: Sequence[Ref], fan: Fan) -> list[Ref]:
+    """The refs a fan's level edge holds a box for: its own, a tag only where it stands at a pin the fan attaches to (R3657)."""
+    pins = {a.pin for a in (*fan.drivers, *fan.legs)}
+    return [r for r in refs if kind_of(r) is not RefKind.TAG or any(e.pin in pins for e in r.ends)]
+
+
 def _spans(env: PageEnv, x: Mapping[str, int]) -> list[Span]:
     """Each fan's x span per row, from its column attachments and its box pins."""
     out = []
     for fan in _trunked(env):
-        roles, side = fan_roles(env, fan), fan_side(env, fan)
+        roles, side, own = fan_roles(env, fan), fan_side(env, fan), _own_markers(env.refs, fan)
         for r in range(len(env.plan.rows)):
             drivers, legs = _xs(env, x, (fan, roles[0]), r), _xs(env, x, (fan, roles[1]), r)
             if drivers or legs:
                 xs = (*drivers, *legs)
                 left, right = end_widths(env.refs, env.plan, (fan,), r, env.options)
                 lo, hi = min(xs) - left, max(xs) + right
-                out.append(Span(fan.id, r, lo, hi, fan.lanes, side, drivers, legs))
+                out.append(Span(fan.id, r, lo, hi, fan.lanes, side, drivers, legs, arrow_room(own, env.plan, [fan], r, env.options)))
     return out
 
 

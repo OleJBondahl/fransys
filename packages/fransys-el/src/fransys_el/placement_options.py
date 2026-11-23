@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, cast
 from electrical_symbols import G_PER_MODULE, MARKER_FACING
 from fransys_layout.core import Options, Size
 from fransys_layout.symbols import outline_room
-from fransys_model.layout import Side
 
 from .placement_forms import TRUNK_FORMS
 from .placement_syms import PLAIN
@@ -53,14 +52,13 @@ def core_options(layout: Mapping[str, object], wiring_grid: int) -> Options:
 
 @dataclass(frozen=True, slots=True)
 class Conventions:
-    """Text values for `fransys_el.footprints`, the tag side, and the core options."""
+    """Text values for the placement symbols and the core options."""
 
     options: Options
     text_height: int
     area: Size
     step: int
     pad: int
-    tag_side: Side = Side.W
 
 
 def options(conventions: Conventions, library: Library) -> Options:

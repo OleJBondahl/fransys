@@ -15,16 +15,13 @@ statements = 15
 surface_docstring_lines = 15
 
 [statements]
-"packages/fransys-layout/src/fransys_layout/core/widen.py::widen" = 22
+"packages/fransys-layout/src/fransys_layout/core/widen.py::widen" = 21
 
 [nested_defs]
 "packages/fransys-model/src/fransys_model/derive/facts/closure.py::_adjacency" = 1
 "packages/fransys-model/src/fransys_model/derive/facts/closure.py::_conditional_adjacency" = 1
 
 [module_code_lines]
-"packages/fransys-author/src/fransys_author/handles.py" = 304
-"packages/fransys-layout/src/fransys_layout/core/arrow_reserve.py" = 305
-"packages/fransys-layout/src/fransys_layout/core/widen.py" = 312
 "packages/fransys/src/fransys/derive.py" = 327
 
 [surface_types]
@@ -47,9 +44,6 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/_release_cmds.py::release" = 1
 "packages/fransys/src/fransys/documents.py::document" = 1
 "packages/fransys/src/fransys/settings.py::Settings.table" = 1
-
-[md_tokens]
-"packages/fransys/src/fransys/guide/findings-render.md" = 5321
 
 [md_long_sentences]
 "CLAUDE.md" = 8

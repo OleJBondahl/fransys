@@ -5,7 +5,6 @@ a per-rack export is named from the rack's designation printed for that unit (`w
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import csv
 import io
 import tempfile
@@ -26,6 +25,7 @@ from test_write_unit_worked_example import (
     _ALL_WRITE_FILES,
     _PUMP1_BOARD_WRITE_FILES,
     _PUMP1_WRITE_FILES,
+    _UNIT_DESIGN_FILES,
     _unit_id,
 )
 
@@ -51,9 +51,8 @@ from fransys_model.vocab.templates import Part
 _BARE_NAMES = ("wago.xml",)
 
 
-@pytest.fixture(scope="module")
-def worked():
-    """The units worked example with its three documents: (result, pump1 cabinet, pump1 board)."""
+def _build_worked(settings=None):
+    """The units worked example with its documents: (result, pump1 cabinet, pump1 board)."""
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts, tags=("P1", "P2"))
     draft = d.draft()
@@ -75,7 +74,20 @@ def worked():
             )
         ),
     )
-    return fr.build(parts, draft, *documents), cabinet, board
+    return fr.build(parts, draft, *documents, settings=settings), cabinet, board
+
+
+@pytest.fixture(scope="module")
+def worked():
+    return _build_worked()
+
+
+@pytest.fixture(scope="module")
+def worked_ring_out():
+    """The same build with the ring-out sheet asked for, so every document would carry one."""
+    path = Path(tempfile.mkdtemp()) / "fransys.toml"
+    path.write_text('[export]\nreports = ["bom", "plc", "wires", "designations", "cables", "cores", "ring_out"]\n', encoding="utf-8")
+    return _build_worked(fr.settings(path))
 
 
 @pytest.fixture(scope="module")
@@ -121,8 +133,13 @@ def test_no_name_in_a_unit_folder_carries_the_location_path(cabinet_write, board
 def test_out_all_keeps_the_full_reference_designation_names(worked, tmp_path):
     result, _cabinet, _board = worked
     names = _names(fr.write(result, tmp_path, unit=None))
-    assert names == _ALL_WRITE_FILES
-    assert {n for n in names if "terminals" in n or "connectors" in n} == {"P-1001-v1.1-terminals.csv", "P-1001-v1.1-connectors.csv"}
+    assert names == _ALL_WRITE_FILES | _UNIT_DESIGN_FILES
+    assert {n for n in names if "terminals" in n or "connectors" in n} == {
+        "P-1001-v1.1-terminals.csv",
+        "P-1001-v1.1-connectors.csv",
+        "demo-pump-cabinet-v1.2-terminals.csv",  # the unit sets' own lists (R3632)
+        "demo-io-board-v1.3-connectors.csv",
+    }
     assert not names & set(_BARE_NAMES)
 
 
@@ -562,6 +579,17 @@ def test_write_paths_are_out_dir_joined_with_export_names_for_the_whole_build(wo
     assert {kind for kind, _subject in names} >= {"bom", "terminals", "pdf", "overview", "cables"}
 
 
+def test_export_names_of_a_whole_build_key_each_unit_set_of_two_instances_and_name_no_pdf_for_it(worked_ring_out):
+    """R3681, R3685: a unit name with two instances writes one set under units/<name>/ with no per-document file (KI-1452)."""
+    result, _cabinet, _board = worked_ring_out
+    names = fr.export_names(result)
+    assert names[("units/demo-pump-cabinet/bom", None)] == "units/demo-pump-cabinet/data/demo-pump-cabinet-v1.2-bom.csv"
+    unit_kinds = {kind for kind, _subject in names if kind.startswith("units/")}
+    assert "units/demo-io-board/connectors" in unit_kinds
+    assert not {kind for kind in unit_kinds if kind.endswith(("/pdf", "/ring_out"))}
+    assert {"pdf", "ring_out"} <= {kind for kind, _subject in names}, "the whole build keeps both per-document files"
+
+
 def test_write_paths_are_out_dir_joined_with_export_names_for_a_unit(worked, tmp_path):
     result, cabinet, _board = worked
     names = fr.export_names(result, unit=cabinet)
@@ -603,7 +631,7 @@ def test_export_set_rows_are_the_names_write_gives_and_the_overview_is_whole_mod
     model = result.model
     for unit in (None, cabinet):
         rows = export_set(model, unit)
-        names = fr.export_names(result, unit=unit)
+        names = {key: path for key, path in fr.export_names(result, unit=unit).items() if not key[0].startswith("units/")}
         assert {(r.export_kind, r.subject): export_path(export_form_of(model), r.name) for r in rows} == names
     system = export_set(model, None)
     assert [r.export_kind for r in system[:9]] == [

@@ -1,0 +1,23 @@
+schema = 1
+name = "Mating cell (table row)"
+kind = "element"
+status = "unverified"
+# our own table cell of a mating box: it stands against a pin cell's mating edge, so it has no wire
+# stub (its ink cannot float), and its `reference` slot holds the partner's pin name
+reference = { standard = "IEC 60617", number = "mating-cell" }
+
+ports = [
+  { id = "mate", at = [-1, 1], dir = "W", description = "mating side" },
+]
+
+elements = [
+  { polyline = [[-1, 0], [3, 0], [3, 2], [-1, 2]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+  { rule = "port-isolated", reason = "a mating cell ends its circuit at the table; no path of this symbol continues it" },
+]
+
+[slots]
+reference = { at = [-0.75, 1], side = "E", box = [3.5, 1] }

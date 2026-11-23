@@ -47,6 +47,7 @@ def test_each_fused_terminal_draws_its_fuse_between_two_unjoined_points(built: f
         at = {pin: point for point, pin in port_points(symbol, LIBRARY)}
         assert at["n"] != at["s"]
         assert not any({"n", "s"} <= set(node.ports) for node in LIBRARY.symbols[symbol.key].nodes)
+        assert [type(e).__name__ for e in LIBRARY.symbols[symbol.key].elements].count("Circle") == 2
     assert [f.code for f in built.findings if f.severity is fr.Severity.ERROR] == []
 
 

@@ -1,10 +1,9 @@
 """Stage 8a: one Marker for each end of each planned reference, placed from the placement alone.
 
 Ends of a reference go in the order (page, row of the column, pin); every tie breaks by
-`natural_key`. A marker names the cell of the far end: the next end of its reference in that
-order, cyclically (layout-0296), or the hub itself for a copy. Markers on one side of one row whose
-boxes overlap along the edge take `intervals.stem_levels`, one box further out per level. It reads
-no `Routes`; the text printed beside it is the builder's.
+`natural_key`. Markers on one side of one row whose boxes overlap along the edge take
+`intervals.stem_levels`, one box further out per level. It reads no `Routes`; the text printed
+beside it is the builder's.
 """
 
 from __future__ import annotations
@@ -12,18 +11,18 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .anchors import MARKED, Stood, anchor_pages, page_keeps
 from .clearance import clear, own_end, through_keeps
 from .errors import CoreError
 from .geometry import inset, inside, marker_box
 from .hang_levels import staggered
-from .keys import natural_key
 from .net_keys import net_of_key
 from .outputs import Demand, Marker
 from .ref_kind import kind_of
 from .stand_fit import Limits, fit
-from .text_cells import cell_of
-from .text_ends import bundle_nets, end_stand, hub_xy, legless_pins, mark_env, pin_keeps, who
+from .text_ends import bundle_nets, end_stand, legless_pins, mark_env, pin_keeps, who
 from .values import Box, Finding, RefKind
 
 if TYPE_CHECKING:
@@ -50,28 +49,13 @@ def _order(env: MarkEnv, ref: Ref, end: RefEnd) -> tuple[object, ...]:
     return end.page, row, column, env.ranks[end.pin.sym], natural_key(end.pin.pin)
 
 
-def _far(env: MarkEnv, ref: Ref, stands: Sequence[Stand], end: RefEnd, i: int) -> tuple[int, int]:
-    """The place the marker at end i names: the hub of a copy, else the next end, cyclically."""
-    if kind_of(ref) is RefKind.COPY:
-        return hub_xy(env, ref, end)
-    other = stands[(i + 1) % len(stands)]
-    return other.x, other.y
-
-
-def _inside(at: tuple[int, int], area: Size) -> tuple[int, int]:
-    """The point held inside the area: a stand pushed past the page names its nearest cell."""
-    return min(max(at[0], 0), area.w), min(max(at[1], 0), area.h)
-
-
 def stand_ref(env: MarkEnv, ref: Ref) -> list[tuple[Marker, Stand]]:
     """One marker and its stand for each end of `ref`, in the order of its ends."""
     ends = sorted(ref.ends, key=lambda e: _order(env, ref, e))
     stands = [end_stand(env, ref, e, i) for i, e in enumerate(ends)]
     out = []
-    for i, (end, st) in enumerate(zip(ends, stands, strict=True)):
-        far = _far(env, ref, stands, end, i)
-        cell = cell_of(*_inside(far, env.area), env.area, env.options.cells)
-        mk = Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end, st.orient, ref.cut, end.also, end.far, end.stand, st.span)
+    for end, st in zip(ends, stands, strict=True):
+        mk = Marker(ref.net, kind_of(ref), end.page, st.x, st.y, st.end, st.orient, ref.cut, end.also, end.far, end.stand, st.span)
         out.append((mk, st))
     return out
 

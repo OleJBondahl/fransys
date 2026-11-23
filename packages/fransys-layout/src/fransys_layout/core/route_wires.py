@@ -6,13 +6,14 @@ from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .clearance import pin_points, through_keeps
 from .errors import CoreError
 from .flow_values import hop_wires
 from .geometry import stair_room
 from .intervals import levels
 from .jog_rows import bend_rows, taken_rows
-from .keys import natural_key
 from .net_keys import net_of_key
 from .outputs import Refused, Wire
 from .route_bend import bend_side

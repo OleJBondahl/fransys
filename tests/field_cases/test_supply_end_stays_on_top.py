@@ -4,15 +4,14 @@ Fixed by layout-0115: the potential rank of the two end pins decides which break
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 
 def _rows() -> dict[str, int]:
     """Each breaker's drawn y (its tag text's top): Q2 next to `+`, Q1 next to `-`."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Chain", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Chain", place="CAB", date="2026-10-02")
     _cabinet = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         psu = d.device("T1", "DEMO-PSU-24")

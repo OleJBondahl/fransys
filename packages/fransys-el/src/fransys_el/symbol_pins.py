@@ -7,6 +7,7 @@ function by the caller. A pin binds its one port to the symbol's one port, or th
 
 from typing import TYPE_CHECKING
 
+from electrical_symbols import is_mating_port
 from fransys_layout.symbols import library_symbol
 from fransys_model.derive import connected_ports, connector_pin_views
 
@@ -34,7 +35,7 @@ def _pick(library: Library, view: PinView, choice: Choice) -> Pick:
     symbol, port_map = choice
     if symbol is None:
         refuse(f"connector pin {view.name}", "no symbol rule names a connector pin: add one")
-    ports = {p.id for p in library_symbol(library, symbol, 1).ports}
+    ports = {p.id for p in library_symbol(library, symbol, 1).ports if not is_mating_port(p.id)}
     chosen = port_of(view.name, _ALONE, port_map, Target(ports, {}, 1))
     if chosen not in ports:
         refuse(f"connector pin {view.name}", f"no port of symbol {symbol} to bind it to")

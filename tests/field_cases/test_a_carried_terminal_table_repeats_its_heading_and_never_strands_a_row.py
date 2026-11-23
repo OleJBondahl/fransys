@@ -7,6 +7,8 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _field_designs import fc_design, written_pdf
+from _model_build_cover import cabinet_document
 from _pdf_measure import has_page_title
 
 _HEADING = re.compile(r"^-X(\d+)( \(cont\.\))?$")
@@ -15,23 +17,13 @@ _ROW = re.compile(r"^-X(\d+):\d+\b")
 
 def _pdf(root: Path, counts: tuple[int, ...]) -> Path:
     """The cabinet's PDF: one strip per count, the later ones with a description; list only."""
-    d = fr.design("demo_parts")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     for number, count in enumerate(counts, 1):
         note = "Valve feedback" if number > 1 else ""
         d.terminal_strip(f"X{number}", "DEMO-TB-2.5", count, place="C1", description=note)
-    cover = root / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    document = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC,
-        cabinet,
-        cover=cover,
-    )
-    fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
-    return pdf
+    document = cabinet_document(cabinet)
+    return written_pdf(fr.build(d, document), root)
 
 
 class _Fragment:

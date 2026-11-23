@@ -7,7 +7,8 @@ model-0068, the wiring is the truth).
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
-from fransys_model.derive.facts.plc_wiring import binding_wiring, controller_signal_names, plc_requests, request_functions, requested_signal
+from fransys_model.derive.facts.cdp_names import cdp_name_repeats, cdp_names_empty
+from fransys_model.derive.facts.plc_wiring import binding_wiring, plc_requests, request_functions, requested_signal
 from fransys_model.derive.facts.roles import function_channel
 from fransys_model.kernel import Finding, natural_join
 from fransys_model.vocab.codes import finding
@@ -86,17 +87,21 @@ def _refs(wired: Collection[Id[Function]]) -> str:
 
 
 def check_plc_names(model: Model) -> tuple[Finding, ...]:
-    """Check no two bound field functions of one controller carry the same signal name (WAGO-CDP, R1820).
+    """Check the CDP names the WAGO export writes for the channels of a module differ (WAGO-CDP, R1820, R3423, R3658).
 
-    `PLC_SIGNAL_NAME_TWICE` (`ERROR`): the controller is the rack of the channel's module. A spare
-    channel's name and a placeholder are not signal names and never count.
+    `PLC_SIGNAL_NAME_TWICE` (`ERROR`): channels of one module, spares and bound devices together, written under one name; the
+    bound devices of one controller (the rack) with one CDP name, or a bound signal name CDP reads as empty (R3684), count too.
     """
     all_functions = functions(model)
-    found: list[Finding] = []
-    for (_, name), pairs in controller_signal_names(model).items():
-        if len(pairs) == 1:
-            continue
-        where = natural_join(f"channel {ref(c)} of module {ref(all_functions[c].item)} (device {ref(d)})" for c, d in pairs)
-        message = f"{where} are all named {name!r} on one controller; rename one with .plc(signal, name)"
-        found.append(finding(PLC_SIGNAL_NAME_TWICE, tuple(f for pair in pairs for f in pair), message))
+    found = [
+        finding(
+            PLC_SIGNAL_NAME_TWICE,
+            (channel,),
+            f"channel {ref(channel)} has the signal name {name!r}, which CDP reads as empty; give the signal a name with a letter or digit",
+        )
+        for name, channel in cdp_names_empty(model)
+    ]
+    for name, channels in cdp_name_repeats(model):
+        where = natural_join(f"channel {ref(c)} of module {ref(all_functions[c].item)}" for c in channels)
+        found.append(finding(PLC_SIGNAL_NAME_TWICE, channels, f"{where} are all written as {name!r} for CDP; rename one with .plc(signal, name)"))
     return ordered(found)

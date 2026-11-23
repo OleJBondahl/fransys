@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 
 def _head_example() -> Model:
     """The e-stop head with two NC blocks, both wired to the terminal strip."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="E-stop", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("E-stop", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     s1 = d.device("S1", "DEMO-HEAD-ESTOP")

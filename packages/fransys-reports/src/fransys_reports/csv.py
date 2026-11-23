@@ -14,11 +14,11 @@ from fransys_model.derive import (
     csv_dialect,
     designation_list,
     export_form_of,
-    list_columns,
     list_csv_header,
     pin_lines,
     plc_channel_rows,
     terminal_rows,
+    unit_list_columns,
     wire_rows,
 )
 
@@ -38,20 +38,19 @@ def _write(model: Model, header: tuple[str, ...], lines: Iterable[Iterable[objec
     return buffer.getvalue()
 
 
-def _header(model: Model, name: str) -> tuple[str, ...]:
-    """The CSV header cells of list `name`: the text of each column's `csv` word."""
-    return tuple(list_csv_header(model, name, field) for field in list_columns(model, name))
-
-
 def _csv(model: Model, rows: Iterable[object], columns: tuple[str, ...]) -> str:
     """One line per row, each the row's fields named by `columns`; the header is their names."""
     return _write(model, columns, column_rows(rows, columns))
 
 
-def _list_csv(model: Model, name: str, rows: Iterable[object]) -> str:
+def _header(model: Model, name: str, unit: UnitId | None = None) -> tuple[str, ...]:
+    """The CSV header cells of list `name`: the text of each column's `csv` word."""
+    return tuple(list_csv_header(model, name, field) for field in unit_list_columns(model, name, unit))
+
+
+def _list_csv(model: Model, name: str, rows: Iterable[object], unit: UnitId | None = None) -> str:
     """One line per row of list `name`, under the `csv` headers of its columns."""
-    lines = column_rows(rows, list_columns(model, name))
-    return _write(model, _header(model, name), lines)
+    return _write(model, _header(model, name, unit), column_rows(rows, unit_list_columns(model, name, unit)))
 
 
 def terminal_csv(
@@ -136,7 +135,8 @@ def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
     """Write the designation (tag) list as CSV.
 
     Formats ``fransys_model.derive.queries.designation_list``, one row per item,
-    sorted by designation. `unit` passes through. Pure.
+    sorted by designation. `unit` passes through; a unit set is the unit alone, so it has no
+    `reference` (placement) column. Pure.
 
     Args:
         model: A frozen, numbered model.
@@ -145,7 +145,7 @@ def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _list_csv(model, "designations", designation_list(model, unit=unit))
+    return _list_csv(model, "designations", designation_list(model, unit=unit), unit)
 
 
 def connectors_csv(

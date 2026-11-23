@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,9 +44,7 @@ def _build(title: str, count: int, cover_dir: Path) -> fr.BuildResult:
                 cable.core(pin, near[pin], far[pin])
         return _Open()
 
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
     d.add(harnesses, "DEMO")
     cover = cover_dir / "cover.md"
     cover.write_text("# Harnesses\n", encoding="utf-8")

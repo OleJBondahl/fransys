@@ -251,7 +251,7 @@
 "fransys_author._partless::FunctionKind" = 2
 "fransys_author._scope_build::FunctionKind" = 1
 "fransys_author._scope_build::ConductorKind" = 1
-"fransys_author.handles::ConductorKind" = 1
+"fransys_author._cable_handles::ConductorKind" = 1
 "fransys_author.surface._bare::FunctionKind" = 1
 "fransys_author.surface._contacts::FunctionKind" = 1
 "fransys_author.surface._ends::FunctionKind" = 1
@@ -288,7 +288,7 @@
 "fransys_model.derive.overview_view_plain::kind==str" = 2
 "fransys_model.derive.report_scope::ConductorKind" = 1
 "fransys_model.derive.wire_list::ConductorKind" = 1
-"fransys_model.vocab.templates::FunctionKind" = 3
+"fransys_model.vocab.templates::FunctionKind" = 1
 "fransys_model.vocab.templates::LinkKind" = 1
 "fransys_overview._data_places::kind==str" = 1
 "fransys_pdf._markdown::kind==str" = 2
@@ -763,7 +763,6 @@
 "fransys_layout.core.place_y::_loosened" = 1
 "fransys_layout.core.route_tree::end_anchors" = 2
 "fransys_layout.core.route_wires::_stair" = 1
-"fransys_layout.core.text_ends::hub_xy" = 1
 "fransys_layout.core.topology::_columns" = 2
 "fransys_layout.core.topology::build_flow" = 1
 "fransys_layout.core.topology_boxchain::_chain" = 1
@@ -860,7 +859,6 @@
 "name:fransys_el.placement_kit::Pick" = 1
 "name:fransys_el.placement_pins::nodes_of" = 1
 "name:fransys_kicad.check::check" = 1
-"name:fransys_layout.core.keys::natural_key" = 1
 "name:fransys_layout.core.place_align::Line" = 1
 "name:fransys_layout.core.route_trunk::Line" = 1
 "name:fransys_layout.symbols.slots::ink_boxes" = 1
@@ -888,7 +886,6 @@
 "name:fransys_render.check::check" = 1
 "packages/fransys-author/src/fransys_author/surface/_tags.py" = 28
 "packages/fransys-author/src/fransys_author/surface/_unit_tags.py" = 10
-"packages/fransys-layout/src/fransys_layout/core/keys.py" = 8
 "packages/fransys-model/src/fransys_model/derive/contacts.py" = 41
 "packages/fransys-model/src/fransys_model/derive/facts/function_ratings.py" = 72
 "packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 105

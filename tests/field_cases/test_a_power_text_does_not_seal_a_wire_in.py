@@ -5,6 +5,7 @@ Fixed by layout-0196, no text stands on a port's exit lane, and the power placer
 from typing import NamedTuple
 
 import fransys as fr
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 
@@ -12,10 +13,7 @@ class _Io(NamedTuple):
     x1: fr.TerminalStrip
 
 
-@fr.unit(
-    "shape", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB",
-    title="Shape", number="S-1",
-)  # fmt: skip
+@fc_unit("shape", title="Shape", number="S-1")
 def _shape(d):
     psu = d.device("T1", "DEMO-PSU-24")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])

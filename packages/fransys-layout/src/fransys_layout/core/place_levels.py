@@ -6,9 +6,10 @@ from collections import defaultdict
 from itertools import combinations, permutations
 from typing import TYPE_CHECKING, NamedTuple
 
-from .band import level_offset
+from fransys_model.kernel import natural_key
+
+from .band import arrow_hang, trunk_room
 from .intervals import levels
-from .keys import natural_key
 from .place_trunk import trunk_node
 
 if TYPE_CHECKING:
@@ -32,6 +33,7 @@ class Span(NamedTuple):
     side: str
     drivers: tuple[int, ...] = ()
     legs: tuple[int, ...] = ()
+    arrow: int = 0
 
 
 def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset[str]:
@@ -48,7 +50,7 @@ def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset
             for j in range(i + 1, len(order)):
                 if level[j] > level[i] and upper.x0 <= order[j].x1 and order[j].x0 <= upper.x1:
                     a, b = trunk_node(upper.fan, upper.row), trunk_node(order[j].fan, order[j].row)
-                    g.after(a, b, level_offset(upper.lanes, 0, options.wiring_grid))
+                    g.after(a, b, trunk_room(upper.lanes, options.wiring_grid, arrow_hang(upper.lanes, options.wiring_grid, upper.arrow))[1])
                     below[g.uf.find(a)[0]].add(g.uf.find(b)[0])
                     lowered |= {a, b}
     return frozenset(lowered)

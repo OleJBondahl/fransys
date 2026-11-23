@@ -9,6 +9,7 @@ lazy from pathlib import Path
 import fransys as fr
 import pypdfium2
 import pytest
+from _field_designs import written_pdf
 from fransys.colours import BK
 from pypdfium2 import raw
 
@@ -32,9 +33,7 @@ def _pdf(root: Path) -> Path:
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
-    fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
-    return pdf
+    return written_pdf(fr.build(d, document), root)
 
 
 def _horizontal_rules(pdf: Path) -> tuple[Any, list[Box], Any]:

@@ -193,7 +193,7 @@ def read_text(text: str, name: str) -> Instance:
     for w in by_kind.get("marker", []):
         sid, pin = _owner(w[2], syms)
         x, y = _ints(_kv(w)["at"])
-        markers.append(SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin, "", "N"))
+        markers.append(SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin, "N"))
     pages: dict[str, set[int]] = {}
     for b in boxes:
         pages.setdefault(b.sym, set()).add(b.page)

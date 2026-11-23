@@ -2,10 +2,8 @@
 The bug: the wire keeps held a pole's soft tag room, so a feed wire read as running through the other pole's footprint (WIRE_MEETS_NET).
 Fixed by layout-0495 (KI-477): a wire keep is the symdef body, never the tag room."""
 
-import tempfile
-from pathlib import Path
-
 import fransys as fr
+from _model_build_cover import cabinet_document
 
 _BK = ("BK", 2.5)
 
@@ -31,9 +29,7 @@ def _build() -> fr.BuildResult:
         ]
         for a, b in pairs:
             d.series(a, b, wire=_BK)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Feed\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    return fr.build(d, cabinet_document(cab))
 
 
 def test_a_pole_feed_wire_in_a_neighbours_tag_room_is_not_a_meeting() -> None:

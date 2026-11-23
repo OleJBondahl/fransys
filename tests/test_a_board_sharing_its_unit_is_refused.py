@@ -47,11 +47,14 @@ def test_a_board_with_no_unit_is_its_own_unit_and_is_not_refused() -> None:
     cab = d.location("C1", "Cabinet")
     rack = d.device("R1", "DEMO-PCB-IO")
     j1 = d.device("J1", "DEMO-CONN-2P", parent=rack)  # a board is a black box (R2627): a connector of it is what is wired
-    d.series(j1["1"], d.device("K1", "DEMO-RLY-2CO-24").coil["A1"], wire=(BU, 0.5))
+    k1 = d.device("K1", "DEMO-RLY-2CO-24")
+    d.series(j1["1"], k1.coil["A1"], wire=(BU, 0.5))
+    d.series(k1.coil["A2"], j1["2"], wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
     assert "BOARD_SHARES_UNIT" not in {f.code for f in result.findings}
+    assert "FUNCTION_HALF_CONNECTED" not in {f.code for f in result.findings}
     assert result.findings, "positive half: the build still reports its findings"
 
 

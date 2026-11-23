@@ -48,8 +48,7 @@ def _bullet(section: str, rows: tuple[Change, ...]) -> str:
     """One Markdown bullet for one `(section, subject)` group of `Change` rows (reports-0004)."""
     identity = change_identity(section, rows[0].parts)
     if len(rows) == 1 and rows[0].field == "" and rows[0].change != "changed":
-        change = rows[0].change
-        verb = "Added" if change == "added" else "Removed"
+        verb = change_clause(rows[0]).capitalize()
         detail = rows[0].detail
         if detail:
             return f"- {verb} {identity}: {detail}."

@@ -7,6 +7,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document, unit_document
 from fransys.colours import BU
 
@@ -31,9 +32,7 @@ def _cab(d: Any) -> _Io:
 
 
 def build(*, series_in_group: bool = True) -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Hints", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Hints", place="CAB", date="2026-10-02")
     cab = d.location("CAB", "Cabinet")
     u = d.add(_cab, "U1")
     if series_in_group:

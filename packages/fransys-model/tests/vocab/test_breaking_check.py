@@ -7,6 +7,7 @@ through string fuses `SF{i}`, a main fuse `FM` leaves it. Every fuse states brea
 import dataclasses
 from typing import TYPE_CHECKING
 
+import pytest
 from current_plant import device, fuse, hub, run
 from fault_plant import module
 from plant import Plant
@@ -21,8 +22,8 @@ from fransys_model.checks.ratings_current import (
     LOADS_ABOVE_LIMIT,
     check_load_draw,
 )
-from fransys_model.elecdef import Current, Fuse, Range, Unit
-from fransys_model.kernel import Finding, Model, Severity, make_id
+from fransys_model.elecdef import At, Current, Fuse, Range, Role, Unit
+from fransys_model.kernel import Finding, Model, ModelError, Severity, make_id
 from fransys_model.vocab import (
     Operating,
     OperatingFacet,
@@ -138,3 +139,10 @@ def test_an_unknown_time_constant_leaves_only_points_without_one() -> None:
     model = _battery(strings=1, per=1, fault="1000", tc=None).model()
     (finding,) = _main(model)
     assert "time constant of the sources, unknown" in finding.message
+
+
+def test_a_min_only_point_is_no_current_and_raises_never_zero() -> None:
+    """The part reader refuses such a point (BREAKING-MIN-ONLY); a model that holds one is not read as 0 A."""
+    only_min = Range(Role.RATED, min=Unit.A("1000"), at=At(Current.DC, Unit.V("1000"), Unit.MS("15")))
+    with pytest.raises(ModelError, match="no nom, max or typ"):
+        check_breaking(_battery(points=(only_min,)).model())

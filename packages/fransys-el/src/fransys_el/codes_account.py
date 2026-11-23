@@ -10,6 +10,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=("No wire or marker accounts for a conductor end, or a wire and a stub both do, or two stubs do (CORE-ACCOUNT); the message names it."),
         fix="No call clears this: send the smallest model that shows it.",
-        page="findings-render",
+        page="findings-wires",
     ),
 )

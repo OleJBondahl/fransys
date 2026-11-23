@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document, unit_document
 from fransys.colours import BU
 
@@ -22,9 +23,7 @@ def _board(u: Any) -> _Io:
 
 def _container_texts() -> tuple[fr.Model, list[str]]:
     """The model and the black box title lines the container's pages draw."""
-    d = fr.design("demo_parts", place="C1")
-    d.project(title="Box", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-05", text="First issue", created="XX")
+    d = fc_design("Box", place="C1", date="2026-10-05")
     _cabinet = d.location("C1", "Cabinet")
     board = d.add(_board, "U2")
     lamp = d.device("M1", "DEMO-LAMP-24")

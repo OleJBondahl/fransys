@@ -5,7 +5,8 @@ from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
+from fransys_model.kernel import natural_key
+
 from .occupancy import cells_between
 from .outputs import Wire
 from .route_astar import Leg, anchor, astar, simplify, tidy

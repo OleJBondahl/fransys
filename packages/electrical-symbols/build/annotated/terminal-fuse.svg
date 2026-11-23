@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="25mm" height="21.5mm" viewBox="-8.5 -4.3 10 8.6">
 <title>Terminal with fuse</title>
 <g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
-<line x1="0" y1="-2" x2="0" y2="2" stroke-width="0.1"/>
+<circle cx="0" cy="-1.5" r="0.25" stroke-width="0.1"/>
+<circle cx="0" cy="1.5" r="0.25" stroke-width="0.1"/>
+<line x1="0" y1="-2" x2="0" y2="-1.75" stroke-width="0.1"/>
+<line x1="0" y1="-1.25" x2="0" y2="-1" stroke-width="0.1"/>
+<line x1="0" y1="1" x2="0" y2="1.25" stroke-width="0.1"/>
+<line x1="0" y1="1.75" x2="0" y2="2" stroke-width="0.1"/>
 <polygon points="-0.5,-1 0.5,-1 0.5,1 -0.5,1" stroke-width="0.1"/>
 <polygon points="-0.5,-1 0.5,-1 0.5,-0.5 -0.5,-0.5" stroke-width="0.1" fill="#000"/>
 </g>

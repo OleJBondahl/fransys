@@ -5,7 +5,6 @@ One small invented document carries a marked word in every text role (`HEKone` i
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 from __future__ import annotations
 
 from dataclasses import replace

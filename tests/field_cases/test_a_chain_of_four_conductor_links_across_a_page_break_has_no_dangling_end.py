@@ -5,6 +5,7 @@ Fixed by order DANGLING-0223 (consumer N4): a page-cut two-pin net is wrapped by
 from itertools import pairwise
 
 import fransys as fr
+from _drawn_pages import drawn_pages
 from _model_build_cover import unit_document
 from fransys.colours import BN, GN, WH, YE
 
@@ -27,3 +28,14 @@ def _findings(devices: int, links: int) -> set[str]:
 
 def test_a_chain_of_four_conductor_links_across_a_page_break_has_no_dangling_end() -> None:
     assert "DANGLING_WIRE_END" not in _findings(11, 4)
+
+
+def test_a_chain_of_four_links_with_a_marker_at_one_cut_fills_two_pages_not_one_per_device() -> None:
+    """The level edge holds a tag's box only for the trunk the tag belongs to (R3657): a row's other trunks keep their bare edge."""
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    with d.function("CHAIN", "Chain"):
+        chain = [d.device(f"A{k}", "DEMO-IO-CLAMPS") for k in range(1, 12)]
+        for a, b in pairwise(chain):
+            d.series(a.clamps.pins[4:], b.clamps.pins[:4], wire=_COLOURS)
+    assert len(drawn_pages(fr.build(d, unit_document(cab)).model)) == 2

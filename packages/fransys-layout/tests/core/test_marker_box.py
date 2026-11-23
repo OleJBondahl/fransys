@@ -18,7 +18,7 @@ KEY = (END, "copy")
 
 
 def make_marker(x: int, y: int, orient: Orientation = "R0") -> Marker:
-    return Marker("N1", RefKind.COPY, 0, "c", x, y, END, orient)
+    return Marker("N1", RefKind.COPY, 0, x, y, END, orient)
 
 
 def test_marker_box_at_moves_the_symbols_box_to_its_origin(marker_options):

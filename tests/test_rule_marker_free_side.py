@@ -16,7 +16,6 @@ import fransys as fr
 import pytest
 from _direct_case import SHEET
 from fransys_el import build, house_conventions, symbol_kit
-from fransys_el.drawn_graph import Union
 from fransys_el.drawn_power import inked_power
 from fransys_el.placement_env import port_pins
 from test_drawn_symbols_placed_by_core import R825_STUBS
@@ -25,6 +24,7 @@ from electrical_symbols import LIBRARY, marking_slot, power_symbol_key
 from fransys_layout.core.cut_drawn import stand_pins
 from fransys_layout.core.values import PinRef
 from fransys_model.derive import far_pins
+from fransys_model.kernel import UnionFind
 
 ROOT = Path(__file__).resolve().parent.parent
 CND_ENDS = tomllib.loads((ROOT / "tests/ratchets.toml").read_text())["drawing_connection_not_drawn"]
@@ -250,7 +250,7 @@ def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_car
     """R1631, R4: ground, PE and a texted supply with ink to their pin carry its end; a supply with no printed text names no potential."""
     symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",), slots=((marking_slot("1"), text),) if text else ())]
     part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, powers={"a": (0, 0)})  # the symbol stands on its pin
-    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, union=Union())
+    net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, union=UnionFind())
     assert (inked_power(net) == {"a"}) is (key != "supply" or text is not None)
 
 

@@ -10,7 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
-from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from fransys_model.kernel import NaturalKey
+
+from .arrow_reserve import arrow_rows, leg_fit, leg_rows
 from .band import abut as band_abut
 from .band import lane_line, lane_span
 from .clearance import Keep, footprint_keeps
@@ -18,7 +20,7 @@ from .cut_drawn import cut_stands
 from .cut_end_rooms import laned_stub, pole_of
 from .errors import CoreError
 from .geometry import sized
-from .keys import natural_key
+from .leg_lines import leg_feet, leg_lines
 from .ref_kind import kind_of
 from .route_env import body_keeps, pin_sides
 from .sides import step_out
@@ -32,7 +34,7 @@ if TYPE_CHECKING:
     from .outputs import Placed, Placement, Trunk
     from .values import XY, Options, Orientation, PlacementProblem, Ref, RefEnd, Side, Size
 
-Key = tuple[tuple[int, int | str], ...]
+Key = NaturalKey
 PinAt = tuple[int, int, int, "Orientation"]
 
 
@@ -285,23 +287,3 @@ def end_stand(env: MarkEnv, ref: Ref, end: RefEnd, index: int) -> Stand:
             return pin_stand(env, _named(ref, end), end.page, ref)
         case RefKind.COPY | RefKind.STUB | RefKind.STAR:
             return pinned_stand(env, ref, end)
-
-
-def hub_xy(env: MarkEnv, ref: Ref, end: RefEnd) -> tuple[int, int]:
-    """Where a copy's hub stands: its first placed pin, by the pin's name (all of one symbol, so no id text orders it).
-
-    The hub is on a page other than the copy's; on the copy's own page there is nothing to copy.
-    """
-    fan = next((f for f in env.fans.values() if ref.net in f.nets), None)
-    pins = sorted((k for k in env.pins if fan is not None and k[0] == fan.hub), key=lambda k: natural_key(k[1]))
-    if not pins:
-        msg = f"marks: {who(ref)}: the hub has no placed pin; the placement must place a pin of the fan's hub"
-        raise CoreError(msg)
-    page, x, y, _ = env.pins[pins[0]]
-    if page == end.page:
-        msg = (
-            f"marks: {who(ref)} page {end.page}: the hub {pins[0][0]} stands on the copy's own "
-            "page; stage 4 copies() plans a copy end only on a page other than the hub's"
-        )
-        raise CoreError(msg)
-    return x, y

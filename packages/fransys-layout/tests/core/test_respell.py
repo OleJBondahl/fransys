@@ -10,13 +10,14 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import Facts, Hints, PinRef, PlacementProblem, Size, natural_key, order_blocks
+from fransys_layout.core import Facts, Hints, PinRef, PlacementProblem, Size, order_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.order import order_columns
 from fransys_layout.core.place import place_pages
 from fransys_layout.core.route import route_page, route_pages
 from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.widen import Round, route_round, widen
+from fransys_model.kernel import natural_key
 
 from . import align_fixtures as fx
 from . import pipeline_fixtures
@@ -598,7 +599,7 @@ def _ranked(name: str) -> PlacementProblem:
 
 
 def _canon_markers(markers: tuple[Marker, ...], back: Callable[[str | None], str | None]) -> list[Any]:
-    return [(back(m.net), m.kind, m.page, m.cell, m.x, m.y, m.end and (back(m.end.sym), m.end.pin)) for m in markers]
+    return [(back(m.net), m.kind, m.page, m.x, m.y, m.end and (back(m.end.sym), m.end.pin)) for m in markers]
 
 
 @pytest.mark.parametrize("name", PLANTS)

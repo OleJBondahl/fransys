@@ -16,6 +16,7 @@ Axis = Literal["x", "y"]
 TABLE_ROW_AXIS: dict[str, Axis] = {
     "pin-cell": "y",
     "pin-cell-wide": "y",
+    "mating-cell": "y",
     "cable-column": "x",
     "contact-row": "y",
 }

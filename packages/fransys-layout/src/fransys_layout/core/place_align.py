@@ -9,9 +9,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .errors import CoreError
 from .geometry import pin_xy
-from .keys import natural_key
 from .outputs import StripRun
 from .pack import cell_node
 

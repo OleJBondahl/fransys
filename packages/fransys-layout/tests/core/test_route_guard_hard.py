@@ -10,12 +10,14 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import Box, PinRef
+from fransys_layout.core import Box, PinRef, Size
 from fransys_layout.core.clearance import Keep, own_end
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.occupancy import Occupancy
-from fransys_layout.core.outputs import PinXY, Placed, Refused, Wire
-from fransys_layout.core.route_env import Drawn, hard_keeps
+from fransys_layout.core.outputs import PinXY, Placed, Refused, Trunk, Wire
+from fransys_layout.core.route import route_page
+from fransys_layout.core.route_env import Drawn, Rise, hard_keeps, lost_key
+from fransys_layout.core.route_fixed import Fixed, fixed_page
 from fransys_layout.core.route_guard import _meets, guard
 
 from .route_fixtures import link_env
@@ -223,3 +225,34 @@ def test_a_met_drop_with_no_way_is_handed_with_its_trunk(xs: tuple[int, ...]) ->
     out = _stuck_drops(xs)
     assert out.lost == (Refused("n", (PinRef("A", "p"), PinRef("B", "p"), PinRef("C", "p"))),)
     assert [w for w in out.wires if w.net == "n"] == []
+
+
+def _zero_length_lane(*, riser: bool):
+    """A drop from T to (80, 52) and M's way up to the same point across a wall: the lane has no trunk wire (KI-1401)."""
+    env = link_env({"T": (80, 28, "N"), "M": (80, 100, "S")}, {})
+    wall = Box(0, 60, 320, 20)
+    placed = {**env.placed, "wall": Placed("wall", 1, 0, 60, "R0", wall, wall, ())}
+    env = replace(env, area=Size(320, 200), placed=placed, net_pins={"n": (PinRef("T", "p"), PinRef("M", "p"))})
+    drop = Wire("n", 1, ((80, 28), (80, 52)), "drop")
+    up = Wire("n", 1, ((80, 100), (80, 52)), "riser")
+    rise = Rise("n", PinRef("M", "p"), (80, 100), (80, 52), "riser")
+    return env, Drawn(wires=(drop, up) if riser else (drop,), rises=() if riser else (rise,))
+
+
+def test_a_blocked_rise_on_a_zero_length_trunk_lane_hands_the_opposite_pin_and_the_next_round_lays_no_drop() -> None:
+    env, _ = _zero_length_lane(riser=False)
+    drv, leg = Attach(None, 0, 0, PinRef("M", "p"), net="n"), Attach("c", 0, 0, PinRef("T", "p"), net="n")
+    fan = Fan("f:n", ("n",), (drv,), (leg,), None, 1, "below")
+    env = replace(env, fans={"f:n": fan}, trunks=(Trunk("f:n", 1, 52, 80, 80, 1, 0, ((80, 80),)),), bands=((0, 200),))
+    _, lost, _ = route_page(env, fixed_page(env))
+    assert {p for r in lost for p in r.ends or ()} >= {PinRef("T", "p"), PinRef("M", "p")}, "the rise was not handed with the lane's other pin"
+    again = replace(env, lost=frozenset(lost_key(r.net, r.ends or ()) for r in lost))
+    page, _, _ = route_page(again, fixed_page(again))
+    assert not page.wires, "a wire stays whose end at (80, 52) joins nothing"
+
+
+def test_a_blocked_riser_on_a_zero_length_trunk_lane_removes_the_opposite_drop() -> None:
+    env, drawn = _zero_length_lane(riser=True)
+    page, lost, _ = route_page(env, Fixed(drawn))
+    assert {p for r in lost for p in r.ends or ()} >= {PinRef("T", "p"), PinRef("M", "p")}, "the riser was not handed with the lane's other pin"
+    assert not page.wires, "a wire stays whose end at (80, 52) joins nothing"

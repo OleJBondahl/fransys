@@ -7,11 +7,12 @@ CSV header. An `Id` field is left out where the row carries its rendered twin.
 
 lazy from collections.abc import Mapping
 
-from fransys_model.kernel import Model, SchemaError
+from fransys_model.kernel import Id, Model, SchemaError
+lazy from fransys_model.vocab import Unit
 
 from .facts.house_settings import lists_of, word
 
-__all__ = ["list_columns", "list_csv_header", "list_pdf_columns", "list_pdf_heading"]
+__all__ = ["list_columns", "list_csv_header", "list_pdf_columns", "list_pdf_heading", "unit_list_columns"]
 
 
 def _of[T](table: Mapping[str, T], name: str) -> T:
@@ -24,6 +25,18 @@ def _of[T](table: Mapping[str, T], name: str) -> T:
 def list_columns(model: Model, name: str) -> tuple[str, ...]:
     """The row fields the list `name` prints, in order (`[[lists.<name>.columns]] field`)."""
     return _of(lists_of(model).columns, name)
+
+
+def unit_list_columns(model: Model, name: str, unit: Id[Unit] | None) -> tuple[str, ...]:
+    """The row fields list `name` prints for a set scoped to `unit` (`None`: the whole model).
+
+    A unit set is the unit alone, so its designation list has no `reference` (placement) column:
+    one instance's placement would state a false fact for the unit's other instances.
+    """
+    columns = list_columns(model, name)
+    if name == "designations" and unit is not None:
+        return tuple(field for field in columns if field != "reference")
+    return columns
 
 
 def list_pdf_columns(model: Model, name: str) -> tuple[str, ...]:

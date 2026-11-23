@@ -2,13 +2,11 @@
 The bug (KI-412): the page cut falls inside the fan, one phase gets a lone copy marker, and its net draws as 3 pieces (CONNECTION_NOT_DRAWN).
 Closed (KI-412, KI-537): the repro is valid (X1 marks the supply only, the pumps' PE points sit on X5); no 3-piece net at six salts."""
 
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 import fransys as fr
+from _model_build_cover import cabinet_document
 from fransys.colours import BK, BN, GNYE, GY
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 _PH = (BN, BK, GY)
 _PUMPS = 5
@@ -74,7 +72,7 @@ def _cabinet_in(u: Any) -> _Io:
     return _fan(u, motors_inside=True)
 
 
-def _built(tmp_path: Path, *, motors_inside: bool = False) -> Any:
+def _built(*, motors_inside: bool = False) -> Any:
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
     cab = d.add(_cabinet_in if motors_inside else _cabinet, "U1", place=None)
@@ -88,21 +86,19 @@ def _built(tmp_path: Path, *, motors_inside: bool = False) -> Any:
             m, cable = d.device(f"M{n}", "DEMO-MOTOR-4KW"), d.cable(f"W{n}1", "DEMO-CBL-4G1.5", length_m=15)
             for core, (run, pin) in enumerate(zip(cab[4:], ("U", "V", "W", "PE"), strict=True), start=1):
                 cable.core(core, run[n], m.motor[pin])
-    cover = tmp_path / "cover.md"
-    cover.write_text("# Fan\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
+    return fr.build(d, cabinet_document(cab))
 
 
-def test_no_net_of_a_cut_fan_draws_as_three_pieces(tmp_path: Path) -> None:
+def test_no_net_of_a_cut_fan_draws_as_three_pieces() -> None:
     """KI-412: the fan's phases each stay one net on the drawing, whatever page the cut falls on."""
-    findings = _built(tmp_path).findings
+    findings = _built().findings
     assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
     assert not [f.message for f in findings if f.code in ("CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END")]
 
 
-def test_motors_inside_the_unit_draw_without_an_error(tmp_path: Path) -> None:
+def test_motors_inside_the_unit_draw_without_an_error() -> None:
     """KI-918, KI-919: the same fan with the motors authored inside the unit draws with no SHORT, no wire-meets-net, no JUNCTION ERROR."""
-    errors = [f"{f.code}: {f.message}" for f in _built(tmp_path, motors_inside=True).findings if f.severity.name == "ERROR"]
+    errors = [f"{f.code}: {f.message}" for f in _built(motors_inside=True).findings if f.severity.name == "ERROR"]
     assert not errors
 
 

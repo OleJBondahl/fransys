@@ -8,6 +8,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import system_document
 from fransys.colours import BU
 
@@ -32,9 +33,7 @@ def _cab(u: fr.Design) -> _Io:
 
 @pytest.fixture(scope="module")
 def built(tmp_path_factory) -> tuple[Any, dict[str, Any]]:
-    d = fr.design("demo_parts", place="ER")
-    d.project(title="FC", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("FC", place="ER")
     d.location("ER", "Electrical room")
     d.location("FLD", "Field")
     unit = d.add(_cab, "PC", place="ER")

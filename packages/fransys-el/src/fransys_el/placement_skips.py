@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import natural_key
 from fransys_model.derive import unused_functions
+from fransys_model.kernel import natural_key
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model

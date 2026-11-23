@@ -10,12 +10,13 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .band import trunk_room
 from .blocks_card import box_pin, pin_order
 from .cut_height import lowered
 from .flow_values import Block, block_id
 from .hang_build import stack_extra
-from .keys import natural_key
 from .unionfind import UnionFind
 
 if TYPE_CHECKING:

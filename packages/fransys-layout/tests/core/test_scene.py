@@ -60,9 +60,8 @@ def test_a_marker_stands_at_the_pin_its_end_names():
     assert (m.net, m.kind, m.page, m.x, m.y, m.box, m.pin) == ("n1", "tag", 2, 40, 46, "A", "in")
 
 
-def test_a_marker_carries_its_cell_and_the_turned_side_of_its_pin():
+def test_a_marker_carries_the_turned_side_of_its_pin():
     m = SCENE.markers[0]
-    assert m.cell == layout().annotations.markers[0].cell == "C3"
     assert m.side == "S"
 
 

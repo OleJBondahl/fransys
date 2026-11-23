@@ -4,6 +4,7 @@ Fixed by layout-0099 V3 (owner-backed 2026-10-02; designer R315), rails draw the
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -14,9 +15,7 @@ from fransys_model.vocab.tables import items
 
 
 def _built() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Rail", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-19", text="First issue", created="XX")
+    d = fc_design("Rail", place="CAB", date="2026-10-19")
     cab = d.location("CAB", "Cabinet")
     x10 = d.terminal_strip("X10", "DEMO-TB-2.5-TWIN", 2, bridged=True, rail=True)
     with d.function("G", "Group"):

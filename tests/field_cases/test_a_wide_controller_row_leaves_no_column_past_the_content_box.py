@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 from fransys_model.kernel import id_namespace
@@ -19,16 +20,7 @@ class _Strips(NamedTuple):
     X4: Any
 
 
-@fr.unit(
-    "demo-control",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Control",
-    number="N-1",
-)
+@fc_unit("demo-control", title="Control", number="N-1")
 def _control(d: Any) -> _Strips:
     d.layout.profile(hide_unused_pins=True)  # the unit's own profile (model-0192)
     x4, x5, x6 = (d.terminal_strip(name, "DEMO-TB-2.5") for name in ("X4", "X5", "X6"))

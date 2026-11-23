@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, cast
 
-from fransys_layout.core import Bundle, Net, natural_key
+from fransys_layout.core import Bundle, Net
 from fransys_model.derive import (
     boundary_rail_wires,
     bundle_of,
@@ -14,7 +14,7 @@ from fransys_model.derive import (
     port_function,
     port_power_kind,
 )
-from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, natural_key
 
 from .placement_env import drawn_pins, refuse_inside_board
 from .placement_forms import DRAWN_FORMS

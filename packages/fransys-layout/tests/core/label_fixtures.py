@@ -158,5 +158,5 @@ def dense() -> LabelCase:
 
 def marker_over_candidate() -> LabelCase:
     """lone() plus a COPY marker at (88, 116): its box overlaps the first candidate."""
-    marker = Marker("n1", RefKind.COPY, 1, "a", 88, 116, PinRef("S1", "p"))
+    marker = Marker("n1", RefKind.COPY, 1, 88, 116, PinRef("S1", "p"))
     return _case((sym("S1"),), (("S1", 88, 96),), markers=(marker,))

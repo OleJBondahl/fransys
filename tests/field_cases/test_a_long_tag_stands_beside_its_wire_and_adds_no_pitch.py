@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -19,9 +20,7 @@ LAMPS = 3
 
 def _build(names: tuple[str, ...]) -> fr.BuildResult:
     """Lamps `names` each between two terminals of strip `X1`."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Tags", number="P-3", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-19", text="First issue", created="XX")
+    d = fc_design("Tags", place="CAB", number="P-3", date="2026-10-19")
     cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     with d.function("G1", "Lamps"):

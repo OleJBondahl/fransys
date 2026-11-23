@@ -1,14 +1,14 @@
 """The table symbols (SYMDEF-SLOTS SS5 a): rows and heads, each head authored in its row's frame."""
 
 import pytest
-from symdef import body_box, fitted_table, from_divisions, keepout_box, table
+from symdef import body_box, fitted_table, from_divisions, ink_boxes, keepout_box, table, to_svg
 
-from electrical_symbols import LIBRARY
+from electrical_symbols import LIBRARY, is_mating_port
 
 CABLE = ("cable-column", "cable-head", "x", "core")
 CONTACT = ("contact-row", "contact-head", "y", ("no", "nc"))
 PIN = ("pin-cell", None, "y", None)
-CONNECTOR = ("pin-cell", "connector-head", "y", "lines")
+CONNECTOR = ("pin-cell", "connector-head", "y", "where")
 PIN_WIDE = ("pin-cell-wide", None, "y", None)
 
 
@@ -54,7 +54,7 @@ def test_contact_head_lies_before_the_first_row_on_the_axis():
 def test_connector_head_lies_before_the_first_pin_cell_and_follows_the_cuts():
     row, head = body_box(LIBRARY.get("pin-cell")), body_box(LIBRARY.get("connector-head"))
     assert head.max.y == row.min.y
-    assert "lines" in slot_ids(build(*CONNECTOR[:3]))
+    assert "where" in slot_ids(build(*CONNECTOR[:3]))
     step = row.max.y - row.min.y
     for n in (1, 3):
         box = body_box(build(*CONNECTOR[:3], n))
@@ -124,3 +124,45 @@ def test_the_headed_head_takes_the_heading_text_and_grows_at_the_row_cuts():
     long = fitted_table(row, "y", rows, LIBRARY, height, head=head, head_texts={"heading": "-U1-K1234567890"}, port_format=LIBRARY.port_format)
     wide = lambda t: body_box(t).max.x - body_box(t).min.x  # noqa: E731 - a one-use measure
     assert wide(long) > wide(plain)
+
+
+def test_connector_box_head_has_named_lines_and_every_row_a_mating_port_on_one_edge():
+    """T1-T3, T5: the head's slots are named, and `k.mate` of every row stands on the cell's east edge."""
+    built = build(*CONNECTOR[:3])
+    assert {"designation", "part", "name", "description", "where"} <= slot_ids(built)
+    assert "lines" not in slot_ids(built)
+    mates = [p for p in built.ports if is_mating_port(p.id)]
+    assert len(mates) == 3
+    assert {p.position.x for p in mates} == {body_box(LIBRARY.get("pin-cell")).max.x}
+    assert {p.direction.name for p in mates} == {"E"}
+
+
+def test_mating_cell_has_no_wire_stub_a_reference_slot_and_its_mating_port_on_the_west_edge():
+    """T4: no stub (the port sits on the body edge), a `reference` slot, and `is_mating_port` knows its port."""
+    cell = LIBRARY.get("mating-cell")
+    (port,) = cell.ports
+    assert is_mating_port(port.id)
+    assert port.position.x == body_box(cell).min.x
+    assert "reference" in slot_ids(cell)
+
+
+def test_is_mating_port_names_the_mating_port_alone():
+    assert is_mating_port("mate")
+    assert is_mating_port("2.mate")
+    assert not is_mating_port("pin")
+    assert not is_mating_port("2.pin")
+
+
+@pytest.mark.parametrize("n", [1, 2, 3])
+def test_connector_box_of_few_pins_builds_and_renders_with_its_ink_inside_its_outline(n):
+    """R3608: the five-slot head does not stretch, so a box of 1, 2 or 3 pins builds, renders and keeps its ink in its outline."""
+    head_texts = {"designation": "-X1", "part": "MPN", "name": "Name", "description": "Text", "where": "=A+B"}
+    height = from_divisions(LIBRARY.grid, 8)
+    built = build(*CONNECTOR[:3], n=n)
+    assert to_svg(built, texts=head_texts).startswith("<svg")
+    outline, ink = body_box(built), ink_boxes(built, head_texts, height, LIBRARY.font, LIBRARY.grid)
+    assert ink.body is not None
+    assert all(
+        outline.min.x <= b.min.x and b.max.x <= outline.max.x and outline.min.y <= b.min.y and b.max.y <= outline.max.y
+        for b in [ink.body, *ink.texts.values()]
+    )

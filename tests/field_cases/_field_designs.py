@@ -1,10 +1,39 @@
 """Small circuits and checks that several field cases build or run alike: an I/O unit, a board unit, a feeder, a PLC card, wire crossings."""
 
+import functools
 import itertools
 from typing import Any, NamedTuple
+lazy from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BK
+
+fc_unit = functools.partial(fr.unit, revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")  # `@fc_unit(name, **override)`
+
+
+def fc_design(  # noqa: PLR0913 -- one keyword per project and revision field the designs vary, typed so a wrong key is a TypeError
+    title: str,
+    place: str | None = None,
+    *,
+    number: str = "P-1",
+    customer: str = "Example Co",
+    author: str = "OJB",
+    date: str = "2026-10-14",
+    text: str = "First issue",
+    created: str = "XX",
+) -> fr.Design:
+    """A demo-parts design with its project and first revision set; number, customer and author override the defaults."""
+    d = fr.design("demo_parts", place=place)
+    d.project(title=title, number=number, customer=customer, author=author, revision=1)
+    d.revision(1, date=date, text=text, created=created)
+    return d
+
+
+def written_pdf(result: fr.BuildResult, root: Path) -> Path:
+    """Write `result` under `root` (exports in `out`, intermediates in `inter`) and return its one pdf."""
+    fr.write(result, out_dir=root / "out", intermediates=root / "inter")
+    (pdf,) = (root / "out").glob("*.pdf")
+    return pdf
 
 
 class Io(NamedTuple):

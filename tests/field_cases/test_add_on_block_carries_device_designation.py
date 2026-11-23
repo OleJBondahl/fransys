@@ -6,6 +6,7 @@ from typing import Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -14,9 +15,7 @@ from fransys_model.derive import designation_list, item_designation
 
 def _build() -> tuple[fr.Model, Any, Any]:
     """K1 with an untagged add-on block and overload child: the model, the block, the overload."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Block", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Block", place="CAB", date="2026-10-02")
     _cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN")
     with d.function("G", "Group"):

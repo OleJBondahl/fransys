@@ -20,12 +20,13 @@ from fransys_model.derive import (
     pole_count,
     pole_pin_names,
     poles_of_template,
+    protection_symbols,
     template_throws,
 )
 from fransys_model.derive.facts.part_poles import unlinked_poles
 from fransys_model.elecdef import LinkKind, PinRole, Side
 from fransys_model.kernel import Id, ModelError
-from fransys_model.vocab import CONDUCTOR_MARKS
+from fransys_model.vocab import CONDUCTOR_MARKS, ProtectionType
 from fransys_model.vocab.enums import ConductorMark, FunctionKind, PortBoundary, SignalType
 from fransys_model.vocab.facets import PlcChannelFacet
 from fransys_model.vocab.templates import InternalLink, PortTemplate
@@ -272,3 +273,23 @@ def test_contact_kinds_and_their_implied_rest() -> None:
     assert implied_rest(FunctionKind.CONTACT_NC) == "closed"
     assert implied_rest(FunctionKind.CONTACT_CO) is None
     assert implied_rest(FunctionKind.SWITCH) is None
+
+
+@pytest.mark.parametrize(
+    ("protection_type", "symbols"),
+    [
+        ("none", ("circuit-breaker",)),
+        ("fuse", ("fuse",)),
+        ("mcb", ("circuit-breaker",)),
+        ("motor_breaker", ("circuit-breaker",)),
+        ("overload", ("thermal-overload",)),
+        ("rcd", ("rcd",)),
+        ("unknown", ()),
+    ],
+)
+def test_protection_symbols_of_every_type(protection_type, symbols):
+    assert protection_symbols(protection_type) == symbols
+
+
+def test_every_protection_type_has_a_symbol():
+    assert all(protection_symbols(t.value) for t in ProtectionType)

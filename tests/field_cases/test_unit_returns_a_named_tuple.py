@@ -6,6 +6,7 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
 from fransys_author import AuthorError
 
 
@@ -14,15 +15,13 @@ class _Cab(NamedTuple):
     L1: fr.Run
 
 
-@fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+@fc_unit("demo-cab")
 def _cab(d: fr.Design) -> _Cab:
     strip = d.terminal_strip("X2", "DEMO-TB-2.5", 3, interface=True)
     return _Cab(d.device("X1", "DEMO-CONN-2P", interface=True), strip.run("L1", 2))
 
 
-@fr.unit(  # ty: ignore[invalid-argument-type] -- a mapping return is the refusal under test
-    "demo-dict", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB"
-)
+@fc_unit("demo-dict")  # ty: ignore[invalid-argument-type] -- a mapping return is the refusal under test
 def _dict(d: fr.Design) -> dict[str, fr.Device]:
     return {"X1": d.device("X1", "DEMO-CONN-2P", interface=True)}
 

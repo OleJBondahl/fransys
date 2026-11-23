@@ -6,12 +6,11 @@ from fransys_render._cable_pen import Pen
 from fransys_render._constants import DIAGRAM_TAB_PAD_G
 from fransys_render._diagram_boxes import _tab, tab_outer
 from fransys_render._library import grid_to_mm
-from fransys_render._numbers import format_decimal
 
 from electrical_symbols import LIBRARY
 from fransys_layout import DiagramBox, DiagramLine, DiagramTab, Facing
 from fransys_layout.geometry import Point
-from fransys_model.kernel import make_id
+from fransys_model.kernel import decimal_text, make_id
 from fransys_model.vocab import Item
 
 _CABLE = make_id(Item, ("item", "cable"))
@@ -21,7 +20,7 @@ _PEN = Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad
 
 
 def _mm(g: int) -> str:
-    return format_decimal(grid_to_mm(0, g, Decimal("2.5")))
+    return decimal_text(grid_to_mm(0, g, Decimal("2.5")))
 
 
 def _box(*, x=40, width=24) -> DiagramBox:

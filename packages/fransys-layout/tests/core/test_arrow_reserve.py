@@ -19,9 +19,6 @@ from fransys_layout.core.arrow_reserve import (
     end_widths,
     lead_reserve,
     leg_depth,
-    leg_feet,
-    leg_line,
-    leg_lines,
     leg_pins,
     leg_rows,
     leg_unit,
@@ -33,6 +30,7 @@ from fransys_layout.core.cut_end_rooms import arrow_ends, arrow_poles, arrow_roo
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import marker_box_at, overlaps
+from fransys_layout.core.leg_lines import _clear, leg_feet, leg_line, leg_lines
 from fransys_layout.core.outputs import Trunk
 from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_trunk import held_room
@@ -615,6 +613,6 @@ def test_a_legs_run_along_a_body_outline_is_refused_and_a_corner_touch_is_free()
 
     room = ([Keep("", Box(100, 0, 40, 40), "body", "s")], frozenset(), None)
     start = (0, 40)  # the run lies on the body's bottom edge line y 40
-    assert ar._clear(60, Box(60, 60, 10, 10), start, room)  # stops short of the body
-    assert ar._clear(100, Box(100, 60, 10, 10), start, room)  # run and drop touch the body's corner (100, 40) only
-    assert not ar._clear(120, Box(120, 60, 10, 10), start, room)  # the run lies along the outline from x 100 to 120
+    assert _clear(60, Box(60, 60, 10, 10), start, room)  # stops short of the body
+    assert _clear(100, Box(100, 60, 10, 10), start, room)  # run and drop touch the body's corner (100, 40) only
+    assert not _clear(120, Box(120, 60, 10, 10), start, room)  # the run lies along the outline from x 100 to 120

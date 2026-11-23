@@ -10,7 +10,7 @@ from .clearance import clear
 from .errors import CoreError
 from .flow_values import CrossLink
 from .net_keys import net_of_key
-from .outputs import Refused
+from .outputs import Refused, Wire
 from .route_astar import Leg, anchor, astar, simplify, tidy
 from .route_env import hard_keeps, own_syms, pin_point, pin_side
 from .route_tree import tree
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
     from .clearance import Keep
     from .occupancy import Occupancy
-    from .outputs import Wire
     from .route_env import Drawn, Rise, RouteEnv
     from .values import XY
 
@@ -173,9 +172,8 @@ def _retree(env: RouteEnv, grid: Occupancy, drawn: Drawn, i: int) -> tuple[Wire,
     return tuple(replace(w, net=trunk.net) for w in found)
 
 
-def _pins(env: RouteEnv, drawn: Drawn, i: int) -> tuple[tuple[PinRef, ...], tuple[int, ...], tuple[Rise, ...]]:
-    """The pins at the ends and taps of the trunk wire `i`, with its taps and rises: pins only; what a loss joins is `cut_loss.withdrawn`."""
-    wire = drawn.wires[i]
+def _pins(env: RouteEnv, drawn: Drawn, wire: Wire) -> tuple[tuple[PinRef, ...], tuple[int, ...], tuple[Rise, ...]]:
+    """The pins at the ends and taps of the trunk `wire`, with its taps and rises: pins only; what a loss joins is `cut_loss.withdrawn`."""
     taps, aimed = _taps(drawn, wire)
     at = (wire.points[0], wire.points[-1], *(drawn.wires[j].points[0] for j in taps))
     pins = tuple(q for q in (*(_pin_at(env, p, wire.net) for p in at), *(r.pin for r in aimed)) if q is not None)
@@ -187,14 +185,20 @@ def _hand(env: RouteEnv, drawn: Drawn, i: int) -> _Tree | None:
 
     None when it has no pin: the wire is then warned, never kept silently.
     """
-    pins, taps, aimed = _pins(env, drawn, i)
-    return _Tree((), (Refused(net_of_key(drawn.wires[i].net), pins),), taps, aimed) if pins else None
+    wire = drawn.wires[i]
+    pins, taps, aimed = _pins(env, drawn, wire if wire.kind not in ("drop", "riser") else _no_length(wire.net, wire.points[-1]))
+    return _Tree((), (Refused(net_of_key(wire.net), pins),), taps, aimed) if pins else None
+
+
+def _no_length(net: str, at: XY) -> Wire:
+    """The trunk of a lane that has no trunk wire: no length, at the point its taps end."""
+    return Wire(net, 0, (at, at), "trunk")
 
 
 def hand_rise(env: RouteEnv, drawn: Drawn, rise: Rise) -> Refused:
-    """A rise no path was found for hands the trunk it aims at (layout-0610); its own pin when it aims at none."""
-    i = next((i for i, w in enumerate(drawn.wires) if w.kind == "trunk" and w.net == rise.net and _on_line(w, rise.target)), None)
-    pins = _pins(env, drawn, i)[0] if i is not None else ()
+    """A rise no path was found for hands the trunk it aims at (layout-0610); a lane with no trunk wire is a trunk of no length at its target."""
+    trunk = next((w for w in drawn.wires if w.kind == "trunk" and w.net == rise.net and _on_line(w, rise.target)), None)
+    pins = _pins(env, drawn, trunk or _no_length(rise.net, rise.target))[0]
     return Refused(rise.net, pins or (rise.pin,))
 
 

@@ -8,9 +8,10 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 lazy from collections.abc import Set as AbstractSet
 
+from fransys_model.kernel import NaturalKey, natural_key
+
 from .flow_values import Cell, End
 from .geometry import lane_extent
-from .keys import natural_key
 from .row_extent import grid_up
 from .topology_elements import Elem, NetEnd
 from .topology_fans import LaneDraft
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from .values import Orientation
 
 PAIR = 2
-Rank = tuple[bool, bool, tuple[tuple[int, int | str], ...]]
+Rank = tuple[bool, bool, NaturalKey]
 
 Ends = dict[str, tuple[NetEnd, ...]]
 

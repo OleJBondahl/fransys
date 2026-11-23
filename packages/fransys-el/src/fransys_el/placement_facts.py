@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Facts, Parallel, Series, Unit, natural_key
+from fransys_layout.core import Facts, Parallel, Series, Unit
 from fransys_model.derive import (
     SeriesRow,
     drawn_groups,
@@ -16,7 +16,7 @@ from fransys_model.derive import (
     unit_chain,
     unit_ids,
 )
-from fransys_model.kernel import render_id
+from fransys_model.kernel import natural_key, render_id
 from fransys_model.layout import Side
 
 from .kit_keys import function_of

@@ -2,15 +2,13 @@
 The bug: the far terminals printed only their point (`4`) under a strip tag, so an engineer could not tell which strip they belong to.
 Fixed by el-0125 (STRIP-TAG-ONCE, designer R2063, R2068): a terminal alone in its run, or a gap from its neighbour, prints the full form (`-XA:4`)."""
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import NamedTuple
 
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _model_build_cover import cabinet_document
 from fransys.colours import RD
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class _Io(NamedTuple):
@@ -35,25 +33,23 @@ def _gapped(d: fr.Design) -> _Io:
     return _Io()
 
 
-def _tags(unit: fr.UnitDef[_Io], name: str, tmp: Path) -> set[str]:
+def _tags(unit: fr.UnitDef[_Io], name: str) -> set[str]:
     d = fr.design("demo_parts")
     d.add(unit, "U1")
-    cover = tmp / "cover.md"
-    cover.write_text("# cover\n", encoding="utf-8")
-    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, name, cover=cover))
+    result = fr.build(d, cabinet_document(name))
     return {t.text for drawing in drawn_pages(result.model).values() for t in drawing.texts if t.kind == "TAG"}
 
 
 @pytest.mark.rule("STRIP-TAG-ONCE")
-def test_a_terminal_alone_in_its_column_prints_its_full_designation(tmp_path: Path) -> None:
-    tags = _tags(_alone, "fc-terminal-tag", tmp_path)
+def test_a_terminal_alone_in_its_column_prints_its_full_designation() -> None:
+    tags = _tags(_alone, "fc-terminal-tag")
     assert {"1", "2", "3", "-XA"} <= tags  # the run at the symbols' own pitch keeps one strip tag over its points
     assert {"-XA:4", "-XA:5"} <= tags
     assert not {"4", "5"} & tags
 
 
 @pytest.mark.rule("STRIP-TAG-ONCE")
-def test_terminals_a_gap_apart_in_one_row_print_their_full_designations(tmp_path: Path) -> None:
-    tags = _tags(_gapped, "fc-terminal-gap", tmp_path)
+def test_terminals_a_gap_apart_in_one_row_print_their_full_designations() -> None:
+    tags = _tags(_gapped, "fc-terminal-gap")
     assert {"-XA:1", "-XA:2", "-XA:3", "-XA:4"} <= tags
     assert not {"1", "2", "3", "4"} & tags

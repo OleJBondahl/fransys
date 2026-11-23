@@ -6,15 +6,21 @@ returns, and the picks of each kind equal the view fact's rows. The skid of P7.2
 # CONNECTION_NOT_DRAWN 10 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
 from functools import cache
-from typing import TYPE_CHECKING
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
 
 import pytest
+from fransys_el.placement_kit import ProblemError
+from fransys_el.symbol_pins import _pick
 from kit_instance_checks import built, check_channels, check_gangs, check_pins, laid_out
 from kit_instances import INSTANCES
+
+from electrical_symbols import LIBRARY
 
 if TYPE_CHECKING:
     from fransys_el.placement_kit import SymbolKit
 
+    from fransys_model.derive import PinView
     from fransys_model.kernel import Model
 
 
@@ -52,3 +58,11 @@ def test_the_instances_between_them_hold_pins_and_channels() -> None:
     assert pins["w09"] > 0
     assert channels["p02"] > 0
     assert channels["w03"] > 0
+
+
+def test_a_connector_pin_binds_to_the_pin_port_and_never_to_the_mating_port() -> None:
+    """`mate` is no pin: the symbol's pins are the port `pin` alone (CB-1 T3)."""
+    view = cast("PinView", SimpleNamespace(name="A", port="p"))
+    assert _pick(LIBRARY, view, ("pin-cell", frozendict({"A": "pin"}))).ports == {"p": "pin"}
+    with pytest.raises(ProblemError):
+        _pick(LIBRARY, view, ("pin-cell", frozendict({"A": "mate"})))

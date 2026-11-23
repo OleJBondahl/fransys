@@ -12,11 +12,12 @@ from dataclasses import dataclass, replace
 from itertools import permutations
 from typing import TYPE_CHECKING, NamedTuple, cast
 
+from fransys_model.kernel import natural_key
+
 from .cut_bundle import bundled
 from .cut_drawn import stand_pins
 from .cut_end_rooms import cut_ends, pole_of
 from .cut_pieces import fan_pins, hole_pin, join, joined, key, pairs, split, trunked
-from .keys import natural_key
 from .net_keys import is_lone_cut
 from .values import PinRef, Ref, RefEnd, RefKind, StandClass
 

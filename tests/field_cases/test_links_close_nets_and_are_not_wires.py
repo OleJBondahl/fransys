@@ -14,7 +14,7 @@ from fransys.colours import BK
 
 from fransys_model.derive import net_of
 from fransys_model.vocab import ConductorKind
-from fransys_model.vocab.tables import conductors
+from fransys_model.vocab.tables import conductors, functions, ports
 
 _TERMINAL = "DEMO-TB-2.5"
 _LINKS = (ConductorKind.MOUNT, ConductorKind.BUSBAR)
@@ -44,6 +44,14 @@ def test_each_link_closes_its_net_and_the_wire_list_has_no_row_for_it(tmp_path) 
     (path,) = (p for p in written if p.name.endswith("wires.csv"))
     rows = list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8"))))
     assert [row["label"] for row in rows] == ["-X1:1 -Q1:1"]  # the ends text, not an authored label
+
+
+def test_an_aux_contact_of_a_mounted_device_stays_unmounted_and_is_kept_as_its_own_function() -> None:
+    model = _build().model
+    mounts = [c for c in conductors(model).values() if c.kind is ConductorKind.MOUNT]
+    ends = [functions(model)[ports(model)[end].function].name for c in mounts for end in (c.a, c.b)]
+    assert ends == ["main"] * 6  # the three poles of the overload and of the contactor, and no aux
+    assert sum(f.name == "aux" for f in functions(model).values()) == 2  # the overload's aux is its own one-pole function, not dropped
 
 
 class _Io(NamedTuple):

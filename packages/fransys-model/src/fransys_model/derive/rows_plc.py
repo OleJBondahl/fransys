@@ -99,12 +99,16 @@ class PlcRackModule:
 
 @value
 class CdpChannel:
-    """One configured channel of a CDP module: `cdp_kind` (DI, AI, DO, AO) and `nr`, its number within its direction."""
+    """One configured channel of a CDP module: `cdp_kind` (DI, AI, DO, AO) and `nr`, its number within its direction.
+
+    `name` is what the WAGO file writes: the CDP name of the signal, else the channel's `label`. Not unique: `check_plc_names` refuses a repeat.
+    """
 
     channel: PlcRackChannel
     cdp_kind: str
     output: bool
     nr: int
+    name: str
 
 
 @value

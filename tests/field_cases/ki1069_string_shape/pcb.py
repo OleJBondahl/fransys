@@ -65,7 +65,6 @@ NETS = {
 FED_NETS = ("V24_IN", "GND")
 COPPER = (WH, 1)
 COPPER_NETS = (*FED_NETS, "V24", "V24_BDV_CU")
-NO_CONNECT = ("J1.4", "J9.6", "J3.4", "J4.4", "J8.14")
 
 
 class Interface(NamedTuple):
@@ -99,20 +98,6 @@ def _function(tag: str, pin: str) -> tuple[str, str]:
     if tag == "K3":
         return (part, "no")
     return (part, "no_1" if pin in ("11", "14") else "no_2")
-
-
-def _j1_nets() -> set[str]:
-    nets = {n for n, pins in NETS.items() if any(p.startswith("J1.") for p in pins)}
-    grown = True
-    while grown:
-        grown = False
-        for net, pins in NETS.items():
-            fuses = {p.split(".")[0] for p in pins if p.startswith("F")}
-            reached = {p.split(".")[0] for n in nets for p in NETS[n] if p.startswith("F")}
-            if net not in nets and fuses & reached:
-                nets.add(net)
-                grown = True
-    return nets
 
 
 @fr.unit(NAME, version=VERSION, revision=REVISION, interface_version=INTERFACE, title=TITLE, number=NUMBER, date="2026-10-06", text="demo", by="XX")

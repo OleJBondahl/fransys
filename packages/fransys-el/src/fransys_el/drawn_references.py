@@ -23,9 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from electrical_symbols import Library
-    from fransys_model.kernel import Finding, Id, Model
+    from fransys_model.kernel import Finding, Id, Model, UnionFind
 
-    from .drawn_graph import Union
     from .drawn_netlist import Netlist, PagePart
 
 __all__ = ["References", "join_references", "reference_findings"]
@@ -133,14 +132,14 @@ def _read_markers(
     return References(tuple(faults), read, nodes, listed)
 
 
-def join_references(model: Model, pages: Mapping[Id[Page], PagePart], library: Library, union: Union) -> References:
+def join_references(model: Model, pages: Mapping[Id[Page], PagePart], library: Library, union: UnionFind[_Node]) -> References:
     """Join the nodes of the markers of each reference group that are read back, and read the stubs; the faults of those that are not."""
     drawn = _drawn(pages)
     marked = _read_markers(model, pages, drawn, library)
     stubs = _read_stubs(model, drawn, pages, {m for ends in reference_targets(model).values() for m, *_ in ends})
     for joined in marked.groups.values():
         for node in joined[1:]:
-            union.join(joined[0], node)
+            union.union(joined[0], node)
     return References(
         (*marked.faults, *stubs.faults), {**marked.markers, **stubs.markers}, {**marked.groups, **stubs.groups}, {**marked.stubs, **stubs.stubs}
     )

@@ -26,7 +26,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "`layout.symbol_placement` and `layout.page`. Wire the open end's function into a function block, "
             "or move its device into a unit. Write: d.series(a, b, ...) to draw it in its block."
         ),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="DRAWING_SHORTS_NETS",
@@ -38,7 +38,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "nets, or a wire ends on another net's wire with no junction dot."
         ),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="DANGLING_WIRE_END",
@@ -50,7 +50,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "reference marker, other wire or joined bundle lane end stands."
         ),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="DRAWN_READ_INCOMPLETE",
@@ -72,7 +72,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=("Wires or dots join ports that no conductor joins: a run between two pins, or a dot over three or more (CONDUCTOR-INK)."),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="CONNECTION_DRAWN_TWICE",
@@ -81,7 +81,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause="Two routes on one page join the same ports: the wires of a page close a loop.",
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="WIRE_NOT_ORTHOGONAL",
@@ -90,7 +90,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause="A drawn wire has a segment that is neither horizontal nor vertical.",
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="WHERE_TEXT_FAR",
@@ -108,7 +108,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=("A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail."),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="POWER_SYMBOL_WRONG_KIND",
@@ -117,7 +117,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=("A power symbol is drawn for a pin as another kind than the potential of its net (supply, ground or protective earth)."),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="PRINTED_TEXT_WRONG",
@@ -154,7 +154,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "between them: put a fuse or breaker between them. For a ground: bond the nets, or declare each supply in its own unit, "
             "so each prints its declaring unit's tag."
         ),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="MISSING_JUNCTION_DOT",
@@ -165,7 +165,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Three or more ink directions meet at a wire end or vertex with no dot and no pin, so the page does not show the wires joined or apart."
         ),
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="DOT_ON_CROSSING",
@@ -174,7 +174,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause="A junction dot stands where two wires cross through each other, so the page shows them joined when they are not.",
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="WIRE_OVER_PIN_TIP",
@@ -183,6 +183,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause="A wire passes over the tip of a pin with its interior and no dot, so the page does not show whether it joins the pin.",
         fix=_REPORT,
-        page="findings-render",
+        page="findings-wires",
     ),
 )

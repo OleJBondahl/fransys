@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fransys_model.vocab import FunctionKind
+
 from . import _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
-_POWER = ("supply", "load")
+_POWER = {kind.value for kind in FunctionKind if kind.carries_energy}
 
 
 def check_energy(entry: _toml.Table, path: str, line: int) -> list[Finding]:

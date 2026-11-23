@@ -6,9 +6,10 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .flow_values import BiasedEnd, Column, CrossLink, End, Fan, FlowGraph, Lane
 from .geometry import column_extent, stack_lane
-from .keys import natural_key
 from .series_tree import anchor_signs
 from .topology_boxchain import box_chains
 from .topology_chains import (

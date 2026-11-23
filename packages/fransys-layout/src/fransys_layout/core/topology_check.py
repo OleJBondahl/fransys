@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections import Counter
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .errors import CoreError
-from .keys import natural_key
 from .values import Finding
 
 if TYPE_CHECKING:

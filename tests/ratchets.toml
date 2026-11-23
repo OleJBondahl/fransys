@@ -40,7 +40,7 @@ stock = 1
 # fransys_author, fransys_kernel, fransys_render).
 [twin_doors]
 twins = 101  # +CodeBook, +findings_sorted (kernel and fransys_model.kernel, R2711 FINDING-KEY, R2935), +OverviewRef (derive door, R2403, R2416), +port_marking (derive door, R1799(2), MARK-DOOR), -ModelDiff, -diff (CL-KER-1), -check_value (DS-1), +value_data, +value_from (kernel and fransys_model.kernel), -Rating: R809, ADOPT-PARTS-3
-clashes = 26
+clashes = 25  # -natural_key (layout core/keys.py deleted for the kernel key, KEYS-ONE)
 
 # HOMES-GATES (root-0350): typed setting literals (numeric value bound to a name ending _mm, _pct,
 # _g, _pt, _gap, _pitch, _margin, _height, _penalty or _width), in packages/*/src. Base 47, 45 after Part B,
@@ -51,11 +51,11 @@ stock = 15
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 42  # 38 + the two PLR0913 above (R2369, R2420)
+total = 41  # 38 + the two PLR0913 above (R2369, R2420)
 
 [escape_hatches_codes]
 # 30 -> 32: Scope.strip and Scope.harness gain drawn_with, a sixth keyword of a public call (R2369, R2420); stock 32 stays: the scope methods' arguments carry no unit; option (C) does not exist (R2420, R2431)
-PLR0913 = 33
+PLR0913 = 32
 PLR0917 = 1
 ANN401 = 1
 ty-invalid-method-override = 5

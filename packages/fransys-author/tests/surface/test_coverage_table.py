@@ -10,8 +10,8 @@ import re
 
 import pytest
 from coverage_table import ROWS
+from fransys_author import _cable_handles, handles, wiring
 from fransys_author import design as engine_design
-from fransys_author import handles, wiring
 from fransys_author.surface import Design, Device, Fn, TerminalStrip
 
 _ENGINE = (
@@ -22,7 +22,7 @@ _ENGINE = (
     handles.Item,
     handles.Strip,
     handles.Terminal,
-    handles.Cable,
+    _cable_handles.Cable,
     wiring.Wiring,
 )
 _LAYOUT = getattr(importlib.import_module("fransys_author.surface._layout"), "Layout", None)

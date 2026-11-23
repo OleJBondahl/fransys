@@ -1,6 +1,5 @@
 """WAGO module XML."""
 
-import re
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
@@ -22,12 +21,6 @@ _ATTRIBUTE_ESCAPES = {'"': "&quot;", "\n": "&#10;", "\r": "&#13;", "\t": "&#9;"}
 def _attr(value: str) -> str:
     """`value` for the inside of a double-quoted XML attribute."""
     return escape(value, _ATTRIBUTE_ESCAPES)
-
-
-def _sanitise(text: str) -> str:
-    """`text` as a CDP name: `[A-Za-z0-9_]` only, no `_` run or edge, `N_` before a first digit."""
-    name = re.sub(r"_+", "_", re.sub(r"[^A-Za-z0-9_]", "_", text)).strip("_")
-    return f"N_{name}" if name[:1].isdigit() else name
 
 
 def _letters(index: int) -> str:
@@ -74,19 +67,13 @@ def _scaling(scaling: ChannelScaling) -> list[str]:
     return _element("Operator", 3, attributes, points)
 
 
-def _channel_name(entry: CdpChannel) -> str:
-    """The bare signal name, else the channel's drawn pin label (DO3)."""
-    name = entry.channel.signal_name
-    return _sanitise(name) if name else entry.channel.label
-
-
 def _channel(entry: CdpChannel) -> list[str]:
     channel = entry.channel
     signal = SIGNALS[entry.cdp_kind]
     attributes = [
         ("Input", "1" if entry.output else "0"),
         ("Model", f"CDPSignalChannel<{signal.kind}>"),
-        ("Name", _channel_name(entry)),
+        ("Name", entry.name),
         ("NetworkConvert", "1"),
         *((("Nr", str(entry.nr)),) if signal.digital else ()),
         *(() if channel.routing is None else (("Routing", channel.routing),)),

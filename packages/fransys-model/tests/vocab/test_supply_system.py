@@ -53,3 +53,16 @@ def test_a_dict_of_rails_is_refused_at_freeze() -> None:
     (error,) = excinfo.value.errors
     assert type(error) is SchemaError
     assert str(error) == "SupplySystem.rails: expected frozendict, got dict"
+
+
+@pytest.mark.parametrize(
+    ("current", "rail", "text"),
+    [
+        (Current.DC, Rail(max_v=Decimal(24), phase=60), "DC and cannot have a phase"),
+        (Current.AC, Rail(max_v=Decimal(-5), phase=0), "cannot be negative"),
+    ],
+    ids=["dc-with-phase", "ac-negative-max-v"],
+)
+def test_a_supply_refuses_a_dc_phase_and_a_negative_ac_max_v(current: Current, rail: Rail, text: str) -> None:
+    with pytest.raises(SchemaError, match=text):
+        _system("x", frozendict({"R": rail}), current=current)

@@ -10,11 +10,11 @@ import pytest
 from _model_build_cover import unit_document
 from fransys.colours import BU
 from fransys_el import symbol_kit
-from fransys_el.drawn_graph import Union
 from fransys_el.drawn_netlist import drawn_netlist
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import port_designation
+from fransys_model.kernel import UnionFind
 
 
 class _Release(TypedDict):
@@ -84,10 +84,6 @@ def _built(*, plugs: int, pins: int) -> fr.BuildResult:
     return fr.build(d, unit_document(top))
 
 
-def _undrawn(*, plugs: int, pins: int) -> list[str]:
-    return [f.message for f in _built(plugs=plugs, pins=pins).findings if f.code == "CONNECTION_NOT_DRAWN"]
-
-
 @pytest.mark.parametrize(("plugs", "pins"), [(2, 3), (2, 5), (2, 6), (3, 2), (3, 3)])
 def test_mated_plugs_wired_to_the_same_pins_of_one_device_draw_every_end(plugs: int, pins: int) -> None:
     """KI-1069 (R2578, R2580): the ends of every sibling plug are drawn, and no stub names a far end that has no conductor."""
@@ -101,8 +97,8 @@ def test_the_child_page_joins_only_the_pins_its_own_conductors_join() -> None:
     net = drawn_netlist(result.model, symbol_kit(result.model, LIBRARY), result.drawings, (), LIBRARY)
     at = {port_designation(result.model, net.ids[key]): dict(placed) for key, placed in net.placed.items()}
     page = next(iter(at["-U1-U2-X2:1"]))
-    ink = Union()
+    ink = UnionFind()
     for edge in net.pages[page].graph.edges:
-        ink.join(*edge)
+        ink.union(*edge)
     root = {name: ink.find(at[f"-U1-U2-{name}:1"][page]) for name in ("X1", "X2", "X4", "X5")}
     assert root["X1"] == root["X2"] != root["X4"] == root["X5"]

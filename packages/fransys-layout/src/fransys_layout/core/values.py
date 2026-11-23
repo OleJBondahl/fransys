@@ -325,7 +325,6 @@ class Options:
     marker_above: Orientation | None = None
     marker_below: Orientation | None = None
     outline: OutlineRoom | None = None  # R889, R900: the unit frame's room; None draws no frame
-    cells: tuple[int, int] = field(kw_only=True)
     box_columns: bool = field(kw_only=True)
     # layout-0440: a pin on one side of a body wired to a column hung on its other side is a tag pair, not a wire round the body
     tag_across_body: bool = field(kw_only=True)

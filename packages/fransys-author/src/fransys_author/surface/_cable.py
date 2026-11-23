@@ -18,7 +18,7 @@ from fransys_author.surface.colours import GNYE
 from fransys_model.derive import core_on_pe_not_gnye, cores_past_product
 from fransys_model.refdef import lowest_free
 from fransys_model.vocab import RESERVED_CODES
-lazy from fransys_author.handles import Cable as EngineCable
+lazy from fransys_author._cable_handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:

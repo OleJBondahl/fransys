@@ -11,7 +11,7 @@ ARROW: Any = "arrow"  # the core RefKind member, which the surface does not expo
 
 
 def _arrow(ref: int, page: int) -> Marker:
-    return Marker("f:x", ARROW, page, "1A", 0, 0, PIN, "R0", ref)
+    return Marker("f:x", ARROW, page, 0, 0, PIN, "R0", ref)
 
 
 def test_a_fans_two_cuts_are_two_groups() -> None:

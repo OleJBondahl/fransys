@@ -90,14 +90,16 @@ def _net(
     return tuple(found)
 
 
-def _whole(net: Net, scope: DrawingScope, boundary: Collection[PinRef]) -> Net:
+def _whole(net: Net, scope: DrawingScope, boundary: Collection[PinRef], ends: Collection[tuple[PinRef, PinRef]]) -> Net:
     """`net` with the pins inside `scope` and no cut.
 
-    A stub out of the unit stays at a boundary end that is the scope's own or printed in another document.
+    A stub out of the unit stays at a boundary end that is the scope's own or printed in another document,
+    and at an in-set pin whose conductor runs to a pin of the net that only the other joined set draws (R652).
     """
     pins = tuple(p for p in net.pins if p.sym in scope.symbols)
-    own_edge = any(p in boundary and (p.sym not in scope.away or p.sym in scope.abroad) for p in pins)
-    return replace(net, pins=pins, cut=(), crosses_unit=net.crosses_unit and own_edge)
+    edge = any(p in boundary and (p.sym not in scope.away or p.sym in scope.abroad) for p in pins)
+    edge = edge or any(a in pins and b in net.pins and b.sym not in scope.symbols for a, b in ends)
+    return replace(net, pins=pins, cut=(), crosses_unit=net.crosses_unit and edge)
 
 
 def _lined(net: Net, lines: Mapping[PinRef, str]) -> Net:
@@ -149,15 +151,11 @@ def _facts(facts: Facts, symbols: frozenset[str], bare: Collection[PinRef], gone
     return Facts(kept, units, mates, series=series, far_ends=far, groups=groups)
 
 
-def _known[T](names: Iterable[T], known: Collection[T]) -> bool:
-    return all(n in known for n in names)
-
-
 def _hints(hints: Hints, names: Collection[str], scope: DrawingScope) -> Hints:
     """The hints whose every name stands in the scope, and the scope's frames (R900 G9)."""
     return Hints(
         tuple(g for g in hints.group_order if g in names),
-        tuple(p for p in hints.order_pairs if _known(p, names)),
+        tuple(p for p in hints.order_pairs if all(n in names for n in p)),
         scope.frames,
     )
 
@@ -184,8 +182,9 @@ def _scoped(  # noqa: PLR0913, PLR0917 -- the scope cut takes the set's cut fact
     own = scopes.index(scope) if scope in scopes else -1
     joined = {n.id for n in problem.nets if _joined(n, own, scopes)}
     ended = {*bare, *(a.pin for a in problem.anchors)}  # an anchored pin ends its net: no conductor leaves it
-    cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), problem.facts.far_ends, pieces)) for n in problem.nets if n.id not in joined]
-    nets = tuple(_lined(p, lines or {}) for _, ps in cut for p in ps) + tuple(_whole(n, scope, boundary) for n in problem.nets if n.id in joined)
+    far = problem.facts.far_ends
+    cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), far, pieces)) for n in problem.nets if n.id not in joined]
+    nets = tuple(_lined(p, lines or {}) for _, ps in cut for p in ps) + tuple(_whole(n, scope, boundary, far) for n in problem.nets if n.id in joined)
     dropped = frozenset(o.id for o, ps in cut if not ps and any(p.sym in scope.symbols for p in o.pins))
     return nets, dropped
 

@@ -6,6 +6,7 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import RD
 
@@ -36,9 +37,7 @@ def _rail(u: fr.Design) -> _Io:
 
 @pytest.fixture(scope="module")
 def built() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="PE", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-11-06", text="First issue", created="XX")
+    d = fc_design("PE", place="CAB", date="2026-11-06")
     d.location("CAB", "Cabinet")
     return fr.build(d, unit_document(d.add(_cab, "U1", place=None)))
 
@@ -61,9 +60,7 @@ def test_the_terminal_is_not_a_spare(built: fr.BuildResult) -> None:
 
 
 def test_an_unwired_terminal_of_a_bridged_unflagged_strip_on_24v_stays_a_spare() -> None:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="PE", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-11-06", text="First issue", created="XX")
+    d = fc_design("PE", place="CAB", date="2026-11-06")
     d.location("CAB", "Cabinet")
     result = fr.build(d, unit_document(d.add(_rail, "U1", place=None)))
     spare = [f for f in result.findings if f.code == "SPARE_TERMINALS"]

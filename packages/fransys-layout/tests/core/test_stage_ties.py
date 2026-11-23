@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from fransys_layout.core.jsonform import to_plain
-from fransys_layout.core.keys import natural_key
+from fransys_model.kernel import natural_key
 
 from .stage_cases import STAGE_CASES
 

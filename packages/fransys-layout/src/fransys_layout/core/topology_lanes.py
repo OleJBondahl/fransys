@@ -6,9 +6,10 @@ from collections import Counter, defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .flow_values import Cell
 from .geometry import lane_extent, pin_xy
-from .keys import natural_key
 from .topology_chains import Node, cells_of, group_columns
 from .topology_fans import LaneDraft
 from .values import PinRef

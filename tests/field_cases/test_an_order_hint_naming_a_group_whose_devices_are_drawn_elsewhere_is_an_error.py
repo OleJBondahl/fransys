@@ -4,14 +4,13 @@ Fixed by model-0441 (R1841): the model check ORDER_GROUP_DRAWS_NOTHING names MOD
 
 import fransys as fr
 from _expected_codes import expect_codes
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 
 def _build() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Hints", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Hints", place="CAB", date="2026-10-02")
     cab = d.location("CAB", "Cabinet")
     with d.function("MOD", "Module") as mod:
         k1 = d.device("K1", "DEMO-RLY-2CO-24")

@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 from fransys.colours import BK
 
@@ -21,15 +22,7 @@ class _Io(NamedTuple):
     X1: fr.Device
 
 
-@fr.unit(
-    "demo-board",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Relay board",
-)
+@fc_unit("demo-board", title="Relay board")
 def _board(u: Any) -> _Io:
     pcb = u.device("A1", "DEMO-PCB-IO")
     with u.function("F1", "Board circuit"):
@@ -40,15 +33,7 @@ def _board(u: Any) -> _Io:
     return _Io(x)
 
 
-@fr.unit(
-    "demo-cab",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Cabinet",
-)
+@fc_unit("demo-cab", title="Cabinet")
 def _cabinet(u: Any) -> _Open:
     with u.function("P1", "Feed 1"):
         h1 = u.device("H1", "DEMO-LAMP-24")

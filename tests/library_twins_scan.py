@@ -37,7 +37,6 @@ NOT_TWINS = {
 M = "packages/fransys-model/src/fransys_model/"
 A = "packages/fransys-author/src/fransys_author/surface/"
 P = "packages/fransys-parts/src/fransys_parts/"
-L = "packages/fransys-layout/src/fransys_layout/"
 TWINS = [
     *(f"{M}vocab/{n}.py" for n in ["designation_scheme", "colours", "signal_types", "markings"]),
     *(f"{M}derive/facts/{n}.py" for n in ["function_ratings", "part_throws", "part_poles"]),
@@ -49,7 +48,6 @@ TWINS = [
     f"{A}_unit_tags.py",
     # _ratings.py is no twin (R915 P5): function_ratings and the part-level [block] mapping read Fransys records; narrowed by name, ADOPT-POLES-2
     f"{P}_protection.py",
-    f"{L}core/keys.py",
 ]
 
 

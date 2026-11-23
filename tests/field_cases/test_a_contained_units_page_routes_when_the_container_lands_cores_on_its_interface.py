@@ -6,6 +6,7 @@ from typing import NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
+from _field_designs import fc_unit
 from fransys.colours import WH
 
 N = 7
@@ -15,17 +16,7 @@ class _Out(NamedTuple):
     T: fr.TerminalStrip
 
 
-@fr.unit(
-    "U1",
-    version=1,
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="First",
-    by="XX",
-    title="Unit",
-    number="R-1",
-)
+@fc_unit("U1", version=1, text="First", by="XX", title="Unit", number="R-1")
 def _u1(d: fr.Design) -> _Out:
     t = d.terminal_strip("T", "DEMO-TB-2.5", N, interface=True)
     di = d.device("DI", "DEMO-PLC-DI-16")

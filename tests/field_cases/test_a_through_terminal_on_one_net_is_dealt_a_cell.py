@@ -1,11 +1,9 @@
 """Field case: an unbridged terminal fed to a supply's input, the supply standing over the module it feeds.
 The bug: the terminal's net fell to a cross-link and no cell was dealt it (NO_CELL); fixed by layout-0486 (R1167)."""
 
-import tempfile
-from pathlib import Path
-
 import fransys as fr
 import pytest
+from _model_build_cover import cabinet_document
 from fransys.colours import BN, BU
 
 CORRECTNESS = {"NO_CELL", "CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END"}
@@ -32,9 +30,7 @@ def _built(mpn: str, plus: str, minus: str, *, hide: bool):
     d.dc_supply("S", plus=m1.out["+"], minus=m1.out["-"], voltage=24)
     d.series(m1.out["+"], rail.run("P", 2, bridged=True, rail=True)[1].outer, wire=(BN, 1.5))
     d.series(m1.out["-"], rail.run("M", 2, bridged=True, rail=True)[1].outer, wire=(BU, 1.5))
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    doc = cabinet_document(cab)
     return fr.build(d, doc)
 
 

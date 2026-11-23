@@ -15,6 +15,7 @@ from fransys_model.vocab.tables import facets_of, functions
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 if TYPE_CHECKING:
+    from fransys_model.kernel import Model
     from fransys_model.vocab.core import Function, Item, Port
 
 
@@ -85,7 +86,7 @@ def test_several_wired_devices_are_sorted_and_joined_with_a_comma() -> None:
 
 def _named_request(plant: Plant, key: str, name: str | None, *, signal: SignalType | None = SignalType.DI) -> Id[Function]:
     """A function with a `plc_request`: a device's (a `signal`) or a spare channel's settings (`signal=None`)."""
-    function = plant.function(plant.item(key), "fn")
+    function = plant.function(plant.item(key, designation=key.upper()), "fn")
     plant.add(
         PlcRequestFacet(
             id=make_id(PlcRequestFacet, (key, "request")), key=(key, "request"), subject=function, signal=signal, signal_name=name, priority=1
@@ -94,8 +95,8 @@ def _named_request(plant: Plant, key: str, name: str | None, *, signal: SignalTy
     return function
 
 
-def _bound_in(plant: Plant, rack: Id[Item], key: str, name: str) -> Id[Function]:
-    """A device named `name`, bound to the one channel of a DI module under `rack`."""
+def _bound_in(plant: Plant, rack: Id[Item], key: str, name: str, *, spares: tuple[str, ...] = ()) -> Id[Function]:
+    """A device named `name`, bound to channel `1` of a DI module under `rack`; one spare channel per label of `spares` follows."""
     part = Part(
         id=make_id(Part, (key, "part")),
         key=(key, "part"),
@@ -105,13 +106,25 @@ def _bound_in(plant: Plant, rack: Id[Item], key: str, name: str) -> Id[Function]
         category=PartCategory.PLC_MODULE,
         class_code="A",
     )
-    template = FunctionTemplate(id=make_id(FunctionTemplate, (key, "ch")), key=(key, "ch"), part=part.id, name="ch1", kind=FunctionKind.PLC_CHANNEL)
-    facet = PlcChannelFacet(id=make_id(PlcChannelFacet, (key, "facet")), key=(key, "facet"), subject=template.id, signal=SignalType.DI, channel=1)
-    plant.add(part, template, facet)
-    channel = plant.function(plant.item(key, parent=rack, part=part.id), "ch1", template=template.id)
+    plant.add(part)
+    module = plant.item(key, parent=rack, part=part.id, designation=f"A{key}")
+    channels = []
+    for number, pin in enumerate(("1", *spares), start=1):
+        tkey = (key, f"ch{number}")
+        template = FunctionTemplate(id=make_id(FunctionTemplate, tkey), key=tkey, part=part.id, name=f"ch{number}", kind=FunctionKind.PLC_CHANNEL)
+        facet = PlcChannelFacet(
+            id=make_id(PlcChannelFacet, (*tkey, "f")), key=(*tkey, "f"), subject=template.id, signal=SignalType.DI, channel=number
+        )
+        plant.add(template, facet)
+        channels.append(plant.function(module, f"ch{number}", template=template.id))
+        plant.port(channels[-1], pin)
     device = _named_request(plant, f"dev-{key}", name)
-    _bind(plant, device, channel)
+    _bind(plant, device, channels[0])
     return device
+
+
+def _channel_of(model: Model, device: Id[Function]) -> Id[Function]:
+    return {b.subject: b.channel for b in facets_of(model, PlcBindingFacet).values()}[device]
 
 
 def test_two_devices_of_one_controller_with_one_signal_name_are_refused_naming_both() -> None:
@@ -121,11 +134,29 @@ def test_two_devices_of_one_controller_with_one_signal_name_are_refused_naming_b
     (found,) = check_plc_names(plant.model())
     assert (found.code, found.severity) == (PLC_SIGNAL_NAME_TWICE, Severity.ERROR)
     model = plant.model()
-    bound = {b.subject: b.channel for b in facets_of(model, PlcBindingFacet).values()}
     for device in (first, second):
-        channel = bound[device]
-        assert f"channel {ref(channel)} of module {ref(functions(model)[channel].item)} (device {ref(device)})" in found.message
+        channel = _channel_of(model, device)
+        assert f"channel {ref(channel)} of module {ref(functions(model)[channel].item)}" in found.message
     assert "rename one with .plc(signal, name)" in found.message
+
+
+def test_two_signal_names_that_are_one_cdp_name_are_refused() -> None:
+    plant = Plant()
+    rack = plant.item("rack")
+    _bound_in(plant, rack, "a", "Door")
+    _bound_in(plant, rack, "b", "Door!")
+    (found,) = check_plc_names(plant.model())
+    assert (found.code, found.severity) == (PLC_SIGNAL_NAME_TWICE, Severity.ERROR)
+    assert "'Door' for CDP" in found.message
+
+
+def test_a_bound_signal_name_that_is_empty_for_cdp_is_refused_naming_the_signal_and_the_fix() -> None:
+    plant = Plant()
+    _bound_in(plant, plant.item("rack"), "a", "!!!", spares=("2",))
+    (found,) = check_plc_names(plant.model())
+    assert (found.code, found.severity) == (PLC_SIGNAL_NAME_TWICE, Severity.ERROR)
+    assert "'!!!'" in found.message
+    assert "a name with a letter or digit" in found.message
 
 
 def test_one_signal_name_on_two_controllers_is_allowed() -> None:
@@ -141,4 +172,30 @@ def test_a_spare_channels_name_is_no_signal_name_and_may_repeat() -> None:
     _bound_in(plant, rack, "a", "Door")
     _named_request(plant, "s1", "unused", signal=None)
     _named_request(plant, "s2", "unused", signal=None)
+    assert check_plc_names(plant.model()) == ()
+
+
+def test_a_signal_name_equal_to_a_spare_label_of_its_module_is_refused_naming_both_channels() -> None:
+    plant = Plant()
+    device = _bound_in(plant, plant.item("rack"), "a", "Door", spares=("Door",))
+    (found,) = check_plc_names(plant.model())
+    assert (found.code, found.severity) == (PLC_SIGNAL_NAME_TWICE, Severity.ERROR)
+    assert f"channel {ref(_channel_of(plant.model(), device))} of module" in found.message
+    assert "are all written as 'Door' for CDP" in found.message
+    assert "rename one with .plc(signal, name)" in found.message
+
+
+def test_two_spare_channels_with_one_label_in_a_module_are_refused() -> None:
+    plant = Plant()
+    _bound_in(plant, plant.item("rack"), "a", "X", spares=("Door", "Door"))
+    (found,) = check_plc_names(plant.model())
+    assert (found.code, found.severity) == (PLC_SIGNAL_NAME_TWICE, Severity.ERROR)
+    assert "are all written as 'Door' for CDP" in found.message
+
+
+def test_a_signal_name_equal_to_a_spare_label_of_another_module_is_allowed() -> None:
+    plant = Plant()
+    rack = plant.item("rack")
+    _bound_in(plant, rack, "a", "X", spares=("Door",))
+    _bound_in(plant, rack, "b", "Door")
     assert check_plc_names(plant.model()) == ()

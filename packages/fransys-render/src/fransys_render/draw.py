@@ -40,14 +40,6 @@ _BOX_SIDES = (2, 2)
 _BOX_POINTS = (2, 4)
 
 
-def format_decimal(value: Decimal) -> str:
-    """`value` as plain text: no exponent, no trailing zeros, `0` for any zero."""
-    text = f"{value:f}"
-    if "." in text:
-        text = text.rstrip("0").rstrip(".")
-    return "0" if text in ("", "-0") else text
-
-
 def _mm(grid: int, style: Style) -> Decimal:
     """`grid` G as mm, in `Decimal`."""
     return Decimal(grid) * Decimal(str(style.module_mm)) / Decimal(style.g_per_module)
@@ -217,11 +209,7 @@ def svg(
     parts += [_wire(wire, library, style) for wire in drawing.wires]
     parts += [text_tag(text, library, style) for text in drawing.texts]
     body = "".join(parts)
-    if sheet_mm is not None:
-        width, height, x, y = sheet_mm
-        return sheet_svg(width, height, group_mm(body, (x, y)), margin_mm=0)
-    width_mm, height_mm = (
-        format_decimal(_mm(drawing.area.w, style)),
-        format_decimal(_mm(drawing.area.h, style)),
-    )
-    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{width_mm}mm" height="{height_mm}mm" viewBox="0 0 {width_mm} {height_mm}">{body}</svg>'
+    if sheet_mm is None:
+        return sheet_svg(float(_mm(drawing.area.w, style)), float(_mm(drawing.area.h, style)), body, margin_mm=0)
+    width, height, x, y = sheet_mm
+    return sheet_svg(width, height, group_mm(body, (x, y)), margin_mm=0)

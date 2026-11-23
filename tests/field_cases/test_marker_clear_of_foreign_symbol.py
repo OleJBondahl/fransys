@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import cabinet_document
+from fransys.colours import BU
 
+from fransys_layout.core import overlaps
 from fransys_model.layout import LinkMarker, layout_of
 
 if TYPE_CHECKING:
@@ -67,3 +70,27 @@ def test_the_pass_through_carries_a_marker(built: fr.BuildResult) -> None:
     """The fixture builds the shape the docstring describes, whichever place the marker takes."""
     markers = layout_of(built.model, LinkMarker).values()
     assert [m for m in markers if "a2" in m.key and "A2" in m.key]
+
+
+def _di_build() -> fr.BuildResult:
+    """A PLC input card, pins 1 to 8, each wired to two loads, so each pin draws a link marker flag."""
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    strip = d.terminal_strip("X2", "DEMO-TB-2.5", 80)
+    with d.function("DI", "PLC inputs"):
+        di = d.device("DI1", "DEMO-PLC-DI-16")
+    for n in range(16):
+        with d.function(f"L{n}", f"Load {n}"):
+            load = d.device(f"CV{n:02d}", "DEMO-ACT-4P-2SW")
+            d.series(di[str(n // 2 + 1)], load.sw_1, wire=(BU, 0.75))
+            d.series(strip[n + 1].outer, load.sw_1[5], wire=(BU, 0.75))
+    return fr.build(d, cabinet_document(cab))
+
+
+def test_no_two_marker_boxes_of_a_page_share_area() -> None:
+    """KI-1389: the flags of adjacent pins share area, so one marker's text prints over the next (R2647)."""
+    sharing = []
+    for drawing in _di_build().drawings.values():
+        boxes = [s.outline for s in drawing.symbols if s.outline is not None and "marker" in s.key]
+        sharing += [(a, b) for i, a in enumerate(boxes) for b in boxes[i + 1 :] if overlaps(a, b)]
+    assert sharing == [], f"{len(sharing)} marker pairs share area, first {sharing[:1]}"

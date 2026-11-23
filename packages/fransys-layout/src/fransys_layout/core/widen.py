@@ -16,9 +16,7 @@ from .cut import cut_pages
 from .cut_costs import with_wires
 from .cut_measured import Measured, placed_rows
 from .errors import CoreError
-from .geometry import union
 from .order import order_blocks
-from .outputs import Demand, Placement, Routes
 from .place import place_pages
 from .route_labels import roomed
 from .route_loop import Round, route_round
@@ -26,15 +24,15 @@ from .row_measure import page_rows
 from .row_names import row_where
 from .topology import build_flow
 from .values import Finding, g_text
-from .widen_rounds import settled, unspent
+from .widen_rounds import asked_of, digits_of, floored, settled, tagged_by, unspent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
 
     from .arrow_reserve import RowReserve
     from .flow_values import BlockList, CutResult, FlowGraph
-    from .outputs import PagePlacement, Refused, RowMeasure
-    from .values import Options, PinRef, PlacementProblem
+    from .outputs import Demand, PagePlacement, Placement, Routes, RowMeasure
+    from .values import Options, PlacementProblem
 
 
 def reserves_of(placement: Placement, routes: Routes) -> Mapping[tuple[str, str], int]:
@@ -196,40 +194,6 @@ def _recut(
     return best[1], best[2]
 
 
-def tagged_by(problem: PlacementProblem, lost: Iterable[Refused], apart: Iterable[Refused] = (), legless: Iterable[PinRef] = ()) -> PlacementProblem:
-    """The problem whose nets hold each lost link as a tagged one (layout-0508) and each apart pair as an apart one (layout-0635).
-
-    The cut plans their tag pairs, so placement reserves their room.
-    A pin whose leg stood no line is `legless`: the next cut ends it at the trunk end.
-    """
-    out = problem
-    for field, refused in (("tagged", lost), ("apart", apart)):
-        held = {n.id: set(getattr(n, field)) for n in out.nets}
-        by_net: dict[str, list[tuple[PinRef, ...]]] = {}
-        for r in refused:
-            if r.ends and len(r.ends) > 1 and r.ends not in held.get(r.net, ()) and r.ends not in by_net.get(r.net, ()):
-                by_net.setdefault(r.net, []).append(r.ends)
-        if by_net:
-            out = replace(out, nets=tuple(replace(n, **{field: (*getattr(n, field), *by_net[n.id])}) if n.id in by_net else n for n in out.nets))
-    new = {p for p in legless if all(p not in n.legless for n in out.nets)}
-    if new:
-        out = replace(out, nets=tuple(replace(n, legless=(*n.legless, *(p for p in n.pins if p in new))) for n in out.nets))
-    return out
-
-
-def _floored(routes: Routes) -> Routes:
-    """The routes with each page's label needs read as demands: the gap beside a blocked label is wanted as wide as the label (T6)."""
-    pages = []
-    for p in routes.pages:
-        want: dict[str, int] = {}
-        for d in (*p.demand, *p.needs):
-            if d.room:
-                continue
-            want[d.gap] = max(want.get(d.gap, 0), d.tracks)
-        pages.append(replace(p, demand=tuple(Demand(g, t) for g, t in want.items())))
-    return replace(routes, pages=tuple(pages))
-
-
 def _widen_to(
     cut: CutResult, placement: Placement, routes: Routes, env: tuple[PlacementProblem, Options, Mapping[str | tuple[str, str], RowReserve]]
 ) -> tuple[CutResult, Placement]:
@@ -255,7 +219,7 @@ def _widened(
     problem, options, _ = env
     if any(p.needs for p in routes.pages):
         try:
-            tried = _widen_to(cut, placement, _floored(routes), env)
+            tried = _widen_to(cut, placement, floored(routes), env)
         except CoreError:
             tried = None
         if tried and not overflows(tried[1], tried[0], problem, options):
@@ -264,26 +228,15 @@ def _widened(
     return cut2, placement2, overflows(placement2, cut2, problem, options)
 
 
-def _asked(demands: Iterable[Demand], given: Mapping[tuple[str, str], Demand]) -> tuple[list[Demand], dict[tuple[str, str], Demand]]:
-    """The room and rung boxes each owner is asked for, per side, beyond what an earlier pass gave (layout-0559, R1831, R1961)."""
-    want: dict[tuple[str, str], Demand] = {}
-    for d in demands:
-        if d.owner and (d.room or d.box):
-            old = want.get((d.owner, d.side), Demand("", 0, owner=d.owner, side=d.side))
-            box = d.box if old.box is None or d.box is None else union(old.box, d.box)
-            want[d.owner, d.side] = Demand("", 0, max(old.room, d.room), d.owner, box=box or old.box, side=d.side)
-    asked = []
-    for k, w in want.items():
-        g = given.get(k, Demand("", 0, owner=k[0], side=k[1]))
-        if w.room > g.room or (w.box is not None and w.box != g.box):
-            asked.append(Demand("", 0, w.room - g.room if w.room > g.room else 0, k[0], box=w.box if w.box != g.box else None, side=k[1]))
-    return asked, {**given, **want}
+def _marker_room(
+    problem: PlacementProblem, asks: Sequence[Demand], given: Mapping[tuple[str, str], Demand], options: Options
+) -> tuple[PlacementProblem, list[Demand], dict[tuple[str, str], Demand]]:
+    """The problem with the room the markers ask for, those asks and the grants so far.
 
-
-def _digits(placement: Placement, problem: PlacementProblem, risen: int) -> tuple[PlacementProblem, int, bool]:
-    """`problem` with the annexes for the digits of the page count, once they pass the `risen` reserved; digits only rise (R1883)."""
-    rise = len(problem.wider[: len(str(len(placement.pages))) - 1])  # capped at the sets `wider` holds
-    return (replace(problem, annexes=problem.wider[rise - 1]), rise, True) if rise > risen else (problem, risen, False)
+    The last resort, tried before a quiet pass settles the loop (layout-0559, KI-1004).
+    """
+    asked, given = asked_of(asks, given)
+    return roomed(problem, asked, options.outline), asked, given
 
 
 def widen(
@@ -303,24 +256,20 @@ def widen(
     roomed_for: dict[tuple[str, str], Demand] = {}
     risen, tried = 0, {}
     for i in count():
-        problem, risen, rose = _digits(placement, problem, risen)
+        problem, risen, rose = digits_of(placement, problem, risen)
         tried, needs = unspent(tried, rnd.routes, options)
-        asked, roomed_for = _asked(needs, roomed_for)
+        asked, roomed_for = asked_of(needs, roomed_for)
         problem2 = roomed(tagged_by(problem, rnd.lost, rnd.apart, rnd.legless), asked, options.outline)
-        # a marker's ask is the last resort, tried before a quiet pass settles the loop (layout-0559, KI-1004)
         marker_only = problem2 is problem and not rose and (i > 0 or not _grew(placement, rnd.routes))
         if marker_only:
-            asked, roomed_for = _asked(rnd.asks, roomed_for)
-            problem2 = roomed(problem, asked, options.outline)
+            problem2, asked, roomed_for = _marker_room(problem, rnd.asks, roomed_for, options)
         if i == 0 and problem2 is problem and not rose and not _grew(placement, rnd.routes) and not overflows(placement, cut, problem, options):
             return cut, _counted(placement, reserves_of(placement, rnd.routes)), rnd, problem, ()
         if settled(i, options, asked, quiet=problem2 is problem and not rose):
             break
         held = keep_legs(held, block_reserves(cut, problem.annexes, options))
         grown = _widened(cut, placement, rnd.routes, (problem2, options, held))
-        if (
-            marker_only and grown[2] and not overflows(placement, cut, problem, options)
-        ):  # a room the page cannot hold is no room: the marker stays unplaced, the page does not overflow
+        if marker_only and grown[2] and not overflows(placement, cut, problem, options):  # no room the page cannot hold: the marker stays unplaced
             break
         cut, placement, over = grown
         problem, rnd = problem2, route_round(cut, placement, problem2, options, rnd.memo)

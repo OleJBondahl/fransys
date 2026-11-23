@@ -8,6 +8,7 @@ from typing import NamedTuple
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages, markers_in, ref_texts
+from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
@@ -30,9 +31,7 @@ def _cabinet(u: fr.Design) -> _Io:
 
 @pytest.fixture(scope="module")
 def built() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Stub", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("Stub", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     cab = d.add(_cabinet, "U1", place=None)
     with d.function("IN", "Incoming"):

@@ -71,11 +71,10 @@ a function that takes or gives energy above a signal function.
 `no_conductor_at(model, port)` is `True` when no conductor (wire, jumper, cable core
 or link) ends at `port`. Unlike `unconnected_ports`, a mate or a declared net does not count.
 
-
 `port_is_unused(model, port)` is `True` when no conductor ends at `port` and no declared
 net has it. A mate does not count. `function_is_unused(model, function)` is `True` when
 every port of `function` is unused: the function `hide_unused_pins` leaves off the page, and a contact
-among them is a spare in its coil's contact table. `function_is_idle_terminal(model, function)` is `True` for a terminal no wire inside its drawing reaches.
+among them is a spare in its coil's contact table. `function_is_idle_terminal(model, function)` is `True` for a terminal no wire in its drawing reaches.
 `function_scopes(model, function)` returns the `(unit, place)` sets that draw `function`: its own, then each set holding a copy of a terminal.
 
 `power_kind(model, net)` returns a `PowerKind` for a declared net: `SUPPLY`,
@@ -89,7 +88,7 @@ is the text a power symbol prints. It is the supply's name, else its potential, 
 `GROUND`, `PE` and `NONE`. `port_power_text(model, port)` gives the text of the symbol at a port.
 `is_rail_terminal(model, terminal)` is true for a terminal in a group flagged `rail=True`.
 A flagged terminal draws as its power symbol, an unflagged one as a terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and wire list hold every landing and wire.
-A terminal is drawn at the pin it serves, once per page. So is a single-wire contact or a coil on a PLC output channel, with a reference back to its device. A rail symbol faces away from its box: up above a top pin, down below a bottom pin.
+A terminal is drawn at the pin it serves, once per page. So is a single-wire contact or a coil on a PLC output channel, with a reference back to its device. A rail symbol faces away from its box: up above a top pin, down below a bottom one.
 A terminal with no wire on a page is not drawn there. One wired to nothing is only in the terminal list.
 
 `fransys.derive.wire_rows(model, *, unit=None)` returns the wire list: one `WireRow` per
@@ -97,12 +96,11 @@ wire, with `from_`, `to`, `colour`, `cross_section_mm2` and `ends`. The `ends` a
 designations joined by one space in a fixed order, the text the wire list and sleeves print. A schematic page prints no wire label.
 `fr.write` writes these rows as `<set>-wires.csv`.
 
-`fransys.derive.boundary(model, unit)` returns the functions that make up a unit's
-interface, as a tuple of function ids in id order. A function of any kind can be a unit's boundary.
+`fransys.derive.boundary(model, unit)` returns a unit's interface functions
+as a tuple of function ids in id order. Any function kind can be a boundary.
 
-`fransys.derive.FunctionKind` is the enum of what a `Function` exposes: `COIL`,
-`CONTACT_NO`, `TERMINAL`, `CONNECTOR`, `SUPPLY`, and so on. A function's `kind` is one of
-these.
+`fransys.derive.FunctionKind` is the enum of a `Function`'s `kind`: `COIL`,
+`CONTACT_NO`, `TERMINAL`, `CONNECTOR`, `SUPPLY`, and so on. `FunctionKind.carries_energy` is true for `SUPPLY` and `LOAD`, the kinds that may declare an energy direction.
 
 `fransys.derive.connector_facets(model)` returns every `connector` facet, by the function
 template it describes, as a `frozendict[Id[FunctionTemplate], ConnectorFacet]`.

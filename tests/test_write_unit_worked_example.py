@@ -5,7 +5,6 @@ Does not modify `test_units_worked_example.py`'s shared fixture functions
 """
 # CONNECTION_NOT_DRAWN 4 per default-salt build set (MATES-DISABLED): mated, harness or board-unit input, refused for 0.22 (R1216).
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import re
 import tempfile
 from pathlib import Path
@@ -90,6 +89,16 @@ _ALL_WRITE_FILES = frozenset(
         "P-1001-v1.1-wires.csv",
     }
 )
+# The default write adds one set per unit design under units/<name>/, whatever its instance count (R3632).
+# Both designs have two instances, so no set holds a PDF (KI-1452, R375).
+_UNIT_DESIGN_FILES = frozenset(
+    f"{design}-{kind}"
+    for design in ("demo-io-board-v1.3", "demo-pump-cabinet-v1.2")
+    for kind in ("bom.csv", "cables.csv", "cores.csv", "designations.csv", "plc.csv", "wires.csv")
+) | {
+    "demo-io-board-v1.3-connectors.csv",
+    "demo-pump-cabinet-v1.2-terminals.csv",
+}
 
 
 def _unit_id(model, *, name, prefix):
@@ -188,7 +197,7 @@ def test_write_unit_none_and_pump2_also_succeed(built, tmp_path):
     result, _pump1_cabinet, pump2_cabinet, _pump1_board = built
     assert [f.code for f in fr.check(result)].count("INK_WITHOUT_CONDUCTOR") == 0  # a board trace is a conductor (R2626)
     written_all = fr.write(result, tmp_path / "all", unit=None)
-    assert {p.name for p in written_all} == _ALL_WRITE_FILES
+    assert {p.name for p in written_all} == _ALL_WRITE_FILES | _UNIT_DESIGN_FILES
     written_pump2 = fr.write(result, tmp_path / "pump2", unit=pump2_cabinet)
     (terminals,) = (p for p in written_pump2 if "terminals" in p.name)
     assert terminals.name == "demo-pump-cabinet-v1.2-terminals.csv"
@@ -320,9 +329,9 @@ def test_write_unit_str_unknown_name_raises_value_error(tmp_path):
     assert str(excinfo.value) == expected
 
 
-def test_write_unit_str_two_instances_of_the_same_name_raises_value_error(tmp_path):
-    """Two `Unit` instances of the same release name: `units_named` finds both, so `write`
-    raises the same `unit_name_unresolved` sentence (not exactly one match)."""
+def test_write_unit_str_two_instances_of_the_same_name_writes_the_one_design_set(tmp_path):
+    """Two `Unit` instances of the same release name: `unit_design_of` picks the first, so `write`
+    writes ONE set whose designations list carries no placement text (R3632)."""
     d = Design(fr.parts())
     d.project(title="t", number="n", customer="c", revision=1, author="a")
     d.revision(1, date="2026-09-23", text="First issue", created="XX")
@@ -331,10 +340,24 @@ def test_write_unit_str_two_instances_of_the_same_name_raises_value_error(tmp_pa
     second = d.scope("cab2").unit("dup-name", revision=1, interface="1")
     second.revision(1, date="2026-01-01", text="First release", created="XX")
     result = fr.build(fr.parts(), d.draft(), system_document())
-    expected = unit_name_unresolved(result.model, "dup-name")
-    with pytest.raises(ValueError, match=re.escape(expected)) as excinfo:
-        fr.write(result, tmp_path, unit="dup-name")
-    assert str(excinfo.value) == expected
+    written = fr.write(result, tmp_path, unit="dup-name")
+    (designations,) = (p for p in written if p.name.endswith("designations.csv"))
+    assert designations.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
+
+
+def test_the_default_write_of_two_instances_of_one_name_writes_one_set_under_units(tmp_path):
+    """KI-1304: the default write puts ONE `units/dup-name/` set, whose designations list has no placement column."""
+    d = Design(fr.parts())
+    d.project(title="t", number="n", customer="c", revision=1, author="a")
+    d.revision(1, date="2026-09-23", text="First issue", created="XX")
+    for scope in ("cab1", "cab2"):
+        unit = d.scope(scope).unit("dup-name", revision=1, interface="1")
+        unit.revision(1, date="2026-01-01", text="First release", created="XX")
+    written = fr.write(fr.build(fr.parts(), d.draft(), system_document()), tmp_path)
+    (designations,) = (p for p in written if "dup-name" in p.parts and p.name.endswith("designations.csv"))
+    assert designations.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
+    (system,) = (p for p in written if "units" not in p.parts and p.name.endswith("designations.csv"))
+    assert "reference" in system.read_text(encoding="utf-8").splitlines()[0].lower()
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

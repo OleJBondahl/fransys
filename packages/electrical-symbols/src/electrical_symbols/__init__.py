@@ -32,6 +32,7 @@ from electrical_symbols.marker_keys import (
     MARKER_TURNED,
     marker_symbol,
 )
+from electrical_symbols.mating_port import is_mating_port
 from electrical_symbols.natural import Natural, natural
 from electrical_symbols.power_symbols import power_symbol_key
 from electrical_symbols.sheet import (
@@ -87,6 +88,7 @@ __all__ = [
     "frame_strip",
     "generic_box",
     "is_generic_box",
+    "is_mating_port",
     "library_version",
     "marker_symbol",
     "marking_slot",

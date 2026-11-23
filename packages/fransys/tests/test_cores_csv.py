@@ -19,7 +19,7 @@ _HEADER = "cable,core,colour,pair,end_a,end_b,note"
 
 
 def _cores_csv(written: tuple[Path, ...]) -> str:
-    (csv,) = [p for p in written if p.name.endswith("cores.csv")]
+    (csv,) = [p for p in written if p.name.endswith("cores.csv") and "units" not in p.parts]
     return csv.read_text(encoding="utf-8").replace("\r\n", "\n")
 
 
@@ -66,8 +66,10 @@ def test_a_paired_cable_prints_its_pairs_and_the_spare(tmp_path: Path) -> None:
 
 def test_a_units_cable_is_in_the_units_cores_csv_only(tmp_path: Path) -> None:
     assert units_table(relay_cab_with_cable_list().model)
-    system = _lines(_cores_csv(fr.write(relay_cab_with_cable_list(), tmp_path / "system")))
-    assert system == [_HEADER]
+    written = fr.write(relay_cab_with_cable_list(), tmp_path / "system")
+    assert _lines(_cores_csv(written)) == [_HEADER]
+    (default_own,) = [p for p in written if p.name.endswith("cores.csv") and "units" in p.parts]
+    assert [row.split(",")[:2] for row in _lines(default_own.read_text(encoding="utf-8").replace("\r\n", "\n"))[1:]] == [["-W1", "1"], ["-W1", "2"]]
     own = _lines(_cores_csv(fr.write(relay_cab_with_cable_list(), tmp_path / "unit", unit="demo-cab")))
     assert [row.split(",")[:2] for row in own[1:]] == [["-W1", "1"], ["-W1", "2"]]
 

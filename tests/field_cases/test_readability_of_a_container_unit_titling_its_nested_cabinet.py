@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
@@ -16,15 +17,7 @@ class _Out(NamedTuple):
     pass
 
 
-@fr.unit(
-    "demo-cabinet",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Cabinet",
-)
+@fc_unit("demo-cabinet", title="Cabinet")
 def _cabinet(u: Any) -> _Out:
     u.layout.profile(hide_unused_pins=True)
     with u.function("B", "Group"):
@@ -40,15 +33,7 @@ def _cabinet(u: Any) -> _Out:
     return _Out()
 
 
-@fr.unit(
-    "demo-container",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Container",
-)
+@fc_unit("demo-container", title="Container")
 def _container(u: Any) -> _Out:
     u.add(_cabinet, "U1")
     with u.function("A", "Own"):

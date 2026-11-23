@@ -12,10 +12,11 @@ from bisect import bisect_right
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .cut_bundle import bundled
 from .cut_costs import ref_name
 from .errors import CoreError
-from .keys import natural_key
 from .ref_kind import kind_of
 from .values import Ref, RefEnd, RefKind
 

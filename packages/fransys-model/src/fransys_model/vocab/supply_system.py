@@ -36,12 +36,16 @@ def rail_phase_problem(current: Current, rail: Rail) -> str | None:
     `freeze()` reports the type.
     """
     max_v, phase = rail.max_v, rail.phase
+    if current is Current.AC and max_v < 0:
+        return f"is AC and max_v is an RMS value, so it cannot be negative ({max_v})"
     if phase is None:
         if current is Current.AC and max_v != 0:
             return f"is AC at {max_v} V and needs a phase"
-        return None
-    if type(phase) is int and phase % PHASE_STEP != 0:
-        return f"phase must be a multiple of {PHASE_STEP} degrees, not {phase}"
+    elif type(phase) is int:
+        if current is Current.DC:
+            return f"is DC and cannot have a phase ({phase})"
+        if phase % PHASE_STEP != 0:
+            return f"phase must be a multiple of {PHASE_STEP} degrees, not {phase}"
     return None
 
 

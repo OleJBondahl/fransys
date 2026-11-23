@@ -8,28 +8,20 @@ lazy from pathlib import Path
 import fransys as fr
 import pypdfium2
 import pytest
+from _field_designs import fc_design, written_pdf
+from _model_build_cover import cabinet_document
 
 _DESCRIPTION = "ZZDESC " + "long words " * 12
 
 
 def _pdf(root: Path, filler: int) -> Path:
     """The terminal list of a `filler`-terminal strip and a described three-terminal strip."""
-    d = fr.design("demo_parts")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     d.terminal_strip("X1", "DEMO-TB-2.5", filler, place="C1")
     d.terminal_strip("X2", "DEMO-TB-2.5", 3, place="C1", description=_DESCRIPTION)
-    cover = root / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    document = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC,
-        cabinet,
-        cover=cover,
-    )
-    fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
-    return pdf
+    document = cabinet_document(cabinet)
+    return written_pdf(fr.build(d, document), root)
 
 
 def _place(pdf: Path, key: str) -> tuple[int, Any]:

@@ -15,10 +15,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
 
     from fransys_layout.core import Box
-    from fransys_model.kernel import Id
+    from fransys_model.kernel import Id, UnionFind
     from fransys_model.layout import Page
 
-    from .drawn_graph import Union
     from .drawn_netlist import PagePart
     from .drawn_references import References
 
@@ -71,7 +70,7 @@ def _feet(part: PagePart, at: XY, pitch: int) -> list[XY]:
     return sorted(lanes | {end for end, trunk in ends if not trunk}, key=lambda e: (e not in lanes, e[1], e[0]))
 
 
-def _held(page: Id[Page], part: PagePart, union: Union) -> dict[object, set[str]]:
+def _held(page: Id[Page], part: PagePart, union: UnionFind[_Node]) -> dict[object, set[str]]:
     """The ports of `page`, by the piece that holds them."""
     held: dict[object, set[str]] = defaultdict(set)
     for port, at in part.ports.items():
@@ -79,7 +78,7 @@ def _held(page: Id[Page], part: PagePart, union: Union) -> dict[object, set[str]
     return held
 
 
-def _read(held: Mapping[object, set[str]], union: Union, page: Id[Page], feet: Iterable[XY]) -> list[tuple[XY, set[str]]]:
+def _read(held: Mapping[object, set[str]], union: UnionFind[_Node], page: Id[Page], feet: Iterable[XY]) -> list[tuple[XY, set[str]]]:
     """Each foot with the ports its piece holds on the page."""
     return [(end, held.get(union.find((page, end)), set())) for end in feet]
 
@@ -148,7 +147,7 @@ class _Reader:
 
     pages: Mapping[Id[Page], PagePart]
     held: Mapping[Id[Page], Mapping[object, set[str]]]
-    union: Union
+    union: UnionFind[_Node]
     pitch: int
 
     def on_ink(self, node: _Node) -> bool:
@@ -193,7 +192,7 @@ class _Reader:
         return {foot: net for foot in found if len(arrows[c := chain[piece[foot]]]) > 1 and (net := _one_net(read[c])) is not None}
 
 
-def join_lanes(union: Union, pages: Mapping[Id[Page], PagePart], refs: References, nets: Mapping[str, str], pitch: int) -> Lanes:
+def join_lanes(union: UnionFind[_Node], pages: Mapping[Id[Page], PagePart], refs: References, nets: Mapping[str, str], pitch: int) -> Lanes:
     """Join, across each read reference, the lane feet whose nets stand in one order on both sides; meet the feet a read stub lists (R1957).
 
     A pair or star side that reads other nets in the other order joins nothing: its feet stay unmet. A stub meets the feet whose
@@ -207,5 +206,5 @@ def join_lanes(union: Union, pages: Mapping[Id[Page], PagePart], refs: Reference
     alone = [[(page, reader.feet(page, at))] for page, at in refs.stubs]
     bare = {(page, end) for side in (*read, *alone) for page, found in side for end, ports in found if not ports} - passing.keys()
     for a, b in pairs:  # after every read: a join moves the roots the readings are keyed by
-        union.join(a, b)
+        union.union(a, b)
     return Lanes({node for pair in pairs for node in pair} | listed | passing.keys(), bare)

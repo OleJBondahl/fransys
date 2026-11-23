@@ -11,6 +11,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 from _drawn_facts import symbol_boxes
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_cables
@@ -44,9 +45,7 @@ def _built() -> fr.BuildResult:
     root = Path(tempfile.mkdtemp())
     (root / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     (root / "looms.md").write_text("# Looms\n", encoding="utf-8")
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
     d.location("CAB", "Cabinet")
     d.add(_ext, "U1", place="CAB")
     schematic = fr.document(
@@ -202,9 +201,7 @@ def test_a_by_others_device_drawn_with_a_unit_prints_with_that_unit() -> None:
     """BY-OTHERS-DRAWN-WITH: M9, supplied by others at IGG and wired to the skid, prints on the skid's document, not the system's."""
     root = Path(tempfile.mkdtemp())
     (root / "cover.md").write_text("# Skid\n", encoding="utf-8")
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
     d.location("IGG", "Other system")
     skid = d.add(_skid, "SKID")
     m9 = d.device("M9", None, external=True, pins=("U", "V", "W"), place="IGG", drawn_with=skid)

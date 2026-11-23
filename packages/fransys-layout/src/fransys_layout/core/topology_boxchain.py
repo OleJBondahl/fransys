@@ -14,7 +14,8 @@ from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
+from fransys_model.kernel import natural_key
+
 from .series_values import Series
 from .topology_boxtree import BoxChain, HopFacts, box_lane, pin_on, tree_column, tree_of
 from .topology_elements import NetEnd

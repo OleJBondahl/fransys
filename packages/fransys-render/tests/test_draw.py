@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 import symdef
 from fransys_el import style
-from fransys_render.draw import DrawError, format_decimal, svg
+from fransys_render.draw import DrawError, svg
 from symdef import Weight
 
 from electrical_symbols import LIBRARY, drawn_slots, drawn_symbol
@@ -225,7 +225,7 @@ def test_an_unknown_corner_is_symdef_s_error_and_not_a_guess():
 
 def _placed(body, x_g, y_g):
     x, y = Decimal(x_g) * M / STYLE.g_per_module, Decimal(y_g) * M / STYLE.g_per_module
-    return f'<g transform="translate({format_decimal(x)} {format_decimal(y)})">{body}</g>'
+    return symdef.group_mm(body, (float(x), float(y)))
 
 
 def test_an_outline_is_its_frame_stretched_to_its_points():

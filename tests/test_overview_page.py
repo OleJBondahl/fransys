@@ -4,7 +4,6 @@ The page draws the recorded positions of every view and prints the rows' texts. 
 what breaks it.
 """
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import json
 import re
 from functools import cache

@@ -7,8 +7,9 @@ symbol port, a dot, a marker, another wire or a lane end the netlist joins (el-0
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import UnionFind
+
 from .drawn_finding import drawn_finding
-from .drawn_graph import Union
 from .drawn_netlist import is_marker
 
 if TYPE_CHECKING:
@@ -22,15 +23,16 @@ _MIN_PORTS = 2
 XY = tuple[int, int]
 
 
-def _loops(part: PagePart) -> tuple[Union, set[object]]:
+def _loops(part: PagePart) -> tuple[UnionFind[XY], set[XY]]:
     """The page's pieces, and those whose edges close a loop."""
-    union, closing = Union(), []
+    union: UnionFind[XY] = UnionFind()
+    closing: list[XY] = []
     for edge in part.graph.edges:
         a, b = tuple(edge)
         if union.find(a) == union.find(b):
             closing.append(a)
         else:
-            union.join(a, b)
+            union.union(a, b)
     return union, {union.find(a) for a in closing}
 
 

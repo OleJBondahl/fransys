@@ -6,6 +6,7 @@ kept until the flip (SB9). A kind row, then a state row, as the engine's two loo
 
 from typing import TYPE_CHECKING, NamedTuple
 
+from fransys_model.derive import protection_symbols
 from fransys_model.layout import SymbolChoice, layout_of
 from fransys_model.vocab import LINK_STATES
 
@@ -59,10 +60,6 @@ def _operated(symbol: str, operator: str, rest: str) -> Row:
     return _kind(symbol, "switch", ("operated_by", operator), ("rest", rest))
 
 
-def _by_type(symbol: str, value: str) -> Row:
-    return _kind(symbol, "protection", ("protection_type", value))
-
-
 _REST = ("rest", "rest")
 _OPERATED = LINK_STATES
 
@@ -78,12 +75,6 @@ TABLE: tuple[Row, ...] = (
     _kind("break-contact", "switch", _REST),
     _kind("make-contact", "generic", _OPERATED),
     _kind("break-contact", "generic", _REST),
-    _by_type("circuit-breaker", "none"),
-    _by_type("fuse", "fuse"),
-    _by_type("circuit-breaker", "mcb"),
-    _by_type("circuit-breaker", "motor_breaker"),
-    _by_type("thermal-overload", "overload"),
-    _by_type("rcd", "rcd"),
     _kind("operating-device", "coil"),
     _kind("contact-female", "connector", ("gender", "female")),
     _kind("contact-male", "connector", ("gender", "male")),
@@ -121,6 +112,8 @@ def _subject(facts: Facts) -> dict[str, str | None]:
 def default_row(facts: Facts) -> Row | None:
     """The first row of `TABLE` whose facts all equal `facts`'; `None` draws a labelled box."""
     subject = _subject(facts)
+    if subject["kind"] == "protection" and (symbols := protection_symbols(subject["protection_type"])):
+        return Row(symbols[0], (("kind", "protection"), ("protection_type", subject["protection_type"])))
     return next((r for r in TABLE if all(subject[k] == v for k, v in r.when)), None)
 
 

@@ -6,7 +6,8 @@ import heapq
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from .keys import natural_key
+from fransys_model.kernel import natural_key
+
 from .unionfind import UnionFind
 
 if TYPE_CHECKING:

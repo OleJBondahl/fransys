@@ -22,6 +22,7 @@ from fransys_layout.core.row_measure import row_measures
 from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.values import PinRef, RefKind, RowTerm
 from fransys_layout.core.widen import Round, _culprit, measured_of, overflows, widen
+from fransys_layout.core.widen_rounds import digits_of, tagged_by
 
 from .conftest import MARKERS
 from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
@@ -235,13 +236,13 @@ def _pages_of(prob: PlacementProblem, count: int) -> Placement:
 
 def test_the_annexes_follow_the_digits_of_the_page_count_and_the_digits_only_rise() -> None:
     prob = _wide_prob()
-    one, risen, _ = widen_module._digits(_pages_of(prob, 9), prob, 0)
+    one, risen, _ = digits_of(_pages_of(prob, 9), prob, 0)
     assert (one is prob, risen) == (True, 0)
-    two, risen, _ = widen_module._digits(_pages_of(prob, 10), prob, risen)
+    two, risen, _ = digits_of(_pages_of(prob, 10), prob, risen)
     assert (two.annexes, risen) == (prob.wider[0], 1)
-    back, risen, _ = widen_module._digits(_pages_of(prob, 2), two, risen)  # fewer pages leave the 2-digit annexes
+    back, risen, _ = digits_of(_pages_of(prob, 2), two, risen)  # fewer pages leave the 2-digit annexes
     assert (back is two, risen) == (True, 1)
-    capped, risen, _ = widen_module._digits(_pages_of(prob, 1000), two, risen)  # 4 digits: only 3 are held
+    capped, risen, _ = digits_of(_pages_of(prob, 1000), two, risen)  # 4 digits: only 3 are held
     assert (capped.annexes, risen) == (prob.wider[1], 2)
 
 
@@ -286,12 +287,12 @@ def test_a_lost_link_already_tagged_is_no_new_grant() -> None:
     prob = three_columns()
     net = prob.nets[0]
     ends = (net.pins[0], net.pins[1])
-    once = widen_module.tagged_by(prob, [Refused(net.id, ends), Refused(net.id, ends)])
+    once = tagged_by(prob, [Refused(net.id, ends), Refused(net.id, ends)])
     assert once.nets[0].tagged == (ends,)
-    assert widen_module.tagged_by(once, [Refused(net.id, ends)]) is once
-    held = widen_module.tagged_by(prob, [], legless=[net.pins[0], net.pins[0]])  # MARKER-FREE-SIDE (R3472): a pin that stood no leg
+    assert tagged_by(once, [Refused(net.id, ends)]) is once
+    held = tagged_by(prob, [], legless=[net.pins[0], net.pins[0]])  # MARKER-FREE-SIDE (R3472): a pin that stood no leg
     assert held.nets[0].legless == (net.pins[0],)
-    assert widen_module.tagged_by(held, [], legless=[net.pins[0]]) is held
+    assert tagged_by(held, [], legless=[net.pins[0]]) is held
 
 
 @pytest.mark.timeout(30)
@@ -302,7 +303,7 @@ def test_a_dedupe_that_grants_the_same_ask_again_raises_core_error_not_a_hang(mo
     placement = placed_from(cut, prob, OPTS)
     rnd = Round((), (), routed_from(cut, prob, OPTS), ())
     ask = Demand("", 0, 1, "c:a0", side="E")
-    monkeypatch.setattr(widen_module, "_asked", lambda *_: ([ask], {}))
+    monkeypatch.setattr(widen_module, "asked_of", lambda *_: ([ask], {}))
     monkeypatch.setattr(widen_module, "roomed", lambda problem, *_: replace(problem))
     monkeypatch.setattr(widen_module, "_widened", lambda c, p, *_: (c, p, ()))
     monkeypatch.setattr(widen_module, "route_round", lambda *_: rnd)
@@ -340,6 +341,6 @@ def test_an_unjoined_pair_comes_back_as_a_tagged_net_and_the_cut_plans_its_tag()
     cut = cut_of(prob, OPTS)
     cut = replace(cut, spec=replace(cut.spec, unjoined=(("n1", pair),)))
     rnd = loop_module.route_round(cut, placed_from(cut, prob, OPTS), prob, OPTS)
-    again = widen_module.tagged_by(prob, rnd.lost, rnd.apart)
+    again = tagged_by(prob, rnd.lost, rnd.apart)
     assert [n.apart for n in again.nets if n.id == "n1"] == [(pair,)]
     assert any({e.pin for e in r.ends} == set(pair) for r in cut_of(again, OPTS).spec.reference_plan if r.kind is RefKind.TAG)

@@ -29,6 +29,29 @@ def units_named(model: Model, name: str) -> tuple[Id[Unit], ...]:
     return tuple(unit_id for unit_id, unit in units(model).items() if unit.release in named_releases)
 
 
+def unit_design_of(model: Model, name: str) -> Id[Unit]:
+    """The one unit instance that stands for the unit design `name`: its first instance in id order.
+
+    A unit's own lists (cables, cores, parts, strips) are the same for every instance, so a
+    list written for the design reads this instance; the lists carry no instance path.
+
+    Example: `unit_design_of(model, "relay-board")` with two instances returns the lower id.
+
+    Raises:
+        ModelError: no unit of the model is an instance of a release named `name`.
+    """
+    matches = units_named(model, name)
+    if not matches:
+        raise ModelError(unit_name_unresolved(model, name))
+    return matches[0]
+
+
+def unit_list_names(model: Model) -> tuple[str, ...]:
+    """The release name of every unit design the model holds, once each, in unit-table order."""
+    releases = unit_releases(model)
+    return tuple(dict.fromkeys(releases[unit.release].name for unit in units(model).values()))
+
+
 def unit_name_unresolved(model: Model, name: str) -> str:
     """The one sentence for a `unit_name` that does not resolve to exactly one unit.
 

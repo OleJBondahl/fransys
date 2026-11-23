@@ -7,7 +7,7 @@ and pole-group views are not here.
 
 from typing import TYPE_CHECKING
 
-from electrical_symbols import GENERIC_BOX_KEY
+from electrical_symbols import GENERIC_BOX_KEY, is_mating_port
 from fransys_layout.symbols import library_symbol, ports_at_one_node, symbol_shape
 from fransys_model.derive import (
     CarriedReason,
@@ -145,7 +145,7 @@ def bind(symbol: str, parts: tuple[Part, ...], model_and_library: tuple[Model, L
     model, library = model_and_library
     poles = parts[0].shape.poles
     drawn = library_symbol(library, symbol, poles)
-    symbol_ports = {p.id for p in drawn.ports}
+    symbol_ports = {p.id for p in drawn.ports if not is_mating_port(p.id)}
     bound: dict[Id[Port], str] = {}
     for part in parts:
         bound.update(_bind_part(part, symbol, (model, symbol_ports, drawn), set(bound.values())))

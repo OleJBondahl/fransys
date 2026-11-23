@@ -8,8 +8,9 @@ import annotationlib
 import inspect
 
 import fransys_author
+from fransys_author._cable_handles import Cable
 from fransys_author.design import Design, Scope
-from fransys_author.handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal
+from fransys_author.handles import Fn, Group, Item, Location, Port, Strip, Terminal
 from fransys_author.wiring import Wiring
 
 _FORBIDDEN_NAMES = frozenset({"x", "y", "page", "column", "row", "page_number", "column_number", "row_number", "points"})

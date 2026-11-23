@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 from options_fixtures import core_options
 
-from fransys_layout.core import natural_key
 from fransys_layout.core.constraints import Graph
 from fransys_layout.core.place_levels import EXACT_LIMIT, Span, trunk_levels
 from fransys_layout.core.place_trunk import trunk_node
+from fransys_model.kernel import natural_key
 
 # (fan, x0, x1, driver xs, leg xs): nine trunks overlapping in a chain; f10 sorts before f2.
 TRUNKS = (

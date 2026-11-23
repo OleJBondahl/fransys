@@ -5,6 +5,7 @@ Fixed by layout-0175: packing counts a column's placed pitch, so a column whose 
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _field_designs import fc_unit
 from _model_build_cover import unit_document
 
 _COLUMNS = 9
@@ -14,16 +15,7 @@ class _Strips(NamedTuple):
     X4: Any
 
 
-@fr.unit(
-    "demo-control",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Control",
-    number="N-1",
-)
+@fc_unit("demo-control", title="Control", number="N-1")
 def _control(d: Any) -> _Strips:
     d.layout.profile(hide_unused_pins=True)  # the unit's own profile (model-0192)
     x4 = d.terminal_strip("X4", "DEMO-TB-2.5")

@@ -201,7 +201,7 @@ NETS = ({A: "n", B: "n", C: "n"}, {"a": 1, "b": 1, "c": 1})
 
 
 def _marker(pin: PinRef, far: PinRef, also: tuple[PinRef, ...] = ()) -> Marker:
-    return Marker("n", RefKind.STUB, 1, "a", 0, 0, pin, also=also, far=(far,))
+    return Marker("n", RefKind.STUB, 1, 0, 0, pin, also=also, far=(far,))
 
 
 @pytest.mark.rule("CORE-ACCOUNT")

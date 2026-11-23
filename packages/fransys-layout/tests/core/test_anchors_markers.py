@@ -18,7 +18,7 @@ OPTIONS = _options(0)
 FRAME = Box(-200, -200, 800, 800)
 PAGE = PagePlacement(1, (), (), (), (), ())
 # R0 marker at (100, 40): the box (100, 32, 48, 16)
-STUB = Marker("N1", RefKind.COPY, 1, "c", 100, 40, PinRef("K1", "A1"))
+STUB = Marker("N1", RefKind.COPY, 1, 100, 40, PinRef("K1", "A1"))
 ON_STUB = Pose("R90", (0, 0), Box(96, 28, 16, 28), (0, 0))
 BESIDE = Pose("R270", (0, 0), Box(148, 28, 16, 28), (0, 0))  # touches the stub's right edge
 

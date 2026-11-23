@@ -7,6 +7,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
 from fransys.colours import BN
 
 
@@ -15,10 +16,7 @@ class _Io(NamedTuple):
 
 
 def _fanout(n: int) -> Any:
-    @fr.unit(
-        "fanout", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB",
-        title="Fan-out", number="F-1",
-    )  # fmt: skip
+    @fc_unit("fanout", title="Fan-out", number="F-1")
     def fanout(d: fr.Design) -> _Io:
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2 * n, bridged=((1, n), (n + 1, 2 * n)))  # R1266: a terminal per branch
         for i in range(n):

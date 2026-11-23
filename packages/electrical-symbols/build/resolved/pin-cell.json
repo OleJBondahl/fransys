@@ -78,6 +78,11 @@
       "ports": [
         "pin"
       ]
+    },
+    {
+      "ports": [
+        "mate"
+      ]
     }
   ],
   "paths": [],
@@ -90,6 +95,15 @@
       "description": "wire side",
       "dir": "W",
       "id": "pin"
+    },
+    {
+      "at": [
+        3,
+        1
+      ],
+      "description": "mating side",
+      "dir": "E",
+      "id": "mate"
     }
   ],
   "reference": {

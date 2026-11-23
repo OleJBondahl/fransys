@@ -7,15 +7,15 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _field_designs import fc_design, written_pdf
+from _model_build_cover import cabinet_document
 from _pdf_measure import has_page_title
 
 _ROW = re.compile(r"^(\d+) (.+) (\d+)$")
 
 
 def _built(root: Path, *, blocks: int) -> fr.BuildResult:
-    d = fr.design("demo_parts", place="C1")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", place="C1", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     for i in range(1, blocks + 1):
         with d.function(f"F{i}", f"Relay and lamp circuit {i}"):
@@ -24,18 +24,15 @@ def _built(root: Path, *, blocks: int) -> fr.BuildResult:
             d.series(k.co_1["14"], lamp[1], wire=("RD", 0.75))  # layout-0218: the circuit is wired
             d.series(lamp[2], k.coil["A1"], wire=("BU", 0.75))
             d.series(k.coil["A2"], k.co_1["11"], wire=("BU", 0.75))
-    cover = root / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
     notes = root / "cover.notes.md"
     notes.write_text("Notes before the sheets.\n", encoding="utf-8")
-    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
+    document = cabinet_document(cabinet)
     return fr.build(d, document)
 
 
 def _pdf(root: Path, *, blocks: int) -> pypdfium2.PdfDocument:
     result = _built(root, blocks=blocks)
-    fr.write(result, out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
+    pdf = written_pdf(result, root)
     return pypdfium2.PdfDocument(pdf)
 
 

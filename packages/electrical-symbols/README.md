@@ -102,6 +102,7 @@ copied from the standard.
 | `marker-arrow` | Marker arrow (reference marker, horizontal text) | element |
 | `marker-arrow-turned` | Marker arrow (reference marker, text along the wire) | element |
 | `marker-box` | Marker box (shared reference marker) | element |
+| `mating-cell` | Mating cell (table row) | element |
 | `residual-current-core` | Residual current sensing core | qualifier |
 | `resistor` | Resistor, general symbol | symbol |
 | `selector-break` | Switch, manually operated, turning, with stay-put, break contact | symbol |

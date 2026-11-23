@@ -309,8 +309,8 @@ code = "SYMBOL_TYPE_MISMATCH"
 severity = "ERROR"
 stage = "library load"
 who = "part author"
-cause = "A protection function's `symbol` is `fuse` or `circuit-breaker`, but its protection `type` is another one."
-fix = "A `fuse` symbol needs `type = \"fuse\"`, a `circuit-breaker` symbol needs `type = \"mcb\"`. Write: type = \"fuse\""
+cause = "A protection function's `symbol` is a protection symbol that its protection `type` does not take."
+fix = "A `fuse` symbol needs `type = \"fuse\"`; `mcb` and `motor_breaker` take `circuit-breaker`, `overload` `thermal-overload`, `rcd` `rcd`. Write: type = \"fuse\""
 page = "findings-parts"
 
 [[code]]

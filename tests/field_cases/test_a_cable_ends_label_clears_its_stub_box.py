@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import fransys as fr
 from _expected_codes import expect_codes
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document, unit_document
 from fransys.colours import BK, BU
 
@@ -56,9 +57,7 @@ def _feed_box(d: fr.Design) -> _StripIo:
 
 
 def test_a_motor_cabled_from_a_three_pole_overloads_strips_draws_its_bundle_stub() -> None:
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="OJB")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant", customer="Demo Co", date="2026-01-01", text="first", created="AB")
     d.location("DECK", "Upper deck")
     d.location("ROOM", "Pump room")
     motor = d.add(_motor_box, "BP", place="DECK")

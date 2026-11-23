@@ -8,23 +8,25 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import far_pins, rail_drawn_by
+from fransys_model.kernel import UnionFind
 from fransys_model.layout import StarKind
 
 from .drawn_ends import ink_without_conductor
 from .drawn_finding import drawn_finding
-from .drawn_graph import Union
 from .drawn_power import inked_power
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding, Model
-    from fransys_model.layout import LinkMarker
+    from fransys_model.kernel import Finding, Id, Model
+    from fransys_model.layout import LinkMarker, Page
 
     from .drawn_netlist import Netlist
 
 __all__ = ["not_drawn_findings"]
 
+type _Node = tuple[Id[Page], tuple[int, int]]
 
-def _listed(net: Netlist, record: LinkMarker, node: tuple[object, tuple[int, int]]) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+
+def _listed(net: Netlist, record: LinkMarker, node: _Node) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
     """The `(port, far)` conductors an off stub ends on its page: its own, each pair inked to its node, then those on a lane foot (R1334).
 
     A bundle's one stub lists every lane it stands for; a lane inked into its piece is joined by it. A lane whose end is a
@@ -70,7 +72,7 @@ def _lined(net: Netlist, port: str) -> bool:
     return stubbed and any(at in net.pages[page].nodes for page, at in net.at_home(port))
 
 
-def _roots(net: Netlist, port: str, stubs: dict[str, set[str]]) -> set[object]:
+def _roots(net: Netlist, port: str, stubs: dict[str, set[str]]) -> set[_Node]:
     """The live components the port joins by its home point; its copies join where a stub or each placement's where-text ends it (R798, R1396).
 
     A port of a set that was not drawn has no home to read: its copies on the pages that did draw are all there is (KI-812).
@@ -80,21 +82,21 @@ def _roots(net: Netlist, port: str, stubs: dict[str, set[str]]) -> set[object]:
     return {net.union.find(place) for place in points} & net.live
 
 
-def _pairs(net: Netlist, stubs: dict[str, set[str]]) -> Union:
+def _pairs(net: Netlist, stubs: dict[str, set[str]]) -> UnionFind[_Node]:
     """The drawn pieces joined by reference pairs, transitively: two pieces whose stubs each name a port in the other."""
-    names: dict[object, set[object]] = defaultdict(set)
+    names: dict[_Node, set[_Node]] = defaultdict(set)
     for port, fars in stubs.items():
         for root in _roots(net, port, stubs):
             names[root].update(r for far in fars for r in _roots(net, far, stubs))
-    joined = Union()
+    joined: UnionFind[_Node] = UnionFind()
     for root, others in names.items():
         for other in others:
             if root in names.get(other, ()):
-                joined.join(root, other)
+                joined.union(root, other)
     return joined
 
 
-def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: set[str], end: tuple[str, str]) -> bool:
+def _carried(net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node], powered: set[str], end: tuple[str, str]) -> bool:
     """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or both pins on inked power symbols (R1631).
 
     A mark is a stub at `near` that names `far`, or the stubbed line of `near`. A where-text names a copy, never an end: ink carries it.
@@ -106,7 +108,7 @@ def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: s
     return bool({joined.find(r) for r in _roots(net, near, stubs)} & {joined.find(r) for r in _roots(net, far, stubs)})
 
 
-def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Union) -> list[tuple[str, str]]:
+def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node]) -> list[tuple[str, str]]:
     """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws.
 
     A pin that stands the power symbol of the flagged rail terminal `far` draws that terminal (`rail_drawn_by`, owner 2026-10-25).

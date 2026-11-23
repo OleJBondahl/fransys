@@ -4,7 +4,6 @@ The two-release plant is the units worked example plus a yard switch `-K7` with 
 `-P7`, and a device `-K9`; release 2 drops `-P7` and `-K9`. Each test
 """
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import dataclasses
 import json
 import re

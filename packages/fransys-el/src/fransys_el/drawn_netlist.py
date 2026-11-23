@@ -19,9 +19,9 @@ from fransys_model.derive import (
     port_function,
     set_unit,
 )
+from fransys_model.kernel import UnionFind
 from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 
-from .drawn_graph import Union
 from .drawn_identity import inked
 from .drawn_ids import core_symbol_id, symbol_id
 from .drawn_lanes import Lanes, join_lanes
@@ -72,7 +72,7 @@ class Netlist:
     """
 
     pages: dict[Id[Page], PagePart]
-    union: Union
+    union: UnionFind[tuple[Id[Page], XY]]
     placed: dict[str, tuple[tuple[Id[Page], XY], ...]]
     ids: dict[str, Id[Port]]
     markers: dict[str, tuple[Id[Page], XY] | None]
@@ -150,13 +150,13 @@ def _part(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: L
     return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots, powers)
 
 
-def _join(pages: Mapping[Id[Page], PagePart]) -> Union:
+def _join(pages: Mapping[Id[Page], PagePart]) -> UnionFind[tuple[Id[Page], XY]]:
     """One union of every page's wire edges."""
-    union = Union()
+    union: UnionFind[tuple[Id[Page], XY]] = UnionFind()
     for page, part in pages.items():
         for edge in part.graph.edges:
             a, b = tuple(edge)
-            union.join((page, a), (page, b))
+            union.union((page, a), (page, b))
     return union
 
 
@@ -172,7 +172,7 @@ def _link(net: Netlist) -> None:
         there = dict(net.placed.get(b.value, ()))
         for page, at in net.placed.get(a.value, ()):
             if page in there:
-                net.union.join((page, at), (page, there[page]))
+                net.union.union((page, at), (page, there[page]))
 
 
 def _placed(pages: Mapping[Id[Page], PagePart]) -> dict[str, tuple[tuple[Id[Page], XY], ...]]:

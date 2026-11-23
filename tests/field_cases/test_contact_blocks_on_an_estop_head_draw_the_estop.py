@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -17,9 +18,7 @@ if TYPE_CHECKING:
 
 def _design() -> tuple[fr.Design, object, Any, Any]:
     """The head `S1` with two NC blocks, each in its own circuit off strip `X1`."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="E-stop", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("E-stop", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     head = d.device("S1", "DEMO-HEAD-ESTOP")

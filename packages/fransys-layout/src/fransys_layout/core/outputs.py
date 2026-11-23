@@ -226,7 +226,6 @@ class Marker:
     net: str
     kind: MarkerKind
     page: int
-    cell: str
     x: int
     y: int
     end: PinRef
@@ -378,7 +377,6 @@ class SceneMarker:
     y: int
     box: str
     pin: str
-    cell: str
     side: Side
 
 
@@ -430,7 +428,7 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
 
 def _scene_marker(m: Marker, facts: SceneFacts, orient: Mapping[str, Orientation]) -> SceneMarker:
     side = facts.pins[(m.end.sym, m.end.pin)].sides[orient[m.end.sym]]
-    return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin, m.cell, side)
+    return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin, side)
 
 
 def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Scene:

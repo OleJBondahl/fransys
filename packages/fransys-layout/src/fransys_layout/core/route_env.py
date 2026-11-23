@@ -10,9 +10,10 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .anchors import HELD, Stood, page_keeps
-from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
+from .arrow_reserve import arrow_rows, leg_fit, leg_rows
 from .clearance import Keep, fan_own, pin_points, through_keeps
 from .errors import CoreError
+from .leg_lines import leg_feet, leg_lines
 from .net_keys import net_of_key, port_key
 from .outputs import Marker, Refused, Wire
 from .sides import step_out

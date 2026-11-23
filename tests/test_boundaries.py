@@ -179,13 +179,22 @@ def test_layout_and_render_never_import_fransys_el():
 CORE_DIR = PACKAGES_ROOT / "fransys-layout" / "src" / "fransys_layout" / "core"
 
 
+CORE_MAY_IMPORT = "fransys_model.kernel"
+
+
 def core_violations(source: str) -> set[str]:
-    """Absolute imports of `fransys_layout.core` source that are not the standard library (E2)."""
-    return top_level_imports(source) - sys.stdlib_module_names
+    """Absolute imports of `fransys_layout.core` source outside the standard library and `fransys_model.kernel` (E2, R3668)."""
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            found.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            found.add(node.module)
+    return {name for name in found if name.split(".")[0] not in sys.stdlib_module_names and name != CORE_MAY_IMPORT}
 
 
 def test_the_placement_core_imports_nothing_outside_the_standard_library():
-    """layout-0269, E2: the core and `drawing.py` (layout-0315) import only the standard library."""
+    """layout-0269, E2 as amended by R3668: the core and `drawing.py` (layout-0315) import only the standard library and `fransys_model.kernel`."""
     files = [*sorted(CORE_DIR.glob("*.py")), CORE_DIR.parent / "drawing.py"]
     assert len(files) > 2
     found = {f"{path.name}: {name}" for path in files for name in core_violations(path.read_text(encoding="utf-8"))}
@@ -194,6 +203,9 @@ def test_the_placement_core_imports_nothing_outside_the_standard_library():
 
 def test_the_core_import_check_can_fail():
     assert core_violations("import fransys_model") == {"fransys_model"}
+    assert core_violations("from fransys_model.derive import x") == {"fransys_model.derive"}
+    assert core_violations("from fransys_model import kernel") == {"fransys_model"}
+    assert core_violations("from fransys_model.kernel import natural_key") == set()
     assert core_violations("from symdef import x") == {"symdef"}
     assert core_violations("from fransys_layout import options") == {"fransys_layout"}
     assert core_violations("from . import values\nimport typing\nimport dataclasses") == set()

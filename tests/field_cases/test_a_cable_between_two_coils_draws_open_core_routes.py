@@ -73,11 +73,6 @@ def _drawn(*, in_unit: bool) -> _Drawn:
     )
 
 
-def _on(point: Pt, run: tuple[Pt, Pt]) -> bool:
-    (x1, y1), (x2, y2) = run
-    return min(x1, x2) <= point[0] <= max(x1, x2) and min(y1, y2) <= point[1] <= max(y1, y2)
-
-
 def _column_run(route: tuple[Pt, ...], col: int) -> set[Pt]:
     """The grid points of `route` where it runs along the column `col`, not just crosses it."""
     on = {p for p in _grid(route) if p[0] == col}

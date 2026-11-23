@@ -33,8 +33,6 @@
 "test_any_function_may_be_a_unit_boundary.py::test_the_container_page_draws_the_boundary_ports_as_pin_cells[plc channel]" = "GAP-FLIP-517"  # KI-517 NESTED-PIN-CELL: no replica page while the widening is parked; with it (78e651c43) the replica prints the card pins 3-8 and a wire/text OVERLAP finding appears
 "test_any_function_may_be_a_unit_boundary.py::test_the_container_page_draws_the_boundary_ports_as_pin_cells[relay coil]" = "GAP-FLIP-520"  # KI-520 NESTED-PIN-CELL: parked, NESTED-PIN-CELL (KI-004 key 7, AFTER-0.22, R1355)
 "test_any_function_may_be_a_unit_boundary.py::test_the_container_page_draws_the_boundary_ports_as_pin_cells[supply output]" = "GAP-FLIP-7"  # KI-480 NESTED-SUPPLY-REPLICA: a supply output has no kit symbol to replicate
-"test_box_device_contact_stands_in_its_circuit.py::test_the_box_stands_on_a_function_drawn_in_it_not_on_one_drawn_apart" = "GAP-FLIP-1"
-"test_box_device_contact_stands_in_its_circuit.py::test_the_contact_stands_in_k1s_circuit_and_shows_the_boxs_position" = "GAP-FLIP-1"
 "test_box_device_contact_stands_in_its_circuit.py::test_the_image_of_a_module_wired_to_terminals_crosses_no_wire" = "GAP-FLIP-416"
 "test_box_device_contact_stands_in_its_circuit.py::test_the_image_stands_clear_of_the_ink_below_the_module" = "GAP-FLIP-416"
 "test_box_device_contact_stands_in_its_circuit.py::test_the_image_under_the_module_lists_13_14_with_the_contacts_position" = "GAP-FLIP-416"  # KI-146 (R1368 S2): the module's contact image is not drawn at all
@@ -100,8 +98,6 @@
 # a missing key) means the fixture draws nothing the test can read: a found defect, each to become an assertion.
 "test_untagged_unused_device_in_a_holder_is_an_accessory.py::test_no_wire_runs_across_the_box_of_a_reference_marker" = "GAP-FLIP-632"  # KI-632 MARKER-OBSTACLE (R1661): the jog bends over the marker box
 
-"test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 "test_a_terminal_of_a_unit_set_cut_across_pages_is_drawn_on_each_page.py::test_a_terminal_wired_to_relays_on_two_pages_is_drawn_on_each" = "GAP-FLIP-647"  # KI-647 TERMINAL-PAGE-COPY (WIRE-29): the terminal is drawn once, the far page carries stubs
-"test_a_di_module_unit_on_one_page_never_leaves_a_row_wider_than_its_page.py::test_no_row_is_wider_than_its_page_at_any_salt[--30]" = "GAP-FLIP-1260"  # KI-1260 STUB-OFF-INK (R2981): a stub stands on no ink, REFERENCE_NOT_READABLE
 
 [raises]

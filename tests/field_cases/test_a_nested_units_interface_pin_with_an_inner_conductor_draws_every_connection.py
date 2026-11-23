@@ -8,6 +8,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import _COVER, unit_document
 from fransys.colours import BK
 
@@ -66,9 +67,7 @@ def _carrier(d: Any) -> _Open:
 
 
 def _detector_build() -> fr.BuildResult:
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
     room = d.location("ROOM", "Equipment room")
     u = d.add(_detector, "U1")
     with d.function("FEED", "Detector feed"):

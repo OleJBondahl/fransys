@@ -7,8 +7,9 @@ import random
 
 from options_fixtures import core_options
 
-from fransys_layout.core import Options, PinRef, natural_key, order
+from fransys_layout.core import Options, PinRef, order
 from fransys_layout.core.flow_values import Attach, Block, BlockKind, Column, CrossLink, End, Fan, FlowGraph
+from fransys_model.kernel import natural_key
 
 OPTIONS = core_options()
 

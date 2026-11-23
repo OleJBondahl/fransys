@@ -4,18 +4,22 @@ kind = "element"
 status = "unverified"
 # our own head of a connector pin table, authored in the pin cell's frame: it sits before the first
 # row on the table's axis (y), its lower edge on the row's upper edge (y = 0) and over the row's
-# body x extent. Stretched on y it follows the cuts of table().
+# body x extent. Five lines, top down: the connector's designation, part, name, description and where.
+# It has no stretch: it stays five lines high however many rows follow.
 reference = { standard = "IEC 60617", number = "connector-head" }
 
 elements = [
-  { polyline = [[-1, -2], [3, -2], [3, 0], [-1, 0]], closed = true },
+  { polyline = [[-1, -7], [3, -7], [3, 0], [-1, 0]], closed = true },
 ]
 
-stretch = [{ axis = "y", at = -1 }]
-
 lint_allow = [
+  { rule = "slot-overlap-slot", reason = "the five lines are one above the other in a head that is drawn unrotated; a turned view is never built" },
   { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
 ]
 
 [slots]
-lines = { at = [-0.75, -1], side = "E", box = [3.5, 1] }
+designation = { at = [-0.75, -6], side = "E", box = [3.5, 1] }
+part = { at = [-0.75, -4.75], side = "E", box = [3.5, 1] }
+name = { at = [-0.75, -3.5], side = "E", box = [3.5, 1] }
+description = { at = [-0.75, -2.25], side = "E", box = [3.5, 1] }
+where = { at = [-0.75, -1], side = "E", box = [3.5, 1] }

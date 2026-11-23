@@ -50,6 +50,7 @@ GUIDE_PAGES = (
     "findings-build",
     "findings-release",
     "findings-render",
+    "findings-wires",
     "findings-pdf",
     "findings-kicad",
     "findings-parts",

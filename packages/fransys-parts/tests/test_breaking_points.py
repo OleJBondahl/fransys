@@ -121,3 +121,9 @@ def test_a_malformed_figure_is_rating_value_invalid(tmp_path, case):
     assert findings
     assert {f.code for f in findings} <= {"RATING_VALUE_INVALID", "FIELD_TYPE"}
     assert all(f.severity is Severity.ERROR for f in findings)
+
+
+def test_a_breaking_point_at_a_voltage_with_only_min_is_refused(tmp_path):
+    (refused,) = [f for f in _lint(tmp_path, _block('{ min = "1000 A", at = ["AC", "230 V"] }')) if f.severity is Severity.ERROR]
+    assert refused.code == "RATING_VALUE_INVALID"
+    assert "give nom or max" in refused.message

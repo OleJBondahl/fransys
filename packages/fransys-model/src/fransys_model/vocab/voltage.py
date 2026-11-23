@@ -13,10 +13,11 @@ from decimal import Decimal
 from fractions import Fraction
 from typing import Final
 
+from .supply_system import PHASE_STEP
+
 # 2 * cos(dphi) for dphi = 0, 60, ..., 300 degrees: integers, so the pair formula never divides.
 _TWO_COS: Final = (2, 1, -1, -2, -1, 1)
 _FULL_TURN: Final = 360
-_STEP: Final = 60
 _PRINT: Final = decimal.Context(prec=60)
 
 
@@ -73,7 +74,7 @@ def exceeds(volt: Volt, rating: Fraction) -> bool:
 
 def _ac_square(first: Fraction, first_phase: int | None, second: Fraction, phase: int | None) -> Fraction:
     """V^2 between two AC rails of their own values: Va^2 + Vb^2 - 2 Va Vb cos(dphi)."""
-    step = ((first_phase or 0) - (phase or 0)) % _FULL_TURN // _STEP
+    step = ((first_phase or 0) - (phase or 0)) % _FULL_TURN // PHASE_STEP
     return first**2 + second**2 - _TWO_COS[step] * first * second
 
 

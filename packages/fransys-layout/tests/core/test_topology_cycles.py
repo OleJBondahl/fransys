@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from fransys_layout.core import CoreError, natural_key
+from fransys_layout.core import CoreError
 from fransys_layout.core.topology_cycles import CycleCutError, cyclic_parts, y_cycle_cuts
 from fransys_layout.core.topology_split import y_cycles
+from fransys_model.kernel import natural_key
 
 from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import flow_of

@@ -7,6 +7,8 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _field_designs import fc_design, written_pdf
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 from pypdfium2 import raw
 
@@ -23,25 +25,15 @@ Box = tuple[float, float, float, float]
 
 def _pdf(root: Path) -> Path:
     """The cabinet's PDF: three wires between long-tagged devices and a strip; the document prints the terminal list."""
-    d = fr.design("demo_parts")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     strip = d.terminal_strip(_STRIP, "DEMO-TB-2.5", 6, place="C1")
     for number in range(1, 4):
         relay = d.device(f"{_DEVICE}-{number}", "DEMO-RLY-2CO-24", place="C1")
         d.series(relay["A1"], strip[number].outer, wire=(BU, 0.5))
         d.series(relay["A2"], strip[number + 3].outer, wire=(BU, 0.5))
-    cover = root / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    document = fr.document(
-        fr.DocumentPreset.CABINET_SCHEMATIC,
-        cabinet,
-        cover=cover,
-    )
-    fr.write(fr.build(d, document), out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
-    return pdf
+    document = cabinet_document(cabinet)
+    return written_pdf(fr.build(d, document), root)
 
 
 def _in_body(box: Box, width: float, height: float) -> bool:

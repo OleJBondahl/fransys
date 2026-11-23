@@ -11,6 +11,8 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import NaturalKey, natural_key
+
 from .arrow_reserve import reserve_x
 from .blocks_card import CardEdges, card_edges, overfull
 from .blocks_check import box_findings
@@ -25,7 +27,6 @@ from .blocks_members import (
     members,
 )
 from .flow_values import BlockList
-from .keys import natural_key
 from .pack_row import row_width
 from .rowspec import one_row
 from .values import Size
@@ -116,7 +117,7 @@ def _unit_list(unit: str, blocks: Sequence[Block], notes: Sequence[Finding], env
     return BlockList(unit, tuple(out), tuple(notes))
 
 
-def _tie(block: Block, ranks: Mapping[str, int]) -> tuple[int, int, tuple[tuple[int, int | str], ...]]:
+def _tie(block: Block, ranks: Mapping[str, int]) -> tuple[int, int, NaturalKey]:
     """A ranked anchor stands by its rank (0388), the rest after them by natural key."""
     anchor = block.anchor or block.columns[0]
     if anchor in ranks:

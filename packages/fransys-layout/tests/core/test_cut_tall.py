@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from options_fixtures import core_options
 
-from fransys_layout.core.values import RefKind
+from fransys_layout.core.cut_tall import Tall, _wires
+from fransys_layout.core.errors import CoreError
+from fransys_layout.core.flow_values import Cell, Column, End, Lane
+from fransys_layout.core.values import PinRef, RefKind
 
 from .cut_fixtures import chain, cut_of, elem, net
 
@@ -36,3 +40,16 @@ def test_every_piece_of_a_cut_column_has_one_head_and_one_foot_per_lane() -> Non
     assert len(result.flow.columns) > 2
     assert any(lanes == 2 for lanes, _, _ in shapes)
     assert all(lanes == heads == feet for lanes, heads, feet in shapes)
+
+
+def test_a_cut_between_cells_with_no_shared_net_is_refused_not_tagged_with_an_empty_net() -> None:
+    """F1 row 7: `net_of.get(pin, "")` made a TAG with net "", a reference pair with no conductor; the cut now names the cells."""
+    cells = (Cell("a", "R0", "n", "s"), Cell("b", "R0", "n", "s"))
+    col = Column("c:a", (Lane(cells, 0),), (End("open"),), (End("open"),), 0, 0)
+    joined = net("x", "a.s", "b.n")
+    ok = Tall({}, core_options(), 0, 0, dict.fromkeys(joined.pins, "x"), {"x": joined.pins}, {}, {}, ())
+    assert _wires(col, 0, 1, ok) == (("x", PinRef("a", "s"), PinRef("b", "n")),)
+    for net_of in ({}, {PinRef("a", "s"): "x"}, {PinRef("a", "s"): "x", PinRef("b", "n"): "y"}):
+        apart = Tall({}, core_options(), 0, 0, net_of, {}, {}, {}, ())
+        with pytest.raises(CoreError, match="cells a and b of lane 0 in column c:a share no net"):
+            _wires(col, 0, 1, apart)

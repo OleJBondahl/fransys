@@ -30,7 +30,7 @@ from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
 from fransys_layout.core.cut_ledger import _pole_carried, account
 from fransys_layout.core.cut_loss import arrowed, restood, whole, withdrawn
-from fransys_layout.core.cut_refs import _column_pin, across
+from fransys_layout.core.cut_refs import _column_pin, across, with_copies
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
 from fransys_layout.core.geometry import marker_box_at
@@ -66,6 +66,24 @@ def test_a_free_sided_hub_is_copied_onto_the_other_page_of_its_fan() -> None:
         "f:feed",
     )  # one leg with the head, two on page 2
     assert finding.text.startswith("f:feed")
+
+
+def no_pin_holds_two_ends_of_one_net(refs: tuple[Ref, ...] | list[Ref]) -> bool:
+    """PAGE-CUT: one conductor is carried once, so no pin is the end of two references of one net."""
+    ends = [(r.net, e.pin) for r in refs for e in r.ends if e.pin is not None]
+    return len(ends) == len(set(ends))
+
+
+@pytest.mark.rule("PAGE-CUT")
+def test_a_tag_pair_that_a_copy_of_its_net_ends_at_one_of_its_pins_is_not_planned() -> None:
+    """KI-1260: a fold tag, a cut tag and the terminal copy each carried one conductor; the copy alone does."""
+    ends = (RefEnd(1, "c:a", PinRef("f", "in")), RefEnd(2, "c:b", PinRef("t", "n")))
+    tag, other = Ref("feed", RefKind.TAG, ends, 3), Ref("other", RefKind.TAG, ends, 3)
+    copy = Ref("feed", RefKind.COPY, (RefEnd(1, "c:a", PinRef("f", "in")),))
+    assert not no_pin_holds_two_ends_of_one_net([tag, copy])
+    planned = with_copies([tag, tag, other], [copy])
+    assert planned == [other, copy]
+    assert no_pin_holds_two_ends_of_one_net(planned)
 
 
 def test_a_copy_has_one_end_for_each_page_beyond_the_hubs_own() -> None:

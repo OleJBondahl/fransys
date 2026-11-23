@@ -7,9 +7,10 @@ from typing import Any
 import pytest
 from author_library import with_house
 from fransys_author import AuthorError
+from fransys_author._cable_handles import Cable
 from fransys_author._design_support import _required_and_defaults
 from fransys_author.design import Design
-from fransys_author.handles import Cable, Fn, Item, Location, Port, Strip, Terminal
+from fransys_author.handles import Fn, Item, Location, Port, Strip, Terminal
 
 from fransys_model.checks.revisions import REVISION_CURRENT_MISSING, check_revisions
 from fransys_model.kernel import Draft, Record, Severity, freeze, merge

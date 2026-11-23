@@ -1,0 +1,25 @@
+schema = 2
+
+[part]
+mpn = "DEMO-MPCB-1P"
+manufacturer = "Demo"
+description = "Motor protection circuit breaker, 1-pole, one device"
+category = "protection"
+class_code = "Q"
+
+[[function]]
+name = "element"
+kind = "protection"
+symbol = "circuit-breaker"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }]
+
+[function.block]
+type = "motor_breaker"
+
+[rating]
+voltage = [{ nom = "400 V", at = ["AC"] }]
+current = [{ nom = "6 A", at = ["AC"] }]

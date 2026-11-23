@@ -4,6 +4,7 @@ import pytest
 from rack_builders import build_racks
 
 from fransys_model.derive import cdp_kind, rack_modules_for_cdp
+from fransys_model.derive.cdp_name import cdp_name
 from fransys_model.vocab.enums import SignalType
 
 
@@ -44,3 +45,11 @@ def test_a_module_of_one_kind_names_it_and_its_channels_count_from_zero():
 )
 def test_the_cdp_kind_is_the_form_and_the_direction_of_the_signal(signal, kind):
     assert cdp_kind(signal) == kind
+
+
+@pytest.mark.parametrize(
+    ("text", "name"),
+    [("Door", "Door"), ("Door!", "Door"), ("B-1", "B_1"), ("a  b", "a_b"), ("__x__", "x"), ("1st", "N_1st"), ("Ä1", "N_1"), ("!!!", ""), ("", "")],
+)
+def test_the_cdp_name_keeps_letters_digits_and_underscores_only(text, name):
+    assert cdp_name(text) == name

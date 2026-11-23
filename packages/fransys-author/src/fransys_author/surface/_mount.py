@@ -64,7 +64,10 @@ def _mount_marks(design: Design, fn: EngineFn, carrier: Device | Fn, mounted: De
 
 
 def mount(design: Design, mounted: Device | Fn, carrier: Device | Fn) -> None:
-    """Write the mount links of `mounted` on `carrier`: poled functions, then pass-throughs."""
+    """Write the mount links of `mounted` on `carrier`: poled functions, then pass-throughs.
+
+    A function of fewer poles than the widest (an aux contact) stays unmounted: it is its own one-pole function, drawn on its own (layout-0026).
+    """
     mine = _fns(mounted)
     if {f.id for f in mine} & {f.id for f in _fns(carrier)}:
         msg = f"{_label(mounted)} cannot be mounted on itself"

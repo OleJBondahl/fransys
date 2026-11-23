@@ -22,9 +22,9 @@ from fransys_layout.core import (
     values,
 )
 from fransys_layout.core.flow_values import Block, Cell, End
-from fransys_layout.core.keys import natural_key
 from fransys_layout.core.outputs import CoreLayout
 from fransys_layout.core.values import Options, PlacementProblem
+from fransys_model.kernel import natural_key
 
 from . import values_fixtures
 from .values_fixtures import all_values, layout, problem
@@ -256,7 +256,6 @@ def test_the_marker_names_the_pin_it_stands_at():
 def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
     o = core_options()
     assert o.box_columns is True
-    assert o.cells == (8, 6)
     assert not o.marker_boxes  # layout-0305: symdef data, passed in, never typed in the core
     assert "colours" not in {f.name for f in dataclasses.fields(Options)}
 
@@ -277,7 +276,6 @@ def test_a_label_has_no_text():
 def test_a_marker_has_no_text_and_no_colour():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
     assert not {"text", "colour"} & names["Marker"]
-    assert "cell" in names["Marker"]
 
 
 def test_no_core_value_carries_a_string_to_print():

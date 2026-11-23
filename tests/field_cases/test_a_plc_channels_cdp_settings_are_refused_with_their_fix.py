@@ -24,6 +24,16 @@ def test_two_devices_of_one_controller_with_one_signal_name_are_an_error() -> No
     expect_codes(fr.build(d), "PLC_SIGNAL_NAME_TWICE")
 
 
+def test_names_that_are_one_cdp_name_are_errors() -> None:
+    """KI-1358: "Door" and "Door!" wrote two channels named Door (wago-0002, R3423)."""
+    d = fr.design("demo_parts")
+    di = d.device("A1", "DEMO-PLC-DI-4P", parent=d.rack("U1"))
+    strip = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 3)
+    _wired_relay(d, "M1", di.di_1["1"], strip, 1).co_1.plc(fr.DI, "Door")
+    _wired_relay(d, "M2", di.di_2["2"], strip, 2).co_1.plc(fr.DI, "Door!")
+    expect_codes(fr.build(d), "PLC_SIGNAL_NAME_TWICE")
+
+
 def test_a_scale_on_a_digital_spare_is_an_error() -> None:
     d = fr.design("demo_parts")
     di = d.device("A1", "DEMO-PLC-DI-4P", parent=d.rack("U1"))

@@ -72,7 +72,6 @@ LAYOUT_VALUES = {
     "solve_rounds": 3,
     "widen_rounds_limit": 50,
     "corner_order": ["TL", "BL", "TR", "BR"],
-    "cells": [8, 6],
     "label_gap": 8,
     "box_columns": True,
     "top_headroom_lanes": 3,

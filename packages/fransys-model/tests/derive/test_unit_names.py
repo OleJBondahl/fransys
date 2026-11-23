@@ -3,7 +3,7 @@
 import pytest
 from plant import Plant
 
-from fransys_model.derive.facts.unit_names import unit_name_unresolved
+from fransys_model.derive.facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, units_named
 from fransys_model.kernel import ModelError
 from fransys_model.vocab.finding_ref import ref
 
@@ -63,3 +63,19 @@ def test_exactly_one_match_raises_value_error() -> None:
     plant.unit("a", name="relay-board")
     with pytest.raises(ModelError, match="resolves to exactly one unit"):
         unit_name_unresolved(plant.model(), "relay-board")
+
+
+def test_the_design_of_a_name_is_its_first_instance_and_each_name_is_listed_once() -> None:
+    plant = Plant()
+    plant.unit("a", name="board")
+    plant.unit("b", name="board")
+    plant.unit("c", name="cabinet")
+    model = plant.model()
+    assert unit_design_of(model, "board") == units_named(model, "board")[0]
+    assert sorted(unit_list_names(model)) == ["board", "cabinet"]
+
+
+def test_the_design_of_an_unknown_name_raises_the_unresolved_sentence() -> None:
+    model = Plant().model()
+    with pytest.raises(ModelError, match="no unit release is named 'x'"):
+        unit_design_of(model, "x")

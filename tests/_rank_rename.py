@@ -11,7 +11,8 @@ import re
 from dataclasses import fields, is_dataclass, replace
 from typing import Any
 
-from fransys_layout.core import PlacementProblem, natural_key
+from fransys_model.kernel import natural_key
+lazy from fransys_layout.core import PlacementProblem
 
 _PREFIX = "A"  # the control keeps every plain and natural comparison; "~" flipped some
 Mapping_ = dict[str, str]

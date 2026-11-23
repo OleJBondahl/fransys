@@ -7,6 +7,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _field_designs import fc_design, written_pdf
 
 _WORDS = "This drawing is the property of Demo Co and may not be copied or shown to a third party"
 _LEGEND = " ".join([_WORDS] * 4) + " Demo Co ENDING"  # 366 characters, the last word distinctive
@@ -18,9 +19,7 @@ assert 360 <= len(_LEGEND) <= 370
 
 def _build(root: Path, notice: str, *, customer: str = "Demo Co", author: str = "d"):
     root.mkdir(parents=True, exist_ok=True)
-    d = fr.design("demo_parts", place="C1")
-    d.project(title="Cabinet", number="CAB-1", customer=customer, revision=1, author=author)
-    d.revision(1, date="2026-10-11", text="First issue", created="XX")
+    d = fc_design("Cabinet", place="C1", number="CAB-1", customer=customer, author=author, date="2026-10-11")
     cabinet = d.location("C1", "Cabinet")
     d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     cover = root / "cover.md"
@@ -32,8 +31,7 @@ def _build(root: Path, notice: str, *, customer: str = "Demo Co", author: str = 
         notice=notice,
     )
     result = fr.build(d, document)
-    fr.write(result, out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
+    pdf = written_pdf(result, root)
     return result, pdf
 
 

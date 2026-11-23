@@ -7,6 +7,7 @@ reference = { standard = "IEC 60617", number = "pin-cell" }
 
 ports = [
   { id = "pin", at = [-3, 1], dir = "W", description = "wire side" },
+  { id = "mate", at = [3, 1], dir = "E", description = "mating side" },
 ]
 
 elements = [

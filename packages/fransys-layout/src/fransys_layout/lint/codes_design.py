@@ -13,7 +13,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Put the missing end's item in a drawn unit or location, or remove the connection. "
             "Write: d.function(name, text) to place that item in a drawn group."
         ),
-        page="findings-render",
+        page="findings-wires",
     ),
     CodeInfo(
         code="WIRE_AS_REFERENCE",
@@ -22,6 +22,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause=("No orthogonal path on the wiring grid could be found for a connection, so it is drawn as a reference at its pin."),
         fix=("None needed: the connection is shown by its reference. To draw it as a wire, give its ports more room."),
-        page="findings-render",
+        page="findings-wires",
     ),
 )

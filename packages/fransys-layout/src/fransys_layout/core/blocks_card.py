@@ -10,9 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, NamedTuple
 
+from fransys_model.kernel import natural_key
+
 from .flow_values import Block
 from .geometry import pin_of
-from .keys import natural_key
 from .pack_row import row_width
 from .rowspec import one_row
 from .values import Finding

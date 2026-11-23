@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import natural_key
+
 from .cut_costs import is_pair, ref_name
 from .cut_ends import (
     Lanes,
@@ -20,7 +22,6 @@ from .cut_ends import (
 )
 from .errors import CoreError
 from .fan_head import fan_head, head_short
-from .keys import natural_key
 from .topology_elements import is_free_sided
 from .values import Finding, PinRef, Ref, RefEnd, RefKind
 
@@ -76,6 +77,12 @@ def references(
                     out.append(Ref(name, kind, ends, b))
     rows = {n: frozenset((page_of[i], row_of[i]) for p in lanes for i, _ in p) for n, lanes in pins.items()}
     return link_over_pinless(link_over_empty_rows(out, rows))
+
+
+def with_copies(refs: Sequence[Ref], copied: Sequence[Ref]) -> list[Ref]:
+    """`refs` less each tag pair a copy of its net ends at one of its pins, then the copies (PAGE-CUT)."""
+    ended = {(r.net, e.pin) for r in copied for e in r.ends}
+    return [*(r for r in refs if r.kind is not RefKind.TAG or not any((r.net, e.pin) in ended for e in r.ends)), *copied]
 
 
 def on_pages(ref: Ref, where: Mapping[str, int]) -> Ref:

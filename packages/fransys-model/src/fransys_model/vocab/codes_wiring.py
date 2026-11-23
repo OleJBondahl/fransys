@@ -183,8 +183,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="validators",
         who="consumer",
-        cause="Two devices bound to one controller carry one signal name, so the CDP file would name two channels alike.",
-        fix='Rename one. Write: K1.coil.plc(fr.DO, "pump-run")',
+        cause=(
+            "Two channels of one WAGO module are written under one CDP name (a repeated spare label, a label equal to a signal name), "
+            "or two devices of one controller carry signal names that are one CDP name; CDP keeps letters, digits and underscores."
+        ),
+        fix='Rename one so the names differ in letters or digits. Write: K1.coil.plc(fr.DO, "pump-run")',
         page="findings-validators",
     ),
     CodeInfo(

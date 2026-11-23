@@ -4,7 +4,6 @@ EXPECTED is the base probe's output (`claude-tools/ro1_scope_probe.py`, run on t
 the swap): the demo cabinet, the units worked example and the demo skid.
 """
 
-# CONNECTION_NOT_ACCOUNTED: an old finding of this file's builds, on KI-1374 (R3538).
 import importlib.util
 from pathlib import Path
 

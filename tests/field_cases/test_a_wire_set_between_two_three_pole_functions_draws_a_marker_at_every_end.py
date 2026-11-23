@@ -7,6 +7,7 @@ from collections import Counter
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages, markers_in
+from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import BK
 
@@ -15,9 +16,7 @@ _SHAPES = ("mixed-contactors-to-one-motor", "two-contactors-in-parallel-to-one-m
 
 
 def _built(shape: str) -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Drive", number="D-1", customer="Demo Co", revision=1, author="XX")
-    d.revision(1, date="2026-10-29", text="First issue", created="XX")
+    d = fc_design("Drive", place="CAB", number="D-1", customer="Demo Co", author="XX", date="2026-10-29")
     cab, fld = d.location("CAB", "Cabinet"), d.location("FLD", "Field")
     k1, k2 = d.device("K1", "DEMO-CTR-3P-NC", place="CAB"), d.device("K2", "DEMO-CTR-3P-NC", place="CAB")
     m1, m2 = d.device("M1", "DEMO-MOTOR-4KW", place="FLD"), d.device("M2", "DEMO-MOTOR-4KW", place="FLD")

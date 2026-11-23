@@ -87,7 +87,7 @@ def label_annexes(syms: Sequence[Sym], options: Options, home: str, tags: Mappin
     for s in syms:
         if s.row_group is not None and s.row_group in tags:
             strips.setdefault(s.row_group, s)
-    if clash := next(iter(strips.keys() & {s.id for s in syms}), None):
+    if clash := next((s.id for s in syms if s.id in strips), None):
         refuse(f"strip {clash}", "a strip is named like a symbol: the run tag and the symbol's tag would share one annex owner", clash)
     return (
         *(_sym_annex(s, home, options, rise) for s in syms),

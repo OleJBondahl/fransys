@@ -2,12 +2,12 @@
 The bug: fr.readability raised KeyError on a page id, since power leads came from the top run for a page the unit run replaced.
 Fixed by layout-0260, the report holds each page once, by the run that drew it, with that run's power leads."""
 
-import tempfile
-from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_unit
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 WIRE = (BU, 0.5)
@@ -19,16 +19,7 @@ class _Psu(NamedTuple):
     psu: Any
 
 
-@fr.unit(
-    "demo-control",
-    revision=1,
-    interface_version=1,
-    date="2026-01-01",
-    text="first",
-    by="AB",
-    title="Control",
-    number="N-1",
-)
+@fc_unit("demo-control", title="Control", number="N-1")
 def _control(d: Any) -> _Psu:
     d.layout.profile(hide_unused_pins=True)
     with d.function("B", "Group"):
@@ -60,9 +51,7 @@ def _control(d: Any) -> _Psu:
 def built() -> fr.BuildResult:
     d = fr.design("demo_parts")
     d.add(_control, "U1")
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Control\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-control", cover=cover))
+    return fr.build(d, cabinet_document("demo-control"))
 
 
 def test_readability_reports_a_unit_with_its_own_profile_and_power_symbols(

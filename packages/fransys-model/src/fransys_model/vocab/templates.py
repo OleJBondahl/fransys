@@ -11,8 +11,6 @@ from .wiring_rows import WiringRow
 if TYPE_CHECKING:
     from .connectivity import Conductor, Mate, Net, RailGroup
 
-_POWER_KINDS = frozenset({FunctionKind.SUPPLY, FunctionKind.LOAD})
-
 
 def _holder(found: Net | Conductor | Mate | RailGroup | InternalLink | FunctionTemplate) -> Id[Any] | None:
     """The id of the record that refuses, for its error; `None` if it is not even an `Id`."""
@@ -106,7 +104,7 @@ class FunctionTemplate:
         if self.protection_type is not None and self.kind is not FunctionKind.PROTECTION:
             msg = "only a protection function has a protection type"
             raise SchemaError(msg, kind="function_template", record_id=_holder(self))
-        if self.energy is not None and self.kind not in _POWER_KINDS:
+        if self.energy is not None and not self.kind.carries_energy:
             msg = "only a supply or load function has an energy direction"
             raise SchemaError(msg, kind="function_template", record_id=_holder(self))
 

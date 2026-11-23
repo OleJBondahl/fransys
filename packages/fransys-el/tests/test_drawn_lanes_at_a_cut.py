@@ -7,12 +7,13 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from fransys_el.drawn_graph import Union
 from fransys_el.drawn_lanes import join_lanes
+
+from fransys_model.kernel import UnionFind
 
 
 def _side(
-    union: Union, name: str, *lanes: tuple[str, int, int], style: str = "trunk", ports: bool = True, inked: int | None = None
+    union: UnionFind[Any], name: str, *lanes: tuple[str, int, int], style: str = "trunk", ports: bool = True, inked: int | None = None
 ) -> tuple[str, Any, dict[str, str]]:
     """A page `name` with a wire per `(net, y, x end)` from x 0, a port at its start (unless `ports` is off), a marker over `inked` lanes."""
     ys = [y for _, y, _ in lanes[:inked]]
@@ -20,19 +21,21 @@ def _side(
     marks = [SimpleNamespace(slots=(("ref", "#1"),), x=x, y=ys[0], outline=box) for x in {0, *(x for _, _, x in lanes)}]  # one flag per lane end x
     wires = [SimpleNamespace(points=((0, y), (x, y)), style=style) for _, y, x in lanes]
     for _, y, x in lanes:
-        union.join((name, (0, y)), (name, (x, y)))
+        union.union((name, (0, y)), (name, (x, y)))
     held = {f"{name}{net}": (0, y) for net, y, _ in lanes} if ports else {}
     return name, SimpleNamespace(drawing=SimpleNamespace(wires=wires, symbols=marks), ports=held), {f"{name}{net}": net for net, _, _ in lanes}
 
 
-def _join(*sides: tuple[str, Any, dict[str, str]], at: list[tuple[str, tuple[int, int]]], union: Union, stubs: dict[Any, set[str]] | None = None):
+def _join(
+    *sides: tuple[str, Any, dict[str, str]], at: list[tuple[str, tuple[int, int]]], union: UnionFind[Any], stubs: dict[Any, set[str]] | None = None
+):
     pages = {name: part for name, part, _ in sides}
     refs = SimpleNamespace(groups={0: at}, stubs=stubs or {})
     return join_lanes(union, pages, refs, {k: v for _, _, nets in sides for k, v in nets.items()}, 8)  # ty: ignore[invalid-argument-type] - doubles
 
 
 def test_lanes_pair_across_the_ends_of_a_star_though_one_page_lacks_a_lane() -> None:
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100))
     b = _side(union, "B", ("L1", 8, 50), ("L2", 16, 50))
     c = _side(union, "C", ("L1", 8, 60), ("L2", 16, 60))
@@ -48,7 +51,7 @@ def test_lanes_pair_across_the_ends_of_a_star_though_one_page_lacks_a_lane() -> 
 )
 def test_a_foot_pairs_only_at_the_arrows_port_or_inside_its_ink(outline_y: int, outline_h: int, foot_y: int, *, pairs: bool) -> None:
     """R3541, R3568: the port's lane pairs even on its outline's end; another lane only where its end is inside the ink."""
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100), ("L2", foot_y, 100), inked=1)
     for mark in a[1].drawing.symbols:
         mark.outline = SimpleNamespace(x=0, w=100, y=outline_y, h=outline_h)
@@ -60,7 +63,7 @@ def test_a_foot_pairs_only_at_the_arrows_port_or_inside_its_ink(outline_y: int, 
 
 def test_lanes_the_other_side_reads_in_another_order_pair_nothing() -> None:
     """The k-th lane of one side is the k-th of the other: the same nets in the other order are no pairing."""
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100), ("L2", 16, 100))
     b = _side(union, "B", ("L2", 8, 50), ("L1", 16, 50))
     lanes = _join(a, b, at=[("A", (100, 8)), ("B", (50, 8))], union=union)
@@ -70,7 +73,7 @@ def test_lanes_the_other_side_reads_in_another_order_pair_nothing() -> None:
 
 def test_the_lanes_of_the_arrows_trunk_pair_at_the_arrows_x() -> None:
     """R903, R2714: the lanes of the arrow trunk end at the arrow's x, one pitch apart; a far trunk is not read."""
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100), ("L2", 16, 100), ("L3", 24, 100), ("L9", 80, 100))
     b = _side(union, "B", ("L1", 8, 50), ("L2", 16, 50), ("L3", 24, 50), ("L9", 80, 50))
     _join(a, b, at=[("A", (100, 8)), ("B", (50, 8))], union=union)
@@ -80,7 +83,7 @@ def test_the_lanes_of_the_arrows_trunk_pair_at_the_arrows_x() -> None:
 
 
 def test_a_foot_whose_piece_holds_no_port_is_bare_and_pairs_nothing() -> None:
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100), ("L2", 16, 100), ports=False)
     b = _side(union, "B", ("L1", 8, 50), ("L2", 16, 50))
     lanes = _join(a, b, at=[("A", (100, 8)), ("B", (50, 8))], union=union)
@@ -89,7 +92,7 @@ def test_a_foot_whose_piece_holds_no_port_is_bare_and_pairs_nothing() -> None:
 
 
 def test_a_piece_of_two_nets_is_a_short_and_pairs_nothing() -> None:
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100))
     b = _side(union, "B", ("L1", 8, 50))
     a[1].ports["Ax"] = (0, 8)  # a second port of another net on the same piece
@@ -101,7 +104,7 @@ def test_a_piece_of_two_nets_is_a_short_and_pairs_nothing() -> None:
 
 def test_a_stub_meets_the_feet_whose_piece_holds_a_port_its_text_lists() -> None:
     """R1666: an off stub's text lists the conductors it ends; the lane of a listed port is met, the lane of an unlisted port is not."""
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", ("L1", 8, 100), ("L2", 16, 100), ("L3", 24, 100))
     refs = SimpleNamespace(groups={}, stubs={("A", (100, 8)): {"AL1", "AL2"}})
     lanes = join_lanes(union, {"A": a[1]}, refs, a[2], 8)  # ty: ignore[invalid-argument-type] - doubles
@@ -110,7 +113,7 @@ def test_a_stub_meets_the_feet_whose_piece_holds_a_port_its_text_lists() -> None
 
 def _pass_through(near: str, far: str, *, far_read: bool = True):
     """Page T holds a lane with no port from one arrow to another; each arrow's reference leads to a page whose first lane has a port."""
-    union = Union()
+    union = UnionFind()
     t = _side(union, "T", ("L", 16, 100), ports=False)
     p1, p2 = _side(union, "P1", (near, 16, 50)), _side(union, "P2", (far, 16, 50))
     groups = {1: [("T", (0, 8)), ("P1", (0, 8))], 2: [("T", (100, 8)), ("P2", (0, 8))] if far_read else [("T", (100, 8))]}
@@ -140,7 +143,7 @@ def test_a_lane_between_two_arrows_whose_references_lead_to_two_nets_stays_dangl
 
 def _short(chain: int, reach: int):
     """P1's lane of net L ends at x `reach`, its arrow stands at x 100; `chain` portless lanes T0.. lead on to P2, whose lane meets its arrow."""
-    union = Union()
+    union = UnionFind()
     ts = [_side(union, f"T{i}", ("L", 16, 100), ports=False) for i in range(chain)]
     p1, p2 = _side(union, "P1", ("L", 16, reach)), _side(union, "P2", ("L", 16, 50))
     stops = [("P1", (100, 8)), *((f"T{i}", x) for i in range(chain) for x in ((0, 8), (100, 8))), ("P2", (0, 8))]
@@ -166,7 +169,7 @@ def test_control_a_chain_whose_lanes_reach_their_arrows_is_met() -> None:
 
 def _bundle_beside(*other: tuple[str, int, int], own: tuple[tuple[str, int], ...] = (("L1", 8),), drop: tuple[str, ...] = ()):
     """Page A holds the arrow's own lanes and `other` lanes of a second bundle (portless where named in `drop`); page B holds the own lanes."""
-    union = Union()
+    union = UnionFind()
     a = _side(union, "A", *((n, y, 100) for n, y in own), *other)
     b = _side(union, "B", *((n, y, 50) for n, y in own))
     for net in drop:
@@ -201,7 +204,7 @@ def test_a_flush_neighbour_one_pitch_away_is_read_in_the_documented_limit() -> N
 
 def test_a_portless_chain_beside_a_far_flush_neighbour_keeps_its_k() -> None:
     """R2065: a lane of another bundle far above the arrow's on the page does not shift the k-th lane of a pass-through chain."""
-    union = Union()
+    union = UnionFind()
     t = _side(union, "T", ("L", 16, 100), ("M", -40, 100), ports=False)
     t[1].ports["TM"] = (0, -40)
     p1, p2 = _side(union, "P1", ("L", 16, 50)), _side(union, "P2", ("L", 16, 50))

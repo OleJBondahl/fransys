@@ -179,7 +179,7 @@ def test_a_tags_hanging_box_is_the_route_obstacle_box_of_the_marker_standing_the
     for (sym, pin, _), (side, box) in boxes.items():
         end = PinRef(sym, pin)
         stand = abut(options, side, 0, 0, (end, "tag"))
-        tag = Marker("n1", RefKind.TAG, 1, "c", stand.x, stand.y, end, stand.orient)
+        tag = Marker("n1", RefKind.TAG, 1, stand.x, stand.y, end, stand.orient)
         assert box == marker_box(tag, options, drawn=True)
         assert box != marker_box(tag, options)
 

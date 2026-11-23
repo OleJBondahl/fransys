@@ -8,6 +8,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import system_document, unit_document
 from fransys.colours import BK, RD
 
@@ -43,9 +44,7 @@ def _wide_chain(u: Any) -> _Io:
 @cache
 def _built(salt: str, *, with_system: bool) -> fr.BuildResult:
     with id_namespace(salt) if salt != "-" else nullcontext():
-        d = fr.design("demo_parts")
-        d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="d")
-        d.revision(1, date="2026-01-01", text="first", created="AB")
+        d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
         d.add(_wide_chain, "U1", place=None)
         documents = [unit_document("wide-chain"), *([system_document()] if with_system else [])]
         return fr.build(d, *documents)

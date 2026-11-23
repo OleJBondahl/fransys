@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import pytest
 from _drawn_pages import drawn_pages
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -21,9 +22,7 @@ _BESIDE = 24  # G: how near a text stands to count as beside the tag
 
 
 def _built(relays: int = 12) -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Poles", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-14", text="First issue", created="XX")
+    d = fc_design("Poles", place="CAB")
     cabinet = d.location("CAB", "Cabinet")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     with d.function("A", "Control"):

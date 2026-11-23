@@ -357,18 +357,9 @@ def test_a_channel_with_a_device_but_no_signal_name_is_named_as_a_spare(new_rack
     assert _channel_names(rack) == ["DI1", "DI2"]
 
 
-def test_two_channels_with_one_name_are_both_written_as_they_are(new_rack):
-    rack = new_rack()
-    module = rack.module(rack.part("p", "750-X", (SignalType.DI,) * 2), "m", "A1", 1)
-    rack.device("d1", "B-1", "Door", module.channels[0])
-    rack.device("d2", "B_1", "Door", module.channels[1])
-    assert _channel_names(rack) == ["Door", "Door"]
-
-
-def test_a_name_that_sanitises_to_nothing_is_emitted_empty(new_rack):
+def test_a_name_that_sanitises_to_nothing_is_written_as_the_channel_label(new_rack):
     rack, _ = _one_module_rack(new_rack, (SignalType.DI,), [("--", "!!")])
-    text = modules_xml(rack.freeze(), rack.rack)
-    assert 'Name="" NetworkConvert' in text
+    assert _channel_names(rack) == ["DI1"]
 
 
 def test_scaling_prints_the_numbers_as_they_are(new_rack):
@@ -463,3 +454,12 @@ def test_a_rack_that_is_not_an_item_is_refused(demo_rack):
     (facet_owner,) = [r for r in demo_rack.records if getattr(r, "mpn", "") == "750-352"]
     with pytest.raises(SchemaError):
         modules_xml(model, facet_owner.id)
+
+
+def test_a_spare_in_each_of_two_modules_is_written_as_its_own_label(new_rack):
+    rack = new_rack()
+    part = rack.part("p", "750-X", (SignalType.DI,) * 2)
+    first, second = rack.module(part, "m1", "A1", 1), rack.module(part, "m2", "A2", 2)
+    rack.device("dev1", "B1", "Door", first.channels[1])
+    rack.device("dev2", "B2", "Gate", second.channels[0])
+    assert _channel_names(rack) == ["DI1", "Door", "Gate", "DI2"]

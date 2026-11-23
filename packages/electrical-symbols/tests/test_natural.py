@@ -17,7 +17,7 @@ STRETCHABLE = [
     "harness-frame",
     "group-frame",
 ]
-ROWS = {"pin-cell": "y", "pin-cell-wide": "y", "cable-column": "x", "contact-row": "y"}
+ROWS = {"pin-cell": "y", "pin-cell-wide": "y", "mating-cell": "y", "cable-column": "x", "contact-row": "y"}
 SS5 = [
     *ROWS,
     "cable-head",

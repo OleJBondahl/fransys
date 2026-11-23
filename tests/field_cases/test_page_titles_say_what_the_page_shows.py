@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pypdfium2
 import pytest
+from _field_designs import fc_design, written_pdf
 from _model_build_cover import unit_document
 
 if TYPE_CHECKING:
@@ -25,9 +26,7 @@ def _flat(text: str) -> str:
 
 def _build(root: Path, *, blocks: int) -> tuple[fr.BuildResult, list[str]]:
     """The cabinet with `blocks` circuits, `-X1` wired to `-H1`; the schematic pages' titles."""
-    d = fr.design("demo_parts", place="C1")
-    d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Cabinet", place="C1", number="CAB-1", customer="Demo Co", author="d", date="2026-10-12")
     cabinet = d.location("C1", "Cabinet")
     relays = []
     for i in range(1, blocks + 1):
@@ -40,8 +39,7 @@ def _build(root: Path, *, blocks: int) -> tuple[fr.BuildResult, list[str]]:
     d.series(x1.run("SIG", 1)[1].inner, h1.lamp["1"], wire=("WH", 0.75))
     d.series(x1[2].inner, h1.lamp["2"], wire=("WH", 0.75))
     result = fr.build(d, unit_document(cabinet))
-    fr.write(result, out_dir=root / "out", intermediates=root / "inter")
-    (pdf,) = (root / "out").glob("*.pdf")
+    pdf = written_pdf(result, root)
     document = pypdfium2.PdfDocument(pdf)
     texts = [_flat(page.get_textpage().get_text_range()) for page in document]
     titles = [m.group(1) for t in texts if (m := _TITLE.search(t))]

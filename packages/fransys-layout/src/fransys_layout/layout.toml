@@ -42,7 +42,6 @@ solve_rounds = 3
 # widen passes before it raises: grants only grow, so a pass past this is a loop (R1981)
 widen_rounds_limit = 50
 corner_order = ["TL", "BL", "TR", "BR"]
-cells = [8, 6]
 label_gap = 8
 box_columns = true
 top_headroom_lanes = 3

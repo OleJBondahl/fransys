@@ -13,6 +13,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends."
         ),
         fix="No call clears this: send the smallest model that shows it.",
-        page="findings-render",
+        page="findings-wires",
     ),
 )

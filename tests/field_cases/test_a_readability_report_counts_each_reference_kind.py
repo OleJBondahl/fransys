@@ -3,14 +3,13 @@ The bug: none; a reader asked for references by kind, and R239 dropped that coun
 Fixed by decision 0182, the reading is a function of the build, so the same model gives the same rows."""
 
 import fransys as fr
+from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import BU
 
 
 def _build() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Readability", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-12", text="First issue", created="XX")
+    d = fc_design("Readability", place="CAB", date="2026-10-12")
     cabinet = d.location("CAB", "Cabinet")
     with d.function("A", "Group A"):
         k1 = d.device("K1", "DEMO-RLY-2CO-24")

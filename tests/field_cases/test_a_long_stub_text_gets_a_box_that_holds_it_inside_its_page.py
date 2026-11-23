@@ -5,6 +5,7 @@ Fixed by layout-0374 (R318, R329), the stub box is fitted to its text and lies i
 from typing import cast
 
 import fransys as fr
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -34,9 +35,7 @@ def _box(one: LinkMarker) -> tuple[float, float, float, float]:
 
 
 def _fan_out() -> fr.BuildResult:
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Marker", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Marker", place="CAB", date="2026-10-02")
     cabinet = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         relays = [d.device(f"K{n}", "DEMO-RLY-2CO-24") for n in range(1, 40)]

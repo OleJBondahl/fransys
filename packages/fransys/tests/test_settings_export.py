@@ -23,12 +23,12 @@ _REPORT_STEMS = ("bom", "plc", "wires", "designations", "cables", "cores")
 
 
 def _written(tmp_path: Path, text: str | None) -> dict[str, bytes]:
-    """Every file `fr.write` makes for the skid under the settings `text`, by relative path."""
+    """Every file of the system set `fr.write` makes for the skid under the settings `text`, by relative path (not `units/`, R3596)."""
     tmp_path.mkdir(parents=True, exist_ok=True)
     path = None if text is None else consumer_file(tmp_path, text)
     out = tmp_path / "out"
     fr.write(skid_result(path), out)
-    return {str(p.relative_to(out)): p.read_bytes() for p in sorted(out.rglob("*")) if p.is_file()}
+    return {str(p.relative_to(out)): p.read_bytes() for p in sorted(out.rglob("*")) if p.is_file() and "units" not in p.relative_to(out).parts}
 
 
 def _csv_names(files: dict[str, bytes]) -> list[str]:

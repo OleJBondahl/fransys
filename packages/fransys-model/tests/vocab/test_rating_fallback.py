@@ -4,6 +4,8 @@ A 400 V supply with N: L1, L2, L3 at 230 V max and 0/120/240 degrees, N at 0 V. 
 stands 230 V to earth. A function with a rail pair in some state checks at its pairs, even
 """
 
+from fractions import Fraction
+
 from plant import Plant
 from rating_plant import AC_400, rated, supply
 from test_rail_pairs import _GENERIC, _NO, _load, _Relay
@@ -15,6 +17,7 @@ from fransys_model.vocab import PartRatingFacet
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import Part
+from fransys_model.vocab.voltage import _ac_square
 
 _PROTECTION = (
     "prot",
@@ -75,3 +78,7 @@ def test_a_single_pole_in_one_conductor_rated_below_its_rail_to_earth_gives_the_
 
 def test_the_same_single_pole_rated_above_its_rail_to_earth_gives_none() -> None:
     assert check_ratings(_pole("231").model()) == ()
+
+
+def test_two_phases_120_degrees_apart_stand_at_the_root_of_three() -> None:
+    assert _ac_square(Fraction(1), 0, Fraction(1), 120) == 3

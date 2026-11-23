@@ -339,7 +339,7 @@ def _marker_env(kind: RefKind, out: int, stand: StandClass = StandClass.PIN) -> 
     env = link_env({"a": (32, 64, "E")}, {})
     pin = PinRef("a", "p")
     st = abut(env.options, "E", 32 + out, 64, (pin, str(kind)))
-    mark = Marker("n", kind, 1, "c", st.x, st.y, pin, st.orient, stand=stand)
+    mark = Marker("n", kind, 1, st.x, st.y, pin, st.orient, stand=stand)
     return replace(env, net_of={pin: "n"}, sides={("a", "p", "R0"): "E"}, markers=(mark,))
 
 

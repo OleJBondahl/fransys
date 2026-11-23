@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _field_designs import fc_design
 from _model_build_cover import _COVER
 from annex_tag_spy import ink_boxes, tags_with_annexes
 from fransys.colours import GNYE
@@ -45,9 +46,7 @@ def _board(d: Any) -> _Io:
 
 
 def _design() -> tuple[Any, tuple[Any, ...]]:
-    d = fr.design("demo_parts")
-    d.project(title="Demo plant power and control system", number="P-1", customer="Demo Co", revision=1, author="d")
-    d.revision(1, date="2026-01-01", text="first", created="AB")
+    d = fc_design("Demo plant power and control system", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
     d.location("ROOM", "Switch room")
     d.location("FA", "Field A")
     d.location("FB", "Field B")

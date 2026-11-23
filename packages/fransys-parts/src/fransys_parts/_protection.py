@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import protection_symbols
+
 from . import _fields, _toml
 
 if TYPE_CHECKING:
@@ -49,10 +51,6 @@ def check_protection_links(entry: _toml.Table, path: str, line: int) -> list[Fin
     return [_toml.finding("PROTECTION_LINK_KIND", path, line, text) for text in texts if text]
 
 
-# A symbol that is one protection type's; a symbol not in it is not checked.
-_SYMBOL_TYPE = {"fuse": "fuse", "circuit-breaker": "mcb"}
-
-
 def _type_off_protection(entry: _toml.Table, table: object, path: str, line: int) -> list[Finding]:
     """`PROTECTION_TYPE_ON_NON_PROTECTION`: the model refuses a type on any other kind."""
     if type(table) is not dict or table.get("type") is None:
@@ -75,7 +73,7 @@ def check_protection_type(entry: _toml.Table, path: str, line: int) -> list[Find
         text = "a protection function declares no [function.block] type"
         warning = _toml.finding("PROTECTION_WITHOUT_TYPE", path, line, text)
         return [*findings, warning]
-    if symbol in _SYMBOL_TYPE and _SYMBOL_TYPE[symbol] != declared:
-        text = f"symbol {symbol!r} is a {_SYMBOL_TYPE[symbol]!r} but the type is {declared!r}"
+    if symbol not in protection_symbols(declared) and any(symbol in protection_symbols(type_) for type_ in _TYPE_KIND):
+        text = f"symbol {symbol!r} is not a {declared!r} symbol; the type takes {protection_symbols(declared)}"
         findings.append(_toml.finding("SYMBOL_TYPE_MISMATCH", path, line, text))
     return findings

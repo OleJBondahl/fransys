@@ -114,7 +114,7 @@ def layout() -> CoreLayout:
         Routes((PageRoutes(2, (wire,), (), Counts(0, 0, 0, 10), (), (), ()),)),
         Annotations(
             annexes=(AnnexBox("K", 1, Box(1, 2, 3, 4), "BR"),),
-            markers=(OutMarker("n1", RefKind.TAG, 2, "C3", 40, 46, PinRef("A", "in")),),
+            markers=(OutMarker("n1", RefKind.TAG, 2, 40, 46, PinRef("A", "in")),),
         ),
         (),
         frozenset(),

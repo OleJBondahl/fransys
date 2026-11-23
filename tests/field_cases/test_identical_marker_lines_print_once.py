@@ -3,6 +3,7 @@ The bug: a relay's marker printed the contactor's cell three times ("#1-2A", "#1
 Fixed by model-0137 and model-0139, identical targets count once, in target_lines."""
 
 import fransys as fr
+from _field_designs import fc_design
 from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
@@ -13,9 +14,7 @@ from fransys_model.layout import LinkMarker, layout_of
 
 def _texts() -> dict[str, list[str]]:
     """Each marker's printed lines by its port's designation."""
-    d = fr.design("demo_parts", place="CAB")
-    d.project(title="Marker", number="P-1", customer="Example Co", revision=1, author="OJB")
-    d.revision(1, date="2026-10-02", text="First issue", created="XX")
+    d = fc_design("Marker", place="CAB", date="2026-10-02")
     _cabinet = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         k1 = d.device("K1", "DEMO-CTR-3P-24")

@@ -7,6 +7,7 @@ from fransys_model.vocab.signal_types import SIGNAL_TYPES
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .cdp_name import cdp_name
 from .kinds import cdp_kind
 from .plc_rack import plc_rack_modules
 from .rows_plc import CdpChannel, CdpRackModule, PlcRackChannel, PlcRackModule
@@ -15,7 +16,11 @@ from .rows_plc import CdpChannel, CdpRackModule, PlcRackChannel, PlcRackModule
 def _direction(channels: tuple[PlcRackChannel, ...], *, output: bool) -> list[CdpChannel]:
     """The configured channels of one direction; `nr` counts every channel of it, a left-out one too."""
     same = [channel for channel in channels if SIGNAL_TYPES[channel.signal].output is output]
-    return [CdpChannel(channel=c, cdp_kind=cdp_kind(c.signal), output=output, nr=nr) for nr, c in enumerate(same) if c.configured]
+    return [
+        CdpChannel(channel=c, cdp_kind=cdp_kind(c.signal), output=output, nr=nr, name=cdp_name(c.signal_name or "") or c.label)
+        for nr, c in enumerate(same)
+        if c.configured
+    ]
 
 
 def _module(module: PlcRackModule, ordinal: int) -> CdpRackModule:

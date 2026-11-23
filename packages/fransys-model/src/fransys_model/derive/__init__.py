@@ -11,6 +11,7 @@ from fransys_model.derive.facts.function_ratings import (
 )
 from fransys_model.derive.facts.item_predicates import cable_items, is_cable
 from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
+from fransys_model.derive.facts.protection_symbols import protection_symbols
 from fransys_model.derive.facts.rating_index import function_block
 from fransys_model.derive.pole_lists import function_poles
 from fransys_model.layout import OverviewRef, OverviewRefKind, profile_of
@@ -72,6 +73,7 @@ from .columns import (
     list_csv_header,
     list_pdf_columns,
     list_pdf_heading,
+    unit_list_columns,
 )
 from .connected_ports import boundary_rail_wires, connected_ports
 from .contact_entries import NO_PLACE, contact_list_key
@@ -197,7 +199,7 @@ from .facts.strips import strip_of
 from .facts.subjects import is_unit_owned_kind, record_key_text, subject_kind, subject_kind_text
 from .facts.system_document import is_system_document
 from .facts.unit_index import item_unit, unit_index
-from .facts.unit_names import unit_name_unresolved, units_named
+from .facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, units_named
 from .facts.unit_reach import nested_boundary_functions, unused_functions, wired_inside_outside
 from .facts.units import crosses_unit, drawn_with
 from .far_pins import far_pins
@@ -456,7 +458,6 @@ from .rows_document_row import (
 from .rows_drawn import Carried, CarriedReason, ConductorEnd, FunctionSymbol, MateEnd, Required
 from .rows_drawn_sheets import CableBlockSize, ReplicaOnlySet, SheetGroup, SheetRow
 from .rows_export_set import ExportRow
-from .rows_footprints import Extent, Footprints
 from .rows_item_boxes import BoxCandidate, BoxPort, ItemBoxView
 from .rows_jumper_lanes import BridgePieceRow, JumperLane, JumperLanes
 from .rows_marks import DiffMark, DiffRest, DiffViewMarks, FindingHold, FindingMark
@@ -600,7 +601,6 @@ __all__ = [
     "DrawnReading",
     "ExportRow",
     "ExtUsage",
-    "Extent",
     "FieldFold",
     "FieldForms",
     "FieldJoin",
@@ -611,7 +611,6 @@ __all__ = [
     "FoldLevel",
     "FoldLine",
     "FoldStub",
-    "Footprints",
     "FrameLabels",
     "FrameStrip",
     "Function",
@@ -1070,6 +1069,7 @@ __all__ = [
     "profile_of",
     "project_facts",
     "prospective_fault",
+    "protection_symbols",
     "rack_modules_for_cdp",
     "rail_drawn_by",
     "rail_pairs",
@@ -1162,11 +1162,14 @@ __all__ = [
     "unit_chain",
     "unit_chain_below",
     "unit_connector_items",
+    "unit_design_of",
     "unit_ids",
     "unit_index",
     "unit_items",
     "unit_key",
     "unit_label",
+    "unit_list_columns",
+    "unit_list_names",
     "unit_location",
     "unit_matrix",
     "unit_name_unresolved",

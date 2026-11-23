@@ -9,7 +9,7 @@ from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.fault.breaking import chosen_point
 from fransys_model.derive.facts.fault.prospective import ProspectiveFault, prospective_fault
 from fransys_model.derive.facts.fault.readers import breaking_points
-from fransys_model.derive.facts.figures import condition, value
+from fransys_model.derive.facts.figures import breaking_amps, condition
 from fransys_model.derive.facts.rail_reach import function_reach, voltage_across
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.elecdef import Current, Unit
@@ -33,7 +33,7 @@ RATING_BREAKING_NO_DATA: Final[str] = "RATING_BREAKING_NO_DATA"
 def _point_text(point: Range, kind: Current) -> str:
     stated = condition(point, Unit.MS)
     tau = "" if stated is None else f" at {stated:f} ms"
-    return f"{value(point, Unit.A):f} A {kind.name} at {condition(point, Unit.V):f} V{tau}"
+    return f"{breaking_amps(point):f} A {kind.name} at {condition(point, Unit.V):f} V{tau}"
 
 
 def _sources(fault: ProspectiveFault) -> str:
@@ -68,7 +68,7 @@ def _finding(model: Model, function: Id[Function], fault: ProspectiveFault, curr
     if isinstance(choice, str):
         message = _no_data(function, fault, voltage.show(volt), choice)
         return finding(RATING_BREAKING_NO_DATA, (function,), message)
-    if (value(choice, Unit.A) or 0) < current:
+    if breaking_amps(choice) < current:
         message = _below(function, fault, choice)
         return finding(RATING_BREAKING_BELOW_FAULT, (function,), message)
     return None

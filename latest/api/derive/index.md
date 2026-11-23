@@ -1468,7 +1468,7 @@ its set.
 ### export_set
 
 ```python
-def export_set(model: Model, unit: Id[Unit] | None) -> tuple[ExportRow, ...]
+def export_set(model: Model, unit: Id[Unit] | None, *, design: bool=False) -> tuple[ExportRow, ...]
 ```
 
 Every export a write of `unit` makes (the whole model with `unit=None`), in write order.
@@ -1476,6 +1476,8 @@ Every export a write of `unit` makes (the whole model with `unit=None`), in writ
 The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
 all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
 (`ring_out`, for a document with drawings and a preset not in `ring_out_skip`).
+`design` is true when `unit` stands for a unit design written by release name and placed several times
+(`unit_placed_once` false): it has no per-document rows yet (KI-1452, R3687).
 Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
 
 ### export_set_name
@@ -3865,6 +3867,16 @@ A bolted fault at either terminal joins it to every other rail of its supplies; 
 left out, every source counts. A
 position no source reaches reads `0`.
 
+### protection_symbols
+
+```python
+def protection_symbols(protection_type: str | None) -> tuple[str, ...]
+```
+
+The symbol keys a protection `type` takes, the default first; `()` for a type this table does not know; `None` reads as `none`.
+
+Example: `mcb` and `motor_breaker` take `circuit-breaker`; `none` (a protection with no type) does too.
+
 ### rack_modules_for_cdp
 
 ```python
@@ -4917,6 +4929,22 @@ def unit_connector_items(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]
 
 The `connector_items` `unit` owns directly, never a nested unit's (as `unit_boards`).
 
+### unit_design_of
+
+```python
+def unit_design_of(model: Model, name: str) -> Id[Unit]
+```
+
+The one unit instance that stands for the unit design `name`: its first instance in id order.
+
+A unit's own lists (cables, cores, parts, strips) are the same for every instance, so a
+list written for the design reads this instance; the lists carry no instance path.
+
+Example: `unit_design_of(model, "relay-board")` with two instances returns the lower id.
+
+Raises:
+    ModelError: no unit of the model is an instance of a release named `name`.
+
 ### unit_ids
 
 ```python
@@ -4965,6 +4993,25 @@ def unit_label(model: Model, unit: Id[Unit]) -> str
 What a drawing, a cover or a title block prints for a unit.
 
 The unit's release title (`derive.unit_release`), else its name when the title is empty.
+
+### unit_list_columns
+
+```python
+def unit_list_columns(model: Model, name: str, *, design: bool) -> tuple[str, ...]
+```
+
+The row fields list `name` prints; `design` is true for a unit design set (`units/<name>/`).
+
+A unit design set is the unit alone, so its designation list has no `reference` (placement) column:
+one instance's placement would state a false fact for the unit's other instances. A placed document keeps it.
+
+### unit_list_names
+
+```python
+def unit_list_names(model: Model) -> tuple[str, ...]
+```
+
+The release name of every unit design the model holds, once each, in unit-table order.
 
 ### unit_location
 
@@ -5037,6 +5084,17 @@ def unit_parent(model: HasTables, unit: Id[Unit]) -> Id[Unit] | None
 ```
 
 The id of `unit`'s parent by `Unit.parent`; `None` for a root.
+
+### unit_placed_once
+
+```python
+def unit_placed_once(model: Model, unit: Id[Unit]) -> bool
+```
+
+True when `unit`'s release name has exactly one instance: its placed document is the unit's own.
+
+Several instances have no placement that holds for all, so a write by name drops the placement
+column and the per-document rows (KI-1452, R3698).
 
 ### unit_racks
 
@@ -5400,6 +5458,8 @@ class CdpChannel
 
 One configured channel of a CDP module: `cdp_kind` (DI, AI, DO, AO) and `nr`, its number within its direction.
 
+`name` is what the WAGO file writes: the CDP name of the signal, else the channel's `label`. Not unique: `check_plc_names` refuses a repeat.
+
 ### CdpRackModule
 
 ```python
@@ -5694,14 +5754,6 @@ Not a Fransys output format: read by whoever maintains this repo to decide what
 to promote to a real field next, keeping `ext` honest (kernel-records.md 5.3 and
 derive-queries-structure.md).
 
-### Extent
-
-```python
-class Extent
-```
-
-A box in G, in the frame of the symbol's body: top-left `x`, `y` and its size.
-
 ### FieldFold
 
 ```python
@@ -5807,17 +5859,6 @@ prints it; `end` is the same far end as a reference (a group, a box's own, a uni
 the far item). `kind` and `via` are the line's: a stub folds per kind, and `via` is set only
 for `END`. `count` is the connections. `members` are the single stubs it opens to:
 those of an outside fold, the stub itself for `END`, empty inside the unit.
-
-### Footprints
-
-```python
-class Footprints
-```
-
-The room a symbol takes: `standalone`, and `in_strip_row` without the strip's shared tag.
-
-`alone` is `standalone` without a coil's contact table; `no_cells` and `nc_cells` are its
-two columns of cells.
 
 ### FrameLabels
 

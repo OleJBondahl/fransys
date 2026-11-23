@@ -1,6 +1,6 @@
 # Finding codes
 
-Every code Fransys can emit, with severity, stage, who acts, meaning and fix, on five pages by source.
+Every code Fransys can emit, with severity, stage, who acts, meaning and fix, on eight pages by source.
 
 A finding's message names each thing as the drawings print it. An item reads as its designation, a port as its port designation, a wire as its ends and a tagged unit as the word unit and its tag, `unit -U1`. A unit with no tag reads as its name and revision alone, as its title block prints them. A thing with no printed text reads as its kind alone. A message never prints a `name=` key or an Id. A renamed key changes no message (decision overview-0003).
 
@@ -11,7 +11,8 @@ Every `Finding` row carries its own `fix`: `<valid values>. Write: <corrected ca
 - [`findings-validators.md`](../findings-validators/index.md): the model checks.
 - [`findings-build.md`](../findings-build/index.md): the build, `release` and the library load.
 - [`findings-release.md`](../findings-release/index.md): the build, `release`, `verify` and the baseline check.
-- [`findings-render.md`](../findings-render/index.md): layout and the drawing stage.
+- [`findings-render.md`](../findings-render/index.md): layout, placement and the page.
+- [`findings-wires.md`](../findings-wires/index.md): the wires, junctions and power symbols the drawings show.
 - [`findings-pdf.md`](../findings-pdf/index.md): the PDF output.
 - [`findings-kicad.md`](../findings-kicad/index.md): the KiCad import.
 - [`findings-parts.md`](../findings-parts/index.md): the part-file lint.

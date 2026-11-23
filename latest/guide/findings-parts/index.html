@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/findings-parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/findings-parts/">
       
       
       
@@ -1145,6 +1145,33 @@
     
   
   Finding codes: layout and render
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
 
     
   </span>
@@ -2315,8 +2342,8 @@
 <td>ERROR</td>
 <td>library load</td>
 <td>part author</td>
-<td>A protection function's <code>symbol</code> is <code>fuse</code> or <code>circuit-breaker</code>, but its protection <code>type</code> is another one.</td>
-<td>A <code>fuse</code> symbol needs <code>type = "fuse"</code>, a <code>circuit-breaker</code> symbol needs <code>type = "mcb"</code>. Write: type = "fuse"</td>
+<td>A protection function's <code>symbol</code> is a protection symbol that its protection <code>type</code> does not take.</td>
+<td>A <code>fuse</code> symbol needs <code>type = "fuse"</code>; <code>mcb</code> and <code>motor_breaker</code> take <code>circuit-breaker</code>, <code>overload</code> <code>thermal-overload</code>, <code>rcd</code> <code>rcd</code>. Write: type = "fuse"</td>
 </tr>
 <tr>
 <td><a id="table_unknown"></a>TABLE_UNKNOWN</td>
@@ -2363,7 +2390,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

@@ -2,6 +2,23 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.41
+
+- `write(unit=...)` of a unit placed once writes its placed documents again, `reference` included; a unit placed several times writes the unit alone. Skip 0.23.39 and 0.23.40.
+
+## New in 0.23.40
+
+- Placed unit documents print the `reference` column again; only the unit's own set under `units/<name>/` leaves it out.
+- listing_version is 11.
+- Skip 0.23.39.
+
+## New in 0.23.39
+
+- Each unit set is written under `units/<name>/<kind>`, from the unit design whatever its instance count.
+- An empty or clashing PLC channel name is an ERROR. A breaking point with only a minimum is refused.
+- A fused terminal draws as terminal, fuse, terminal. A tag on one row no longer widens every trunk of its fan.
+- symdef is pinned at 0.38.0.
+
 ## New in 0.23.38
 
 - A bundle stub with one near symbol now draws, not a stub-table error.
@@ -9,20 +26,16 @@ This page lists what 0.23 adds, what stays refused for now, and the known issues
 ## New in 0.23.37
 
 - A fan's hub is the conductor wired to a leg's head pin, so the legs of a fan align and no wire crosses text (KI-1382, KI-1383).
-- Forced test findings are asserted by the test, not accepted.
-- The CUT-CONTINUATION spec is amended: A1 closes with no code.
 
 ## New in 0.23.36
 
 - A cut rail end now draws one reference that points to where the wire continues.
 - The bundle arrow spans every lane it carries.
 - West arrows are mirrored, so they point the way the wire leaves.
-- The far-pin leg tables are gone.
 - These are drawing moves under the rules BUNDLE-ARROW and MARKER-FREE-SIDE.
 
 ## New in 0.23.35
 
-0.23.34 was not published; this release carries its changes too.
 
 BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or `None`. A device handle, a harness and an item id are no longer accepted and raise `TypeError`; `DocumentRow` and `DocumentScope` lose `item`, `bom_item` and `boards`, and `has_schematic_subject` is gone.
 
@@ -39,7 +52,6 @@ BREAKING: a board that shares its unit with another top-level device is refused 
 - CONNECTION_TO_UNDRAWN, MARKER_UNPLACED, NO_CELL, OUTLINE_NO_ROOM, OUT_OF_PAGE and WIRE_MEETS_NET are now ERRORs, so `fr.write` refuses a model that shows them.
 - New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.
 - An unnamed rack channel is named by its drawn pin label, for example `DO3`.
-- Page titles now state what the page draws.
 - `cores.csv` prints the far end in full form, for example `+EXT-M1:U1`.
 - A terminal row's `side_a` no longer names the bridge partner; the bridge is the shared `jumper_group`.
 
@@ -47,7 +59,6 @@ BREAKING: a board that shares its unit with another top-level device is refused 
 
 - A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.
 - Texts and tags keep clear of the unit boxes, so some pages repack and the pump-station example drawings move.
-- No call changes.
 
 ## New in 0.23.32
 
@@ -60,32 +71,21 @@ BREAKING: a board that shares its unit with another top-level device is refused 
 
 - A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.
 - Such a wire now falls back to a reference pair where no other path exists.
-- No call changes.
 
 ## New in 0.23.30
 
 - A released unit placed under a function scope no longer fails `fr.release` with a false BASELINE_DIFFERS on boundary.
 - A unit's baseline compares only what the unit itself authored; the placement's function scope never enters it.
-- No call changes.
 
 ## New in 0.23.29
 
 - A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).
 - Mated plugs wired to shared device pins now draw every end in larger cabinets too; 0.23.26 could miss a connection there (KI-1069).
 - Builds with many such plugs take longer, up to about 80% more CPU; a later release brings it down (KI-1096).
-- No call changes.
 
 ## New in 0.23.26
 
 - Mated plugs wired to shared device pins now draw every end; the two shapes that missed a connection in 0.23.25 are fixed (KI-1069). No call changes.
-
-## New in 0.23.25
-
-- The 0.23.24 change for mated plugs on shared device pins is reverted. Builds that stopped with PLACEMENT_PROBLEM build again. Two such shapes still miss a connection until the next release (KI-1069 open).
-
-## New in 0.23.24
-
-- Mated plugs wired to shared device pins draw every conductor. A failed route at a pin that already stands a stub adds its far ends to that stub, so no connection is lost (KI-1069 closed).
 
 ## New in 0.23.23
 

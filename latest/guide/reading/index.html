@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/reading/">
       
       
       
@@ -1310,6 +1310,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../findings-pdf/" class="md-nav__link">
         
   
@@ -2217,7 +2244,7 @@ or link) ends at <code>port</code>. Unlike <code>unconnected_ports</code>, a mat
 <p><code>port_is_unused(model, port)</code> is <code>True</code> when no conductor ends at <code>port</code> and no declared
 net has it. A mate does not count. <code>function_is_unused(model, function)</code> is <code>True</code> when
 every port of <code>function</code> is unused: the function <code>hide_unused_pins</code> leaves off the page, and a contact
-among them is a spare in its coil's contact table. <code>function_is_idle_terminal(model, function)</code> is <code>True</code> for a terminal no wire inside its drawing reaches.
+among them is a spare in its coil's contact table. <code>function_is_idle_terminal(model, function)</code> is <code>True</code> for a terminal no wire in its drawing reaches.
 <code>function_scopes(model, function)</code> returns the <code>(unit, place)</code> sets that draw <code>function</code>: its own, then each set holding a copy of a terminal.</p>
 <p><code>power_kind(model, net)</code> returns a <code>PowerKind</code> for a declared net: <code>SUPPLY</code>,
 <code>GROUND</code>, <code>PE</code> or <code>NONE</code>. A net of class <code>pe</code> is <code>PE</code>. A potential of a DC supply is <code>GROUND</code> at
@@ -2230,17 +2257,16 @@ is the text a power symbol prints. It is the supply's name, else its potential, 
 <code>GROUND</code>, <code>PE</code> and <code>NONE</code>. <code>port_power_text(model, port)</code> gives the text of the symbol at a port.
 <code>is_rail_terminal(model, terminal)</code> is true for a terminal in a group flagged <code>rail=True</code>.
 A flagged terminal draws as its power symbol, an unflagged one as a terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and wire list hold every landing and wire.
-A terminal is drawn at the pin it serves, once per page. So is a single-wire contact or a coil on a PLC output channel, with a reference back to its device. A rail symbol faces away from its box: up above a top pin, down below a bottom pin.
+A terminal is drawn at the pin it serves, once per page. So is a single-wire contact or a coil on a PLC output channel, with a reference back to its device. A rail symbol faces away from its box: up above a top pin, down below a bottom one.
 A terminal with no wire on a page is not drawn there. One wired to nothing is only in the terminal list.</p>
 <p><code>fransys.derive.wire_rows(model, *, unit=None)</code> returns the wire list: one <code>WireRow</code> per
 wire, with <code>from_</code>, <code>to</code>, <code>colour</code>, <code>cross_section_mm2</code> and <code>ends</code>. The <code>ends</code> are the two end
 designations joined by one space in a fixed order, the text the wire list and sleeves print. A schematic page prints no wire label.
 <code>fr.write</code> writes these rows as <code>&lt;set&gt;-wires.csv</code>.</p>
-<p><code>fransys.derive.boundary(model, unit)</code> returns the functions that make up a unit's
-interface, as a tuple of function ids in id order. A function of any kind can be a unit's boundary.</p>
-<p><code>fransys.derive.FunctionKind</code> is the enum of what a <code>Function</code> exposes: <code>COIL</code>,
-<code>CONTACT_NO</code>, <code>TERMINAL</code>, <code>CONNECTOR</code>, <code>SUPPLY</code>, and so on. A function's <code>kind</code> is one of
-these.</p>
+<p><code>fransys.derive.boundary(model, unit)</code> returns a unit's interface functions
+as a tuple of function ids in id order. Any function kind can be a boundary.</p>
+<p><code>fransys.derive.FunctionKind</code> is the enum of a <code>Function</code>'s <code>kind</code>: <code>COIL</code>,
+<code>CONTACT_NO</code>, <code>TERMINAL</code>, <code>CONNECTOR</code>, <code>SUPPLY</code>, and so on. <code>FunctionKind.carries_energy</code> is true for <code>SUPPLY</code> and <code>LOAD</code>, the kinds that may declare an energy direction.</p>
 <p><code>fransys.derive.connector_facets(model)</code> returns every <code>connector</code> facet, by the function
 template it describes, as a <code>frozendict[Id[FunctionTemplate], ConnectorFacet]</code>.</p>
 <h2 id="rows">Rows</h2>
@@ -2463,7 +2489,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

@@ -8,14 +8,14 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/findings-render/">
       
       
       
         <link rel="prev" href="../findings-release/">
       
       
-        <link rel="next" href="../findings-pdf/">
+        <link rel="next" href="../findings-wires/">
       
       
         
@@ -1174,6 +1174,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../findings-pdf/" class="md-nav__link">
         
   
@@ -1913,7 +1940,7 @@
 
 
 <h1 id="finding-codes-layout-and-render">Finding codes: layout and render</h1>
-<p>Codes the layout and the drawing stage emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
+<p>Codes the layout, placement and page checks of the drawing stage emit. The wire and connection codes are in <a href="../findings-wires/"><code>findings-wires.md</code></a>. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
 <p>A drawing set whose layout failed and drew nothing complete (PLACEMENT_PROBLEM, or an ERROR that stops its drawing) is not checked; every complete set is, and fr.write still refuses.</p>
 <table>
 <thead>
@@ -1958,46 +1985,6 @@
 <td>note</td>
 <td>Boxes wired box to box do not make a chain that draws as one column: a ring, a box joined to three boxes, a box also wired by a trunk, or pins that do not face. The message names the boxes and the hop that failed; the boxes are drawn unchained.</td>
 <td>Nothing is wrong; the boxes are drawn unchained (rule CHAIN-COLUMN).</td>
-</tr>
-<tr>
-<td><a id="connection_drawn_twice"></a>CONNECTION_DRAWN_TWICE</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>Two routes on one page join the same ports: the wires of a page close a loop.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="connection_not_accounted"></a>CONNECTION_NOT_ACCOUNTED</td>
-<td>WARNING</td>
-<td>render</td>
-<td>Fransys</td>
-<td>No wire or marker accounts for a conductor end, or a wire and a stub both do, or two stubs do (CORE-ACCOUNT); the message names it.</td>
-<td>No call clears this: send the smallest model that shows it.</td>
-</tr>
-<tr>
-<td><a id="connection_not_drawn"></a>CONNECTION_NOT_DRAWN</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>The drawn ports of one physical net do not lie in one drawn piece: a port no wire, dot, link or reference reaches, or two pieces with no reference pair between them. A group the model joins with a port off the document needs each drawn piece to end in a stub that names a port of the group outside it.</td>
-<td>Give both ends a location so layout can route or cut them; check <code>layout.route</code>, <code>layout.symbol_placement</code> and <code>layout.page</code>. Wire the open end's function into a function block, or move its device into a unit. Write: d.series(a, b, ...) to draw it in its block.</td>
-</tr>
-<tr>
-<td><a id="connection_to_undrawn"></a>CONNECTION_TO_UNDRAWN</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>A connection, net group or rail has an end whose function layout never draws.</td>
-<td>Put the missing end's item in a drawn unit or location, or remove the connection. Write: d.function(name, text) to place that item in a drawn group.</td>
-</tr>
-<tr>
-<td><a id="dangling_wire_end"></a>DANGLING_WIRE_END</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A Fransys drawing defect: a drawn wire ends where no symbol port, junction dot, reference marker, other wire or joined bundle lane end stands.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
 <td><a id="diagram_box_overlap"></a>DIAGRAM_BOX_OVERLAP</td>
@@ -2072,28 +2059,12 @@
 <td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
-<td><a id="dot_on_crossing"></a>DOT_ON_CROSSING</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A junction dot stands where two wires cross through each other, so the page shows them joined when they are not.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
 <td><a id="drawing_set_refused"></a>DRAWING_SET_REFUSED</td>
 <td>INFO</td>
 <td>render</td>
 <td>note</td>
 <td>A layout ERROR refused a drawing set: its drawing is not written and its drawn-page checks did not run. The message names the set.</td>
 <td>Nothing more to do here; clear the ERROR that refused the set, and the set is drawn and checked.</td>
-</tr>
-<tr>
-<td><a id="drawing_shorts_nets"></a>DRAWING_SHORTS_NETS</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>The wires, junction dots and references of the drawings join ports of two physical nets, or a wire ends on another net's wire with no junction dot.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
 <td><a id="drawn_read_incomplete"></a>DRAWN_READ_INCOMPLETE</td>
@@ -2128,36 +2099,12 @@
 <td>Give the function a part whose kind has a symbol. Write: d.device("K1", "DEMO-RLY-2CO-24")</td>
 </tr>
 <tr>
-<td><a id="function_not_wired"></a>FUNCTION_NOT_WIRED</td>
-<td>WARNING</td>
-<td>render</td>
-<td>consumer</td>
-<td>An undeclared function's symbol is on no net, so the page leaves it off (reason function_unwired). The message names the function.</td>
-<td>Wire a pin of <subject> to another function, declare it spare, or remove it. Write: d.device("K1", "DEMO-RLY-2CO-24", unused=True)</td>
-</tr>
-<tr>
-<td><a id="harness_wire_mismatch"></a>HARNESS_WIRE_MISMATCH</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A wire drawn in a cable or harness block page differs from the harness-wire row of the model: another core, other ends or another cable, or a row is not drawn once. The message names the cable, the core and the ends.</td>
-<td>No call clears this: send the smallest model that shows it.</td>
-</tr>
-<tr>
 <td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
 <td>WARNING</td>
 <td>render</td>
 <td>consumer</td>
 <td>A trunk is cut by a page and its head stands on the page with fewer of its legs.</td>
 <td>Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first.</td>
-</tr>
-<tr>
-<td><a id="ink_without_conductor"></a>INK_WITHOUT_CONDUCTOR</td>
-<td>WARNING</td>
-<td>render</td>
-<td>Fransys</td>
-<td>Wires or dots join ports that no conductor joins: a run between two pins, or a dot over three or more (CONDUCTOR-INK).</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
 <td><a id="label_no_room"></a>LABEL_NO_ROOM</td>
@@ -2168,36 +2115,12 @@
 <td>No call clears this: send the smallest model that shows the label of <subject>.</td>
 </tr>
 <tr>
-<td><a id="lane_wire_dropped"></a>LANE_WIRE_DROPPED</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>Two consecutive cells of a lane have no pin facing each other, or a facing pin on no net, so no wire is drawn between them; the message names the cells.</td>
-<td>Put the facing pins of <subject> and its neighbour on one net. Write: d.series(pin_a, pin_b).</td>
-</tr>
-<tr>
 <td><a id="marker_unplaced"></a>MARKER_UNPLACED</td>
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>A reference marker has no place inside the page: every level of its stagger leaves the content box, so layout draws no marker there; the message names its pin and page.</td>
 <td>No call clears this: send the smallest model that shows it.</td>
-</tr>
-<tr>
-<td><a id="missing_junction_dot"></a>MISSING_JUNCTION_DOT</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>Three or more ink directions meet at a wire end or vertex with no dot and no pin, so the page does not show the wires joined or apart.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="net_not_drawn"></a>NET_NOT_DRAWN</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>A net of two or more ends has under two drawn pins, so it is left out. A lone pin gives none. The message names the port.</td>
-<td>Give the net a second drawn pin. Write: d.series(a, <subject>)</td>
 </tr>
 <tr>
 <td><a id="not_series_parallel"></a>NOT_SERIES_PARALLEL</td>
@@ -2272,36 +2195,12 @@
 <td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
-<td><a id="power_symbol_not_joined"></a>POWER_SYMBOL_NOT_JOINED</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="power_symbol_wrong_kind"></a>POWER_SYMBOL_WRONG_KIND</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A power symbol is drawn for a pin as another kind than the potential of its net (supply, ground or protective earth).</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
 <td><a id="printed_text_wrong"></a>PRINTED_TEXT_WRONG</td>
 <td>ERROR</td>
 <td>render</td>
 <td>Fransys</td>
 <td>A drawn text is not the one the model gives it: a pin marking, a tag, a contact table, a where-text or a frame title that differs from its derived text.</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="rail_identity_shared"></a>RAIL_IDENTITY_SHARED</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>Two unbonded nets of a cabinet print one rail identity (its flagged rail, else the cabinet plus the printed potential).</td>
-<td>No call clears this: two nets of one supply print one name in a cabinet. For a supply name with no unique protective device between them: put a fuse or breaker between them. For a ground: bond the nets, or declare each supply in its own unit, so each prints its declaring unit's tag.</td>
 </tr>
 <tr>
 <td><a id="reference_not_readable"></a>REFERENCE_NOT_READABLE</td>
@@ -2423,54 +2322,6 @@
 <td>A row of columns is wider than the page even at its closest spacing. The message names the drawing set, the page and the devices standing in the row.</td>
 <td>Split the device over two units, or choose paper A2. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path)).</td>
 </tr>
-<tr>
-<td><a id="wire_as_reference"></a>WIRE_AS_REFERENCE</td>
-<td>INFO</td>
-<td>render</td>
-<td>consumer</td>
-<td>No orthogonal path on the wiring grid could be found for a connection, so it is drawn as a reference at its pin.</td>
-<td>None needed: the connection is shown by its reference. To draw it as a wire, give its ports more room.</td>
-</tr>
-<tr>
-<td><a id="wire_meets_net"></a>WIRE_MEETS_NET</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>A fixed wire (a lane wire, join, trunk or drop) meets another net's wire and no detour exists, so it is drawn as placed; the message names the wire and its ends.</td>
-<td>Move a symbol of <subject> or widen the gap beside it so the wire has a free path. Write: d.add(unit, tag) to move the device into a unit.</td>
-</tr>
-<tr>
-<td><a id="wire_not_orthogonal"></a>WIRE_NOT_ORTHOGONAL</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A drawn wire has a segment that is neither horizontal nor vertical.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="wire_over_marker"></a>WIRE_OVER_MARKER</td>
-<td>WARNING</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; the message names the page and the first of them.</td>
-<td>No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.</td>
-</tr>
-<tr>
-<td><a id="wire_over_pin_tip"></a>WIRE_OVER_PIN_TIP</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A wire passes over the tip of a pin with its interior and no dot, so the page does not show whether it joins the pin.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
-<td><a id="wire_through_body"></a>WIRE_THROUGH_BODY</td>
-<td>ERROR</td>
-<td>render</td>
-<td>consumer</td>
-<td>A trunk is drawn through the drawn body of a symbol, or along its outline (a touch at a point or in its margin is not this error); the message names the net and the symbol.</td>
-<td>No call clears this: send the smallest model that shows it. A wire never passes a symbol's body, so the model shows a drawing fault.</td>
-</tr>
 </tbody>
 </table>
 
@@ -2508,7 +2359,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

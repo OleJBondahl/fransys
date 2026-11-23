@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/moving-to-0.23/">
       
       
       
@@ -899,6 +899,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02341" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.41
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02340" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.40
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02339" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.39
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02338" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1002,28 +1035,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         New in 0.23.26
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-in-02325" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        New in 0.23.25
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-in-02324" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        New in 0.23.24
       </span>
     </span>
   </a>
@@ -1654,6 +1665,33 @@
     
   
   Finding codes: layout and render
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
 
     
   </span>
@@ -2404,6 +2442,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02341" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.41
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02340" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.40
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02339" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.39
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02338" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2507,28 +2578,6 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         New in 0.23.26
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-in-02325" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        New in 0.23.25
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#new-in-02324" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        New in 0.23.24
       </span>
     </span>
   </a>
@@ -2888,6 +2937,23 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02341">New in 0.23.41</h2>
+<ul>
+<li><code>write(unit=...)</code> of a unit placed once writes its placed documents again, <code>reference</code> included; a unit placed several times writes the unit alone. Skip 0.23.39 and 0.23.40.</li>
+</ul>
+<h2 id="new-in-02340">New in 0.23.40</h2>
+<ul>
+<li>Placed unit documents print the <code>reference</code> column again; only the unit's own set under <code>units/&lt;name&gt;/</code> leaves it out.</li>
+<li>listing_version is 11.</li>
+<li>Skip 0.23.39.</li>
+</ul>
+<h2 id="new-in-02339">New in 0.23.39</h2>
+<ul>
+<li>Each unit set is written under <code>units/&lt;name&gt;/&lt;kind&gt;</code>, from the unit design whatever its instance count.</li>
+<li>An empty or clashing PLC channel name is an ERROR. A breaking point with only a minimum is refused.</li>
+<li>A fused terminal draws as terminal, fuse, terminal. A tag on one row no longer widens every trunk of its fan.</li>
+<li>symdef is pinned at 0.38.0.</li>
+</ul>
 <h2 id="new-in-02338">New in 0.23.38</h2>
 <ul>
 <li>A bundle stub with one near symbol now draws, not a stub-table error.</li>
@@ -2895,19 +2961,15 @@
 <h2 id="new-in-02337">New in 0.23.37</h2>
 <ul>
 <li>A fan's hub is the conductor wired to a leg's head pin, so the legs of a fan align and no wire crosses text (KI-1382, KI-1383).</li>
-<li>Forced test findings are asserted by the test, not accepted.</li>
-<li>The CUT-CONTINUATION spec is amended: A1 closes with no code.</li>
 </ul>
 <h2 id="new-in-02336">New in 0.23.36</h2>
 <ul>
 <li>A cut rail end now draws one reference that points to where the wire continues.</li>
 <li>The bundle arrow spans every lane it carries.</li>
 <li>West arrows are mirrored, so they point the way the wire leaves.</li>
-<li>The far-pin leg tables are gone.</li>
 <li>These are drawing moves under the rules BUNDLE-ARROW and MARKER-FREE-SIDE.</li>
 </ul>
 <h2 id="new-in-02335">New in 0.23.35</h2>
-<p>0.23.34 was not published; this release carries its changes too.</p>
 <p>BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or <code>None</code>. A device handle, a harness and an item id are no longer accepted and raise <code>TypeError</code>; <code>DocumentRow</code> and <code>DocumentScope</code> lose <code>item</code>, <code>bom_item</code> and <code>boards</code>, and <code>has_schematic_subject</code> is gone.</p>
 <p>BREAKING: stored releases are rebuilt (schema 35); reading an old one gives <code>SchemaVersionError</code>.</p>
 <p>BREAKING: a board that shares its unit with another top-level device is refused with the ERROR <code>BOARD_SHARES_UNIT</code>, which replaces <code>BOARD_NETS_NOT_DRAWN</code>. Give the board a unit of its own.</p>
@@ -2921,7 +2983,6 @@
 <li>CONNECTION_TO_UNDRAWN, MARKER_UNPLACED, NO_CELL, OUTLINE_NO_ROOM, OUT_OF_PAGE and WIRE_MEETS_NET are now ERRORs, so <code>fr.write</code> refuses a model that shows them.</li>
 <li>New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.</li>
 <li>An unnamed rack channel is named by its drawn pin label, for example <code>DO3</code>.</li>
-<li>Page titles now state what the page draws.</li>
 <li><code>cores.csv</code> prints the far end in full form, for example <code>+EXT-M1:U1</code>.</li>
 <li>A terminal row's <code>side_a</code> no longer names the bridge partner; the bridge is the shared <code>jumper_group</code>.</li>
 </ul>
@@ -2929,7 +2990,6 @@
 <ul>
 <li>A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.</li>
 <li>Texts and tags keep clear of the unit boxes, so some pages repack and the pump-station example drawings move.</li>
-<li>No call changes.</li>
 </ul>
 <h2 id="new-in-02332">New in 0.23.32</h2>
 <ul>
@@ -2942,32 +3002,21 @@
 <ul>
 <li>A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.</li>
 <li>Such a wire now falls back to a reference pair where no other path exists.</li>
-<li>No call changes.</li>
 </ul>
 <h2 id="new-in-02330">New in 0.23.30</h2>
 <ul>
 <li>A released unit placed under a function scope no longer fails <code>fr.release</code> with a false BASELINE_DIFFERS on boundary.</li>
 <li>A unit's baseline compares only what the unit itself authored; the placement's function scope never enters it.</li>
-<li>No call changes.</li>
 </ul>
 <h2 id="new-in-02329">New in 0.23.29</h2>
 <ul>
 <li>A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).</li>
 <li>Mated plugs wired to shared device pins now draw every end in larger cabinets too; 0.23.26 could miss a connection there (KI-1069).</li>
 <li>Builds with many such plugs take longer, up to about 80% more CPU; a later release brings it down (KI-1096).</li>
-<li>No call changes.</li>
 </ul>
 <h2 id="new-in-02326">New in 0.23.26</h2>
 <ul>
 <li>Mated plugs wired to shared device pins now draw every end; the two shapes that missed a connection in 0.23.25 are fixed (KI-1069). No call changes.</li>
-</ul>
-<h2 id="new-in-02325">New in 0.23.25</h2>
-<ul>
-<li>The 0.23.24 change for mated plugs on shared device pins is reverted. Builds that stopped with PLACEMENT_PROBLEM build again. Two such shapes still miss a connection until the next release (KI-1069 open).</li>
-</ul>
-<h2 id="new-in-02324">New in 0.23.24</h2>
-<ul>
-<li>Mated plugs wired to shared device pins draw every conductor. A failed route at a pin that already stands a stub adds its far ends to that stub, so no connection is lost (KI-1069 closed).</li>
 </ul>
 <h2 id="new-in-02323">New in 0.23.23</h2>
 <ul>
@@ -3195,7 +3244,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

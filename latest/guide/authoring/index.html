@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/authoring/">
       
       
       
@@ -1388,6 +1388,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../findings-pdf/" class="md-nav__link">
         
   
@@ -2516,7 +2543,7 @@ A branch from the common feed is a second series; one looped at the line screws 
 <code>.scale("%", raw=(4, 20), eng=("0", "266"))</code> scales an analogue one. The range reaches the Wago rack XML only.
 A bad range is an ERROR: <code>SCALING_RANGE_INVALID</code> or <code>SCALING_NOT_ANALOGUE</code>. A float in <code>eng</code> raises, and so does a blank unit (<code>unit=None</code> writes none).
 A spare analogue channel takes the same call on its handle: <code>ai.ai_3.plc(name="unused").scale("%", raw=(0, 32767), eng=("0", "100"))</code>.
-Two devices of one controller with one signal name are an ERROR, <code>PLC_SIGNAL_NAME_TWICE</code>: rename one with <code>.plc(signal, name)</code>.
+Two devices of one controller with one CDP name are an ERROR, <code>PLC_SIGNAL_NAME_TWICE</code>, CDP keeps letters, digits and underscores, so "Door" and "Door!" are one name. A channel with no signal name is written as its pin label (<code>DI3</code>). Two channels of one module under one name are refused too: a repeated label, or a label equal to a signal name. Rename one with <code>.plc(signal, name)</code>.
 A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.
@@ -2620,7 +2647,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

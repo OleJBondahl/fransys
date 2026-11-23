@@ -8,15 +8,13 @@ when there is a document. `check` collects every finding about a built model, in
 there. `check` also places the system overview (`overview.html`) and returns its findings.
 `settings=fr.settings(...)` sets the build's paper (settings.md).
 
-`fr.__version__` gives the installed version. It is not in `fr.__all__`.
-
 ## Where a build can fail
 
 Four stages, each failing differently. A design call the builder refuses raises `fr.AuthorError`
 at that call.
 
 **1. Loading a part library.** `fr.design(...)` and `fr.parts(...)` lint every library they load
-and raise `PartLibraryError` if linting finds an `ERROR`. 
+and raise `PartLibraryError` if linting finds an `ERROR`.
 
 **2. The build itself.** `fr.build(d, *documents)` merges the design with the documents, then
 freezes the result into a `Model`. Two structural problems can raise here.
@@ -81,7 +79,7 @@ else:
 
 The missing library leaves four references dangling, one `RefError` each. `e.errors` holds all four.
 
-Any other exception out of `build` is a Fransys bug. Report it as a field case.
+Any other exception out of `build` is a Fransys bug; report it as a field case.
 
 **3. The validators.** Every domain validator runs inside `build`, but an `ERROR` finding from
 one of them does not raise. It comes back in `fr.check(result)` and stops layout: the model is returned numbered but unlaid.
@@ -124,7 +122,7 @@ else:
     raise AssertionError("no error")
 ```
 
-`e.findings` holds only the `ERROR` findings. `out_dir` is left with nothing written for this build.
+`e.findings` holds only the `ERROR` findings, and this build writes nothing to `out_dir`.
 `write` has no `allow_errors`, `force` or `draft` parameter.
 
 ## `fr.report(result)` prints them for a person or an agent
@@ -201,7 +199,7 @@ appears only in file names, never in a title block or history table. The names h
 - **Prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
   `demo-io-board-v1.1-bom.csv`, and per PLC rack `demo-io-board-v1.1-wago-U1.xml`.
 - **Lists.** `terminals.csv` holds every strip, `connectors.csv` every board.
-- **Where each list is.** A unit's cables stay in its own `cables.csv`; a parent sees the unit as a black box.
+- **Where each list is.** A unit's cables are in its own `cables.csv`, which the default `fr.write` also writes into `<out_dir>/units/<unit name>/`. `fr.export_names(result)` names them as `("units/<unit name>/<kind>", subject)`. A name with several instances has no PDF in its set yet.
 - **A PDF is named by its subject, not its cover file.** The set's own document is
   `<prefix>.pdf`. A document of an item or location inside
   the set adds that subject's fragment. A document whose subject is a unit takes that unit's
@@ -281,7 +279,7 @@ A history entry that names a revision never released is `RELEASE_HISTORY_UNRELEA
 `fr.diff(result, into, *, unit=None, against=None)` gives the Markdown change list from a
 stored release to the model as it stands now, without writing anything: use it during a revision. `release()` writes the same text into `changes.md` (and the same rows
 into `data/changes.csv`) once a previous release exists; the first release of a unit gets neither
-file. Nothing overwrites the history text you author. A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.
+file. A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.
 
 ```python
 second_result = fr.build(board(2, spare="X2"))
@@ -317,8 +315,7 @@ assert [f.code for f in findings] == ["BASELINE_DIFFERS"]
 ```
 
 `second_result` is unchanged since its release, so `verify` gives nothing. `third_result` shares
-revision `2` but its spare connector's tag differs from what `1.2` released, so `verify` catches
-the drift. A unit with no stored baseline is not reported.
+revision `2` but its spare connector's tag differs from `1.2`, so `verify` catches the drift. A unit with no stored baseline is not reported.
 
 When a child moved release, `BASELINE_DIFFERS` names it right after `units`, as in
 `demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board revision 1.1 → 1.3)`.
@@ -347,9 +344,7 @@ A patch release reads every revision; rebaseline only on `BASELINE_RULES_MOVED_N
 `Release` has `name`, `version`, `revision`, `interface`, `listing_digest`, `nested`, `files` and `path`.
 `nested` holds one `ReleasePin` (`name`, `version`, `revision`, `listing_digest`) per release nested
 in it. `files` holds `(path, sha256)` pairs. A folder with no manifest is listed with empty fields.
-A manifest that does not parse raises `ValueError`.
-
-Later versions may add manifest keys and keep reading every earlier manifest.
+A manifest that does not parse raises `ValueError`. Later versions may add manifest keys and keep reading every earlier manifest.
 
 ```python
 listed = fr.releases(Path("releases"))
@@ -370,7 +365,7 @@ stale = [
 assert stale == []
 ```
 
-The policy stays yours: tag names, who releases and which findings block. Fransys keeps no issue record.
+The policy stays yours: tag names, who releases and which findings block.
 
 ## Keeping designations fixed across revisions
 

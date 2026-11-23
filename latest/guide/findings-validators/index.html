@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.38/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/guide/findings-validators/">
       
       
       
@@ -1174,6 +1174,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../findings-wires/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: wires and connections
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../findings-pdf/" class="md-nav__link">
         
   
@@ -2251,8 +2278,8 @@
 <td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
-<td>Two devices bound to one controller carry one signal name, so the CDP file would name two channels alike.</td>
-<td>Rename one. Write: K1.coil.plc(fr.DO, "pump-run")</td>
+<td>Two channels of one WAGO module are written under one CDP name (a repeated spare label, a label equal to a signal name), or two devices of one controller carry signal names that are one CDP name; CDP keeps letters, digits and underscores.</td>
+<td>Rename one so the names differ in letters or digits. Write: K1.coil.plc(fr.DO, "pump-run")</td>
 </tr>
 <tr>
 <td><a id="potential_in_two_supplies"></a>POTENTIAL_IN_TWO_SUPPLIES</td>
@@ -2515,7 +2542,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.38 documentation
+      Fransys 0.23.41 documentation
     </div>
   
   

@@ -241,7 +241,7 @@ A mate between two drawings (two units, say) draws an OFF stub at each mated pin
 `.scale("%", raw=(4, 20), eng=("0", "266"))` scales an analogue one. The range reaches the Wago rack XML only.
 A bad range is an ERROR: `SCALING_RANGE_INVALID` or `SCALING_NOT_ANALOGUE`. A float in `eng` raises, and so does a blank unit (`unit=None` writes none).
 A spare analogue channel takes the same call on its handle: `ai.ai_3.plc(name="unused").scale("%", raw=(0, 32767), eng=("0", "100"))`.
-Two devices of one controller with one signal name are an ERROR, `PLC_SIGNAL_NAME_TWICE`: rename one with `.plc(signal, name)`.
+Two devices of one controller with one CDP name are an ERROR, `PLC_SIGNAL_NAME_TWICE`, CDP keeps letters, digits and underscores, so "Door" and "Door!" are one name. A channel with no signal name is written as its pin label (`DI3`). Two channels of one module under one name are refused too: a repeated label, or a label equal to a signal name. Rename one with `.plc(signal, name)`.
 A series that ends or starts
 at a PLC module binds the request to a channel (next section). A request no series wires keeps the
 build's own allocation.

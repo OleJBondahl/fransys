@@ -398,6 +398,279 @@ their published datasheets.
 
 - Download: [EX-1-v1.6-wago-PLC-U1-U1.xml](files/all/data/EX-1-v1.6-wago-PLC-U1-U1.xml)
 
+## out/all/units/pump-cabinet/data
+
+### pump-cabinet-v1.11-bom.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-bom.csv)
+
+| mpn | revision | manufacturer | description | count | designations |
+| --- | --- | --- | --- | --- | --- |
+| 2002-1201 |  | WAGO | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V | 40 | -X1; -X2; -X3; -X4 |
+| 2002-1207 |  | WAGO | TOPJOB S ground terminal block, 2.5 mm2, green-yellow | 3 | -X1; -X3 |
+| 3LD2054-0TK51 |  | Siemens | Switch-disconnector, 3-pole; 16 A | 1 | -Q1 |
+| 3NW7033 |  | Siemens | Fuse holder, 3-pole, 10x38 mm; 32 A | 2 | -F11; -F21 |
+| 3NW8004-1 |  | Siemens | SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A | 6 | -F11; -F21 |
+| 3SU1102-6AA40-1AA0 |  | Siemens | Pilot light 22 mm, green, integrated LED 24 V AC/DC | 2 | -P1; -P2 |
+| 40.61.9.024.1000 |  | Finder | PCB relay, 1 changeover contact, 16 A, 24 V DC coil | 2 | -K1; -K2 |
+| 5SY6506-7 |  | Siemens | Miniature circuit breaker, 1P+N, curve C; 6 A | 1 | -F1 |
+| 750-402 |  | WAGO | 4-channel digital input module, 24 V DC | 1 | -DI1 |
+| 750-504 |  | WAGO | 4-channel digital output module, 24 V DC; 0.5 A | 1 | -DO1 |
+| 750-600 |  | WAGO | End module, terminates the internal data bus; no data contacts | 1 | -E1 |
+| 750-8212 |  | WAGO | PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485 | 1 | -C1 |
+| LADN22 |  | Schneider Electric | TeSys D front-mount auxiliary contact block, 2 NO + 2 NC | 2 | -Q11; -Q21 |
+| LC1D09BD |  | Schneider Electric | TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil | 2 | -Q11; -Q21 |
+| LRD08 |  | Schneider Electric | TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC | 2 | -B12; -B22 |
+| QUINT4-PS/1AC/24DC/2.5/SC |  | Phoenix Contact | Power supply, 1-phase, 24 V DC; 2.5 A | 1 | -T1 |
+
+### pump-cabinet-v1.11-cables.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-cables.csv)
+
+| designation | mpn | description | core_count | gauge_mm2 | length_mm | from_label | to_label | pairs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+### pump-cabinet-v1.11-cores.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-cores.csv)
+
+| cable | core | colour | pair | end_a | end_b | note |
+| --- | --- | --- | --- | --- | --- | --- |
+
+### pump-cabinet-v1.11-designations.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-designations.csv)
+
+| designation | reference | description |
+| --- | --- | --- |
+| -B12 | =P1-B12 | TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC |
+| -B22 | =P2-B22 | TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC |
+| -C1 | =PLC-C1 | PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485 |
+| -DI1 | =PLC-DI1 | 4-channel digital input module, 24 V DC |
+| -DO1 | =PLC-DO1 | 4-channel digital output module, 24 V DC; 0.5 A |
+| -E1 | =PLC-E1 | End module, terminates the internal data bus; no data contacts |
+| -F1 | =CTL-F1 | Miniature circuit breaker, 1P+N, curve C; 6 A |
+| -F11 | =P1-F11 | Fuse holder, 3-pole, 10x38 mm; 32 A |
+| -F21 | =P2-F21 | Fuse holder, 3-pole, 10x38 mm; 32 A |
+| -K1 | =P1-K1 | PCB relay, 1 changeover contact, 16 A, 24 V DC coil |
+| -K2 | =P2-K2 | PCB relay, 1 changeover contact, 16 A, 24 V DC coil |
+| -P1 | =P1-P1 | Pilot light 22 mm, green, integrated LED 24 V AC/DC |
+| -P2 | =P2-P2 | Pilot light 22 mm, green, integrated LED 24 V AC/DC |
+| -Q1 | =SUP-Q1 | Switch-disconnector, 3-pole; 16 A |
+| -Q11 | =P1-Q11 | TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil |
+| -Q21 | =P2-Q21 | TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil |
+| -T1 | =CTL-T1 | Power supply, 1-phase, 24 V DC; 2.5 A |
+| -U1 | =PLC-U1 |  |
+| -X1 | -X1 |  |
+| -X1:L1:1 | =SUP-X1:L1:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X1:L2:1 | =SUP-X1:L2:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X1:L3:1 | =SUP-X1:L3:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X1:N:1 | =SUP-X1:N:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X1:PE:1 | =SUP-X1:PE:1 | TOPJOB S ground terminal block, 2.5 mm2, green-yellow |
+| -X2 | -X2 |  |
+| -X2:24V:1 | =CTL-X2:24V:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:2 | =CTL-X2:24V:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:3 | =CTL-X2:24V:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:4 | =CTL-X2:24V:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:5 | =CTL-X2:24V:5 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:6 | =CTL-X2:24V:6 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:7 | =CTL-X2:24V:7 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:8 | =CTL-X2:24V:8 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:9 | =CTL-X2:24V:9 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:10 | =CTL-X2:24V:10 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:24V:11 | =CTL-X2:24V:11 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:1 | =CTL-X2:GND:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:2 | =CTL-X2:GND:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:3 | =CTL-X2:GND:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:4 | =CTL-X2:GND:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:5 | =CTL-X2:GND:5 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:6 | =CTL-X2:GND:6 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X2:GND:7 | =CTL-X2:GND:7 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3 | -X3 |  |
+| -X3:PE:1 | =P1-X3:PE:1 | TOPJOB S ground terminal block, 2.5 mm2, green-yellow |
+| -X3:PE:2 | =P2-X3:PE:2 | TOPJOB S ground terminal block, 2.5 mm2, green-yellow |
+| -X3:U:1 | =P1-X3:U:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3:U:2 | =P2-X3:U:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3:V:1 | =P1-X3:V:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3:V:2 | =P2-X3:V:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3:W:1 | =P1-X3:W:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X3:W:2 | =P2-X3:W:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4 | -X4 |  |
+| -X4:L1:1 | =SUP-X4:L1:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L1:2 | =SUP-X4:L1:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L1:3 | =SUP-X4:L1:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L1:4 | =SUP-X4:L1:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L2:1 | =SUP-X4:L2:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L2:2 | =SUP-X4:L2:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L2:3 | =SUP-X4:L2:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L2:4 | =SUP-X4:L2:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L3:1 | =SUP-X4:L3:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L3:2 | =SUP-X4:L3:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L3:3 | =SUP-X4:L3:3 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+| -X4:L3:4 | =SUP-X4:L3:4 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
+
+### pump-cabinet-v1.11-plc.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-plc.csv)
+
+| pin | channel_name | signal | signal_name | description | wired_to |
+| --- | --- | --- | --- | --- | --- |
+| -DI1:DI1 | 1 | di | P1_OVERLOAD |  | -B12:98 |
+| -DI1:DI2 | 2 | di | P1_RUNNING |  | -Q11:84 |
+| -DI1:DI3 | 3 | di | P2_OVERLOAD |  | -B22:98 |
+| -DI1:DI4 | 4 | di | P2_RUNNING |  | -Q21:84 |
+| -DO1:DO1 | 1 | do | P1_RUN |  | -K1:A1 |
+| -DO1:DO2 | 2 | do | P2_RUN |  | -K2:A1 |
+| -DO1:DO3 | 3 | do |  |  |  |
+| -DO1:DO4 | 4 | do |  |  |  |
+
+### pump-cabinet-v1.11-terminals.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-terminals.csv)
+
+| designation | group | index | side_a | side_b | jumper_group |
+| --- | --- | --- | --- | --- | --- |
+| -X1:L1:1 | L1 | 1 | -Q1:1L1 | +EXT-X0:L1:1 |  |
+| -X1:L2:1 | L2 | 1 | -Q1:3L2 | +EXT-X0:L2:1 |  |
+| -X1:L3:1 | L3 | 1 | -Q1:5L3 | +EXT-X0:L3:1 |  |
+| -X1:N:1 | N | 1 | -F1:3 N | +EXT-X0:N:1 |  |
+| -X1:PE:1 | PE | 1 |  | +EXT-X0:PE:1 |  |
+| -X2:24V:1 | 24V | 1 | -T1:+ |  | 1 |
+| -X2:24V:2 | 24V | 2 | -C1:24 V |  | 1 |
+| -X2:24V:3 | 24V | 3 | -C1:+ |  | 1 |
+| -X2:24V:4 | 24V | 4 | -K1:11 |  | 1 |
+| -X2:24V:5 | 24V | 5 | -K2:11 |  | 1 |
+| -X2:24V:6 | 24V | 6 | -Q11:53/NO |  | 1 |
+| -X2:24V:7 | 24V | 7 | -B12:97 |  | 1 |
+| -X2:24V:8 | 24V | 8 | -Q11:83/NO |  | 1 |
+| -X2:24V:9 | 24V | 9 | -Q21:53/NO |  | 1 |
+| -X2:24V:10 | 24V | 10 | -B22:97 |  | 1 |
+| -X2:24V:11 | 24V | 11 | -Q21:83/NO |  | 1 |
+| -X2:GND:1 | GND | 1 | -T1:- |  | 2 |
+| -X2:GND:2 | GND | 2 | -C1:0V |  | 2 |
+| -X2:GND:3 | GND | 3 | -C1:- |  | 2 |
+| -X2:GND:4 | GND | 4 | -Q11:A2 |  | 2 |
+| -X2:GND:5 | GND | 5 | -P1:X2 |  | 2 |
+| -X2:GND:6 | GND | 6 | -Q21:A2 |  | 2 |
+| -X2:GND:7 | GND | 7 | -P2:X2 |  | 2 |
+| -X3:PE:1 | PE | 1 |  | +EXT-M1:PE |  |
+| -X3:PE:2 | PE | 2 |  | +EXT-M2:PE |  |
+| -X3:U:1 | U | 1 | -B12:2/T1 | +EXT-M1:U1 |  |
+| -X3:U:2 | U | 2 | -B22:2/T1 | +EXT-M2:U1 |  |
+| -X3:V:1 | V | 1 | -B12:4/T2 | +EXT-M1:V1 |  |
+| -X3:V:2 | V | 2 | -B22:4/T2 | +EXT-M2:V1 |  |
+| -X3:W:1 | W | 1 | -B12:6/T3 | +EXT-M1:W1 |  |
+| -X3:W:2 | W | 2 | -B22:6/T3 | +EXT-M2:W1 |  |
+| -X4:L1:1 | L1 | 1 | -Q1:2T1 |  | 1 |
+| -X4:L1:2 | L1 | 2 | -F1:1 |  | 1 |
+| -X4:L1:3 | L1 | 3 | -F11:1 |  | 1 |
+| -X4:L1:4 | L1 | 4 | -F21:1 |  | 1 |
+| -X4:L2:1 | L2 | 1 | -Q1:4T2 |  | 2 |
+| -X4:L2:2 | L2 | 2 |  |  | 2 |
+| -X4:L2:3 | L2 | 3 | -F11:3 |  | 2 |
+| -X4:L2:4 | L2 | 4 | -F21:3 |  | 2 |
+| -X4:L3:1 | L3 | 1 | -Q1:6T3 |  | 3 |
+| -X4:L3:2 | L3 | 2 |  |  | 3 |
+| -X4:L3:3 | L3 | 3 | -F11:5 |  | 3 |
+| -X4:L3:4 | L3 | 4 | -F21:5 |  | 3 |
+
+### pump-cabinet-v1.11-wires.csv
+
+[Download the CSV](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-wires.csv)
+
+| from | to | colour | cross_section_mm2 | label |
+| --- | --- | --- | --- | --- |
+| -B12:95 | -K1:14 | WH | 1.5 | -B12:95 -K1:14 |
+| -B12:96 | -Q11:A1 | WH | 1.5 | -B12:96 -Q11:A1 |
+| -B12:98 | -DI1:DI1 | WH | 1.5 | -B12:98 -DI1:DI1 |
+| -B22:95 | -K2:14 | WH | 1.5 | -B22:95 -K2:14 |
+| -B22:96 | -Q21:A1 | WH | 1.5 | -B22:96 -Q21:A1 |
+| -B22:98 | -DI1:DI3 | WH | 1.5 | -B22:98 -DI1:DI3 |
+| -DI1:DI2 | -Q11:84 | WH | 1.5 | -DI1:DI2 -Q11:84 |
+| -DI1:DI4 | -Q21:84 | WH | 1.5 | -DI1:DI4 -Q21:84 |
+| -DO1:0V | -K1:A2 | WH | 0.5 | -DO1:0V -K1:A2 |
+| -DO1:0V | -K2:A2 | WH | 0.5 | -DO1:0V -K2:A2 |
+| -DO1:DO1 | -K1:A1 | WH | 0.5 | -DO1:DO1 -K1:A1 |
+| -DO1:DO2 | -K2:A1 | WH | 0.5 | -DO1:DO2 -K2:A1 |
+| -F1:2 | -T1:L/+ | BN | 1.5 | -F1:2 -T1:L/+ |
+| -F1:N 4 | -T1:N/- | BU | 1.5 | -F1:N 4 -T1:N/- |
+| -F11:2 | -Q11:1/L1 | BN | 1.5 | -F11:2 -Q11:1/L1 |
+| -F11:4 | -Q11:3/L2 | BK | 1.5 | -F11:4 -Q11:3/L2 |
+| -F11:6 | -Q11:5/L3 | GY | 1.5 | -F11:6 -Q11:5/L3 |
+| -F21:2 | -Q21:1/L1 | BN | 1.5 | -F21:2 -Q21:1/L1 |
+| -F21:4 | -Q21:3/L2 | BK | 1.5 | -F21:4 -Q21:3/L2 |
+| -F21:6 | -Q21:5/L3 | GY | 1.5 | -F21:6 -Q21:5/L3 |
+| -P1:X1 | -Q11:54 | WH | 1.5 | -P1:X1 -Q11:54 |
+| -P2:X1 | -Q21:54 | WH | 1.5 | -P2:X1 -Q21:54 |
+| -X1:L1:1 | -Q1:1L1 | BN | 2.5 | -X1:L1:1 -Q1:1L1 |
+| -X1:L2:1 | -Q1:3L2 | BK | 2.5 | -X1:L2:1 -Q1:3L2 |
+| -X1:L3:1 | -Q1:5L3 | GY | 2.5 | -X1:L3:1 -Q1:5L3 |
+| -X1:N:1 | -F1:3 N | BU | 1.5 | -X1:N:1 -F1:3 N |
+| -X2:24V:1 | -T1:+ | RD | 1.5 | -X2:24V:1 -T1:+ |
+| -X2:24V:2 | -C1:24 V | RD | 1.5 | -X2:24V:2 -C1:24 V |
+| -X2:24V:3 | -C1:+ | RD | 1.5 | -X2:24V:3 -C1:+ |
+| -X2:24V:4 | -K1:11 | RD | 0.5 | -X2:24V:4 -K1:11 |
+| -X2:24V:5 | -K2:11 | RD | 0.5 | -X2:24V:5 -K2:11 |
+| -X2:24V:6 | -Q11:53/NO | RD | 1.5 | -X2:24V:6 -Q11:53/NO |
+| -X2:24V:7 | -B12:97 | RD | 1.5 | -X2:24V:7 -B12:97 |
+| -X2:24V:8 | -Q11:83/NO | RD | 1.5 | -X2:24V:8 -Q11:83/NO |
+| -X2:24V:9 | -Q21:53/NO | RD | 1.5 | -X2:24V:9 -Q21:53/NO |
+| -X2:24V:10 | -B22:97 | RD | 1.5 | -X2:24V:10 -B22:97 |
+| -X2:24V:11 | -Q21:83/NO | RD | 1.5 | -X2:24V:11 -Q21:83/NO |
+| -X2:GND:1 | -T1:- | BK | 1.5 | -X2:GND:1 -T1:- |
+| -X2:GND:2 | -C1:0V | BK | 1.5 | -X2:GND:2 -C1:0V |
+| -X2:GND:3 | -C1:- | BK | 1.5 | -X2:GND:3 -C1:- |
+| -X2:GND:4 | -Q11:A2 | BK | 1.5 | -X2:GND:4 -Q11:A2 |
+| -X2:GND:5 | -P1:X2 | BK | 1.5 | -X2:GND:5 -P1:X2 |
+| -X2:GND:6 | -Q21:A2 | BK | 1.5 | -X2:GND:6 -Q21:A2 |
+| -X2:GND:7 | -P2:X2 | BK | 1.5 | -X2:GND:7 -P2:X2 |
+| -X3:U:1 | -B12:2/T1 | BN | 1.5 | -X3:U:1 -B12:2/T1 |
+| -X3:U:2 | -B22:2/T1 | BN | 1.5 | -X3:U:2 -B22:2/T1 |
+| -X3:V:1 | -B12:4/T2 | BK | 1.5 | -X3:V:1 -B12:4/T2 |
+| -X3:V:2 | -B22:4/T2 | BK | 1.5 | -X3:V:2 -B22:4/T2 |
+| -X3:W:1 | -B12:6/T3 | GY | 1.5 | -X3:W:1 -B12:6/T3 |
+| -X3:W:2 | -B22:6/T3 | GY | 1.5 | -X3:W:2 -B22:6/T3 |
+| -X4:L1:1 | -Q1:2T1 | BN | 2.5 | -X4:L1:1 -Q1:2T1 |
+| -X4:L1:2 | -F1:1 | BN | 1.5 | -X4:L1:2 -F1:1 |
+| -X4:L1:3 | -F11:1 | BN | 1.5 | -X4:L1:3 -F11:1 |
+| -X4:L1:4 | -F21:1 | BN | 1.5 | -X4:L1:4 -F21:1 |
+| -X4:L2:1 | -Q1:4T2 | BK | 2.5 | -X4:L2:1 -Q1:4T2 |
+| -X4:L2:3 | -F11:3 | BK | 1.5 | -X4:L2:3 -F11:3 |
+| -X4:L2:4 | -F21:3 | BK | 1.5 | -X4:L2:4 -F21:3 |
+| -X4:L3:1 | -Q1:6T3 | GY | 2.5 | -X4:L3:1 -Q1:6T3 |
+| -X4:L3:3 | -F11:5 | GY | 1.5 | -X4:L3:3 -F11:5 |
+| -X4:L3:4 | -F21:5 | GY | 1.5 | -X4:L3:4 -F21:5 |
+
+- Download: [pump-cabinet-v1.11-wago-U1.xml](files/all/units/pump-cabinet/data/pump-cabinet-v1.11-wago-U1.xml)
+
+## out/all/units/pump-cabinet
+
+### pump-cabinet-v1.11.pdf
+
+[Download the PDF](files/all/units/pump-cabinet/pump-cabinet-v1.11.pdf)
+
+[![pump-cabinet-v1.11, page 1](img/all/units/pump-cabinet/pump-cabinet-v1.11-p01.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p01.png)
+
+[![pump-cabinet-v1.11, page 2](img/all/units/pump-cabinet/pump-cabinet-v1.11-p02.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p02.png)
+
+[![pump-cabinet-v1.11, page 3](img/all/units/pump-cabinet/pump-cabinet-v1.11-p03.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p03.png)
+
+[![pump-cabinet-v1.11, page 4](img/all/units/pump-cabinet/pump-cabinet-v1.11-p04.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p04.png)
+
+[![pump-cabinet-v1.11, page 5](img/all/units/pump-cabinet/pump-cabinet-v1.11-p05.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p05.png)
+
+[![pump-cabinet-v1.11, page 6](img/all/units/pump-cabinet/pump-cabinet-v1.11-p06.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p06.png)
+
+[![pump-cabinet-v1.11, page 7](img/all/units/pump-cabinet/pump-cabinet-v1.11-p07.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p07.png)
+
+[![pump-cabinet-v1.11, page 8](img/all/units/pump-cabinet/pump-cabinet-v1.11-p08.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p08.png)
+
+[![pump-cabinet-v1.11, page 9](img/all/units/pump-cabinet/pump-cabinet-v1.11-p09.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p09.png)
+
+[![pump-cabinet-v1.11, page 10](img/all/units/pump-cabinet/pump-cabinet-v1.11-p10.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p10.png)
+
+[![pump-cabinet-v1.11, page 11](img/all/units/pump-cabinet/pump-cabinet-v1.11-p11.png)](img/all/units/pump-cabinet/pump-cabinet-v1.11-p11.png)
+
 ## out/cabinet/data
 
 ### pump-cabinet-v1.11-bom.csv

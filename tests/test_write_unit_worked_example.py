@@ -360,4 +360,18 @@ def test_the_default_write_of_two_instances_of_one_name_writes_one_set_under_uni
     assert "reference" in system.read_text(encoding="utf-8").splitlines()[0].lower()
 
 
+def test_a_unit_scoped_placed_document_keeps_reference_and_the_unit_design_set_drops_it(tmp_path):
+    """R3691: `write(unit=<placed unit>)` keeps the `reference` column; only `units/<name>/` leaves it out."""
+    d = Design(fr.parts())
+    d.project(title="t", number="n", customer="c", revision=1, author="a")
+    d.revision(1, date="2026-09-23", text="First issue", created="XX")
+    unit = d.scope("cab1").unit("one-name", revision=1, interface="1")
+    unit.revision(1, date="2026-01-01", text="First release", created="XX")
+    result = fr.build(fr.parts(), d.draft(), system_document())
+    (placed,) = (p for p in fr.write(result, tmp_path / "placed", unit=unit) if p.name.endswith("designations.csv"))
+    assert "reference" in placed.read_text(encoding="utf-8").splitlines()[0].lower()
+    (design,) = (p for p in fr.write(result, tmp_path / "design", unit="one-name") if p.name.endswith("designations.csv"))
+    assert design.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
+
+
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

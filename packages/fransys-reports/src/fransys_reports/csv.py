@@ -43,14 +43,14 @@ def _csv(model: Model, rows: Iterable[object], columns: tuple[str, ...]) -> str:
     return _write(model, columns, column_rows(rows, columns))
 
 
-def _header(model: Model, name: str, unit: UnitId | None = None) -> tuple[str, ...]:
+def _header(model: Model, name: str, *, design: bool = False) -> tuple[str, ...]:
     """The CSV header cells of list `name`: the text of each column's `csv` word."""
-    return tuple(list_csv_header(model, name, field) for field in unit_list_columns(model, name, unit))
+    return tuple(list_csv_header(model, name, field) for field in unit_list_columns(model, name, design=design))
 
 
-def _list_csv(model: Model, name: str, rows: Iterable[object], unit: UnitId | None = None) -> str:
+def _list_csv(model: Model, name: str, rows: Iterable[object], *, design: bool = False) -> str:
     """One line per row of list `name`, under the `csv` headers of its columns."""
-    return _write(model, _header(model, name, unit), column_rows(rows, unit_list_columns(model, name, unit)))
+    return _write(model, _header(model, name, design=design), column_rows(rows, unit_list_columns(model, name, design=design)))
 
 
 def terminal_csv(
@@ -131,21 +131,22 @@ def wires_csv(model: Model, *, unit: UnitId | None = None, context: AspectNodeId
     return _list_csv(model, "wires", wire_rows(model, unit=unit, context=context))
 
 
-def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
+def designations_csv(model: Model, *, unit: UnitId | None = None, design: bool = False) -> str:
     """Write the designation (tag) list as CSV.
 
     Formats ``fransys_model.derive.queries.designation_list``, one row per item,
-    sorted by designation. `unit` passes through; a unit set is the unit alone, so it has no
-    `reference` (placement) column. Pure.
+    sorted by designation. `unit` passes through; a unit design set (`design`) is the unit alone, so it has no
+    `reference` (placement) column; a placed document keeps it. Pure.
 
     Args:
         model: A frozen, numbered model.
         unit: Keep only that unit's items; `None` is the whole model.
+        design: True for the unit design set under `units/<name>/`: leaves out the `reference` column.
 
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _list_csv(model, "designations", designation_list(model, unit=unit), unit)
+    return _list_csv(model, "designations", designation_list(model, unit=unit), design=design)
 
 
 def connectors_csv(

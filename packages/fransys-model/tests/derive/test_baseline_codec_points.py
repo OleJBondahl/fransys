@@ -20,21 +20,22 @@ def test_a_rating_and_an_operating_round_trip() -> None:
     operating = Operating(fault_current=(Range(Role.RATED, max=Unit.A(800), at=At(Current.DC)),), fault_time_constant=Unit.MS(5))
     listing = _listing(rating, operating)
     text = dumps(listing)
-    assert '"listing_version":10' in text
+    assert '"listing_version":11' in text
     assert loads(text) == listing
     assert dumps(loads(text)) == text
 
 
 def test_a_stored_version_2_listing_is_refused_with_the_fix() -> None:
-    text = dumps(_listing(None, None)).replace('"listing_version":10', '"listing_version":2')
+    text = dumps(_listing(None, None)).replace('"listing_version":11', '"listing_version":2')
     with pytest.raises(SchemaVersionError, match=r"fr\.release"):
         loads(text)
 
 
 def test_a_stored_older_listing_is_read() -> None:
-    """Old-revision round trip (model-0442, 0443): a version-6, 7, 8 and 9 listing read back as the version-10 one (model-0446)."""
+    """Old-revision round trip (model-0442, 0443): a version-6, 7, 8, 9 and 10 listing read back as the version-11 one (model-0446, R3691)."""
     listing = _listing(None, None)
-    assert loads(dumps(listing).replace('"listing_version":10', '"listing_version":6')) == listing
-    assert loads(dumps(listing).replace('"listing_version":10', '"listing_version":7')) == listing
-    assert loads(dumps(listing).replace('"listing_version":10', '"listing_version":8')) == listing
-    assert loads(dumps(listing).replace('"listing_version":10', '"listing_version":9')) == listing
+    assert loads(dumps(listing).replace('"listing_version":11', '"listing_version":6')) == listing
+    assert loads(dumps(listing).replace('"listing_version":11', '"listing_version":7')) == listing
+    assert loads(dumps(listing).replace('"listing_version":11', '"listing_version":8')) == listing
+    assert loads(dumps(listing).replace('"listing_version":11', '"listing_version":9')) == listing
+    assert loads(dumps(listing).replace('"listing_version":11', '"listing_version":10')) == listing

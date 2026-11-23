@@ -28,7 +28,7 @@ def test_a_placed_released_unit_compares_equal_to_its_baseline(place: str | None
     alone.add(_leaf, "U1")
     fr.release(fr.build(alone, releases=tmp_path), tmp_path, unit="demo-leaf")
     listing = (tmp_path / "demo-leaf/1.1/baseline/listing.json").read_bytes()
-    assert hashlib.sha256(listing).hexdigest() == "6aa6355903cea91241aa6ac0473e72dafdefafa751be39da770183574c3c7894"
+    assert hashlib.sha256(listing).hexdigest() == "d908b8dbb5c32f29e55bb10282be2b85853fcffb67e7f4c840bc59f8744f9c75"
     d = fr.design("demo_parts")
     feed = d.add(_leaf, "U1", place=place).feed
     if supply:

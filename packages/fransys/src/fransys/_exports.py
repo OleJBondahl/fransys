@@ -192,7 +192,7 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
         "bom": lambda _s: partial(bom_csv, model, unit),
         "plc": lambda _s: partial(plc_csv, model, unit=unit),
         "wires": lambda _s: partial(wires_csv, model, unit=unit),
-        "designations": lambda _s: partial(designations_csv, model, unit=unit),
+        "designations": lambda _s: partial(designations_csv, model, unit=unit, design=job.design is not None),
         "cables": lambda _s: partial(cables_csv, model, unit=unit),
         "cores": lambda _s: partial(cores_csv, model, unit=unit),
         "overview": lambda _s: partial(

@@ -7,8 +7,7 @@ CSV header. An `Id` field is left out where the row carries its rendered twin.
 
 lazy from collections.abc import Mapping
 
-from fransys_model.kernel import Id, Model, SchemaError
-lazy from fransys_model.vocab import Unit
+from fransys_model.kernel import Model, SchemaError
 
 from .facts.house_settings import lists_of, word
 
@@ -27,14 +26,14 @@ def list_columns(model: Model, name: str) -> tuple[str, ...]:
     return _of(lists_of(model).columns, name)
 
 
-def unit_list_columns(model: Model, name: str, unit: Id[Unit] | None) -> tuple[str, ...]:
-    """The row fields list `name` prints for a set scoped to `unit` (`None`: the whole model).
+def unit_list_columns(model: Model, name: str, *, design: bool) -> tuple[str, ...]:
+    """The row fields list `name` prints; `design` is true for a unit design set (`units/<name>/`).
 
-    A unit set is the unit alone, so its designation list has no `reference` (placement) column:
-    one instance's placement would state a false fact for the unit's other instances.
+    A unit design set is the unit alone, so its designation list has no `reference` (placement) column:
+    one instance's placement would state a false fact for the unit's other instances. A placed document keeps it.
     """
     columns = list_columns(model, name)
-    if name == "designations" and unit is not None:
+    if name == "designations" and design:
         return tuple(field for field in columns if field != "reference")
     return columns
 

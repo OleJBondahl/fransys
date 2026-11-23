@@ -47,14 +47,14 @@ def test_versions_compare_as_numbers_not_text() -> None:
     assert version_key("0.13.14") > version_key("0.13.8")
 
 
-@pytest.mark.parametrize("listing_version", [5, 11])
+@pytest.mark.parametrize("listing_version", [5, 12])
 def test_another_listing_version_has_no_rules(listing_version: int) -> None:
     assert listing_rules(listing_version, "0.19.8") is None
 
 
 def test_listing_versions_6_and_7_are_one_rule_set() -> None:
     """The 7 bump moved no listing text (model-0428): a version-6 revision reads under the same rules."""
-    assert listing_rules(6, "0.22.4") == listing_rules(10, "0.22.4") == CURRENT
+    assert listing_rules(6, "0.22.4") == listing_rules(11, "0.22.4") == CURRENT
 
 
 @pytest.mark.parametrize(

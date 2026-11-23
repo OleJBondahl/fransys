@@ -129,6 +129,3 @@ def test_a_build_then_check_and_write_render_each_page_once(tmp_path, monkeypatc
     fr.write(built, tmp_path / "out")
 
     assert len(calls) == len(built.drawings)
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

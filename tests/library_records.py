@@ -9,9 +9,12 @@ import tomllib
 from decimal import Decimal
 from pathlib import Path
 
+from sheet_formats import a2 as a2_sheet
+from sheet_formats import a3 as a3_sheet
+
 from fransys_model.kernel import Draft, Model, Origin, Record, evolve, make_id
 from fransys_model.kernel import freeze as kernel_freeze
-from fransys_model.layout import DrawingLibrary, PaperChoice, a2_sheet_format, default_sheet_format
+from fransys_model.layout import DrawingLibrary, PaperChoice
 from fransys_model.layout import house_records as house_records_of
 from fransys_model.vocab import PageKind
 
@@ -47,7 +50,7 @@ def drawing_library(divisions: int = 8) -> DrawingLibrary:
 
 def paper_records() -> tuple[Record, Record, PaperChoice]:
     """The paper records the facade writes: A3 by default, the block diagram on A2 (stock)."""
-    a3, a2 = default_sheet_format(), a2_sheet_format()
+    a3, a2 = a3_sheet(), a2_sheet()
     key = ("test", "paper")
     by_kind = frozendict({PageKind.BLOCK_DIAGRAM.value: a2.id})
     return (

@@ -65,7 +65,11 @@ def _solved(name: str) -> list[tuple[Any, Any]]:
     """(problem, CoreLayout) of every core solve the build makes, the problem's `far_ends` the model's conductors (KI-600)."""
     _, every_conductor, _ = _unlaid(name)
     solved = []
-    for problem, _, layout in importlib.import_module("placement_corpus.run").observed(name).caught("solves"):
+    seen = importlib.import_module("placement_corpus.run").observed(name)
+    for (problem, _, again), ink in zip(seen.caught("solves"), seen.caught("inks"), strict=True):
+        layout = SimpleNamespace(
+            **{f.name: getattr(again, f.name) for f in dataclasses.fields(again)}, drawn=ink
+        )  # the cut's ink, as CoreLayout.drawn held it
         held = {sym.id for sym in problem.symbols}  # a drawing set owes every conductor end it holds, its far end in the set or not (R1573)
         owed = tuple(c for c in every_conductor if c[0].sym in held)
         solved.append((dataclasses.replace(problem, facts=dataclasses.replace(problem.facts, far_ends=owed)), layout))
@@ -103,7 +107,7 @@ def bare_conductors(problem, layout, *, one_sided: bool = False) -> list[tuple[s
     `one_sided` picks the pins with no free side to stand at (ONE-SIDED-PIN); the default picks the others.
     """
     stands = stand_pins(problem.facts.far_ends, (layout.drawn, (), ()), problem.symbols)
-    referenced = {e.pin for r in layout.references for e in r.ends if e.pin}
+    referenced = {q for r in layout.references for e in r.ends for q in (e.pin, *e.also) if q}  # an end stands for its `also` pins (R3564)
     mixed = {near for near, _ in layout.drawn}
     powered = {a.pin for a in problem.anchors}  # a power symbol at a pin draws its connection: the pin is covered (CL1)
     return [

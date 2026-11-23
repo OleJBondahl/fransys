@@ -12,7 +12,7 @@ from fransys_layout.core.route import route_pages
 from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.values import CutEnd
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, elem, net
 from .pipeline_fixtures import cut_of, placed_from
 from .text_fixtures import leaving
@@ -22,7 +22,7 @@ def _drawn(*, cut: bool):
     lone = replace(net("m", "x.s"), cut=(CutEnd(PinRef("x", "s")),) if cut else ())
     prob = PlacementProblem(AREA, (elem("x"),), (lone,), facts=Facts(**leaving(PinRef("x", "s"))) if cut else Facts(far_ends=()))
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     result = cut_of(prob, opts)
     placement = placed_from(result, prob, opts)

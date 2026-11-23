@@ -8,6 +8,7 @@ from decimal import Decimal
 
 import pytest
 from derive_helpers import drawing_library, frozen_with_library
+from sheet_formats import a3
 
 from fransys_model.derive import mm_per_division
 from fransys_model.derive.frame_position import content_extent
@@ -15,9 +16,8 @@ from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.library_grid import divisions, library_grid
 from fransys_model.derive.print_sizes import TextRole, font_size_mm, role_height_mm
 from fransys_model.kernel import Draft, SchemaError, dumps, loads
-from fransys_model.layout import default_sheet_format
 
-SHEET = default_sheet_format()
+SHEET = a3()
 EIGHT = frozen_with_library(Draft(), 8)
 SIXTEEN = frozen_with_library(Draft(), 16)
 

@@ -48,6 +48,3 @@ def test_two_runs_over_the_same_model_draw_the_same_pages():
         return lay_out_drawn(model, kit, problem, conventions, LIBRARY)[2]
 
     assert run() == run()
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

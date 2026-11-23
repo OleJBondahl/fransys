@@ -71,7 +71,10 @@ def respell_problem(prob: PlacementProblem, m: Maps) -> PlacementProblem:
         prob.hints,
         group_order=tuple(m[g] for g in prob.hints.group_order),
     )
-    return replace(prob, symbols=syms, nets=nets, hints=hints)
+    facts = replace(
+        prob.facts, far_ends=tuple(tuple(replace(p, sym=m.get(p.sym, p.sym)) for p in pair) for pair in prob.facts.far_ends)
+    )  # a pin outside the problem keeps its name
+    return replace(prob, symbols=syms, nets=nets, hints=hints, facts=facts)
 
 
 def respell_flow(flow: FlowGraph, m: Maps) -> FlowGraph:

@@ -4,13 +4,14 @@ from decimal import Decimal
 
 import pytest
 from derive_helpers import house_record
+from sheet_formats import a3
 
 from fransys_model.derive import (
     FrameStrip,
     sheet_frame,
 )
 from fransys_model.kernel import Id
-from fransys_model.layout import FrameForm, SheetFormat, default_sheet_format
+from fransys_model.layout import FrameForm, SheetFormat
 
 
 def _a4_test_sheet() -> SheetFormat:
@@ -32,7 +33,7 @@ def _a4_test_sheet() -> SheetFormat:
 
 
 def test_the_house_frame_is_the_old_border_band_and_strips():
-    frame = sheet_frame(house_record(FrameForm), default_sheet_format())
+    frame = sheet_frame(house_record(FrameForm), a3())
     assert frame.border == (5, 5, 410, 287)
     assert (frame.band, frame.band_top, frame.title_width, frame.logo_x) == (20, 272, 390, 395)
     top, bottom, left, right = frame.strips

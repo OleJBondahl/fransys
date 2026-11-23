@@ -16,7 +16,7 @@ from electrical_symbols import library_version
 from fransys_layout.core import Box
 from fransys_layout.drawing import Drawing, DrawnOutline, DrawnRow, DrawnSymbol, DrawnText, DrawnWire
 from fransys_layout.symbols import ink_boxes, text_room_on, text_width_g
-from fransys_model.derive import build_indexes, function_item, ordered_pages
+from fransys_model.derive import build_indexes, function_item, ordered_pages, printed_strip_tag, printed_tag
 from fransys_model.derive.order import in_place_order
 from fransys_model.kernel import evolve, render_id
 from fransys_model.layout import sheet_format_of
@@ -27,7 +27,7 @@ from .draw_symbols import junction_dots, placed_symbols
 from .drawn_identity import built_symbol, ports_of
 from .drawn_ids import core_symbol_id, wire_id
 from .drawn_texts import box_rows
-from .kit_keys import function_of, strip_tag_of, tag_of
+from .kit_keys import function_of
 from .placement_ids import symbol_key
 from .placement_kit import refuse
 from .placement_nets import net_ports
@@ -45,14 +45,14 @@ if TYPE_CHECKING:
     from collections.abc import Set as AbstractSet
 
     from electrical_symbols import Library
-    from fransys_layout.core import Wire
+    from fransys_layout.core import CoreLayout, Wire
     from fransys_model.kernel import Id, Model, Origin
     from fransys_model.layout import LinkMarker, Page
 
     from .placement_kit import PickKey
     from .write_pages import Written
 
-__all__ = ["draw_set", "finish_drawings"]
+__all__ = ["alone_of", "draw_set", "finish_drawings"]
 
 _KEY = ("layout", "core")
 
@@ -96,8 +96,13 @@ def _in_place_order[T: DrawnSymbol | DrawnWire | DrawnText](
 def _tag(w: Written, keys: Mapping[str, PickKey], strips: Mapping[str, str], owner: str, alone: AbstractSet[str]) -> str | None:
     """The text of the label of `owner`: a symbol's tag (full when `alone` in its run), or a run's strip tag (the strip owns it); else None."""
     if owner in keys:
-        return tag_of(w.model, keys[owner], unit=w.within, alone=owner in alone)
-    return strip_tag_of(w.model, keys[strips[owner]], unit=w.within) if owner in strips else None
+        return printed_tag(w.model, keys[owner], unit=w.within, alone=owner in alone)
+    return printed_strip_tag(w.model, keys[strips[owner]], unit=w.within) if owner in strips else None
+
+
+def alone_of(layout: CoreLayout) -> set[str]:
+    """The symbols alone in their run: a strip terminal there prints its full tag (el-0125)."""
+    return {r.members[0] for page in layout.placement.pages for r in page.runs if len(r.members) == 1}
 
 
 def _labels(w: Written, keys: Mapping[str, PickKey]) -> list[tuple[Id[Page], DrawnText]]:
@@ -105,7 +110,7 @@ def _labels(w: Written, keys: Mapping[str, PickKey]) -> list[tuple[Id[Page], Dra
     model, pages = w.model, w.pages
     runs = [r for page in w.layout.placement.pages for r in page.runs]
     strips = {r.strip: r.members[0] for r in runs}
-    alone = {r.members[0] for r in runs if len(r.members) == 1}
+    alone = alone_of(w.layout)
     found = []
     for label in (a for a in w.layout.annotations.annexes if not is_table_spot(a.spot)):
         text = _tag(w, keys, strips, label.owner, alone) if label.page in pages else None

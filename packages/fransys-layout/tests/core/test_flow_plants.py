@@ -64,3 +64,9 @@ def test_the_legs_of_a_hub_stand_beside_their_hub() -> None:
     """KI-216: C1's leaves G1 and G2 stand before C2's G3 and G4, so no wire runs under a neighbour's drop."""
     placed = solved_of(tree3()).placement.pages[0].placed
     assert [p.sym for p in sorted(placed, key=lambda p: p.x) if p.sym.startswith("G")] == ["G1", "G2", "G3", "G4"]
+
+
+def test_the_legs_of_a_device_child_stand_beside_their_hub() -> None:
+    """KI-216 witness (R2659): with devices as children, the legal variant, G1..G4 stand in column order."""
+    placed = solved_of(tree3(device_children=True)).placement.pages[0].placed
+    assert [p.sym for p in sorted(placed, key=lambda p: p.x) if p.sym.startswith("G")] == ["G1", "G2", "G3", "G4"]

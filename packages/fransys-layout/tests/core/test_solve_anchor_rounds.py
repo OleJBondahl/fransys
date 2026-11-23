@@ -13,13 +13,13 @@ from fransys_layout.core.solve import solve
 from fransys_layout.core.values import Anchor, Box, PinRef, Pose
 lazy from fransys_layout.core import CoreLayout, Options, PlacementProblem
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .values_fixtures import problem
 
 
 def _options(rounds: int) -> Options:
     return core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
         solve_rounds=rounds,
     )
 

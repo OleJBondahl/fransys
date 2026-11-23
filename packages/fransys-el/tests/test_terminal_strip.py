@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 from input_card_designs import field_case
 
 from electrical_symbols import LIBRARY
@@ -47,7 +46,7 @@ class Solved:
         self.problem, _ = build(self.model, kit, self.conventions, LIBRARY)
         if width is not None:
             self.problem = replace(self.problem, area=Size(width, self.problem.area.h))
-        self.layout: CoreLayout = solve(self.problem, options(self.conventions, LIBRARY))
+        self.layout: CoreLayout = solve(self.problem, drawn_options(self.model, kit, self.problem, self.conventions))
 
     def strips(self) -> set[Id[Item]]:
         """The strip items of the model that have a terminal."""

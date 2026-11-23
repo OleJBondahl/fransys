@@ -7,17 +7,16 @@ left corner, above the box, some distance from the wire", for every symbol. The 
 import fransys as fr
 import pytest
 from _card_case import card_case_drafts, lamps_drafts
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import build, symbol_kit
-from fransys_el.kit_keys import tag_of
 from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, solve
 from fransys_layout.core.annex import place_labels, spot_box
 from fransys_layout.core.clearance import Keep
 from fransys_layout.core.geometry import overlaps
+from fransys_model.derive import printed_tag
 
 CORNERS = {"TL", "BL", "BR", "TR"}
 # The designations that do not stand top left, by their tag: the content box leaves no room at
@@ -35,8 +34,8 @@ def page(request):
     conventions = house()
     kit = symbol_kit(model, LIBRARY)
     problem, _ = build(model, kit, conventions, LIBRARY)
-    core = solve(problem, options(conventions, LIBRARY))
-    names = {symbol_key(model, f): tag_of(model, f) for f in kit}
+    core = solve(problem, drawn_options(model, kit, problem, conventions))
+    names = {symbol_key(model, f): printed_tag(model, f) for f in kit}
     return request.param, core, problem, names
 
 
@@ -72,14 +71,14 @@ def test_each_designations_box_touches_its_symbols_corner_zone(page) -> None:
 
 
 def test_each_annex_passes_the_ladder_a_corner_and_one_step_out_in_the_order_tl_bl_tr_br(page) -> None:
-    """LABEL-PLACE 2: ten spots (a turned pair left of the body after BL), the turned one centred on the body last (R1849)."""
+    """LABEL-PLACE 2: twelve spots (a turned pair left of the body after BL), the turned one centred (R1849), the upright one beside last (R2665)."""
     _, _, problem, _ = page
     step = house().options.wiring_grid
     assert problem.annexes
     for annex in problem.annexes:
         for spots in annex.spots.values():
-            assert [s.name for s in spots] == [*(c for c in ("TL", "BL", "TL", "TR", "BR") for _ in (0, 1)), "TL"]
-            assert [s.turned for s in spots] == [i in (4, 5, 10) for i in range(11)]
+            assert [s.name for s in spots] == [*(c for c in ("TL", "BL", "TL", "TR", "BR") for _ in (0, 1)), "TL", "TR"]
+            assert [s.turned for s in spots] == [i in (4, 5, 10) for i in range(12)]
             assert [s.clear - spots[0].clear for s in spots[:2]] == [0, step]
 
 
@@ -135,9 +134,9 @@ def test_a_tag_stands_at_the_centred_turned_rung_when_the_ten_before_it_are_bloc
     annex = max((a for a in problem.annexes if a.turned is not None and a.turned.w), key=lambda a: placed[a.owner].body.h)
     here = placed[annex.owner]
     boxes = [spot_box(here, annex.turned if s.turned else annex.size, s, 0) for s in annex.spots[here.orient]]
-    walls = [_pin_down(b, boxes[-1]) for b in boxes[:-1]]
+    walls = [_pin_down(b, boxes[-2]) for b in boxes[:-2]]
     (label,), found, _ = place_labels([annex], {annex.owner: here}, [Keep("", b, "text", "") for b in [here.body, *walls]], (1, problem.area, 0, 2))
-    assert (label.spot, label.turned, label.box) == ("TL", True, boxes[-1])
+    assert (label.spot, label.turned, label.box) == ("TL", True, boxes[-2])
     assert found == []
     assert label.box.x + label.box.w <= here.body.x
     assert abs((label.box.y + label.box.h / 2) - (here.body.y + here.body.h / 2)) <= 1

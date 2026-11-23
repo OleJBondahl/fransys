@@ -33,16 +33,9 @@ def page_owners(plan: PagePlan, pcs: Mapping[str, PlacedColumn], blocks: Mapping
     return frozenset(cells | cards)
 
 
-def _marker_rel(options: Options, side: Side, pin: PinRef, kind: str) -> Box | None:
-    """The marker's drawn box from its pin, as `text_ends.pin_stand` stands it.
-
-    None where no marker size was passed (neither `marker` nor a fit for this end): nothing to keep.
-    """
-    if options.marker is None and (pin, kind) not in options.marker_fit:
-        return None
-    box = arrow_box(options, side, 0, 0, (pin, kind))
-    # a stub marker stands `open_stub` out along the side, past the open end's stub
-    return shift(box, *step_out(side, 0, 0, options.open_stub if kind == RefKind.STUB else 0))
+def _marker_rel(options: Options, side: Side, pin: PinRef, kind: str) -> Box:
+    """The marker's drawn box from its pin, as `text_ends.pin_stand` stands it."""
+    return arrow_box(options, side, 0, 0, (pin, kind))
 
 
 def _ends(refs: Iterable[Ref], page: int) -> Iterable[tuple[PinRef, str]]:
@@ -82,8 +75,7 @@ def page_hangings(
         for orient, _ in by_pin.get((end.sym, end.pin), ()):
             pin = (stands or {}).get(end, {}).get(orient) or end
             at = sides[pin.sym, pin.pin, orient]
-            if (rel := _marker_rel(options, at, end, kind)) is not None:
-                out.setdefault((pin.sym, pin.pin, orient), []).append(Hanging(pin, at, rel, kind))
+            out.setdefault((pin.sym, pin.pin, orient), []).append(Hanging(pin, at, _marker_rel(options, at, end, kind), kind))
     for anchor in (a for a in problem.anchors if a.pin.sym in owners):
         for orient, side in by_pin.get((anchor.pin.sym, anchor.pin.pin), ()):
             if (rel := _anchor_rel(anchor, side)) is not None:
@@ -122,14 +114,13 @@ def stack_extra(sym: Sym, options: Options, wired: Container[str]) -> int:
 
     A pin in `wired` (a column stands on it) hangs no marker: its fits stack nothing.
     """
-    fits = [k for k in options.marker_fit if k[0].sym == sym.id and k[0].pin not in wired]
+    fits = [(pin, kind) for pin, kind in options.marker_boxes if pin is not None and pin.sym == sym.id and pin.pin not in wired]
     best = 0
     for view in sym.views.values():
         items = []
         for pin, kind in fits:
             turn = view.pins[next(i for i, p in enumerate(sym.pins) if p.id == pin.pin)]
-            if (rel := _marker_rel(options, turn.side, pin, kind)) is not None:
-                items.append((turn.dx, Hanging(pin, turn.side, rel, kind)))
+            items.append((turn.dx, Hanging(pin, turn.side, _marker_rel(options, turn.side, pin, kind), kind)))
         best = max(best, extra(items))
     return best
 

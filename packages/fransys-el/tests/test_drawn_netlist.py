@@ -19,7 +19,7 @@ from _expected_codes import expect_codes
 from _model_build_cover import unit_document
 from conventions_fixtures import house
 from fransys.colours import BK, BU, GNYE
-from fransys_el import build, drawn_identity_marks, drawn_power, drawn_rails, drawn_references, lay_out_core, lay_out_drawn, symbol_kit
+from fransys_el import build, drawn_power, drawn_printed, drawn_rails, drawn_references, lay_out_core, lay_out_drawn, symbol_kit
 from fransys_el import draw_power as draw_power_module
 from fransys_el import drawn_ends as drawn_ends_module
 from fransys_el import drawn_identity as drawn_identity_module
@@ -38,21 +38,24 @@ from fransys_el.drawn_power import join_power, power_findings
 from fransys_el.drawn_rails import rail_findings
 from fransys_el.drawn_shorts import ink_findings, short_findings
 from fransys_el.drawn_sweep import drawing_sweep
+from fransys_el.kit_keys import function_of
 from fransys_el.placement_ids import net_key
 from fransys_el.placement_joins import node_joins
 from fransys_el.placement_kit import Pick
 from ring_cases import bank_model, box_kit
+from test_a_clean_relay_loop_builds_with_every_net_and_function_drawn import _built as relay_loop_built
 
 from electrical_symbols import LIBRARY, MARKER_SLOT, marking_slot, power_symbol_key
 from fransys_layout.core import Box, page_graph
 from fransys_layout.core.outputs import Refused
 from fransys_layout.core.route_env import lost_key
-from fransys_layout.drawing import DrawnSymbol, DrawnWire
+from fransys_layout.drawing import DrawnSymbol, DrawnText, DrawnWire
 from fransys_layout.symbols import frame_cell
 from fransys_model.derive import (
     PowerKind,
     drawn_net_of,
     drawn_physical_nets,
+    far_pins,
     link_groups,
     net_of,
     port_power_kind,
@@ -92,6 +95,8 @@ class Built:
     drawings: dict[Any, Any]
     markers: Any
     lines: Any
+    alone: frozenset[Any] = frozenset()
+    titles: Any = None
 
     def codes(self, drawings: dict[Any, Any] | None = None) -> set[str]:
         """The sweep's codes (and OVERLAP) over `drawings`, or the build's own."""
@@ -106,7 +111,10 @@ class Built:
         return [f.message for f in drawing_sweep(self.model, self._net(drawings)) if f.code == code]
 
     def _net(self, drawings: dict[Any, Any]):
-        return with_lines(drawn_netlist(self.model, self.kit, drawings, self.markers, LIBRARY), self.model, self.kit, self.lines)
+        net = with_lines(drawn_netlist(self.model, self.kit, drawings, self.markers, LIBRARY), self.model, self.kit, self.lines)
+        net.alone.update(self.alone)
+        net.titles.update(self.titles or {})
+        return net
 
     def netlist(self):
         return self._net(self.drawings)
@@ -125,6 +133,7 @@ def _built_of(model: Any, kit: Any, monkeypatch: pytest.MonkeyPatch) -> Built:
     conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
     caught: list[tuple[Any, ...]] = []
+    nets: list[Any] = []
     original, lines_of = lay_out_core.drawn_netlist, lay_out_core.with_lines
 
     def spy(*args):
@@ -133,13 +142,14 @@ def _built_of(model: Any, kit: Any, monkeypatch: pytest.MonkeyPatch) -> Built:
 
     def spy_lines(net, laid, kit, lines):
         caught.append(lines)
+        nets.append(net)
         return lines_of(net, laid, kit, lines)
 
     monkeypatch.setattr(lay_out_core, "drawn_netlist", spy)
     monkeypatch.setattr(lay_out_core, "with_lines", spy_lines)
     lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     (laid, _, drawings, markers, _), lines = caught
-    return Built(laid, kit, dict(drawings), markers, lines)
+    return Built(laid, kit, dict(drawings), markers, lines, frozenset(nets[0].alone), dict(nets[0].titles))
 
 
 @pytest.fixture(scope="module")
@@ -337,10 +347,13 @@ def test_a_stub_on_a_line_ends_every_port_of_that_line_on_its_page():
     p1, p2 = (Id[Page](kind="page", value=v) for v in ("p1", "p2"))
     places: dict[Any, Any] = {"a": ((p1, (0, 0)),), "b": ((p2, (0, 0)),), "c": ((p1, (1, 1)),)}
     home = {"a": frozenset({p1}), "b": frozenset({p2}), "c": frozenset({p1})}
-    net = Netlist({}, Union(), places, {}, {}, {}, lined={"a": "L", "b": "L", "c": "M"}, stub_lines={(p1, "L")}, home=home)
+    pages: dict[Any, Any] = {p1: SimpleNamespace(nodes={(0, 0), (1, 1)}), p2: SimpleNamespace(nodes={(0, 0)})}
+    net = Netlist(pages, Union(), places, {}, {}, {}, lined={"a": "L", "b": "L", "c": "M"}, stub_lines={(p1, "L")}, home=home)
     assert _lined(net, "a")
     assert not _lined(net, "b")
     assert not _lined(net, "c")
+    pages[p1].nodes.discard((0, 0))
+    assert not _lined(net, "a")  # A2: the line's stub belongs to another port; a pin with no wire or stub of its own is not ended by it
 
 
 def _homed(places: dict[Any, Any], joined: Sequence[Any] = (), bare: Sequence[Any] = ()) -> Netlist:
@@ -421,6 +434,24 @@ def test_a_bundle_stub_ends_each_listed_lane_that_is_drawn_joined_to_it():
     assert found == {"t": {"s"}, "u": {"r"}}
 
 
+@pytest.mark.rule("DRAWN-NETLIST")
+@pytest.mark.parametrize(
+    ("foot_x", "far_names_back", "credited"),
+    [(1, True, True), (1, False, False), (2, True, False)],
+    ids=["foot-on-ink-and-named-back", "far-end-does-not-name-it", "foot-off-the-stub"],
+)
+def test_a_bundle_lane_on_a_read_foot_ends_when_the_far_marker_names_it_back(foot_x: int, *, far_names_back: bool, credited: bool):
+    """R3541: the stub's lane `v` has no ink in its piece; its end is a read foot at the stub's x, and its far marker lists the pair back."""
+    net = _homed({"t": ((P1, (1, 1)),), "v": ((P1, (1, 4)),), "p": ((P1, (9, 9)),)}, [((P1, (1, 4)), (P1, (foot_x, 5)))])
+    pair = lambda port, far: SimpleNamespace(port=SimpleNamespace(value=port), far=SimpleNamespace(value=far))  # noqa: E731 - a one-line namespace
+    stub = lambda port, *pairs: SimpleNamespace(star=StarKind.OFF, pairs=pairs, port=SimpleNamespace(value=port), page=P1)  # noqa: E731 - a one-line namespace
+    records, markers = {"k": stub("t", pair("t", "s"), pair("v", "p"))}, {"k": (P1, (1, 1))}
+    if far_names_back:
+        records["j"], markers["j"] = stub("p", pair("p", "v")), (P1, (9, 9))
+    found = _stubs(replace(net, records=records, markers=markers, lanes=Lanes(joined={(P1, (foot_x, 5))})))
+    assert ("p" in found.get("v", set())) is credited  # fails without the foot rule: the lane has no ink in the stub's piece
+
+
 @pytest.mark.rule("G01-CONNECTED")
 @pytest.mark.parametrize("on_port", [True, False], ids=["on-its-port", "one-grid-off"])
 def test_a_marker_on_a_port_is_a_drawn_node_with_no_wire_to_it(monkeypatch: pytest.MonkeyPatch, *, on_port: bool):
@@ -476,6 +507,40 @@ def test_a_copy_pair_joins_through_its_where_text_and_not_without_it():
     assert not _drawn(net, "s", "t")
     net.texted.update({"s", "t"})
     assert _drawn(net, "s", "t")
+
+
+@pytest.mark.rule("DRAWN-NETLIST")
+def test_a_where_text_alone_draws_no_end_and_a_power_symbol_draws_an_end_only_where_its_far_pin_is_powered_or_absent():
+    """A1: a where-text names a copy, so two texted pins with no ink between them are not drawn. A3: a power symbol at one pin only is no end."""
+    net = _homed({"s": ((P1, (1, 1)),), "t": ((P1, (2, 2)),)})
+    net.texted.update({"s", "t"})
+    assert not _drawn(net, "s", "t")
+    held: dict[str, set[str]] = {}
+    carried = [_carried(net, held, _pairs(net, held), powered, ("s", far)) for powered, far in (({"s"}, "t"), ({"s", "t"}, "t"), ({"s"}, "gone"))]
+    assert carried == [False, True, True]
+
+
+@pytest.fixture(scope="module")
+def relay_loop():
+    model = relay_loop_built().model
+    with pytest.MonkeyPatch.context() as patch:
+        return _built_of(model, symbol_kit(model, LIBRARY), patch)
+
+
+@pytest.mark.rule("READ-POWER-INK")
+def test_a_pin_whose_power_symbol_is_removed_leaves_its_conductor_undrawn_while_its_partner_keeps_a_symbol(relay_loop):
+    """A3: a conductor between two powered pins is drawn only while both stand on their symbols; the bare pin's end is CONNECTION_NOT_DRAWN."""
+    net = relay_loop.netlist()
+    powered = drawn_power.inked_power(net)
+    ends = [(n.value, f.value) for n, f in far_pins(relay_loop.model, [net.ids[p] for p in net.placed if net.at_home(p)])]
+    bare = next(f for n, f in ends if n in powered and f in powered and all(m in powered for m, g in ends if g == f))
+    page, part = next((pg, pt) for pg, pt in net.pages.items() if bare in pt.powers)
+    sym, pin = part.powers[bare], part.ports[bare]
+    leads = {w.id for w in part.drawing.wires if {w.points[0], w.points[-1]} == {pin, sym}}
+    kept = tuple(s for s in part.drawing.symbols if not (s.key in drawn_power.POWER_KEYS and s.ports[:1] == (bare,)))
+    wires = tuple(w for w in part.drawing.wires if w.id not in leads)
+    planted = relay_loop.patched(page, symbols=kept, wires=wires)
+    assert relay_loop.count("CONNECTION_NOT_DRAWN", planted) > relay_loop.count("CONNECTION_NOT_DRAWN")
 
 
 def _page(wires: tuple[DrawnWire, ...], ports: dict[str, tuple[int, int]], anchors: set[tuple[int, int]]) -> Any:
@@ -581,6 +646,7 @@ def test_an_off_stub_whose_printed_text_differs_by_one_character_is_not_read(ban
 
 
 _Stands = dict[str, tuple[str, str | None, str | None, str]]
+NONE = cast("Any", None)  # the monkeypatched reads take no model
 
 
 def _powered(
@@ -607,6 +673,7 @@ def _powered(
     monkeypatch.setattr(drawn_power, "_scope", lambda _m, port: stands[port.value][2])
     monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
     monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
+    monkeypatch.setattr(drawn_power, "port_power_kind", lambda _m, port: PowerKind(stands[port.value][0]))
     monkeypatch.setattr(drawn_power, "item_of_port", lambda _m, port: port.value)
     monkeypatch.setattr(drawn_power, "is_rail_terminal", lambda _m, _item: False)
     monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
@@ -703,7 +770,7 @@ def test_a_ground_identity_carries_its_source_and_a_flag_joins_only_the_flagged_
 @pytest.mark.parametrize("wiring", ["lead", "none", "stub", "zero"], ids=["lead", "no-ink", "off-a-pin-with-another-wire", "stands-on-its-pin"])
 def test_a_power_symbol_is_joined_to_its_pin_by_ink_alone(monkeypatch: pytest.MonkeyPatch, wiring: str):
     """R4 over ink (KI-1363): a lead, or the symbol standing on its pin, joins it; one off its pin is an ERROR, even on a pin with another wire."""
-    found = power_findings(_powered(monkeypatch, {"a": ("ground", None, "A", "p1")}, wiring=wiring))
+    found = power_findings(_powered(monkeypatch, {"a": ("ground", None, "A", "p1")}, wiring=wiring), NONE)
     if wiring in ("lead", "zero"):
         assert found == ()
     else:
@@ -723,13 +790,24 @@ def _marked(built: Built) -> tuple[Any, Any, list[int]]:
 
 
 @pytest.mark.rule("READ-IDENTITY")
-def test_a_drawing_printing_every_pin_marking_as_the_model_gives_it_has_no_pin_marking_wrong(card16):
-    assert "PIN_MARKING_WRONG" not in card16.codes()
+def test_a_drawing_printing_every_pin_marking_as_the_model_gives_it_has_no_printed_text_wrong(card16):
+    assert "PRINTED_TEXT_WRONG" not in card16.codes()
     assert card16.netlist().marks
 
 
+@pytest.mark.rule("READ-POWER-INK")
+@pytest.mark.parametrize(("kind", "found"), [("ground", False), ("supply", True), ("pe", True)], ids=["same-kind", "pin-is-supply", "pin-is-pe"])
+def test_a_power_symbol_of_another_kind_than_its_pin_is_power_symbol_wrong_kind(monkeypatch: pytest.MonkeyPatch, kind: str, *, found: bool):
+    """A5: the symbol key is the key of the pin's potential kind; ground drawn as protective earth is an ERROR."""
+    net = _powered(monkeypatch, {"a": ("ground", None, "A", "p1")})
+    monkeypatch.setattr(drawn_power, "port_power_kind", lambda _m, _port: PowerKind(kind))
+    codes = {f.code for f in power_findings(net, NONE)}
+    assert (codes == {"POWER_SYMBOL_WRONG_KIND"}) is found
+    assert found or codes == set()
+
+
 @pytest.mark.rule("READ-IDENTITY")
-def test_two_pins_with_their_marking_texts_swapped_are_pin_marking_wrong(card16):
+def test_two_pins_with_their_marking_texts_swapped_are_printed_text_wrong(card16):
     page, symbol, (a, b) = _marked(card16)
     slots = list(symbol.slots)
     (sa, ta), (sb, tb) = slots[a], slots[b]
@@ -738,18 +816,77 @@ def test_two_pins_with_their_marking_texts_swapped_are_pin_marking_wrong(card16)
     drawing = card16.drawings[page]
     patched = card16.patched(page, symbols=tuple(swapped if s.id == symbol.id else s for s in drawing.symbols))
     found = drawing_sweep(card16.model, card16._net(patched))
-    expect_codes(SimpleNamespace(findings=found), "PIN_MARKING_WRONG")
-    assert sum(f.code == "PIN_MARKING_WRONG" for f in found) == 2
+    expect_codes(SimpleNamespace(findings=found), "PRINTED_TEXT_WRONG")
+    assert sum(f.code == "PRINTED_TEXT_WRONG" for f in found) == 2
 
 
 @pytest.mark.rule("READ-IDENTITY")
 def test_a_pin_the_sheets_leave_off_is_not_read_for_its_marking(card16, monkeypatch):
-    monkeypatch.setattr(drawn_identity_marks, "hidden_pins", lambda _model: set(card16.netlist().ids.values()))
+    monkeypatch.setattr(drawn_printed, "hidden_pins", lambda _model: set(card16.netlist().ids.values()))
     page, symbol, (a, _) = _marked(card16)
     gone = replace(symbol, slots=tuple(s for i, s in enumerate(symbol.slots) if i != a))
     drawing = card16.drawings[page]
     patched = card16.patched(page, symbols=tuple(gone if s.id == symbol.id else s for s in drawing.symbols))
-    assert card16.count("PIN_MARKING_WRONG", patched) == 0
+    assert card16.count("PRINTED_TEXT_WRONG", patched) == 0
+
+
+def _wrong(built: Built, page, **fields) -> list[str]:
+    """The PRINTED_TEXT_WRONG messages over `built` with `page`'s drawing changed by `fields`."""
+    return built.messages("PRINTED_TEXT_WRONG", built.patched(page, **fields))
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_two_tags_swapped_are_printed_text_wrong(card16):
+    """T2: the TAG texts of two symbols swapped; each prints the other's tag."""
+    page, drawing = next((p, d) for p, d in card16.drawings.items() if sum(t.kind == "TAG" for t in d.texts) > 1)
+    a, b = [i for i, t in enumerate(drawing.texts) if t.kind == "TAG" and t.owner][:2]
+    texts = list(drawing.texts)
+    texts[a], texts[b] = replace(texts[a], text=texts[b].text), replace(texts[b], text=texts[a].text)
+    assert len(_wrong(card16, page, texts=tuple(texts))) == 2
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_table_head_not_the_coils_contact_table_is_printed_text_wrong(card16):
+    """T4: a head symbol standing for a coil whose cells are not `coil_table_texts` of it."""
+    page, drawing = next(iter(card16.drawings.items()))
+    net = card16.netlist()
+    coil = function_of(card16.model, next(iter(net.keys.values())))
+    head = replace(drawing.symbols[0], texts=(("k.no", "p9"),))
+    net.heads[head.id] = coil
+    found = list(drawn_printed._tables(card16.model, replace(net, pages={page: replace(net.pages[page], drawing=replace(drawing, symbols=(head,)))})))
+    assert len(found) == 1
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_where_line_naming_no_other_placement_is_printed_text_wrong(card16):
+    """T5: a terminal placed once owes no where-line, so any WHERE text under its tag is wrong."""
+    page, drawing = next(iter(card16.drawings.items()))
+    tag = next(t for t in drawing.texts if t.kind == "TAG" and t.owner)
+    where = replace(tag, kind="WHERE", text="p9 A1")
+    assert len(_wrong(card16, page, texts=(*drawing.texts, where))) == 1
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_frame_label_not_its_units_title_is_printed_text_wrong(card16):
+    """T6: the frame of the build prints a label other than its title."""
+    page, outline = next((p, o) for p, d in card16.drawings.items() for o in d.outlines)
+    label = DrawnText("x", Box(0, 0, 8, 2), "TAG", "NW", outline.id)
+    other = replace(card16.drawings[page], outlines=(replace(outline, label=label),))
+    assert len(card16.messages("PRINTED_TEXT_WRONG", {**card16.drawings, page: other})) == 1
+
+
+@pytest.mark.rule("READ-IDENTITY")
+def test_a_power_symbol_printing_another_potential_is_printed_text_wrong(card16, monkeypatch):
+    """A5: a symbol that prints `5V` stands on a net whose potential is `24V` (card16 prints no potential, so the net's is given)."""
+    page, symbol = next((p, s) for p, d in card16.drawings.items() for s in d.symbols if s.key in drawn_power.POWER_KEYS)
+    monkeypatch.setattr(drawn_printed, "port_power_text", lambda _model, _port: "24V")
+    drawing = card16.drawings[page]
+
+    def swapped(text: str) -> list[str]:
+        marked = replace(symbol, slots=(("marking.supply", text),))
+        return _wrong(card16, page, symbols=tuple(marked if s.id == symbol.id else s for s in drawing.symbols))
+
+    assert (len(swapped("5V")), len(swapped("24V"))) == (1, 0)
 
 
 H, V = [(-20, 0), (20, 0)], [(0, -20), (0, 20)]
@@ -1122,7 +1259,7 @@ def _lost(shape: tuple[int, int], net_id: str, pin: Any) -> list[str]:
 
 @pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
 def test_a_lost_plug_pin_leaves_no_conductor_end_undrawn():
-    """R2631, RR3: the CI witness, lone plug pin 6 of the 2x3 pool, fails with `whole` and with `restood` off.
+    """R2631, RR3: the CI witness, lone plug pin 6 of the 2x3 pool, fails with `withdrawn` emptied.
     P1: CND over far_pins, the one home of far_ends (placement_facts.py:95)."""
     assert _lost((2, 3), *next(c for c in _forced_loss_case(2, 3)[1] if "plug0/fn/x1 6" in c[0])) == []
 
@@ -1139,3 +1276,20 @@ def test_no_conductor_end_is_undrawn_after_any_single_lost_pin(shape: tuple[int,
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_an_off_stub_drawn_on_no_ink_is_reference_not_readable(monkeypatch: pytest.MonkeyPatch):
+    """KI-1091: a stub printed at its port with no node on ink is a fault naming it, as a pair marker on no wire is; it is not silently unread."""
+
+    class Name(NamedTuple):
+        value: str
+
+    pair = SimpleNamespace(far=Name("f"), port=Name("p"))
+    stub = SimpleNamespace(id=SimpleNamespace(value="k"), pairs=[pair])
+    monkeypatch.setattr(drawn_references, "_lexicon", lambda *_: {(P1, "p", "T"): [stub]})
+    for nodes, faulty in (({}, True), ({(1, 1): 0}, False)):
+        pages = cast("Any", {P1: SimpleNamespace(nodes=nodes)})
+        read = drawn_references._read_stubs(cast("Any", None), {(P1, "p", "T"): [(1, 1)]}, pages, set())
+        assert [m for _, _, m in read.faults] == (["stub prints 'T': on no wire of its net"] if faulty else [])
+        assert ("k" in read.markers) is not faulty

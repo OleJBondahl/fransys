@@ -3,27 +3,27 @@
 Both fixtures are built once; each check reads the same written model.
 """
 
-from dataclasses import replace
+import os
 
 import fransys as fr
 import pytest
 from _card_case import card_case_drafts
 from _model_build_cover import cabinet_document
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys import colours
 from fransys_el import build, lay_out_drawn, symbol_kit
-from fransys_el.kit_keys import strip_tag_of, tag_of
 from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_markers import ARROW, KINDS, LONE, facing_views, stub_fit
-from fransys_el.placement_options import options
-from fransys_el.placement_widest import link_fit
+from fransys_el.placement_markers import ARROW, KINDS, LONE, marker_boxes_value
 from ring_cases import bank_model, box_kit, channels_model
 from symdef import repeat
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import PinRef, solve
-from fransys_model.derive import function_item, strip_of
+from fransys_layout.core.geometry import marker_box_at
+from fransys_model.derive import function_item, printed_strip_tag, printed_tag, strip_of
 from fransys_model.derive.drawing_text import port_marking
+from fransys_model.derive.marker_text import marker_text
+from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import items
 
 
@@ -31,20 +31,7 @@ def _built(model, *, generic: bool):
     conventions = house()
     kit = box_kit(model) if generic else symbol_kit(model, LIBRARY)
     problem, _ = build(model, kit, conventions, LIBRARY)
-    pins = [PinRef(s.id, p.id) for s in problem.symbols for p in s.pins]
-    fit, lines, table = stub_fit(model, kit, (None, LIBRARY), pins)  # the fitted boxes, as `lay_out` passes them
-    wide = link_fit(model, kit, LIBRARY, None)
-    turned, above, below = facing_views()
-    chosen = replace(
-        options(conventions, LIBRARY),
-        marker_fit=fit,
-        stub_lines=lines,
-        stub_table=table,
-        link_fit=wide,
-        marker_vertical=turned,
-        marker_above=above,
-        marker_below=below,
-    )
+    chosen = drawn_options(model, kit, problem, conventions)  # the boxes, as `lay_out` passes them
     core = solve(problem, chosen)
     written, _, drawn = lay_out_drawn(model, kit, problem, conventions, LIBRARY)
     return model, kit, core, written, drawn, chosen
@@ -74,7 +61,7 @@ def test_the_designation_texts_are_the_tag_text_of_the_placed_functions(fixture)
     placed = {p.sym for page in core.placement.pages for p in page.placed}
     alone = {r.members[0] for page in core.placement.pages for r in page.runs if len(r.members) == 1}
     want = sorted(
-        tag_of(model, f, unit=items(model)[function_item(model, f)].unit, alone=symbol_key(model, f) in alone)  # its own set's unit
+        printed_tag(model, f, unit=items(model)[function_item(model, f)].unit, alone=symbol_key(model, f) in alone)  # its own set's unit
         for f in kit
         if symbol_key(model, f) in placed
     )
@@ -87,7 +74,7 @@ def test_a_strip_terminals_run_prints_its_strip_tag_over_the_points(fixture) -> 
     model, kit, core, *_ = fixture
     heads = {r.members[0] for page in core.placement.pages for r in page.runs if len(r.members) > 1}
     want = [
-        strip_tag_of(model, f, unit=items(model)[function_item(model, f)].unit)
+        printed_strip_tag(model, f, unit=items(model)[function_item(model, f)].unit)
         for f in kit
         if symbol_key(model, f) in heads and strip_of(model, function_item(model, f))
     ]
@@ -198,16 +185,19 @@ def _drawn_markers(fixture):
     return [s for d in fixture[4].values() for s in d.symbols if s.key in ("reference-marker", "marker-arrow-turned")]
 
 
-def test_every_core_marker_is_drawn_with_its_far_cell_in_its_text(fixture) -> None:
-    """The text is `derive.marker_text` of the written LinkMarker; it ends in the core's cell."""
-    core = fixture[2]
-    drawn = {(s.x, s.y): dict(s.slots)["ref"] for s in _drawn_markers(fixture)}
-    markers = core.annotations.markers
+@pytest.mark.skipif(
+    not os.environ.get("FRANSYS_CORETEXTS"),
+    reason="11 s build, no marker page under 10 s: run by `just core-texts-repro` and the daily sweep (R2663)",
+)
+def test_every_written_marker_is_drawn_with_its_text() -> None:
+    """The drawn marker's text is `derive.marker_text` of its written LinkMarker (card16 and bank8 draw none: channels 8 does, 2 markers)."""
+    page = _built(channels_model(8), generic=True)
+    written, drawn = page[3], {(s.x, s.y): dict(s.slots)["ref"] for s in _drawn_markers(page)}
+    markers = layout_of(written, LinkMarker).values()
+    assert len(markers) > 0
     assert len(drawn) == len(markers)
     for m in markers:
-        text = drawn[m.x, m.y]
-        assert text.startswith("#")
-        assert text.endswith(f"-{m.cell}"), (text, m)
+        assert drawn[m.x, m.y] == marker_text(written, m)
 
 
 def test_the_channels_23_page_draws_its_forty_three_marker_boxes() -> None:
@@ -242,19 +232,18 @@ def test_the_nets_of_the_channels_23_page_that_draw_markers_have_one_tint_each()
 
 
 def test_a_stub_text_wider_than_the_plain_flag_gets_a_fitted_box_for_the_core_to_reserve() -> None:
-    """Without `marker_fit` a long text keeps the plain box and its flag leaves its page (R318)."""
+    """Without a fitted box a long text keeps the plain box and its flag leaves its page (R318)."""
     model = channels_model(21)
     kit = box_kit(model)
     problem, _ = build(model, kit, house(), LIBRARY)
     pins = [PinRef(s.id, p.id) for s in problem.symbols for p in s.pins]
-    plain = options(house(), LIBRARY).marker
-    fit, _, _ = stub_fit(model, kit, (None, LIBRARY), pins)
-    assert fit
-    assert any(boxes != plain for (_, kind), boxes in fit.items() if kind in LONE)
+    boxes, _, _ = marker_boxes_value(model, kit, (None, LIBRARY), pins)
+    plain = boxes[None, "stub"].footprint
+    assert any(b.footprint != plain for (pin, kind), b in boxes.items() if pin is not None and kind in LONE)
 
 
 def test_the_built_options_hold_a_fitted_box_for_every_marker_kind(monkeypatch) -> None:
-    """R378, R384: the options the real build solves hold a box for each kind: fit or link_fit."""
+    """R378, R384: the options the real build solves hold a box for each kind at any pin and each pin's own."""
     from fransys_el import lay_out_core
 
     from fransys_layout.core.values import RefKind
@@ -270,11 +259,12 @@ def test_the_built_options_hold_a_fitted_box_for_every_marker_kind(monkeypatch) 
     _built(_fan_out().model, generic=False)
     assert seen
     for opts in seen:
-        pins = {pin for pin, _ in opts.marker_fit}
+        assert {k for p, k in opts.marker_boxes if p is None} == set(KINDS)
+        pins = {pin for pin, _ in opts.marker_boxes} - {None}
         assert pins
         for pin in pins:
-            assert {k for p, k in opts.marker_fit if p == pin} == set(KINDS) - {ARROW}, pin
-        assert opts.link_fit  # the arrow's box: the widest line, R350
+            assert {k for p, k in opts.marker_boxes if p == pin} == set(KINDS) - {ARROW}, pin
+        assert opts.marker_boxes[None, ARROW].drawn  # the arrow's box: the widest line, R350
 
 
 def _fan_out():
@@ -317,8 +307,7 @@ def test_every_flag_box_lies_inside_its_rows_solved_band(kind, generic, size) ->
     assert {str(m.kind) for m in flags} >= {kind}
     for m in flags:
         top, bottom = _row_band(pages[m.page], m.end.sym)
-        boxes = chosen.marker_fit.get((m.end, str(m.kind))) or chosen.link_fit
-        box = boxes[m.orient]
+        box = marker_box_at(0, 0, chosen, m.orient, (m.end, str(m.kind)))
         assert top <= m.y + box.y
         assert m.y + box.y + box.h <= bottom, (m.end, box)
 
@@ -339,6 +328,3 @@ def test_a_tag_box_is_as_wide_as_the_tag_is_drawn(fixture) -> None:
     for t in tags:
         drawn_g = text_width(LIBRARY.font, t.text, float(em_mm)) / float(mm_per_division(model, sheet))
         assert t.box.w >= float(drawn_g)
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

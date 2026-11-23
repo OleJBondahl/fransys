@@ -111,14 +111,9 @@ def spilled(
     out: list[Ref] = []
     for unit in blocks:
         for col in (c for b in unit.blocks if b.kind == "column" for c in b.columns):
-            for end in (*columns[col].heads, *columns[col].feet):
-                if end.kind == "boxpin" and end.pin is not None:
-                    pin = _column_pin(columns[col], nets[end.net or ""])
-                    ends = (
-                        RefEnd(where[col], col, pin),
-                        RefEnd(where[end.pin.sym], None, end.pin),
-                    )
-                    out.append(Ref(end.net or "", RefKind.TAG, ends))
+            for b in columns[col].box_pins:
+                pin = _column_pin(columns[col], nets[b.net])
+                out.append(Ref(b.net, RefKind.TAG, (RefEnd(where[col], col, pin), RefEnd(where[b.pin.sym], None, b.pin))))
     return out
 
 

@@ -2,7 +2,7 @@
 
 import pytest
 from options_fixtures import core_options
-from turn_fixtures import marker_views
+from turn_fixtures import marker_views, plain_boxes
 
 from fransys_layout.core.values import Box, Options
 
@@ -11,10 +11,12 @@ from fransys_layout.core.values import Box, Options
 MARKER_BOX = Box(0, -8, 48, 16)
 # Its eight views, turned by symdef (SB4); the layer measures the real ones.
 MARKER = marker_views(MARKER_BOX)
+NO_MARKERS = plain_boxes(marker_views(Box(0, 0, 0, 0)))  # no room kept: tests that plant no marker
+MARKERS = plain_boxes(MARKER)  # every kind, at any pin, the one plain box
 
 
 @pytest.fixture
 def marker_options() -> Options:
     return core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )

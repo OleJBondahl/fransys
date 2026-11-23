@@ -3,10 +3,9 @@
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
-from conventions_fixtures import SHEET
+from conventions_fixtures import SHEET, drawn_options
 from fransys.colours import BU
 from fransys_el import build, house_conventions, symbol_kit
-from fransys_el.placement_options import options
 from fransys_el.placement_series import within
 from fransys_el.placement_skips import NOT_SERIES_PARALLEL
 
@@ -91,8 +90,10 @@ def test_a_nested_control_circuit_stands_as_one_column_source_first() -> None:
     expect_codes(built, "FUNCTION_HALF_CONNECTED")  # open ends; valid fixture is KI-657 (R1745)
     assert [f.code for f in built.findings].count("FUNCTION_HALF_CONNECTED") == 2
     model = built.model
-    problem, _ = build(model, symbol_kit(model, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY)
-    laid = solve(problem, options(house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY))
+    conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET)
+    kit = symbol_kit(model, LIBRARY)
+    problem, _ = build(model, kit, conventions, LIBRARY)
+    laid = solve(problem, drawn_options(model, kit, problem, conventions))
     at = {p.sym.split(" ")[0]: (p.x, p.y) for page in laid.placement.pages for p in page.placed}
     assert at["S1"][0] == at["S2"][0] == at["H1"][0]
     assert at["S3"][0] == at["S4"][0] > at["S2"][0]

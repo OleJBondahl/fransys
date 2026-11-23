@@ -5,7 +5,9 @@
 """
 
 import dataclasses
+import html
 import importlib.util
+import re
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ from electrical_symbols import LIBRARY
 from fransys_model.derive import drawn_pages
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.kernel import render_id
+lazy from fransys_layout.drawing import Drawing
 
 SKID = Path(__file__).resolve().parent.parent / "examples" / "demo-skid" / "skid.py"
 
@@ -149,3 +152,43 @@ def test_repr_and_equality_ignore_the_drawings():
 def test_the_skids_rail_terminals_leave_no_function_not_wired(skid):
     """R911: a flagged terminal draws as its rail's power symbol, so it is not left off the page."""
     assert [f for f in skid[0].findings if f.code == "FUNCTION_NOT_WIRED"] == []
+
+
+def _page_strings(drawing: Drawing) -> set[str]:
+    """Every string a `Drawing` carries: free texts, outline labels and symbol slot texts."""
+    found = {text.text for text in drawing.texts} | {o.label.text for o in drawing.outlines if o.label}
+    return found | {text for symbol in drawing.symbols for _, text in symbol.slots}
+
+
+def _text_nodes(svg_text: str) -> set[str]:
+    """The text content of each element of an SVG: a short string must not match path data or an id."""
+    return set(re.findall(r">([^<>]+)<", svg_text))
+
+
+def _missing_strings(drawings, svgs: dict[str, str]) -> list[str]:
+    """The strings of each drawing that its page SVG does not hold (O3, CORRECTNESS-PROOF S3)."""
+    return [
+        f"{name}: {text!r}"
+        for page, drawing in drawings.items()
+        for name in [render_id(page).replace(":", "-")]
+        for text in sorted(_page_strings(drawing))
+        if text and html.escape(text, quote=False) not in _text_nodes(svgs[name])
+    ]
+
+
+def test_every_drawing_string_reaches_its_svg(skid):
+    """O3: each `Drawing` string (text, outline label, slot text) is in its page's written SVG."""
+    result, mid, _ = skid
+    svgs = {path.stem: path.read_text(encoding="utf-8") for path in mid.glob("*.svg")}
+    assert sum(len(_page_strings(d)) for d in result.drawings.values()) > 50
+    assert _missing_strings(result.drawings, svgs) == []
+
+
+def test_the_string_check_can_fail(skid):
+    """A string dropped from its SVG is named."""
+    result, mid, _ = skid
+    svgs = {path.stem: path.read_text(encoding="utf-8") for path in mid.glob("*.svg")}
+    page, drawing = next((p, d) for p, d in result.drawings.items() if d.texts)
+    name = render_id(page).replace(":", "-")
+    svgs[name] = svgs[name].replace(html.escape(drawing.texts[0].text, quote=False), "")
+    assert _missing_strings(result.drawings, svgs)

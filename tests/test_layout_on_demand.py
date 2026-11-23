@@ -33,6 +33,3 @@ def test_a_document_that_keeps_a_schematic_page_gets_the_layout():
         result = _build(document_for)
         assert dict(result.model.tables["layout.page"])
         assert any(d.symbols for d in result.drawings.values())
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

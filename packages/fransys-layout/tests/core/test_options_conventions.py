@@ -10,7 +10,7 @@ from fransys_layout.core.pack_sep import separation
 from fransys_layout.core.text_ends import MarkEnv, end_stand
 from fransys_layout.core.values import Box, Ref, RefEnd, RefKind, Side
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .flow_builders import OPTIONS
 from .order_fixtures import block, fan, flow, ordered
 from .pack_fixtures import elem, placed
@@ -28,8 +28,8 @@ def test_tag_stagger_false_counts_the_text_slots_as_hard() -> None:
     a, b = placed("a", "e"), placed("b", "e")
     on = replace(OPTIONS, tag_stagger=True)
     off = replace(OPTIONS, tag_stagger=False)
-    assert separation(a, b, syms, frozenset(), on) == 40
-    assert separation(a, b, syms, frozenset(), off) == 48
+    assert separation(a, b, syms, on) == 40
+    assert separation(a, b, syms, off) == 48
 
 
 def test_arrow_sides_choose_the_side_each_arrow_end_stands_on() -> None:
@@ -39,10 +39,10 @@ def test_arrow_sides_choose_the_side_each_arrow_end_stands_on() -> None:
     fans = {"f": Fan("f", ("fa", "fb"), (), (), "H", 1, "S")}
 
     def stood(sides: tuple[Side, Side]) -> list[tuple[str, Box]]:
-        options = replace(OPTIONS, marker=MARKER, arrow_sides=sides)
+        options = replace(OPTIONS, marker_boxes=MARKERS, arrow_sides=sides)
         env = MarkEnv(options, Size(1312, 854), {}, {}, trunks, fans)
         stands = [end_stand(env, ref, e, i) for i, e in enumerate(ref.ends)]
-        return [(s.orient, marker_box_at(s.x, s.y, options, s.orient)) for s in stands]
+        return [(s.orient, marker_box_at(s.x, s.y, options, s.orient, (None, "tag"))) for s in stands]
 
     east_west = stood(("E", "W"))
     west_east = stood(("W", "E"))

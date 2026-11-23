@@ -11,9 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import fransys as fr
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
@@ -89,15 +88,15 @@ def built(name: str) -> tuple[Model, PlacementProblem]:
     return model, problem
 
 
-def solve_problem(problem: PlacementProblem, **plant: Any) -> CoreLayout:
+def solve_problem(model: Model, problem: PlacementProblem, **plant: Any) -> CoreLayout:
     """`problem` on the core; `plant` replaces fields of the house options."""
-    chosen: Options = options(house(), LIBRARY)
+    chosen: Options = drawn_options(model, symbol_kit(model, LIBRARY), problem, house())
     return solve(problem, replace(chosen, **plant))
 
 
 def solved(name: str, **plant: Any) -> CoreLayout:
     """The design `name` on the core; `plant` replaces fields of the house options."""
-    return solve_problem(built(name)[1], **plant)
+    return solve_problem(*built(name), **plant)
 
 
 def counts(layout: CoreLayout) -> dict[str, int]:

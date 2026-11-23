@@ -79,9 +79,7 @@ def _reach(dealt: Sequence[set[str]], elems: Mapping[str, Elem], syms: Mapping[s
     """Per lane, the body extent of the hubs it alone is dealt: a symbol two lanes are dealt (a pole box) stands once."""
     held = Counter(sym for lane in dealt for sym in {elems[e].sym for e in lane})
     return [
-        lane_extent(
-            syms, tuple(Cell(elems[e].sym, "R0", elems[e].n_pin, elems[e].s_pin) for e in lane if held[elems[e].sym] == 1), frozenset(), body=True
-        )
+        lane_extent(syms, tuple(Cell(elems[e].sym, "R0", elems[e].n_pin, elems[e].s_pin) for e in lane if held[elems[e].sym] == 1), body=True)
         for lane in dealt
     ]
 
@@ -155,7 +153,7 @@ def _clear(
     for run in _runs(lanes, order, hubs).values():
         edge: int | None = None
         for moved, k, cells in _units(run, blocks):
-            left, right = lane_extent(syms, cells, frozenset(), body=True)
+            left, right = lane_extent(syms, cells, body=True)
             push = 0 if edge is None else max(0, edge + gap - left - at[k])
             for m in moved:
                 at[m] += push
@@ -173,6 +171,7 @@ def _offsets(lanes: Sequence[Lane], syms: Mapping[str, Sym]) -> list[int]:
     A symbol stands once, so lane j is at lane i's x plus j's pin dx minus i's, a pole box (the cable box) first. The first path
     in lane order wins; a second path with another answer is ignored (pins of another pitch).
     """
+    # KI-1141: lanes feeding a multi-pole symbol should take its pole pitch (LANE-PITCH-POLES); head rows jog into the poles
     held = _held(lanes, syms)
     at: dict[int, int] = {}
     for start in range(len(lanes)):

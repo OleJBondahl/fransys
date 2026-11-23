@@ -16,5 +16,5 @@ def test_an_unknown_kind_is_refused_naming_the_fix() -> None:
         marker_symbol("loop")
 
 
-def test_the_four_turns_are_distinct() -> None:
-    assert sorted(MARKER_FACING.values()) == ["R0", "R180", "R270", "R90"]
+def test_the_four_views_are_distinct() -> None:
+    assert sorted(MARKER_FACING.values()) == ["MR0", "R0", "R270", "R90"]

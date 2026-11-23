@@ -18,13 +18,13 @@ from fransys_layout.core.route_env import RouteEnv, body_hit
 from fransys_layout.core.route_trunk import Line, TrunkError, _leg_wires, drop_kind, trunk_wires
 from fransys_layout.core.score_wiring import bundles
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cycle_fixtures import acyclic_problem
 from .place_fixtures import all_pins, bundle_fan
 from .route_fixtures import envs_of, link_env, reversing_pair
 
 STEP = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 ).wiring_grid
 FULL = (2, 1, 0)
 
@@ -141,7 +141,7 @@ def synthetic(  # noqa: PLR0913 - a fixture builder; each knob is keyword-only
         frozenset(),
         replace(
             core_options(
-                marker=MARKER,
+                marker_boxes=MARKERS,
             ),
             wiring_grid=grid,
         ),

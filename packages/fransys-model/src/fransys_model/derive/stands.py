@@ -27,7 +27,7 @@ def _rails(model: Model) -> tuple[frozendict[Id[Port], PowerKind], frozendict[Id
             if port_power_kind(model, p) is not PowerKind.NONE and p not in wired and not is_rail_terminal(model, item_of_port(model, p))
         ]
         kinds.update((p, port_power_kind(model, p)) for p in pins)
-        drawn_by.update((p, tuple(pins)) for p in physical.ports if p not in wired and is_rail_terminal(model, item_of_port(model, p)))
+        drawn_by.update((p, tuple(pins)) for p in physical.ports if is_rail_terminal(model, item_of_port(model, p)))
     return frozendict(kinds), frozendict(drawn_by)
 
 
@@ -45,7 +45,7 @@ def rail_drawn_by(model: Model) -> frozendict[Id[Port], tuple[Id[Port], ...]]:
     """Each rail terminal port, mapped to the pins of its rail net that stand its power symbol (`stands`, whole).
 
     A flagged terminal draws as the power symbol at each device pin wired to it, so a pin in `drawn_stands` draws it.
-    A port that ends a boundary rail wire is absent: its wire is drawn to the terminal's replica.
+    A port that ends a boundary rail wire is kept: its wire is drawn to the terminal's replica, and the inside pins stand its symbol.
     """
     return _rails(model)[1]
 

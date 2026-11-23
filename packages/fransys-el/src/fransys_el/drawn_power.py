@@ -9,7 +9,10 @@ from typing import TYPE_CHECKING
 from electrical_symbols import marking_slot, power_symbol_key
 from fransys_model.derive import (
     PowerKind,
+    far_pins,
+    function_ports,
     is_rail_terminal,
+    item_functions,
     item_of_port,
     item_unit,
     net_of,
@@ -42,8 +45,11 @@ RailClass = tuple["Id[Unit]", str, Identity]
 
 
 def _scope(model: Model, port: Id[Port]) -> Id[Unit] | None:
-    """The cabinet of `port` (the unit of its item); `None` for a unit-less field device, which stands in no rail scope."""
-    return item_unit(model, item_of_port(model, port))
+    """The cabinet of `port`: the unit of its item, else the first unit a conductor of its terminal enters; `None` for a device that meets none."""
+    item = item_of_port(model, port)
+    near = [p for function in item_functions(model).get(item, ()) for p in function_ports(model, function)]
+    ends = (item_unit(model, item_of_port(model, far)) for _, far in far_pins(model, near))
+    return item_unit(model, item) or next(filter(None, ends), None)
 
 
 def _identity(model: Model, port: Id[Port], key: str, text: str | None) -> Identity:
@@ -137,12 +143,20 @@ def join_power(net: Netlist, model: Model) -> None:
                 net.union.join(first.setdefault(joined, at), at)
 
 
-def power_findings(net: Netlist) -> tuple[Finding, ...]:
-    """POWER_SYMBOL_NOT_JOINED per power symbol that names its potential and has no ink to its pin (R4)."""
-    return tuple(
+def power_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:
+    """POWER_SYMBOL_NOT_JOINED per power symbol that names its potential with no ink to its pin (R4), WRONG_KIND per symbol of another kind."""
+    wrong = (
+        drawn_finding("POWER_SYMBOL_WRONG_KIND", (net.ids[port],), "a power symbol is not the symbol of its pin's potential kind")
+        for part in net.pages.values()
+        for symbol in part.drawing.symbols
+        for port in (symbol.ports if symbol.key in POWER_KEYS else ())
+        if symbol.key != power_symbol_key(port_power_kind(model, net.ids[port]).value)
+    )
+    loose = (
         drawn_finding(
             "POWER_SYMBOL_NOT_JOINED", (net.ids[port],), "a power symbol has no wire to its pin: report it as a Fransys defect with the model"
         )
         for page, part, port, _, _ in _symbols(net)
         if not _inked(net, page, part, port)
     )
+    return (*wrong, *loose)

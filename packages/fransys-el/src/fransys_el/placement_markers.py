@@ -4,14 +4,15 @@ A stub or a copy is a marker symbol; symdef measures it once the text it will pr
 its slot, and the core reserves that box. A text that fits the plain marker adds nothing.
 """
 
-from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
 from electrical_symbols import MARKER_FACING
+from fransys_layout.core import MarkerBoxes
 from fransys_model.derive import far_pins, stub_far, stub_text_at
 
-from .placement_ids import pin_names, symbol_ids
+from .placement_ids import pin_ports
 from .placement_views import marker_boxes
+from .placement_widest import widest_line
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -23,18 +24,21 @@ if TYPE_CHECKING:
 
     from .placement_kit import SymbolKit
 
-__all__ = ["ARROW", "KINDS", "LONE", "facing_views", "pin_ports", "stub_fit"]
+__all__ = ["ARROW", "KINDS", "LONE", "TAG", "facing_views", "marker_boxes_value"]
 
 #: The reference kind whose box is fitted to the widest line it can print (R350).
 ARROW = "arrow"
+
+#: The reference kind placed by its plain box and drawn as wide as the widest line (R350, R543).
+TAG = "tag"
 
 #: The reference kinds that have one end: each is an off stub, its box fitted to its text.
 LONE = ("stub", "copy")
 
 #: Every reference kind; a kind with no fitted symbol of its own gets the plain marker's box.
-KINDS = ("tag", "arrow", "star", *LONE)
+KINDS = (TAG, ARROW, "star", *LONE)
 
-type Fit = Mapping[tuple[PinRef, str], Mapping[Orientation, Box]]
+type Boxes = Mapping[tuple[PinRef | None, str], MarkerBoxes]
 type StubLines = Mapping[tuple[PinRef, PinRef], tuple[int, ...]]
 type StubTable = Mapping[tuple[int, int], Mapping[Orientation, Box]]
 
@@ -44,14 +48,6 @@ def facing_views() -> tuple[frozenset[Orientation], Orientation, Orientation]:
     up, down = (cast("Orientation", MARKER_FACING[side]) for side in "NS")
     mirrored = cast("Orientation", f"M{up}"), cast("Orientation", f"M{down}")
     return frozenset([up, down, *mirrored]), up, down
-
-
-def pin_ports(model: Model, kit: SymbolKit) -> dict[PinRef, list[Id[Port]]]:
-    """Every model port that each symbol pin draws."""
-    found: dict[PinRef, list[Id[Port]]] = defaultdict(list)
-    for port, pin in pin_names(model, kit, symbol_ids(model, kit)).items():
-        found[pin].append(port)
-    return found
 
 
 def _texts(model: Model, unit: Id[Unit] | None, ports: Sequence[Id[Port]]) -> list[str]:
@@ -101,26 +97,35 @@ def _sized(
     return fits, lines, table
 
 
-def stub_fit(
+def _boxes(plain: Mapping[Orientation, Box], wide: Mapping[Orientation, Box], kind: str, fitted: Mapping[Orientation, Box]) -> MarkerBoxes:
+    """One kind's boxes at a pin: a tag places by the plain box and draws the widest line (R350, R543), an arrow is the widest line."""
+    if kind == ARROW:
+        return MarkerBoxes(wide, wide)
+    return MarkerBoxes(plain, wide) if kind == TAG else MarkerBoxes(fitted, fitted)
+
+
+def marker_boxes_value(
     model: Model,
     kit: SymbolKit,
     unit_library: tuple[Id[Unit] | None, Library],
     pins: Iterable[PinRef],
     stands: Iterable[Sequence[PinRef]] = (),
-) -> tuple[Fit, StubLines, StubTable]:
-    """The core's marker sizes (R1597): each kind's box at a pin, each conductor's line width, and the box by (widest width, line count).
+) -> tuple[Boxes, StubLines, StubTable]:
+    """The core's marker sizes (R1597): each kind's boxes, each conductor's line width, and the box by (widest width, line count).
 
-    `Fit` is the pin's own text, the bound before the ledger exists; a line's width is its one-line turned box along the wire.
+    `(None, kind)` is the kind's boxes at any pin; `(pin, kind)` a pin's own, a stub or copy fitted to its text, the bound before
+    the ledger exists. A line's width is its one-line turned box along the wire.
     """
     unit, library = unit_library
     ports = pin_ports(model, kit)
     plain = marker_boxes(library)
+    wide = marker_boxes(library, widest_line(model, kit, library, unit))
     pins = list(pins)
     fits, lines, table = _sized(library, _lines(model, unit, ports, pins), stands)
-    found = {}
+    found = {(None, kind): _boxes(plain, wide, kind, plain) for kind in KINDS}
     for pin in set(pins):
         pin_text = _texts(model, unit, ports[pin]) if pin in ports else []
         if pin_text:
             fits[pin_text[0]] = fits.get(pin_text[0]) or marker_boxes(library, pin_text[0])
-            found.update({(pin, kind): fits[pin_text[0]] if kind in LONE else plain for kind in KINDS if kind != ARROW})
+            found.update({(pin, kind): _boxes(plain, wide, kind, fits[pin_text[0]] if kind in LONE else plain) for kind in KINDS if kind != ARROW})
     return frozendict(found), lines, table

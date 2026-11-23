@@ -39,6 +39,3 @@ def test_write_refuses_on_each_error_code_that_read_zero(code: str, monkeypatch:
         fr.write(built, tmp_path / "out")
     assert {f.code for f in raised.value.findings} == {code}
     assert not any((tmp_path / "out").rglob("*"))
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -8,12 +8,14 @@ import dataclasses
 from fractions import Fraction
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.facts.closure import port_rails, rail_pairs
+from fransys_model.derive.facts.closure import joined_nets, port_rails, rail_pairs, required_groups
 from fransys_model.derive.facts.potentials import rail_potential
+from fransys_model.derive.facts.units import in_unit_subtree
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.lookups import item_of_port
 from fransys_model.elecdef import Current
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab import RailGroup, Unit, voltage
+from fransys_model.vocab import Unit, voltage
 from fransys_model.vocab.tables import nets, ports, rail_groups, supply_of_potential, supply_systems
 
 from .net_facts import is_earth_net, net_potential
@@ -22,6 +24,7 @@ from .unit_index import item_unit
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from fransys_model.vocab import RailGroup
     from fransys_model.vocab.core import Function, Port
 
 
@@ -158,13 +161,35 @@ def reached_supplies(model: Model) -> dict[Id[Function], set[str]]:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailGroup]]:
-    """The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
+def rail_scope(model: Model) -> frozenset[tuple[Id[Unit] | None, str]]:
+    """The (unit, potential) pairs that flag a rail group; a group with no potential is skipped.
 
     New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
     """
-    found: dict[tuple[Id[Unit] | None, str], Id[RailGroup]] = {}
-    for group in rail_groups(model).values():
-        if (potential := rail_potential(model, group)) is not None:
-            found.setdefault((item_unit(model, group.terminals[0]), potential), group.id)
-    return frozendict(found)
+    return frozenset(
+        (item_unit(model, group.terminals[0]), potential)
+        for group in rail_groups(model).values()
+        if (potential := rail_potential(model, group)) is not None
+    )
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _unit_nets(model: Model) -> dict[Id[Unit] | None, dict[Id[Port], tuple[Id[Port], ...]]]:
+    """For each unit flagging a rail, each port's net when only the wiring inside that unit's subtree joins."""
+    out = {}
+    for unit in {unit for unit, _ in rail_scope(model)}:
+        inside = (g for g in required_groups(model) if unit is None or all(in_unit_subtree(model, item_of_port(model, p), unit) for p in g))
+        out[unit] = {p: net.ports for net in joined_nets(model, inside) for p in net.ports}
+    return out
+
+
+def _first_port(model: Model, group: RailGroup) -> Id[Port] | None:
+    """A port of the group's first terminal: where the group meets the unit's wiring."""
+    idx = build_indexes(model)
+    return next((p for f in idx.functions_by_item.get(group.terminals[0], ()) for p in idx.ports_by_function.get(f, ())), None)
+
+
+def rails_joined_in_unit(model: Model, first: RailGroup, second: RailGroup) -> bool:
+    """Whether wiring inside the unit of `first` joins the two groups' terminals (R3336); a pair across a unit boundary is not joined."""
+    nets_in_unit = _unit_nets(model)[item_unit(model, first.terminals[0])]
+    return nets_in_unit.get(_first_port(model, first)) == nets_in_unit.get(_first_port(model, second))

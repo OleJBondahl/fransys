@@ -14,6 +14,7 @@ from fransys_model.kernel import id_namespace
 
 DATA = Path(__file__).parent / "data"
 SALTS = ("-", "a", "b", "c", "d", "e")
+# KI-1260: shape "30" at salt "-" shows REFERENCE_NOT_READABLE (a stub on no ink), a strict xfail in gap_flip.toml.
 REFUSED = {"WIDER_THAN_PAGE", "PAGE_OVERFLOW"}
 # Shapes: "" is 14-letter contact pins (KI-768); "-L" is 8-letter pins on every part (KI-972); "30" is "" with 30 contacts
 # in series on channel 1, a truly tall column on the card (R2283).

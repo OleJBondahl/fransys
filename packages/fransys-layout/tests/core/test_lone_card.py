@@ -17,7 +17,7 @@ from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_guard import unplaced
 
 from .blocks_fixtures import box_sym
-from .conftest import MARKER
+from .conftest import MARKERS
 from .flow_builders import elem, free, net, problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .test_box_blocks import chain_shape
@@ -54,7 +54,7 @@ def two_fans(ends_a: int, ends_b: int, *, a_first: bool = True) -> PlacementProb
 def _seated(prob: PlacementProblem) -> list[str]:
     """Stage 3's block ids for the problem's one unit, in order."""
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     lists = order_blocks(blocks_of(prob, opts), flow_of(prob, opts), opts)
     return [b.id for bl in lists for b in bl.blocks]
@@ -110,7 +110,7 @@ def test_a_refused_chain_box_is_seated_and_drawn_not_dropped() -> None:
 
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 

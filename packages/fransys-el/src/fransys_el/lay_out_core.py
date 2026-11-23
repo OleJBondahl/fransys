@@ -5,19 +5,21 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.core import CoreError, PinRef, solve
 
-from .draw_layout import finish_drawings
+from .draw_layout import alone_of, finish_drawings
+from .draw_outlines import outline_titles
 from .draw_write import ORIGIN, write_layout_drawn
+from .drawn_ids import core_symbol_id
 from .drawn_netlist import drawn_netlist, with_lines
 from .drawn_sweep import drawing_sweep
-from .drawn_where import where_joined
+from .drawn_where import where_joined, where_named
 from .placement_env import make_env
+from .placement_joins import node_joins
 from .placement_kit import ProblemError, refuse
-from .placement_markers import facing_views, stub_fit
+from .placement_markers import facing_views, marker_boxes_value
 from .placement_options import options
 from .placement_syms import strip_tags
-from .placement_widest import link_fit
 from .restrict import restriction
-from .scopes import bare_pins, cut_lines, drawing_scopes
+from .scopes import bare_pins, cut_lines, drawing_scopes, frame_titles, piece_names
 from .set_findings import read_incomplete_finding, set_failure_finding, set_without_page_findings, skipped_ports
 from .write_pages import SetPlace
 from .write_tables import place_texts
@@ -26,7 +28,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from electrical_symbols import Library
-    from fransys_layout.core import Options, PlacementProblem
+    from fransys_layout.core import CoreLayout, Options, PlacementProblem
     from fransys_layout.drawing import Drawing
     from fransys_model.kernel import Finding, Id, Model
     from fransys_model.layout import LinkMarker, Page
@@ -51,6 +53,8 @@ class _Sink:
     markers: list[LinkMarker]
     pageless: list[tuple[DrawingScope, int]]
     failed: list[DrawingScope]  # sets whose layout raised or write skipped its output steps: not checked (KI-779, R1991)
+    alone: set[tuple[Id[Page], str]]  # (page, drawn symbol) alone in its run there: PRINTED_TEXT_WRONG reads the tags back against them
+    titles: dict[str, str]  # the title each drawn frame owes
     refused_pages: set[Id[Page]]  # the pages of the skipped sets: returned, never read by a drawn-page check (R1996)
 
     def take(
@@ -79,6 +83,13 @@ class _Run:
     sink: _Sink
 
 
+def _keep_read_back(run: _Run, layout: CoreLayout, drawn: Mapping[Id[Page], Drawing]) -> None:
+    """The facts `PRINTED_TEXT_WRONG` reads a set's drawings back against, kept on the sink."""
+    alone = {core_symbol_id(s) for s in alone_of(layout)}
+    run.sink.alone.update((page, s.id) for page, d in drawn.items() for s in d.symbols if s.id in alone)
+    run.sink.titles.update(outline_titles(layout, frame_titles(run.model, run.kit)))
+
+
 def _one_set(
     run: _Run,
     laid: Model,
@@ -92,11 +103,10 @@ def _one_set(
     """
     part = cuts.problem
     pins = [PinRef(s.id, p.id) for s in part.symbols for p in s.pins]
-    fit, lines, table = stub_fit(run.model, run.kit, (scope.of_unit, run.library), pins)
-    wide = link_fit(run.model, run.kit, run.library, scope.of_unit)
+    boxes, lines, table = marker_boxes_value(run.model, run.kit, (scope.of_unit, run.library), pins)
     turned, above, below = facing_views()
-    base = replace(run.chosen, link_fit=wide, untitled=scope.copies, marker_vertical=turned, marker_above=above, marker_below=below)
-    layout = solve(part, replace(base, marker_fit=fit, stub_lines=lines, stub_table=table))
+    base = replace(run.chosen, untitled=scope.copies, marker_vertical=turned, marker_above=above, marker_below=below)
+    layout = solve(part, replace(base, marker_boxes=boxes, stub_lines=lines, stub_table=table))
     laid, more, drawn, markers, skipped = write_layout_drawn(
         laid,
         scope.of_unit,
@@ -106,6 +116,7 @@ def _one_set(
         library=run.library,
         where=SetPlace(location=scope.location, number=number),
     )
+    _keep_read_back(run, layout, drawn)
     run.sink.take(drawn, markers, (scope, number) if scope.symbols and not layout.pages else None)
     if skipped:
         run.sink.failed.append(scope)  # write skipped its output steps: the drawing is incomplete (KI-773, R1991)
@@ -119,9 +130,12 @@ def _lay_out(run: _Run) -> tuple[Model, tuple[Finding, ...], Mapping[PinRef, str
     if problem.symbols and not scopes:
         refuse("the kit", "has no function for the problem's symbols: pass the build's kit")
     bare, lines, tags = bare_pins(model, kit), cut_lines(model, kit), strip_tags(make_env(model, kit, run.conventions, run.library))
+    joins = node_joins(kit, run.library)
     found: list[Finding] = []  # model becomes the laid model set by set
     for number, scope in enumerate(scopes, 1):
-        cuts = restriction(problem, scope, bare, lines, scopes, options=run.conventions.options, tags=tags)
+        cuts = restriction(
+            problem, scope, bare, lines, scopes, options=run.conventions.options, tags=tags, pieces=piece_names(run.model, kit, scope, joins)
+        )
         try:
             model, more = _one_set(run, model, cuts, scope, number)
         except _SET_FAILURES as error:
@@ -146,7 +160,7 @@ def lay_out_drawn(
 
     The drawings come straight from the layouts (F7).
     """
-    sink = _Sink({}, [], [], [], set())
+    sink = _Sink({}, [], [], [], set(), {}, set())
     run = _Run(model, problem, kit, options(conventions, library), conventions, library, sink)
     laid, found, lines = _lay_out(run)
     drawings = finish_drawings(laid, sink.drawn, sink.markers, ORIGIN, library)
@@ -154,6 +168,9 @@ def lay_out_drawn(
     checked = {k: v for k, v in drawings.items() if k not in sink.refused_pages}
     net = with_lines(drawn_netlist(laid, kit, checked, sink.markers, library), laid, kit, lines)
     net.texted.update(where_joined(laid, net))
+    net.named.update(where_named(laid, net))
+    net.alone.update(sink.alone)
+    net.titles.update(sink.titles)
     net.skipped.update(skipped_ports(laid, kit, sink.failed))
     unread = (
         (read_incomplete_finding(tuple(k for k in drawings if k in sink.refused_pages), net.skipped),) if sink.failed or sink.refused_pages else ()

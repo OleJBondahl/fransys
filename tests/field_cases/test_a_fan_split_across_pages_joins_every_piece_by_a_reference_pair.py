@@ -26,7 +26,7 @@ class _Io(NamedTuple):
 
 @fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB", title="Cabinet")
 def _cabinet(u: Any) -> _Io:
-    x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
+    x1 = u.terminal_strip("X1", "DEMO-TB-2.5")
     l1, l2, l3 = (x1.run(k, 1) for k in ("L1", "L2", "L3"))
     x3 = u.terminal_strip("X3", "DEMO-TB-2.5")
     loads = [x3.run(k, _STARTERS) for k in ("U", "V", "W")]
@@ -57,10 +57,6 @@ def _built(tmp_path: Path, copied: list[tuple[int, int]], patch: pytest.MonkeyPa
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
     cab = d.add(_cabinet, "U1", place=None)
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
-    w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
-    for core, (outside, inside) in enumerate(zip((x0.run(k, 1) for k in ("L1", "L2", "L3")), cab, strict=True), start=1):
-        w1.core(core, outside[1], inside[1])
     cover = tmp_path / "cover.md"
     cover.write_text("# Fan\n", encoding="utf-8")
     patch.setattr(cut, "copies", spy)
@@ -82,8 +78,5 @@ def test_a_split_fan_has_a_copy_end_on_every_page_beyond_the_hubs_and_no_connect
         findings = _built(tmp_path, copied, monkeypatch).findings
     assert not [f.message for f in findings if f.severity.name == "ERROR"], "the drawing must be made for the check to mean anything"
     assert [f.code for f in findings if f.code in {"CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPLACED", "LABEL_NO_ROOM"}] == []
-    assert copied
+    assert len(copied) == 1
     assert all(ends == pages >= 2 for ends, pages in copied)  # the cut fell inside the fan
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

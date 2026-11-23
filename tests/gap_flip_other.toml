@@ -79,8 +79,6 @@
 # authored votes need the device pole table (TURN-VOTE-B)
 # STAGE-ORDER (Ruling 70, R774): core X=2 on AWS (named 2); KI-209 bar 0 under RT3-FOLLOW
 "packages/fransys-el/tests/test_cross_link_study.py::test_seal_in_has_no_crossing_and_no_reference" = "GAP-FLIP-225"
-# KI-216: a hub's legs stand apart from their hub (tree3 columns G1, G3, G2, G4) (R802)
-"packages/fransys-layout/tests/core/test_flow_plants.py::test_the_legs_of_a_hub_stand_beside_their_hub" = "GAP-FLIP-228"
 # CORE-RING-2 (Ruling 48): core X=1 against today's engine X=0 on this builder
 "packages/fransys-el/tests/test_cross_links.py::test_a_drawn_supply_closing_the_circuit_has_no_crossing" = "GAP-FLIP-226"
 # PIN-OVER-PIN: 96 G (body 16 + table reach 68 + gap 8, on the grid) arrives with the symdef 0.22 pin bump, where keepout_box is body plus leads only
@@ -88,8 +86,6 @@
 # P6 is strict: the cut spreads a row group of three symbols over two rows
 "packages/fransys-layout/tests/core/test_cut_plants.py::test_a_row_group_the_cut_would_spread_over_two_rows_stays_in_one" = "GAP-FLIP-218"
 # TEXT-CANDIDATES no-free-candidate (designer Q4), Ruling 105, 114, recount
-"tests/test_rule_routing_marker_boxes.py::test_no_wire_passes_through_a_marker_box[machine_panel]" = "GAP-FLIP-1"
-"tests/test_rule_routing_marker_boxes.py::test_no_wire_passes_through_a_marker_box[mcc]" = "GAP-FLIP-1"
 "packages/fransys-layout/tests/core/test_route_wires.py::test_two_box_wires_beside_neighbouring_cells_share_no_point" = "GAP-FLIP-209"
 
 # RANK-INVARIANCE P0 (R568, R571): each flips when the piece named lands; P8 deletes the lines.
@@ -124,7 +120,6 @@
 # OPEN-RESPELL: respelling the ids moves the layout; the first moved id is untraced
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[w05_turned_marker-IS.7]" = "GAP-FLIP-217"
 "tests/test_placement_solve_counts.py::test_the_solve_rule_holds[t02_box_device_contact-IS.4]" = "GAP-FLIP-979"  # KI-979
-"tests/test_placement_marker_counts.py::test_every_stub_tag_and_copy_marker_lies_outside_every_footprint[w06_wide_controller_row]" = "GAP-FLIP-980"  # KI-980
 "tests/test_unit_scope_prints_every_set.py::test_ki_990_a_by_others_item_at_the_place_of_an_own_fed_device_prints_on_the_system_document" = "GAP-FLIP-990"  # KI-990
 
 # test_placement_widen_counts: the crossed instances of test_placement_route_counts, widened (R272)
@@ -141,9 +136,8 @@
 # KI-738 (CORRECTNESS-PROOF S0 R6, R1861): the dangling-end check meets a wire end that lies along another wire by a dot further along the run
 "packages/fransys-el/tests/test_drawn_netlist.py::test_a_wire_end_lying_along_another_wire_needs_a_dot_at_the_end_itself" = "GAP-FLIP-738"  # KI-738
 
-# KI-974 (CHAIN-FROM-HEAD): the distribution board shows INK_WITHOUT_CONDUCTOR (3 warnings), revealed by P1-ALONE's reader (designer R2619)
-"tests/test_placement_corpus_distribution_board.py::test_the_board_has_no_error_and_no_warning" = "GAP-FLIP-974"  # KI-974 (CHAIN-FROM-HEAD)
-# KI-1122 (MCC-ARROW-LOSS, FIX-0.23): a forced lone loss at a pin whose conductors ride an arrow leaves its ends undrawn (designer R2618).
-"tests/test_placement_corpus_mcc.py::test_a_forced_lone_loss_at_a_pin_whose_conductors_ride_an_arrow_draws_every_end" = "GAP-FLIP-1122"
 # KI-1304 (UNIT-CABLE-LISTS): a cable a unit owns is in the BOM and in no cable list of a default write (designer R3172).
 "tests/test_corpus_drawing_invariants.py::test_every_cable_the_bom_names_is_in_a_default_cable_list" = "GAP-FLIP-1304"
+"tests/test_short_groups_corpus_pages.py::test_the_real_marker_boxes_keep_the_instance_within_its_bound[s01_skid_v16_m3]" = "GAP-FLIP-1281"  # KI-1281 MARKER-PAGES
+"tests/test_short_groups_corpus_pages.py::test_the_real_marker_boxes_keep_the_instance_within_its_bound[w01_series_to_plc]" = "GAP-FLIP-1281"  # KI-1281 MARKER-PAGES
+"tests/test_rule_rank_invariance.py::test_bank40_overflows_no_page_and_strands_no_leg_at_any_salt[-]" = "GAP-FLIP-1264"  # KI-1264: bank40 HEAD_OFF_LEGS 1 at salt "-"

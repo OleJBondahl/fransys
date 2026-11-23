@@ -6,7 +6,7 @@ and jsonform.py gives every value here a JSON form. Lengths are in G.
 
 from dataclasses import dataclass, field
 from itertools import pairwise
-from typing import Literal
+from typing import Literal, NamedTuple
 lazy from collections.abc import Iterator, Mapping
 
 lazy from .values import Finding, Orientation, PageSpec, PinRef
@@ -56,6 +56,15 @@ class End:
         return self.kind == "join"
 
 
+class BoxEnd(NamedTuple):
+    """A box-pin end of a column: its lane, the box pin, whether it is a foot (else a head) and its net."""
+
+    lane: int
+    pin: PinRef
+    foot: bool
+    net: str
+
+
 @dataclass(frozen=True, slots=True)
 class Column:
     """width and height are a cache of the cells' extent; width spans the full footprints."""
@@ -67,6 +76,16 @@ class Column:
     height: int
     width: int
     hops: tuple[tuple[str, ...], ...] = ()
+
+    @property
+    def box_pins(self) -> tuple[BoxEnd, ...]:
+        """The one place that asks which box pins the column's ends meet: heads first, then feet."""
+        return tuple(
+            BoxEnd(e.lane, e.pin, foot, e.net or "")
+            for foot, ends in ((False, self.heads), (True, self.feet))
+            for e in ends
+            if e.kind == "boxpin" and e.pin is not None and e.lane is not None
+        )
 
     @property
     def is_chain(self) -> bool:

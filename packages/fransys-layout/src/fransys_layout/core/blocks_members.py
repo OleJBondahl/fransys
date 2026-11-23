@@ -78,12 +78,7 @@ def column_group(column: Column, syms: Mapping[str, Sym], rank: Mapping[str, int
 
 def attached_boxes(flow: FlowGraph) -> dict[str, str]:
     """Column to the box whose pin its head or foot meets, the first found."""
-    out: dict[str, str] = {}
-    for c in flow.columns:
-        for end in (*c.heads, *c.feet):
-            if end.kind == "boxpin" and end.pin is not None:
-                out.setdefault(c.id, end.pin.sym)
-    return out
+    return {c.id: c.box_pins[0].pin.sym for c in flow.columns if c.box_pins}
 
 
 def _unite(box_of: Mapping[str, str], spill: Sequence[str], live: Sequence[tuple[Fan, list[str]]]) -> UnionFind:

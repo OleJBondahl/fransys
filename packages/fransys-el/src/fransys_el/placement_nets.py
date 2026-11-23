@@ -78,9 +78,12 @@ def _rail_wires(model: Model) -> list[tuple[Id[Port], ...]]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def net_ports(model: Model) -> frozendict[str, Id[Port]]:
-    """Every net id the core is handed, by its lead port: how a reader goes from a net id back to a record, with no parsing."""
-    found = {}
-    for ports in (*(ph.ports for ph in drawn_physical_nets(model)), *_rail_wires(model)):
+    """Every net id the core is handed, by the port it names: how a reader goes from a net id back to a record, with no parsing.
+
+    A net's id names its lead port; a piece of a net that a set cuts apart names its own (`piece_names`), so every port of a drawn net is read.
+    """
+    found = {symbol_key(model, port): port for ph in drawn_physical_nets(model) for port in ph.ports}
+    for ports in _rail_wires(model):
         lead = net_lead(model, ports)
         found[symbol_key(model, lead)] = lead
     return frozendict(found)

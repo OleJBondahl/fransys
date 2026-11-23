@@ -31,7 +31,6 @@ class PageEnv:
     attach: Attached
     syms: Mapping[str, Sym]
     options: Options
-    in_row: frozenset[str]
     flow: FlowGraph
     problem: PlacementProblem
     columns: Mapping[str, Column]
@@ -70,7 +69,6 @@ def _env(plan: PagePlan, cut: CutResult, problem: PlacementProblem, options: Opt
     hangings, syms = fold_page(plain, refs, problem, (plan.page, owners, stands), (cut.spec.leads, options))
     page = replace(problem, symbols=tuple(syms[s.id] for s in problem.symbols))
     pcs = placed_columns(plan, columns, blocks, attach, syms)
-    in_row = frozenset(s.id for s in syms.values() if s.row_group)
     return PageEnv(
         plan,
         pcs,
@@ -78,7 +76,6 @@ def _env(plan: PagePlan, cut: CutResult, problem: PlacementProblem, options: Opt
         attach,
         syms,
         options,
-        in_row,
         cut.flow,
         page,
         columns,

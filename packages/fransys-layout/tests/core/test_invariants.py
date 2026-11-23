@@ -34,9 +34,9 @@ def _flagged(findings: Sequence[Finding], page: int) -> set[str]:
 
 def _solids(page: PagePlacement, markers: Sequence[Marker], options: Options) -> list[Box]:
     """The bodies and marker boxes of one page: what a label shares no interior with."""
-    from fransys_layout.core.geometry import marker_drawn_box
+    from fransys_layout.core.geometry import marker_box
 
-    return [p.body for p in page.placed] + [marker_drawn_box(m, options) for m in markers if m.page == page.page]
+    return [p.body for p in page.placed] + [marker_box(m, options, drawn=True) for m in markers if m.page == page.page]
 
 
 def check_one_label(placement: Placement, labels: Sequence[AnnexBox]) -> list[str]:

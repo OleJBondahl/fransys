@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -76,12 +77,18 @@ def links_of(ends_by_net: Ends, elems: Mapping[str, Elem], syms: Mapping[str, Sy
             continue
         outer = [e for e in ends if e.site in ("top", "bottom")]
         others = [e for e in ends if e.site not in ("top", "bottom", "through")]
-        throughs = tuple(e.elem for e in ends if e.site == "through" and e.elem)
+        thru = [e for e in ends if e.site == "through" and e.elem]
         series = len(outer) == PAIR and outer[0].site != outer[1].site
         turns = any(_carries_turn(e, elems[e.elem], count, syms) for e in outer if e.elem)
-        if len(outer) == PAIR and not others and (series or (turns and not throughs)):
-            out[net] = Link(net, outer[0], outer[1], throughs)
+        if len(outer) == PAIR and not others and (series or (turns and not thru)) and _on_path(outer[0], thru, outer[1]):
+            out[net] = Link(net, outer[0], outer[1], tuple(e.elem or "" for e in thru))
     return out
+
+
+def _on_path(a: NetEnd, throughs: Sequence[NetEnd], b: NetEnd) -> bool:
+    """A through stands inline only when its conductors run a to it to the next, to b (CHAIN-FROM-HEAD)."""
+    path = [a, *throughs, b]
+    return not throughs or all(any(p.sym == y.pin.sym and (y.site == "through" or p == y.pin) for p in x.far) for x, y in itertools.pairwise(path))
 
 
 def _carries_turn(end: NetEnd, elem: Elem, count: Mapping[str, int], syms: Mapping[str, Sym]) -> bool:
@@ -291,9 +298,8 @@ def member_offset(
 
     Both are snapped up to the wiring grid. `floor` is 0 where no branch stands before it.
     """
-    in_row = frozenset(s.id for s in syms.values() if s.row_group)
-    left, _ = lane_extent(syms, cells, in_row)
-    edge = max(lane.offset + lane_extent(syms, tuple(lane.cells), in_row)[1] for lane in column)
+    left, _ = lane_extent(syms, cells)
+    edge = max(lane.offset + lane_extent(syms, tuple(lane.cells))[1] for lane in column)
     want = max(edge + gap.column_gap_min - left, floor)
     return grid_up(want, gap.wiring_grid)
 

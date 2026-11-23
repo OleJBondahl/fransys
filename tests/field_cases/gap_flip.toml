@@ -102,6 +102,6 @@
 
 "test_a_wide_bank_of_relays_fed_from_a_controllers_pins_builds.py::test_no_reference_marker_overlaps_another_on_the_bank_of_forty" = "GAP-FLIP-640"  # KI-640 MARKER-LOOP-AVOID (R1732): the markers placed in the loop overlap one another on page 4f2c6ea0
 "test_a_terminal_of_a_unit_set_cut_across_pages_is_drawn_on_each_page.py::test_a_terminal_wired_to_relays_on_two_pages_is_drawn_on_each" = "GAP-FLIP-647"  # KI-647 TERMINAL-PAGE-COPY (WIRE-29): the terminal is drawn once, the far page carries stubs
-"test_a_board_without_pe_columns_draws_every_bus_end_on_two_pages.py::test_no_arrow_overprints_a_flag_on_the_board_without_pe_terminals" = "GAP-FLIP-1315"  # KI-1315 TEXT-WIRE (R3331): an arrow and a flag overprint on page 2
+"test_a_di_module_unit_on_one_page_never_leaves_a_row_wider_than_its_page.py::test_no_row_is_wider_than_its_page_at_any_salt[--30]" = "GAP-FLIP-1260"  # KI-1260 STUB-OFF-INK (R2981): a stub stands on no ink, REFERENCE_NOT_READABLE
 
 [raises]

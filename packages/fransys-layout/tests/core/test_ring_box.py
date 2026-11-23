@@ -25,7 +25,7 @@ def _col(cid: str, *names: str, head: End, foot: End) -> Column:
 
 
 def _box_end(box: str) -> End:
-    return End("boxpin", pin=PinRef(box, "P"))
+    return End("boxpin", pin=PinRef(box, "P"), lane=0)
 
 
 def _fan(fid: str, drivers: tuple[Attach, ...], legs: tuple[Attach, ...]) -> Fan:
@@ -103,3 +103,13 @@ def test_ring_symbols_names_cells_and_boxes_and_a_ycycleerror_is_a_core_error() 
     env: Any = SimpleNamespace(pcs={"cA": pc})
     assert set(ring_symbols(env, g)) == {"G", "a"}
     assert issubclass(YCycleError, CoreError)
+
+
+def test_columns_standing_on_one_box_by_their_feet_share_its_y_node() -> None:
+    """Both feet stand on box G: A's last cell and B's last cell are one node, so B1 above A1 closes a ring."""
+    a = _col("cA", "a0", "a1", "a2", head=FAN_END, foot=_box_end("G"))
+    b = _col("cB", "b0", "b1", head=FAN_END, foot=_box_end("G"))
+    fan = _fan("f1", (_at("cB", 1, "b1", "x"),), (_at("cA", 1, "a1", "x"),))
+    assert y_cycles((a, b), (fan,)) != []
+    apart = _col("cB", "b0", "b1", head=FAN_END, foot=FAN_END)
+    assert y_cycles((a, apart), (fan,)) == []

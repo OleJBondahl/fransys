@@ -32,13 +32,10 @@ type Boxes = dict[str, str]
 
 def _box_end(col: Column) -> tuple[str, str] | None:
     """The box and the node of the cell a column's first box-pin end stands on (stage 5 attach)."""
-    for li, end in enumerate(col.heads):
-        if end.kind == "boxpin" and end.pin is not None:
-            return end.pin.sym, f"{col.id}:{li}:0"
-    for li, end in enumerate(col.feet):
-        if end.kind == "boxpin" and end.pin is not None:
-            return end.pin.sym, f"{col.id}:{li}:{len(col.lanes[li % len(col.lanes)].cells) - 1}"
-    return None
+    first = next(iter(col.box_pins), None)
+    if first is None:
+        return None
+    return first.pin.sym, f"{col.id}:{first.lane}:{len(col.lanes[first.lane].cells) - 1 if first.foot else 0}"
 
 
 def _column_nodes(col: Column, uf: UnionFind) -> Nodes:

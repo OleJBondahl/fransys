@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 import symdef
 import symdef.authoring
+from import_walk import top_level_imports
 from test_one_home import (
     INPUTS,
     LAYOUT_FOR_INPUTS,
@@ -79,24 +80,14 @@ THIRD_PARTY: dict[str, frozenset[str]] = {
 TYPE_CHECKER_ONLY = frozenset({"_typeshed"})
 
 
-def _imported(source: str) -> set[str]:
-    imported: set[str] = set()
-    for node in ast.walk(ast.parse(source)):
-        if isinstance(node, ast.Import):
-            imported.update(alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            imported.add(node.module.split(".")[0])
-    return imported
-
-
 def violations(package: str, source: str) -> set[str]:
     """First-party top-level packages that `source` imports and `package` may not."""
-    return (_imported(source) & FIRST_PARTY) - ALLOWED[package] - {package}
+    return (top_level_imports(source) & FIRST_PARTY) - ALLOWED[package] - {package}
 
 
 def third_party_violations(package: str, source: str) -> set[str]:
     """Third-party top-level packages that `source` imports and `package` may not."""
-    outside = _imported(source) - FIRST_PARTY - sys.stdlib_module_names - TYPE_CHECKER_ONLY
+    outside = top_level_imports(source) - FIRST_PARTY - sys.stdlib_module_names - TYPE_CHECKER_ONLY
     return outside - THIRD_PARTY[package]
 
 
@@ -190,7 +181,7 @@ CORE_DIR = PACKAGES_ROOT / "fransys-layout" / "src" / "fransys_layout" / "core"
 
 def core_violations(source: str) -> set[str]:
     """Absolute imports of `fransys_layout.core` source that are not the standard library (E2)."""
-    return _imported(source) - sys.stdlib_module_names
+    return top_level_imports(source) - sys.stdlib_module_names
 
 
 def test_the_placement_core_imports_nothing_outside_the_standard_library():
@@ -425,7 +416,7 @@ def test_a_leading_underscore_attribute_fails_even_when_listed(monkeypatch):
 
 def test_a_deep_import_under_type_checking_still_fails():
     # The order's own wording ("including TYPE_CHECKING blocks"): `ast.walk` already reaches
-    # this body (the same way `_imported`/`violations` do), so no `_runtime_imports`-style
+    # this body (the same way `top_level_imports`/`violations` do), so no `_runtime_imports`-style
     # skip is needed -- this guards against someone later switching to that style by mistake.
     source = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from fransys_model.vocab.tables import items\n"
     assert surface_violations("fransys_render", source) == {"fransys_model.vocab.tables.items"}
@@ -524,7 +515,7 @@ PURITY_EXEMPT: frozenset[tuple[str, str]] = frozenset(
 
 def purity_violations(source: str) -> set[str]:
     """Deny-listed imports, calls, `os.environ` and `sys.<attr>` access (design section 3)."""
-    found = _imported(source) & FORBIDDEN_IMPORTS
+    found = top_level_imports(source) & FORBIDDEN_IMPORTS
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Call):
             func = node.func
@@ -883,5 +874,5 @@ DRAW_SOURCE = RENDER_SRC / "fransys_render" / "draw.py"
 
 def test_draw_imports_no_fransys_model():
     """layout-0315: `svg` takes values and a library; render's new `draw.py` knows no model."""
-    assert {n for n in _imported(DRAW_SOURCE.read_text(encoding="utf-8")) if "model" in n} == set()
-    assert _imported("from fransys_model import Model\n") == {"fransys_model"}
+    assert {n for n in top_level_imports(DRAW_SOURCE.read_text(encoding="utf-8")) if "model" in n} == set()
+    assert top_level_imports("from fransys_model import Model\n") == {"fransys_model"}

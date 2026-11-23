@@ -6,7 +6,7 @@ Every id comes from `make_id` over a key the design chooses, and instance keys a
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, override
 
 from fransys_author.instantiate import instantiate
 
@@ -102,7 +102,52 @@ def _supplies() -> tuple[SupplySystem, ...]:
     )
 
 
-class Kit:
+class _Carrier(Protocol):
+    """What a cable core needs of its cable: a key and an item."""
+
+    @property
+    def key(self) -> tuple[str, ...]:
+        """The cable's key."""
+        ...
+
+    @property
+    def item(self) -> Id[Item]:
+        """The cable's item id."""
+        ...
+
+
+class Builder:
+    """The conductor and facet vocabulary both synthetic cabinets share; a subclass supplies `add`."""
+
+    def add(self, *records: Record) -> None:
+        """Add ready-made records."""
+        raise NotImplementedError
+
+    def facet(self, cls: Any, key: tuple[str, ...], **fields: Any) -> None:
+        """Add a facet of type `cls`, whose id is derived from `key`."""
+        self.add(cls(id=make_id(cls, key), key=key, **fields))
+
+    def core(self, cable: _Carrier, index: int, ends: tuple[Id[Port], Id[Port]]) -> None:
+        """Core `index` of `cable` between `ends`; its colour is the cable product's."""
+        key = (*cable.key, "core", str(index))
+        conductor = self._conductor(key, ends, ConductorKind.CORE, cable.item)
+        self.facet(CoreFacet, (*key, "facet"), subject=conductor, index=index)
+
+    def _conductor(
+        self,
+        key: tuple[str, ...],
+        ends: tuple[Id[Port], Id[Port]],
+        kind: ConductorKind,
+        carrier: Id[Item] | None,
+    ) -> Id[Conductor]:
+        """A conductor of `kind` between two ports."""
+        a, b = ends
+        conductor = Conductor(id=make_id(Conductor, key), key=key, a=a, b=b, kind=kind, carrier=carrier)
+        self.add(conductor)
+        return conductor.id
+
+
+class Kit(Builder):
     """A `Draft` and the small vocabulary the two designs are written in."""
 
     def __init__(self, source: str) -> None:
@@ -117,13 +162,10 @@ class Kit:
         )
         self.add(self._library, *_supplies())
 
+    @override
     def add(self, *records: Record) -> None:
         """Add ready-made records."""
         self.draft.extend(records, origin=self._origin)
-
-    def facet(self, cls: Any, key: tuple[str, ...], **fields: Any) -> None:
-        """Add a facet of type `cls`, whose id is derived from `key`."""
-        self.add(cls(id=make_id(cls, key), key=key, **fields))
 
     def part(self, spec: PartSpec) -> PartBundle:
         """A part with its function templates, port templates and internal links."""
@@ -230,7 +272,7 @@ class Kit:
 
         A `wire` gets a `wire` facet labelled with its key, so every panel wire has a label.
         """
-        conductor = self._conductor((a, b), key, kind, None)
+        conductor = self._conductor(key, (a, b), kind, None)
         if kind is ConductorKind.WIRE:
             self.facet(
                 WireFacet,
@@ -242,24 +284,6 @@ class Kit:
                 label="-".join(key).upper(),
             )
         return conductor
-
-    def core(self, cable: Ref, index: int, ends: tuple[Id[Port], Id[Port]]) -> None:
-        """Core `index` of `cable` between `ends`; its colour is the cable product's."""
-        key = (*cable.key, "core", str(index))
-        conductor = self._conductor(ends, key, ConductorKind.CORE, cable.item)
-        self.facet(CoreFacet, (*key, "facet"), subject=conductor, index=index)
-
-    def _conductor(
-        self,
-        ends: tuple[Id[Port], Id[Port]],
-        key: tuple[str, ...],
-        kind: ConductorKind,
-        carrier: Id[Item] | None,
-    ) -> Id[Conductor]:
-        a, b = ends
-        conductor = Conductor(id=make_id(Conductor, key), key=key, a=a, b=b, kind=kind, carrier=carrier)
-        self.add(conductor)
-        return conductor.id
 
     def net(
         self,

@@ -41,8 +41,8 @@ def _force_drop(monkeypatch: pytest.MonkeyPatch, symbol: str = "H1") -> None:
 
     def drop(net: Any, symbols: Any, *rest: Any) -> Any:
         made = real(net, symbols, *rest)
-        hit = made is not None and (bool(made.cut) or symbol != "H1") and any(s.startswith(symbol) for s in symbols)
-        return None if hit else made
+        hit = bool(made) and (any(n.cut for n in made) or symbol != "H1") and any(s.startswith(symbol) for s in symbols)
+        return () if hit else made
 
     monkeypatch.setattr(restrict, "_net", drop)
 

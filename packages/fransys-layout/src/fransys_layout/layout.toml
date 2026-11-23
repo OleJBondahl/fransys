@@ -44,7 +44,6 @@ widen_rounds_limit = 50
 corner_order = ["TL", "BL", "TR", "BR"]
 cells = [8, 6]
 label_gap = 8
-open_stub = 0
 box_columns = true
 top_headroom_lanes = 3
 bottom_headroom_lanes = 1

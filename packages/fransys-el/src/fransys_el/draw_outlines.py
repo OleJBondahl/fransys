@@ -19,7 +19,12 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id
     from fransys_model.layout import Page
 
-__all__ = ["drawn_outlines"]
+__all__ = ["drawn_outlines", "outline_titles"]
+
+
+def outline_titles(layout: CoreLayout, titles: Mapping[str, tuple[str, str]]) -> dict[str, str]:
+    """The title each frame of the layout owes, by its drawn id: what the frame label is read back against."""
+    return {outline_id(o.key, o.page, o.run): titles[o.key][1] for o in layout.annotations.outlines}
 
 
 def drawn_outlines(

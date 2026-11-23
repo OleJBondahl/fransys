@@ -243,7 +243,7 @@ _.ANALOGUE_OUT  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:114
 _.lane_heads  # OTHER fransys-overview/src/fransys_overview/_data.py:178
 _.open  # OTHER fransys-overview/src/fransys_overview/_data.py:181
 _.by_view  # OTHER fransys-overview/src/fransys_overview/_data.py:222
-# `fransys_layout/drawing.py`: `Style`, `Sheet` and `DrawnWire` fields, read by render `draw.svg`
+# `fransys_layout/drawing.py`: `Style` and `DrawnWire` fields, read by render `draw.svg`
 # (render-0022) or by their tests (DRAWING-VALUE A1/A2; SETTINGS-A2 replaces the Style numbers).
 _.style  # OTHER fransys-render/src/fransys_render/draw.py:143
 _.family  # OTHER fransys-render/src/fransys_render/draw.py:68
@@ -253,7 +253,6 @@ _.line_thick_mm  # OTHER fransys-render/src/fransys_render/draw.py:82
 _.muted_colour  # OTHER fransys-render/src/fransys_render/draw.py:135
 _.module_mm  # OTHER fransys-render/src/fransys_render/draw.py:40
 _.g_per_module  # OTHER fransys-render/src/fransys_render/draw.py:40
-_.frame_key  # TESTS fransys-layout/tests/test_drawing.py:60
 _.dash_mm  # TESTS fransys-layout/tests/test_drawing.py:45
 _.tints  # TESTS fransys-layout/tests/test_drawing.py:44
 _.line_rule_mm  # TESTS fransys-layout/tests/test_drawing.py:50

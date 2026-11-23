@@ -18,8 +18,8 @@ def full_extent_separation(a_syms: tuple[str, ...], b_syms: tuple[str, ...], sym
     """The old rule: right reach of a plus left reach of b plus the gap."""
     la = (Lane(placed("a", *a_syms).lanes[0], 0),)
     lb = (Lane(placed("b", *b_syms).lanes[0], 0),)
-    right = column_extent(syms, la, frozenset())[1]
-    left = column_extent(syms, lb, frozenset())[0]
+    right = column_extent(syms, la)[1]
+    left = column_extent(syms, lb)[0]
     return grid_up(right - left + options.column_gap_min, options.wiring_grid)
 
 
@@ -31,7 +31,7 @@ def test_a_tall_and_a_wide_column_pack_closer_than_their_full_extents() -> None:
     options = core_options()
     a, b = placed("a", "thin", "wide"), placed("b", "wide")
     full = full_extent_separation(("thin", "wide"), ("wide",), syms, options)
-    packed = separation(a, b, syms, frozenset(), options)
+    packed = separation(a, b, syms, options)
     assert full == 112
     assert packed == 72
     assert packed < full
@@ -47,7 +47,6 @@ def test_cells_whose_text_slots_overlap_pack_at_hard_plus_soft_and_not_the_footp
             a,
             b,
             syms,
-            frozenset(),
             core_options(),
         )
         == 40
@@ -57,7 +56,6 @@ def test_cells_whose_text_slots_overlap_pack_at_hard_plus_soft_and_not_the_footp
             a,
             b,
             syms,
-            frozenset(),
             core_options(
                 tag_stagger=False,
             ),
@@ -84,9 +82,9 @@ def test_a_hard_box_never_overlaps_another_hard_box() -> None:
         names_b = tuple(f"b{i}" for i in range(rng.randrange(1, 4)))
         syms = {n: random_sym(rng, n) for n in (*names_a, *names_b)}
         a, b = placed("a", *names_a), placed("b", *names_b)
-        sep = separation(a, b, syms, frozenset(), options)
-        for ca in placed_cells(a, syms, frozenset(), options):
-            for cb in placed_cells(b, syms, frozenset(), options):
+        sep = separation(a, b, syms, options)
+        for ca in placed_cells(a, syms, options):
+            for cb in placed_cells(b, syms, options):
                 hard_b = Box(cb.hard.x + sep, cb.hard.y, cb.hard.w, cb.hard.h)
                 soft_b = Box(cb.soft.x + sep, cb.soft.y, cb.soft.w, cb.soft.h)
                 if ca.top < cb.bottom and cb.top < ca.bottom:
@@ -104,4 +102,4 @@ def test_separation_is_on_the_wiring_grid() -> None:
         )
         for _ in range(20):
             syms = {n: random_sym(rng, n) for n in ("x", "y")}
-            assert separation(placed("a", "x"), placed("b", "y"), syms, frozenset(), options) % grid == 0
+            assert separation(placed("a", "x"), placed("b", "y"), syms, options) % grid == 0

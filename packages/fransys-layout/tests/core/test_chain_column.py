@@ -12,7 +12,7 @@ from fransys_layout.core.series_values import Parallel, Series
 
 from .blocks_fixtures import box_sym
 from .chain_fixtures import facing_chain, link_box, tall_chain
-from .conftest import MARKER
+from .conftest import MARKERS
 from .flow_builders import elem, net, problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, widened_of
 from .test_box_blocks import chain_shape
@@ -205,7 +205,7 @@ def test_a_parallel_of_boxes_below_a_box_stands_beside_its_span_and_every_net_is
     """R2399, R5: B3 stands level with B2, no CHAIN_REFUSED; its head net b is a cross-link the router draws, also in a tree the cut folds."""
     prob = _below_a_box(tail)
     assert len(flow_of(prob).columns[0].lanes) == 2
-    _, routes, findings = widened_of(prob, replace(core_options(), marker=MARKER))
+    _, routes, findings = widened_of(prob, replace(core_options(), marker_boxes=MARKERS))
     assert not {f.code for f in findings} & {"CONNECTION_NOT_DRAWN", "WIRE_AS_REFERENCE", "CHAIN_REFUSED"}
     assert {"a", "b", "c", "d"} <= {w.net for p in routes.pages for w in p.wires}, "b, the head net, is a wire of its own"
 

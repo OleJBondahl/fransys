@@ -16,7 +16,7 @@ from fransys_layout.core.widen import route_round
 lazy from fransys_layout.core import PlacementProblem, Size
 
 from . import text_fixtures
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import solved_of
 from .solve_fixtures import ring_beside_a_tall_chain, tag_on_the_wire
@@ -38,7 +38,7 @@ def planted(request: pytest.FixtureRequest) -> PlacementProblem:
 
 def test_solve_is_pure(planted: PlacementProblem) -> None:
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     assert solve(planted, opts) == solve(planted, opts)
 
@@ -52,7 +52,7 @@ def test_a_routed_wire_passes_no_marker_cell_on_the_planted_problems(
             layout.routes,
             layout.annotations.markers,
             core_options(
-                marker=MARKER,
+                marker_boxes=MARKERS,
             ),
         )
         == []
@@ -112,7 +112,7 @@ def test_the_trade_check_names_a_penalty_that_drifts() -> None:
 def test_a_symbol_in_a_row_wider_than_the_page_is_laid_narrow_once_and_the_solve_ends() -> None:
     """R2250: each symbol with a narrow view in an over-wide row takes it; a narrow view never goes back, so the loop ends."""
     plain = ring_problem()
-    opts = core_options(marker=MARKER)
+    opts = core_options(marker_boxes=MARKERS)
     assert solve(plain, opts).narrow == frozenset()
     room = 59  # one symbol's row is 60 wide: a page this wide holds no row of any symbol
     page = dataclasses.replace(plain, area=Size(room + 2 * opts.margin.w, plain.area.h))

@@ -12,6 +12,7 @@ from fransys_layout.core.geometry import pin_xy
 from fransys_layout.core.pack import cell_node
 
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net
+from .flow_builders import conductors, hub_pins
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
@@ -37,7 +38,7 @@ def _padded(sym: Sym, extra: int) -> Sym:
 
 
 def _problem(syms: list[Sym], nets: list[Net], facts: Facts | None = None) -> PlacementProblem:
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts(far_ends=()))
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts or Facts(far_ends=conductors(nets)))
 
 
 def two_band_columns() -> PlacementProblem:
@@ -93,7 +94,7 @@ def _trunk_parts(group: str | None) -> tuple[list[Sym], list[Net]]:
     syms = [replace(free("h"), band=1), elem("l1"), _band("l2", 1), elem("l3")]
     syms += [replace(elem("u1"), row_group=group), elem("u2")]
     syms += [replace(_padded(elem("v1"), 24), row_group=group), elem("v2")]
-    nets = [net("bus", "h.s", "l1.n", "l2.n", "l3.n"), net("nu", "u1.s", "u2.n")]
+    nets = [net("bus", *hub_pins("h"), "l1.n", "l2.n", "l3.n"), net("nu", "u1.s", "u2.n")]
     nets += [net("nv", "v1.s", "v2.n")]
     return syms, nets
 

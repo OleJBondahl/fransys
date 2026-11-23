@@ -20,7 +20,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import place_y
 from fransys_layout.core.values import Box
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of
 from .place_fixtures import bundle_fan
 
@@ -28,7 +28,7 @@ from .place_fixtures import bundle_fan
 def _page(monkeypatch: pytest.MonkeyPatch, side: str, keep_of):
     """(env, x, y, span, trunk node, keep): `_foreign` returns the keep for the span's own row."""
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     prob = bundle_fan()
     (env,) = page_envs(cut_of(prob, opts), prob, opts)

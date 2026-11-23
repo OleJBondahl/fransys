@@ -151,15 +151,12 @@ def _box_wire(env: RouteEnv, col: Column, slot: tuple[bool, int], end: End) -> D
 
 
 def _end_wires(env: RouteEnv, col: Column) -> Drawn:
-    """The wires of the ends: a box pin's wire to its lane, an open end's stub (one kind read)."""
+    """The wires of the ends: a box pin's wire to its lane."""
     out = Drawn()
     for head, ends in ((True, col.heads), (False, col.feet)):
         for pos, end in enumerate(ends):
-            kind = end.kind
-            if kind == "boxpin":
+            if end.kind == "boxpin":
                 out += _box_wire(env, col, (head, pos), end)
-            elif kind == "open":
-                out += _stub(env, end)
     return out
 
 
@@ -172,29 +169,8 @@ def _hops(env: RouteEnv, col: Column) -> Drawn:
     return out
 
 
-def _stub(env: RouteEnv, end: End) -> Drawn:
-    """A short wire out of the pin of an open end, along the pin's turned side (P4.1b).
-
-    Drawn even where the target is blocked: the scorer counts any crossing, nothing is refused.
-    """
-    ref = end.pin
-    if env.options.open_stub <= 0 or ref is None or end.net is None:
-        return Drawn()
-    placed = env.placed.get(ref.sym)
-    start = pin_point(env, ref.sym, ref.pin)
-    side = None if placed is None else env.sides.get((ref.sym, ref.pin, placed.orient))
-    if placed is None or start is None or side is None:
-        text = (
-            f"open end {ref.sym}.{ref.pin} of net {end.net} has no placed pin or side on page "
-            f"{env.page}, so no stub is drawn: place {ref.sym} on this page or fix the pin name"
-        )
-        return _refused(text)
-    stop = step_out(side, *start, env.options.open_stub)
-    return Drawn(wires=(Wire(end.net, env.page, (start, stop), "straight"),))
-
-
 def lane_wires(env: RouteEnv, col: Column) -> Drawn:
-    """A column's wires: between consecutive cells, to box pins, along chain hops, open stubs."""
+    """A column's wires: between consecutive cells, to box pins, along chain hops."""
     out = Drawn()
     for i in range(len(col.lanes)):
         out += _lane(env, col, i)
@@ -256,7 +232,7 @@ def _stair(env: RouteEnv, key: tuple[int, int, bool, int], members: Sequence[Jog
         [(*s, own_syms(env, net_of_key(j.net), j.net)) for k, s, j in zip(level, spans, ordered, strict=True) if k == n]
         for n in range(max(level) + 1)
     ]
-    rows = bend_rows(ys, by_level, taken, keeps, grid=env.options.wiring_grid)
+    rows = bend_rows(ys, by_level, taken, (keeps, pin_points(env.placed)), grid=env.options.wiring_grid)
     kept = [(row, j) for k, j in zip(level, ordered, strict=True) if (row := rows[k]) is not None]
     laid = [(j, z_wire(j.net, env.page, (j.top, j.bottom), ys[row], j.drawn_as)) for row, j in kept]
     hit = [

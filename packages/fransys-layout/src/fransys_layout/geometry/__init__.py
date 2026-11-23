@@ -2,7 +2,7 @@
 
 from .adapter import text_width_g
 from .boxes import Box, contains, overlaps, translate
-from .errors import GeometryError, LayoutError, UnknownSymbolError
+from .errors import GeometryError, LayoutError
 from .exits import FACING_STEP, port_exit
 from .facing import OPPOSITE, Facing
 from .flow import flow
@@ -26,7 +26,6 @@ __all__ = (
     "LayoutError",
     "Point",
     "Span",
-    "UnknownSymbolError",
     "contains",
     "contains_point",
     "flow",

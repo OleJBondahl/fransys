@@ -23,6 +23,3 @@ def test_same_model_with_other_drawings_is_not_served_the_earlier_drawing(demo_c
     pipeline._svgs_cache.cache_clear()
     assert after == pipeline._svgs(pipeline._Drawn(model, real, none, LIBRARY, pages))
     assert after.keys() >= {f"{page.kind}:{page.value}" for page in real}
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

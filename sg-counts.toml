@@ -26,7 +26,7 @@ home = "fransys_layout/core/sides.py"
 forbid_after = "KI-059, twin of the side table: KI-064"
 
 [r04-kind-compare]
-stock = 32
+stock = 25
 mark = "count"
 home = "the named facts in fransys_model/derive (item_kind and siblings); replaces the rejected PLR2004 setting (C3)"
 forbid_after = "KI-063, the named facts replace the compares"

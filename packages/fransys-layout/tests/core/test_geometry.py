@@ -1,5 +1,7 @@
 """Tests for core/geometry.py: rotation, footprints, anchors and lane stacking."""
 
+from dataclasses import replace
+
 from options_fixtures import core_options
 from turn_fixtures import views_of
 
@@ -64,7 +66,6 @@ def test_stack_lane_puts_cells_a_wire_min_apart() -> None:
         core_options(
             wire_min=8,
         ),
-        frozenset(),
     )
     assert ys == (16, 56)
     assert ys[1] - ys[0] == 40
@@ -75,13 +76,13 @@ def test_column_extent_spans_both_lanes() -> None:
     """Lanes at offsets 0 and 24 reach from -8 to 32 against lane 0's wire."""
     syms = {"U1": make_sym()}
     lanes = (Lane(cells=(make_cell(),), offset=0), Lane(cells=(make_cell(),), offset=24))
-    assert column_extent(syms, lanes, frozenset()) == (-8, 32)
+    assert column_extent(syms, lanes) == (-8, 32)
 
 
 def test_lane_extent_uses_the_footprint_not_the_body() -> None:
     """The lane reach is the full footprint against the lane pin."""
     syms = {"U1": make_sym()}
-    assert lane_extent(syms, (make_cell(),), frozenset()) == (-8, 8)
+    assert lane_extent(syms, (make_cell(),)) == (-8, 8)
 
 
 def test_pin_xy_on_an_r180_cell() -> None:
@@ -94,8 +95,8 @@ def test_cell_footprint_uses_the_row_variant_only_in_a_row_group() -> None:
     """The row footprint applies only to a cell that stands in a row group."""
     sym = make_sym(footprint=Box(0, 0, 10, 10), row_footprint=Box(0, 0, 20, 5))
     cell = make_cell()
-    assert cell_footprint(sym, cell, in_row=True) == Box(0, 0, 20, 5)
-    assert cell_footprint(sym, cell, in_row=False) == Box(0, 0, 10, 10)
+    assert cell_footprint(replace(sym, row_group="g"), cell) == Box(0, 0, 20, 5)
+    assert cell_footprint(sym, cell) == Box(0, 0, 10, 10)
 
 
 def test_cell_anchor_uses_top_pin_else_bottom_pin() -> None:

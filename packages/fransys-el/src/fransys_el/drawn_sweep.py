@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING
 
 from .drawing_invariants import drawing_invariant_findings
-from .drawn_identity_marks import marking_findings
 from .drawn_nets import not_drawn_findings
 from .drawn_pairs import dangling_findings, loop_findings
 from .drawn_power import power_findings
+from .drawn_printed import printed_findings
 from .drawn_rails import rail_findings
 from .drawn_references import reference_findings
 from .drawn_shorts import ink_findings, short_findings
@@ -26,9 +26,9 @@ def drawing_sweep(model: Model, net: Netlist) -> tuple[Finding, ...]:
         *not_drawn_findings(model, net),
         *short_findings(net),
         *ink_findings(net),
-        *power_findings(net),
+        *power_findings(net, model),
         *rail_findings(net, model),
-        *marking_findings(net, model),
+        *printed_findings(model, net),
         *loop_findings(net),
         *reference_findings(net),
         *dangling_findings(net),

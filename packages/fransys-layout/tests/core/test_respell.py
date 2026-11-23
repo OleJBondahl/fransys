@@ -21,7 +21,7 @@ from fransys_layout.core.widen import Round, route_round, widen
 from . import align_fixtures as fx
 from . import pipeline_fixtures
 from .blocks_fixtures import box_case, build, fan, loose
-from .conftest import MARKER
+from .conftest import MARKERS, NO_MARKERS
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net
 from .cut_respell import (
     back_by_parts,
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.outputs import Marker, Routes
     from fransys_layout.core.sym_values import Sym
 
-OPTIONS = core_options(marker=MARKER)
+OPTIONS = core_options(marker_boxes=MARKERS)
 
 
 # --- stage: cut
@@ -356,7 +356,7 @@ def test_blocks_do_not_depend_on_the_order_of_the_input_tuples(case: str) -> Non
 
 # --- stage: align
 
-ALIGN_OPTIONS = core_options()
+ALIGN_OPTIONS = core_options(marker_boxes=NO_MARKERS)
 CASES_align: dict[str, Callable[[], PlacementProblem]] = {
     "band": fx.two_band_columns,
     "mate": fx.mate_columns,

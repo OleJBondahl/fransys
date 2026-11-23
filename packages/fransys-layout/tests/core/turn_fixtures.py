@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import symdef
 
 from fransys_layout.core.sym_values import PinTurn, Sym, Turned
-from fransys_layout.core.values import Box, Orientation, Pin
+from fransys_layout.core.values import Box, MarkerBoxes, Orientation, Pin, RefKind
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -68,8 +68,16 @@ def views_of(  # noqa: PLR0913, PLR0917 -- the R0 symbol's parts, as Sym holds t
 
 
 def marker_views(box: Box, orients: Iterable[Orientation] = ALL_EIGHT) -> Mapping[Orientation, Box]:
-    """A marker symbol's keepout box at each orientation, for `Options.marker`."""
+    """A marker symbol's keepout box at each orientation."""
     return frozendict({o: turn_box(box, o) for o in orients})
+
+
+def plain_boxes(
+    views: Mapping[Orientation, Box], *, tag: Mapping[Orientation, Box] | None = None, arrow: Mapping[Orientation, Box] | None = None
+) -> Mapping[tuple[None, str], MarkerBoxes]:
+    """`Options.marker_boxes`: every kind's one box `views` at any pin; a tag draws `tag` and an arrow is `arrow` (both default `views`)."""
+    wide = {RefKind.TAG: MarkerBoxes(views, tag or views), RefKind.ARROW: MarkerBoxes(arrow or views, arrow or views)}
+    return frozendict({(None, str(k)): wide.get(k, MarkerBoxes(views, views)) for k in RefKind})
 
 
 def refit(sym: Sym, **changes: Any) -> Sym:

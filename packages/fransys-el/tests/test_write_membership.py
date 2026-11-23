@@ -7,11 +7,10 @@ from collections import Counter
 from dataclasses import replace
 
 import pytest
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import build
 from fransys_el.kit_keys import function_of
 from fransys_el.placement_ids import symbol_ids
-from fransys_el.placement_options import options
 from fransys_el.write import write_layout
 from test_write import Written as _Written
 
@@ -120,7 +119,7 @@ def test_a_rerun_replaces_only_its_own_membership_rows(written: Written) -> None
     )
     conventions = house()
     problem, _ = build(written.model, written.kit, conventions, LIBRARY)
-    layout = solve(problem, options(conventions, LIBRARY))
+    layout = solve(problem, drawn_options(written.model, written.kit, problem, conventions))
     again, _, _ = write_layout(base, None, layout, problem, written.kit, library=LIBRARY)
     rows = layout_of(again, Membership)
     assert rows[foreign.id] == foreign

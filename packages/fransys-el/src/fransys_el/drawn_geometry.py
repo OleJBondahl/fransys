@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.core import overlaps, own_end, through
 
+from .drawn_lanes import on_flag_edge
 from .drawn_netlist import is_marker
 
 if TYPE_CHECKING:
@@ -112,7 +113,13 @@ def over_markers(part: PagePart) -> list[str]:
         box = marker.outline
         if box is None or not is_marker(marker):
             continue
-        ports = [(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports)]
+        edge = [
+            end
+            for w in part.drawing.wires
+            for end, prev in ((w.points[0], w.points[1]), (w.points[-1], w.points[-2]))
+            if on_flag_edge(box, (marker.x, marker.y), end) and not _in(prev, box)
+        ]  # a lane ends on the flat edge, approaching from outside the box
+        ports = [(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports), *edge]
         found += [f"wire / {marker.key}" for w in part.drawing.wires if _meets_box(w.points, box, ports)]
         found += [f"dot / {marker.key}" for d in part.drawing.symbols if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)]
     return found

@@ -7,7 +7,7 @@ ports into one piece, a reference pair or stub names the far port, its line is s
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import far_pins
+from fransys_model.derive import far_pins, rail_drawn_by
 from fransys_model.layout import StarKind
 
 from .drawn_ends import ink_without_conductor
@@ -24,36 +24,50 @@ if TYPE_CHECKING:
 __all__ = ["not_drawn_findings"]
 
 
-def _listed(net: Netlist, record: LinkMarker, node: tuple[object, object]) -> list[tuple[str, str]]:
-    """The `(port, far)` conductors an off stub ends on its page: its own, and each listed pair drawn joined to the stub's node (BUNDLE, R682, R1334).
+def _listed(net: Netlist, record: LinkMarker, node: tuple[object, tuple[int, int]]) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """The `(port, far)` conductors an off stub ends on its page: its own, each pair inked to its node, then those on a lane foot (R1334).
 
-    A bundle's one stub lists every lane it stands for; the plan names them, and only a lane inked into the stub's drawn piece is joined by it.
+    A bundle's one stub lists every lane it stands for; a lane inked into its piece is joined by it. A lane whose end is a
+    read foot at the stub's x (`Netlist.lanes`) lies on its ink too: its pair is the second list, kept by `_stubs` on a name back.
     """
-    root = net.union.find(node)
-    first, *rest = ((p.value, f.value) for p, f in ((x.port, x.far) for x in record.pairs))
+    root, first, *rest = net.union.find(node), *((p.value, f.value) for p, f in ((x.port, x.far) for x in record.pairs))
     own = [(p, f) for p, f in rest if p == first[0]]  # the other conductors of the stub's own pin: one box, a line each (R1581)
+    at = {p: [place for place in net.placed.get(p, ()) if place[0] == record.page] for p, _ in rest}
+    feet = {net.union.find(foot) for foot in net.lanes.joined if foot[0] == record.page and foot[1][0] == node[1][0]}
     inked = [
         (p, f)
         for p, f in rest
-        if p != first[0]
-        and any(page == record.page and at in net.pages[page].nodes and net.union.find((page, at)) == root for page, at in net.placed.get(p, ()))
+        if p != first[0] and any(place[1] in net.pages[record.page].nodes and net.union.find(place) == root for place in at[p])
     ]
-    return [pair for pair in (first, *own, *inked) if record.page in net.home.get(pair[0], ())]
+    on_foot = [(p, f) for p, f in rest if p != first[0] and (p, f) not in inked and any(net.union.find(place) in feet for place in at[p])]
+    home = [pair for pair in (first, *own, *inked) if record.page in net.home.get(pair[0], ())]
+    return home, [pair for pair in on_foot if record.page in net.home.get(pair[0], ())]
 
 
 def _stubs(net: Netlist) -> dict[str, set[str]]:
-    """Each port an off stub is drawn at, with the far ports its stubs name, on its home page only."""
+    """Each port an off stub is drawn at, with the far ports its stubs name, on its home page only.
+
+    A lane on a read foot counts when its far end names it back (R3541).
+    """
     found: dict[str, set[str]] = defaultdict(set)
+    fed: list[tuple[str, str]] = []
     for key, record in net.records.items():
         if record.star is StarKind.OFF and (node := net.markers.get(key)) is not None and record.pairs:
-            for here, far in _listed(net, record, node):
+            sure, on_foot = _listed(net, record, node)
+            fed += on_foot
+            for here, far in sure:
                 found[here].add(far)
+    named = {port: set(fars) for port, fars in found.items()}
+    for here, far in fed:
+        if here in named.get(far, ()):
+            found[here].add(far)
     return found
 
 
 def _lined(net: Netlist, port: str) -> bool:
-    """True when the port's home page stubs the port's line, the end of every conductor of that line (R481)."""
-    return any((page, net.lined.get(port, "")) in net.stub_lines for page in net.home.get(port, ()))
+    """True when the port's home page stubs the port's line, the end of every conductor of that line, and the port stands on a node (R481)."""
+    stubbed = any((page, net.lined.get(port, "")) in net.stub_lines for page in net.home.get(port, ()))
+    return stubbed and any(at in net.pages[page].nodes for page, at in net.at_home(port))
 
 
 def _roots(net: Netlist, port: str, stubs: dict[str, set[str]]) -> set[object]:
@@ -81,22 +95,27 @@ def _pairs(net: Netlist, stubs: dict[str, set[str]]) -> Union:
 
 
 def _carried(net: Netlist, stubs: dict[str, set[str]], joined: Union, powered: set[str], end: tuple[str, str]) -> bool:
-    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or a power symbol inked to its pin (R1631).
+    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or both pins on inked power symbols (R1631).
 
-    A mark is a stub at `near` that names `far`, the stubbed line of `near`, or the where-text of its copy.
-    R4 (ink to the pin) replaces the model-net read.
+    A mark is a stub at `near` that names `far`, or the stubbed line of `near`. A where-text names a copy, never an end: ink carries it.
+    R4 (ink to the pin) replaces the model-net read; a far pin with no drawn point has no symbol to ask for.
     """
     near, far = end
-    if set(end) & powered or _lined(net, near) or near in net.texted or far in stubs.get(near, ()):
+    if (near in powered and (far in powered or not net.placed.get(far))) or _lined(net, near) or far in stubs.get(near, ()) or end in net.named:
         return True
     return bool({joined.find(r) for r in _roots(net, near, stubs)} & {joined.find(r) for r in _roots(net, far, stubs)})
 
 
 def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Union) -> list[tuple[str, str]]:
-    """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws."""
+    """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws.
+
+    A pin that stands the power symbol of the flagged rail terminal `far` draws that terminal (`rail_drawn_by`, owner 2026-10-25).
+    """
     held = [net.ids[p] for p in net.placed if net.at_home(p)]
     powered = inked_power(net)
-    return [(n.value, f.value) for n, f in far_pins(model, held) if not _carried(net, stubs, joined, powered, (n.value, f.value))]
+    fed = {(pin.value, terminal.value) for terminal, pins in rail_drawn_by(model).items() for pin in pins}
+    ends = ((n.value, f.value) for n, f in far_pins(model, held))
+    return [end for end in ends if end not in fed and not _carried(net, stubs, joined, powered, end)]
 
 
 def not_drawn_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:

@@ -7,10 +7,9 @@ are generic boxes the kit picks (P7.1 B).
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 from ring_cases import channels_model, drawn_supply_model
 
 from electrical_symbols import LIBRARY
@@ -49,8 +48,9 @@ def named(got: object, want: object, what: str) -> None:
 def solved(model: Model) -> CoreLayout:
     """The core layout of `model` through `fransys_el.build`, the house kit and `solve`."""
     conventions = house()
-    problem, _ = build(model, symbol_kit(model, LIBRARY), conventions, LIBRARY)
-    return solve(problem, options(conventions, LIBRARY))
+    kit = symbol_kit(model, LIBRARY)
+    problem, _ = build(model, kit, conventions, LIBRARY)
+    return solve(problem, drawn_options(model, kit, problem, conventions))
 
 
 def seal_in_model() -> Model:

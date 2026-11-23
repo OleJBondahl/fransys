@@ -13,7 +13,7 @@ from fransys._link_boxes import link_boxes
 from fransys_el import draw_write, lay_out_core
 
 from electrical_symbols import LIBRARY
-from fransys_layout.core.geometry import marker_drawn_box
+from fransys_layout.core.geometry import marker_box
 from fransys_layout.symbols import library_symbol, marker_rule
 from fransys_model.derive.library_grid import divisions
 from fransys_model.kernel import render_id
@@ -25,13 +25,13 @@ lazy from fransys_layout.core.values import Box
 class Facts:
     """One layout marker: the record drawn at its spot with layout's box, and the other homes.
 
-    `matched` is false when no drawn marker at the spot has `marker_drawn_box` as its outline (a tag or arrow: inside it).
+    `matched` is false when no drawn marker at the spot has the drawn box as its outline (a tag or arrow: inside it).
     """
 
     kind: str
     matched: bool
     pdf_ok: bool | None  # the facade's PDF link box equals the old derive.marker_box formula (the outline one gap out)
-    fit_ok: bool | None  # `link_fit` at the orient is the rule's box for the fit's own size
+    fit_ok: bool | None  # the drawn box at the orient is the rule's box for the fit's own size
 
 
 def _link_box_from_outline(rec: LinkMarker, outline: Box, gap: int) -> tuple[int, int, int, int]:
@@ -46,7 +46,7 @@ def _inside(box: Box, reserve: Box) -> bool:
 
 def _facts(mark, options, pairs, gap: int, boxes) -> Facts:
     kind = str(mark.kind)
-    want = marker_drawn_box(mark, options)
+    want = marker_box(mark, options, drawn=True)
     link = kind in ("arrow", "tag")  # a tag or arrow draws the box of its own text, inside the reserve (REF-BOX-OWN-LENGTH)
     hits = [(rec, sym) for rec, sym in pairs if sym.outline == want or (link and _inside(sym.outline, want))]
     if not hits:
@@ -55,7 +55,7 @@ def _facts(mark, options, pairs, gap: int, boxes) -> Facts:
     pdf_ok = boxes[rec.id] == _link_box_from_outline(rec, sym.outline, gap)
     fit_ok = None
     if kind in ("arrow", "tag"):
-        fit = options.link_fit[mark.orient]
+        fit = options.marker_boxes[None, kind].drawn[mark.orient]
         along = sym.stretch[0][0] == "y"
         body = marker_rule(library_symbol(LIBRARY, sym.key), sym.orient, (fit.w, fit.h), LIBRARY, along=along)[1]
         fit_ok = body == fit

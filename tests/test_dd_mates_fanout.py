@@ -135,7 +135,7 @@ def test_which_port_carries_most_conductors_changes_nothing_in_the_trunk() -> No
 @pytest.mark.rule("BUNDLE")
 def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() -> None:
     """X1:1 carries one conductor, K3 three; the terminal stands once as one drop of the trunk
-    over the four ports, one dot at the inner drop (ROUTING, BUNDLE, R467)."""
+    over the four ports, a dot at each inner drop (ROUTING, BUNDLE, R467)."""
     # UNDO: as in the first fan-out test
     model = _star_of_relays(("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), strip=True)
     assert_no_power_net(model)
@@ -143,7 +143,7 @@ def test_a_single_terminal_point_is_a_drop_of_the_trunk_beside_a_bigger_hub() ->
     (drawing,) = drawn_pages(model).values()
     # X1:1 once, plus the five terminals of X2 that close the relays' other coil pins
     assert len([s for s in drawing.symbols if s.key == "terminal"]) == 1 + 5
-    assert _trunk_shape(model) == (1, 4, 1, 0)
+    assert _trunk_shape(model) == (1, 4, 2, 0)
 
 
 def test_a_black_box_pin_carries_no_star_marker() -> None:
@@ -182,6 +182,3 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
     mirrors = [(page, m) for page, m in every if set_of(model, page).unit is None]
     assert len(mirrors) == 2  # the top-level set
     assert all(text.endswith(port_designation(model, pin)) for _, m in mirrors for text in marker_strings(m))
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

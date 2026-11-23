@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .geometry import marker_box_at, marker_drawn_box_at
+from .geometry import marker_box_at, marker_drawn_at
 from .sides import step_out
 
 if TYPE_CHECKING:
@@ -78,6 +78,18 @@ def lane_line(t: Trunk, pole: int, lanes: int, step: int) -> tuple[int, int, int
     return x0, x1, t.y + lane_offset(lane_rows(t.lane_ends)[pole], step), stood
 
 
+def lane_span(t: Trunk, pole: int, lanes: int, step: int, *, right: bool) -> int:
+    """The G from a pole's arrow lane to the last lane below it that runs to the same end: the reach its flat edge stretches over (BUNDLE-ARROW).
+
+    A lane that stops short of the arrow's x, or lies above it, is not in the reach.
+    """
+    own = t.lane_ends[pole]
+    if lanes == 1 or own is None:
+        return 0
+    rows, at = lane_rows(t.lane_ends), own[int(right)]
+    return max((lane_offset(rows[k] - rows[pole], step) for k, e in enumerate(t.lane_ends) if e and e[int(right)] == at), default=0)
+
+
 def abut(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) -> tuple[int, int, Orientation]:
     """The origin and turn of the marker whose box has its near edge at (x, y) on `side`; the box turns to face it."""
     turned = options.marker_facing[side]  # the symbol at R0 points east; this turn points its box along the pin's side
@@ -89,4 +101,4 @@ def abut(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) 
 def arrow_box(options: Options, side: Side, x: int, y: int, key: tuple[PinRef, str]) -> Box:
     """The drawn box of the arrow whose near edge is at (x, y) on `side`: the one box the placement walk and the marker stand test (layout-0524)."""
     ox, oy, turned = abut(options, side, x, y, key)
-    return marker_drawn_box_at(ox, oy, options, turned, key)
+    return marker_drawn_at(ox, oy, options, turned, key)

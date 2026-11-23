@@ -10,13 +10,13 @@ from fransys_layout.core.pack import cell_node
 from fransys_layout.core.place_room import _join_wires, step_rooms
 from fransys_layout.core.place_x import place_x
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .flow_builders import AREA, elem, net
 from .test_place_x import env_of
 
 G = 8
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 

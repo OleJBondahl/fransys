@@ -13,6 +13,8 @@ SLOT = "slot:"
 BOX = "box:"
 PIN = "pin:"
 COL = "col:"
+CELL = "cell:"
+TRUNK = "trunk:"
 
 
 def slot_node(block: str, end: str) -> str:

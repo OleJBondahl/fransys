@@ -4,8 +4,6 @@ import re
 from pathlib import Path
 
 import fransys_el
-from conventions_fixtures import house
-from fransys_el.placement_options import options
 from fransys_el.placement_views import MARKER, marker_boxes
 
 from electrical_symbols import LIBRARY
@@ -14,11 +12,9 @@ from fransys_layout.symbols import library_symbol, marker_views
 _SRC = Path(fransys_el.__file__).parent
 
 
-def test_the_options_marker_is_the_layers_measure_of_the_library_symbol() -> None:
-    got = options(house(), LIBRARY).marker
-    assert got is not None
+def test_the_plain_marker_box_is_the_layers_measure_of_the_library_symbol() -> None:
+    got = marker_boxes(LIBRARY)
     flag = marker_views(library_symbol(LIBRARY, MARKER), LIBRARY)
-    assert got == marker_boxes(LIBRARY)
     assert {o: got[o] for o in ("R0", "R180", "MR0", "MR180")} == {o: flag[o] for o in got if o in ("R0", "R180", "MR0", "MR180")}
 
 

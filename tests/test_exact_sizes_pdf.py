@@ -20,6 +20,7 @@ from _model_build_cover import system_document
 from _pdf_lists import source
 from _pdf_measure import capital_boxes, font_names, stroke_widths, text_objects
 from root_library import freeze, role_height_mm
+from sheet_formats import a3
 from symdef import Weight
 from test_nested_unit_lists import _unit_id
 from test_units_worked_example import _system_design
@@ -33,7 +34,6 @@ from fransys_model.layout import (
     Page,
     PageRole,
     SheetFormat,
-    default_sheet_format,
 )
 from fransys_model.vocab import (
     Aspect,
@@ -97,7 +97,7 @@ def _model(*, module_mm: str = "2.5"):
         text="HEKtable",
         created="XX",
     )
-    sheet = replace(default_sheet_format(), key=("sheet", "s1"), module_mm=Decimal(module_mm))
+    sheet = replace(a3(), key=("sheet", "s1"), module_mm=Decimal(module_mm))
     sheet = replace(sheet, id=make_id(SheetFormat, sheet.key))
     drawing_set = DrawingSet(
         id=make_id(DrawingSet, ("drawing_set", "ds1")),

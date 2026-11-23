@@ -20,7 +20,7 @@ _STEP = {Side.N: (0, -1), Side.E: (1, 0), Side.S: (0, 1), Side.W: (-1, 0)}
 
 
 def link_boxes(model: Model, drawings: Mapping[Id[Page], Drawing], library: Library) -> dict[Id[LinkMarker], tuple[int, int, int, int]]:
-    """Each marker's `(x, y, width, height)` in G: the outline layout's `marker_drawn_box` gave its symbol.
+    """Each marker's `(x, y, width, height)` in G: the outline the layout gave its symbol.
 
     The link area stands one module (`divisions_per_module` G) out of the outline along the marker's facing.
     """

@@ -9,11 +9,10 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 from _bank_case import built_bank
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
 from fransys_el.placement_kit import Pick
-from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
@@ -50,8 +49,7 @@ def solved(model: Model, *, generic: bool = False, **changes: Any) -> CoreLayout
     conventions = house()
     kit = box_kit(model) if generic else symbol_kit(model, LIBRARY)
     problem, _ = build(model, kit, conventions, LIBRARY)
-    opts = options(conventions, LIBRARY)
-    return solve(problem, replace(opts, **changes))
+    return solve(problem, replace(drawn_options(model, kit, problem, conventions), **changes))
 
 
 def drawn_supply_model() -> Model:

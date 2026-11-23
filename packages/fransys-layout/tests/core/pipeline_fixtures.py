@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.outputs import CoreLayout
     from fransys_layout.core.values import Finding
 
-from .conftest import MARKER
+from .conftest import MARKERS
 
 
 def flow_of(prob: PlacementProblem, options: Options | None = None) -> FlowGraph:
@@ -25,7 +25,7 @@ def flow_of(prob: PlacementProblem, options: Options | None = None) -> FlowGraph
         prob,
         options
         or core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
     )
 
@@ -35,7 +35,7 @@ def blocks_of(prob: PlacementProblem, options: Options | None = None) -> tuple[B
     from fransys_layout.core.blocks import assign_blocks
 
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     return assign_blocks(flow_of(prob, opts), prob, opts)
 
@@ -45,7 +45,7 @@ def cut_of(prob: PlacementProblem, options: Options | None = None) -> CutResult:
     from fransys_layout.core.cut import cut_pages
 
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     flow = flow_of(prob, opts)
     lists = order_blocks(blocks_of(prob, opts), flow, opts)
@@ -62,7 +62,7 @@ def placed_from(cut: CutResult, prob: PlacementProblem, opts: Options) -> Placem
 def placed_of(prob: PlacementProblem, options: Options | None = None) -> Placement:
     """Stages 1 to 5 on a problem."""
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     return placed_from(cut_of(prob, opts), prob, opts)
 
@@ -77,7 +77,7 @@ def routed_from(cut: CutResult, prob: PlacementProblem, opts: Options) -> Routes
 def routed_of(prob: PlacementProblem, options: Options | None = None) -> Routes:
     """Stages 1 to 6 on a problem; route_pages is imported late (it lands with stage 6)."""
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     return routed_from(cut_of(prob, opts), prob, opts)
 
@@ -118,6 +118,6 @@ def solved_of(prob: PlacementProblem, options: Options | None = None) -> CoreLay
     from fransys_layout.core.solve import solve
 
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     return solve(with_annexes(prob, opts), opts)

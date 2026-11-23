@@ -12,6 +12,7 @@ lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
+    from collections.abc import Set as AbstractSet
 
     from .topology_elements import Elem, NetEnd
 
@@ -75,6 +76,24 @@ def classify(ends: tuple[NetEnd, ...], slot: Slot, syms: Mapping[str, Sym]) -> t
     return drivers, legs, throughs, cross
 
 
+def _own_only(end: NetEnd) -> bool:
+    return bool(end.far) and {p.sym for p in end.far} == {end.pin.sym}
+
+
+def own_wired(ends: tuple[NetEnd, ...]) -> list[tuple[NetEnd, NetEnd]]:
+    """Each end whose conductors run only to pins of its own symbol, with every end it is wired to: a join, not a trunk attachment.
+
+    A pair of two such ends is joined once, from the earlier end.
+    """
+    return [
+        (e, mate)
+        for i, e in enumerate(ends)
+        if e.site != "through" and _own_only(e)
+        for j, mate in enumerate(ends)
+        if mate.pin in e.far and (j > i or not _own_only(mate))
+    ]
+
+
 def _att_of(end: NetEnd, slot: Slot, syms: Mapping[str, Sym]) -> tuple[bool, Att] | None:
     """(is a leg, the attachment) of one end, or None when it is off a lane end."""
     if end.site == "boxpin":
@@ -89,25 +108,29 @@ def _att_of(end: NetEnd, slot: Slot, syms: Mapping[str, Sym]) -> tuple[bool, Att
 
 def deal(
     fan: FanDraft,
-    throughs: Sequence[str],
+    throughs: Sequence[NetEnd],
     elems: Mapping[str, Elem],
     col_prefix: str,
     apart: frozenset[str] = frozenset(),
 ) -> tuple[LaneDraft, ...]:
-    """Hub rule: with no driver the first through heads the first leg; others head the next legs.
+    """Hub rule: a through stands between the trunk and a leg only with conductors to the leg's head pin and to another end of the net.
 
-    A hub with no lane to stand in (the first attachment is a box pin) is dealt like the rest.
-    Returns the lanes it made for the cells left over, and for the `apart` symbols (R283).
+    With that one conductor it stands over the trunk at that leg, as a hub does; the rest stand in lanes of their own (CHAIN-FROM-HEAD).
+    A hub with no lane to stand in (the first attachment is a box pin) is dealt like the rest. Returns the lanes it made, `apart` ones too (R283).
     """
-    cells = [Cell(elems[t].sym, "R0", elems[t].n_pin, elems[t].s_pin) for t in throughs]
-    apart = _own_symbols(fan, throughs, elems, apart)
+    held = [elems[t.elem or ""] for t in throughs]
+    cells = [Cell(e.sym, "R0", e.n_pin, e.s_pin) for e in held]
+    far = {e.sym: t.far for e, t in zip(held, throughs, strict=True)}
+    apart = _own_symbols(fan, held, elems, apart)
     own = [c for c in cells if c.sym in apart]
     cells = [c for c in cells if c.sym not in apart]
     if not cells and not own:
         return ()
-    if cells and ((not fan.drivers and fan.legs and _hub_at_head(fan, cells[0])) or (fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]))):
+    if cells and (
+        (not fan.drivers and fan.legs and _hub_at_head(fan, cells[0], far)) or (fan.drivers and not fan.legs and _hub_at_foot(fan, cells[0]))
+    ):
         cells.pop(0)
-    rest = [*_deal_to_legs(fan, cells), *own]
+    rest = [*_deal_to_legs(fan, cells, far), *own]
     made = tuple(LaneDraft(f"{col_prefix}{cell.sym}", 0, [cell]) for cell in rest)
     fan.legs.extend(Att(lane, "head") for lane in made)
     return made
@@ -121,25 +144,50 @@ def turn_foot_hub(fan: FanDraft, facing: Mapping[str, str]) -> None:
             lane.cells[i] = Cell(c.sym, "R180", c.bottom_pin, c.top_pin, hold=c.hold)
 
 
-def _own_symbols(fan: FanDraft, throughs: Sequence[str], elems: Mapping[str, Elem], apart: frozenset[str]) -> frozenset[str]:
+def _own_symbols(fan: FanDraft, throughs: Sequence[Elem], elems: Mapping[str, Elem], apart: frozenset[str]) -> frozenset[str]:
     """Symbols that take their own column: the trial's, and a hub with more elements elsewhere."""
     if bool(fan.drivers) == bool(fan.legs):
         return apart
-    return apart | {e.sym for k, e in elems.items() if k not in throughs}
+    return apart | {e.sym for e in elems.values() if e not in throughs}
 
 
-def _deal_to_legs(fan: FanDraft, cells: Sequence[Cell]) -> Sequence[Cell]:
-    """Put one cell at the head of each free leg lane in turn; return the cells left over."""
-    free_lanes = [a.lane for a in fan.legs if a.lane is not None and a.where == "head"]
-    for lane, cell in zip(free_lanes, cells, strict=False):
-        lane.cells.insert(0, cell)
-    return cells[len(free_lanes) :]
+def _head(lane: LaneDraft) -> PinRef:
+    """The pin a lane's head cell shows to the fan."""
+    return PinRef(lane.cells[0].sym, lane.cells[0].top_pin or "")
 
 
-def _hub_at_head(fan: FanDraft, hub: Cell) -> bool:
-    """Stand the hub over the first leg that has a lane; False when every leg is a box pin."""
+def _stands_over(fan: FanDraft, reach: AbstractSet[PinRef], lane: LaneDraft) -> bool:
+    """A cell with a conductor to the lane's head pin, and to another end when the fan has one."""
+    return _head(lane) in reach and (len(reach) > 1 or len(fan.drivers) + len(fan.legs) < PAIR)
+
+
+def _deal_to_legs(fan: FanDraft, cells: Sequence[Cell], far: Mapping[str, AbstractSet[PinRef]]) -> list[Cell]:
+    """Put each cell with a conductor to a free leg lane's head pin at that head; return the cells left over.
+
+    One that stands over the lane meets the trunk above it. One with that conductor only stands over the trunk like a hub at a head, in a fan
+    with no driver of its own: a net with drivers can leave its fan for a cross-link (y cycle), which has no trunk to stand over.
+    """
+    # KI-1264: with this conjunct w08 draws one junction off its line and 6 bends (DEAL-LEGS-W08)
+    left = list(cells)
+    for i, lane in ((i, a.lane) for i, a in enumerate(fan.legs) if a.lane is not None and a.where == "head"):
+        if hit := next((c for c in left if _stands_over(fan, far[c.sym], lane)), None):
+            lane.cells.insert(0, hit)
+            left.remove(hit)
+        elif all(d.where == "hub-head" for d in fan.drivers) and (hit := next((c for c in left if _head(lane) in far[c.sym]), None)):
+            lane.cells.insert(0, hit)
+            left.remove(hit)
+            fan.drivers.append(Att(lane, "hub-head"))
+            fan.legs[i] = Att(lane, "after-hub")
+    return left
+
+
+def _hub_at_head(fan: FanDraft, hub: Cell, far: Mapping[str, AbstractSet[PinRef]]) -> bool:
+    """Stand the hub over the first leg whose head pin it has a conductor to; False when every leg is a box pin or none is reached.
+
+    The fan hangs from the hub, so the leg's head pin stays on the trunk: one conductor is enough here, not in `_stands_over`.
+    """
     for i, first in enumerate(fan.legs):
-        if first.lane is None:
+        if first.lane is None or _head(first.lane) not in far[hub.sym]:
             continue
         first.lane.cells.insert(0, hub)
         fan.drivers.append(Att(first.lane, "hub-head"))
@@ -149,6 +197,7 @@ def _hub_at_head(fan: FanDraft, hub: Cell) -> bool:
     return False
 
 
+# KI-1124
 def _hub_at_foot(fan: FanDraft, hub: Cell) -> bool:
     """Stand the hub under the first driver that has a lane; False when every driver is a box pin."""
     for i, first in enumerate(fan.drivers):

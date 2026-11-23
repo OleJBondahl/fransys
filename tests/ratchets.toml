@@ -8,7 +8,7 @@ stock = 0
 
 [clones_tests]
 # Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers. 5 -> 21 when the internal gates moved into tests/ (INTERNAL-TESTPATHS, R916); 16 are theirs (the unit_instances/unit_sets twins are 10); the cleanup round lowers it.
-stock = 11
+stock = 7
 
 [unread_doors]
 # E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).
@@ -51,11 +51,12 @@ stock = 15
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 40  # 38 + the two PLR0913 above (R2369, R2420)
+total = 42  # 38 + the two PLR0913 above (R2369, R2420)
 
 [escape_hatches_codes]
 # 30 -> 32: Scope.strip and Scope.harness gain drawn_with, a sixth keyword of a public call (R2369, R2420); stock 32 stays: the scope methods' arguments carry no unit; option (C) does not exist (R2420, R2431)
-PLR0913 = 32
+PLR0913 = 33
+PLR0917 = 1
 ANN401 = 1
 ty-invalid-method-override = 5
 UP037 = 2
@@ -68,7 +69,7 @@ UP037 = 2
 # wires through bodies 157, 12, 102, 15. On the merge of frames b9b12623e (MARKER-KEEPS-WIRE R453
 # counts overlap, SHORTS-ROUTE R454, COPY-JOIN R457): page overlaps 23, 26, 31, 6 plus 157, 13, 102,
 # 15. DRAWING_SHORTS_NETS is 0 on every build since ROUTING (R439) and SHORTS-ROUTE, so it is an ERROR.
-# R500 (Covered by: PIN-HANGINGS, which fits each tag marker as a footprint keep by link_fit, H3): a tag record holds the wide box (TEXT-CANDIDATES), so 3 tags touch a neighbour the plain box cleared: machine_panel 0 to 1, mcc 0 to 1, panel_di16p 8 to 10; placement still reserves the plain box (TAG-FIT lane)
+# R500 (Covered by: PIN-HANGINGS, which fits each tag marker as a footprint keep by its drawn box, H3): a tag record holds the wide box (TEXT-CANDIDATES), so 3 tags touch a neighbour the plain box cleared: machine_panel 0 to 1, mcc 0 to 1, panel_di16p 8 to 10; placement still reserves the plain box (TAG-FIT lane)
 # XF-UNIT-SCOPE (R497 U3, R510): a trunk now clears the pins of the card row it hangs from, which
 # moves it past unrelated sensors: machine_panel 1 -> 3, panel_di16p 10 -> 12. The R516 sites are
 # place_trunk._reach, place_reach.card_reaches and text_ends._trunk_end_stand. Covered by: PIN-HANGINGS P4c.
@@ -106,9 +107,9 @@ skid = 0
 # R895 (KI-231, batch M lowers): machine_panel 20 -> 22, panel_di16p 9 -> 11: a replica's stub (a cross-document end) stands on a wire and a dot
 [drawing_wire_over_marker]
 # R1193 LEDGER-INTEGRATION: the ledger's leg and PE copy stubs stand where a wire or dot meets their box: distribution_board 0 -> 2, mcc 0 -> 2 (KI-457)
-distribution_board = 6  # R2714 LANE-TO-ARROW (looks class, R1081): +1 where a bundled lane now runs on to its arrow; was 5; R1957 falls, KI-636: was 6 (R1715: was 7)
+distribution_board = 0  # R3568 CUT-CONT-D1X: a lane ending on the arrow's flat edge is no wire over it, was 12; before: BLOCK-RESTACK: the merged tree measures 12 (main 6, CFH6 alone 11; R2633 CHAIN-FROM-HEAD, looks); R2714 LANE-TO-ARROW (looks class, R1081): +1 where a bundled lane now runs on to its arrow; was 5; R1957 falls, KI-636: was 6 (R1715: was 7)
 machine_panel = 0
-mcc = 8  # R2408 shared pole turn, KI-1003: two wires over markers, was 6; R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
+mcc = 0  # R3568 CUT-CONT-D1X: a lane ending on the arrow's flat edge is no wire over it, was 10; before: BLOCK-RESTACK: the merged tree measures 10 (main 9); R2633 CHAIN-FROM-HEAD (looks): was 8; R2408 shared pole turn, KI-1003: two wires over markers, was 6; R2071 OVERLOAD-SERIES: a copy of a bundle stands on its own pole lane, falls from 9; R1957 falls, KI-636: was 10; R1730 (looks class): the cut flags the handed link it plans a tag for; was 16
 # R1165: R1138 looks trade (OVERLAP -1, WIRE_OVER_MARKER +1)
 panel_di16p = 0  # R1693 and R1715 (looks falls, KI-636): was 1
 remote_io = 0  # R2101 REF-OFF-OWN-WIRE-A (KI-900): the checker counts the pin's own wire through its marker box, was 2; ONE-PAGE (R1830, looks class): the wider reserved marker meets two wires; was 0
@@ -130,9 +131,9 @@ skid = 0
 
 [drawing_connection_not_drawn]
 distribution_board = 0
-machine_panel = 0  # was 1 (CND-D-FIX R963: a spilled column end draws its lead to its tag)
+machine_panel = 0  # RAIL-REPLICA-REF (R2993, KI-1251): the 0 V replica prints where its symbol stands; was 1 (CHECKER-TIGHTEN A3); was 0 (2 before the rail-pin read, R2962); was 1 (CND-D-FIX R963: a spilled column end draws its lead to its tag)
 mcc = 0  # was 1 (CND-D-FIX R963)
-panel_di16p = 0  # was 3 (CND-D-FIX R963)
+panel_di16p = 0  # RAIL-REPLICA-REF (R2993, KI-1251); was 1 (CHECKER-TIGHTEN A3); was 0; was 3 (CND-D-FIX R963)
 remote_io = 0  # KI-132 C1 9 plus C3 3, was 36 (WITNESS-W1 R916); STUB-SLOT (R954 R960): a fan-wired pin stands its stub on the free pin or a leg: 12 -> 0
 skid = 0
 board_cab = 0  # KI-806 (BOARD-RETURN), R-D16: the KI-615 witness build, tests/board_cab.py board_cab
@@ -189,8 +190,8 @@ panel_di16p = 0
 remote_io = 0
 skid = 0
 
-[drawing_pin_marking_wrong]
-# PIN_MARKING_WRONG (READ-IDENTITY, R1): a symbol prints at a pin a marking other than the model's port_marking. Target 0 everywhere.
+[drawing_printed_text_wrong]
+# PRINTED_TEXT_WRONG (READ-IDENTITY, R1): a symbol prints at a pin a marking other than the model's port_marking. Target 0 everywhere.
 distribution_board = 0
 machine_panel = 0
 mcc = 0
@@ -234,8 +235,8 @@ skid = 0
 # (CLOSED at 0 by CORPUS-METRIC, R1132: dots and markers count as placed); bare conductors: see [drawing_connection_not_drawn];
 # lane_end_faults = trunk lane ends past their last tap. Correctness class, target 0 on every seed (piece CORPUS-SEED-DEFECTS).
 mcc_unplaced_symbols = 0
-mcc_lane_end_faults = 2  # R2071 falls: was 3; R1957 falls, KI-636: was 5 (the legged lanes 1 and 2 of the page-3 bundle end at their legs); R1715 falls: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
-distribution_board_lane_end_faults = 1  # R1800 (PE-EARTH-RATCHETS): falls 2 -> 1 with PE-EARTH-JOIN; R1715 falls, KI-636: was 6; R1684: as mcc; was 4
+mcc_lane_end_faults = 0  # CUT-CONT-D1 (R3565) falls: was 1; CHAIN-FROM-HEAD (R2646) falls: was 2; R2071 falls: was 3; R1957 falls, KI-636: was 5 (the legged lanes 1 and 2 of the page-3 bundle end at their legs); R1715 falls: was 17; R1684 (looks class, KI-636): 2-point legs whose lane overruns the leg start by one pitch; was 12
+distribution_board_lane_end_faults = 0  # KI-386 (BLOCK-0.23, designer R2646, R1944 total per build): CHAIN-FROM-HEAD new ends at U1-F1 element 3 and N1, was 1; R1800 (PE-EARTH-RATCHETS): falls 2 -> 1 with PE-EARTH-JOIN; R1715 falls, KI-636: was 6; R1684: as mcc; was 4
 
 [table_scans]
 stock = 0

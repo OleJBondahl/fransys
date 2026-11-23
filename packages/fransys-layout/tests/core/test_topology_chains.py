@@ -61,6 +61,15 @@ def test_links_are_two_end_nets_of_different_roles_or_of_ends_that_can_carry_a_t
     ]  # a trunked net is a trunk, never a chain link (layout-0421)
 
 
+def test_a_through_stands_in_a_link_only_between_two_ends_it_has_conductors_to() -> None:
+    """CHAIN-FROM-HEAD: the conductors run a-t and t-b, or t joins a only."""
+    syms = [elem("a"), free("t"), elem("b")]
+    inline = read(syms, [net("x", "a.s", "t.n", "t.s", "b.n")])  # conductors a-t and t-b
+    assert links_of(inline.ends_by_net, inline.elems, inline.syms)["x"].throughs == ("t#0",)
+    leaf = read(syms, [net("x", "t.s", "t.n", "a.s", "b.n")])  # conductors t-a and a-b
+    assert links_of(leaf.ends_by_net, leaf.elems, leaf.syms) == {}
+
+
 def test_a_chain_is_the_union_of_links_from_one_extreme_to_the_other() -> None:
     syms = [elem("a", stand_n="SUPPLY"), elem("b"), elem("c", stand_s="GROUND")]
     r = read(syms, [net("x", "a.s", "b.n"), net("y", "b.s", "c.n")])

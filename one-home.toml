@@ -55,7 +55,7 @@
 "fransys_el.connection_findings::kind" = 1
 "fransys_el.block_findings::unit" = 1
 "fransys_el.restrict::unit" = 1
-"fransys_el.symbol_kit::kind" = 4
+"fransys_el.symbol_kit::kind" = 3
 "fransys_el.symbol_rules::kind" = 3
 "fransys_kernel.checks::kind" = 6
 "fransys_kernel.decode::kind" = 2
@@ -258,7 +258,7 @@
 "fransys_author.surface._signals::NetClass" = 3
 "fransys_author.wiring::ConductorKind" = 4
 "fransys_el.connection_findings::ConductorKind" = 1
-"fransys_el.symbol_kit::FunctionKind" = 3
+"fransys_el.symbol_kit::FunctionKind" = 2
 "fransys_el.symbol_kit::LinkKind" = 1
 "fransys_kernel.ids::kind==str" = 1
 "fransys_model.derive.accessory_blocks::FunctionKind" = 1
@@ -456,13 +456,7 @@
 "fransys_model.checks.supplies::_potential_in_two_supplies" = 1
 "fransys_model.derive.actuated::_groups" = 1
 "fransys_model.derive.baseline_diff::diff" = 2
-"fransys_model.derive.baseline_diff_units::_boundary_changes" = 1
-"fransys_model.derive.baseline_diff_units::_item_changes" = 1
-"fransys_model.derive.baseline_diff_units::_nested_unit_changes" = 1
 "fransys_model.derive.baseline_diff_units::_rating_changes" = 1
-"fransys_model.derive.baseline_diff_wiring::_conductor_changes" = 1
-"fransys_model.derive.baseline_diff_wiring::_mate_changes" = 1
-"fransys_model.derive.baseline_diff_wiring::_net_changes" = 1
 "fransys_model.derive.baseline_item_order::key_ordered" = 1
 "fransys_model.derive.baseline_listing::_boundary_rows" = 2
 "fransys_model.derive.baseline_listing::_conductor_rows" = 2
@@ -882,7 +876,6 @@
 "name:fransys_layout.engines.overview.lanes.corridor::Line" = 1
 "name:fransys_layout.geometry.boxes::Box" = 1
 "name:fransys_layout.geometry.boxes::translate" = 1
-"name:fransys_layout.geometry.errors::UnknownSymbolError" = 1
 "name:fransys_layout.geometry.units::Point" = 1
 "name:fransys_model.layout.enums::Orientation" = 1
 "name:fransys_parts._changeover::check" = 1

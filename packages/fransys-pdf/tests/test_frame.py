@@ -20,12 +20,13 @@ from _build import (
     source,
 )
 from fransys_pdf._background import PAGE_COUNTER_LABEL
+from sheet_formats import a3
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import SheetKey, document_sheets_of, harness_cables_for
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import make_id, render_id
-from fransys_model.layout import SheetFormat, default_sheet_format
+from fransys_model.layout import SheetFormat
 from fransys_model.vocab import DocumentPreset, PageKind
 
 K = PageKind
@@ -188,7 +189,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
         fransys_render.sheets(document_sheets_of(m, ()), LIBRARY),
         diagrams=(),
     )
-    house = default_sheet_format()
+    house = a3()
     padding = 5
     content_left = house.content_x_mm + padding
     content_top = house.content_y_mm + padding
@@ -210,6 +211,6 @@ def test_a_cable_run_page_reads_its_margin_and_header_from_the_pdf_table():
     sheets = fransys_render.sheets(document_sheets_of(m, ()), LIBRARY)
     svgs = {cable_block_key(None, cable.id): "<svg>block</svg>"}
     text = source(m, doc.id, svgs, sheets, diagrams=(), pdf={**PDF, "page_margin_mm": 7, "cable_run_header_mm": 13})
-    house = default_sheet_format()
+    house = a3()
     assert f"left: {house.content_x_mm + 7}mm, top: {house.content_y_mm + 7}mm" in text
     assert "top: m.top + 13mm" in text

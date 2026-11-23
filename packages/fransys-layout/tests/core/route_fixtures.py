@@ -23,12 +23,12 @@ from fransys_layout.core import (
     Placement,
     PlacementProblem,
 )
-from fransys_layout.core.flow_values import Attach, Column, CrossLink, CutResult, End, Fan
+from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan
 from fransys_layout.core.outputs import PagePlacement, PageRoutes, PinXY, Placed, Routes, Wire
 from fransys_layout.core.route import route_page
-from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
+from fransys_layout.core.route_env import RouteEnv, route_envs
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, elem
 from .cycle_fixtures import ring_problem
 from .flow_builders import conductors, net, poles
@@ -113,7 +113,7 @@ def overlaps(routes: Routes) -> list[tuple[tuple[XY, XY], tuple[XY, XY]]]:
 def envs_of(prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None) -> tuple[RouteEnv, ...]:
     """The stage 6 environments of a problem; a test may pass an edited cut."""
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     cut = cut or cut_of(prob, opts)
     return route_envs(placed_from(cut, prob, opts), cut, prob, opts)
@@ -157,7 +157,7 @@ def link_env(
         frozenset(),
         options
         or core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
         sides={(sym, "p", "R0"): cast("Side", side) for sym, (_, _, side) in pins.items()},
         ink=frozenset((PinRef(a, "p"), PinRef(b, "p")) for ends in links.values() for a, b in pairwise(ends)),
@@ -203,28 +203,6 @@ def oracle_on(env: RouteEnv, net_id: str) -> bool:
     page = route_page(env)[0]
     routes, placement, net = env_view(env, page, net_id)
     return connected_or_referenced(routes, placement, (), net, env.page)
-
-
-def open_end_env(orient: str = "R0", open_stub: int = 8, *, has_pin: bool = True) -> tuple[RouteEnv, Column]:
-    """Coil k2 of a card page with its foot an open end on `pin`; k2 is turned to `orient`."""
-    from .place_fixtures import card_with_coils
-
-    env = envs_of(
-        card_with_coils(3),
-        core_options(
-            marker=MARKER,
-            open_stub=open_stub,
-        ),
-    )[0]
-    col = env.columns[1]
-    placed = replace(env.placed["k2"], orient=orient)
-    env = replace(env, placed={**env.placed, "k2": placed})
-    return env, replace(col, feet=(End("open", "dangling", PinRef("k2", "s")) if has_pin else End("open"),))
-
-
-def stub_of(drawn: Drawn) -> tuple[Wire, ...]:
-    """The wires of the one-pin net dangling in a Drawn."""
-    return tuple(w for w in drawn.wires if w.net == "dangling")
 
 
 def by_bundle(routes: Routes, problem: PlacementProblem) -> Routes:

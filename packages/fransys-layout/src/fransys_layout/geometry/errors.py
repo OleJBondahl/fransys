@@ -11,14 +11,5 @@ class LayoutError(ModelError):
     """Base of everything this repo raises."""
 
 
-class UnknownSymbolError(LayoutError):
-    """A symbol key is not in the symbol library; no placeholder is ever substituted."""
-
-    def __init__(self, message: str, *, key: str) -> None:
-        """Record the symbol `key` that was not found."""
-        super().__init__(message)
-        self.key = key
-
-
 class GeometryError(LayoutError):
     """A library coordinate is off the drawing grid (0.125 M), or a box has a negative size."""

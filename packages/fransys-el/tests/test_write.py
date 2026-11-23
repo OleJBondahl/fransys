@@ -10,7 +10,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import ProblemError, build, lay_out_drawn
 from fransys_el.codes import FINDING_CODES
 from fransys_el.draw_layout import _wires as drawn_wires
@@ -18,7 +18,6 @@ from fransys_el.draw_write import write_layout_drawn
 from fransys_el.drawn_identity import net_text
 from fransys_el.placement_ids import net_key, symbol_key
 from fransys_el.placement_nets import net_ports
-from fransys_el.placement_options import options
 from fransys_el.write import write_layout
 from fransys_el.write_findings import kernel_findings
 from fransys_el.write_ids import symbol_subjects
@@ -53,7 +52,8 @@ class Written:
         conventions = house()
         self.problem: PlacementProblem
         self.problem, _ = build(self.model, self.kit, conventions, LIBRARY)
-        self.layout: CoreLayout = solve(self.problem, options(conventions, LIBRARY))
+        chosen = drawn_options(self.model, self.kit, self.problem, conventions)
+        self.layout: CoreLayout = solve(self.problem, chosen)
         self.out, self.findings, self.drawn, _, _ = write_layout_drawn(
             self.model,
             None,
@@ -63,7 +63,7 @@ class Written:
             library=LIBRARY,
         )
         self.pages = {p.number: p for p in layout_of(self.out, Page).values()}
-        short = solve(replace(self.problem, area=Size(self.problem.area.w, 80)), options(conventions, LIBRARY))  # rows over a page 80 high
+        short = solve(replace(self.problem, area=Size(self.problem.area.w, 80)), chosen)  # rows over a page 80 high
         self.short_findings = short.findings
         self.short_out, self.short_found, self.short_skipped = write_layout(self.model, None, short, self.problem, self.kit, library=LIBRARY)
         self.short_pages = {p.number: p for p in layout_of(self.short_out, Page).values()}
@@ -226,7 +226,7 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
 def test_a_page_overflow_names_the_set_the_page_and_the_designations_of_its_row(written: Written) -> None:
     found = kernel_findings(written.short_out, written.short_findings, symbol_subjects(written.model, written.kit), written.short_pages)
     (first, *_) = (f for f in found if f.code == "PAGE_OVERFLOW")
-    assert first.message.startswith("page 1, row 0 (devices -")
+    assert (first.severity, first.message.partition(", ")[2][:16]) == (Severity.ERROR, "row 0 (devices -")  # R3559: names the row, not the page
     assert "set" not in first.message.partition("(devices")[0]
     assert "function:" not in first.message
     devices = first.message.partition("(devices ")[2].partition(")")[0].split(", ")
@@ -256,14 +256,14 @@ def test_a_row_finding_prints_the_page_number_its_pdf_prints(written: Written) -
         produced_by="t",
     )
     model = evolve(written.short_out, put=(earlier, cover), origin=Origin(file="t", line=0, note="t"))
-    page = min(layout_of(written.short_out, Page).values(), key=lambda p: p.number)
-    core_number = page.number
+    core_number = next(f.page for f in written.short_findings if f.code == "PAGE_OVERFLOW")  # R3559: the page the ERROR names, any number
+    page = next(p for p in layout_of(written.short_out, Page).values() if p.number == core_number)
     assert pdf_page(model, page) != core_number
     marker = Finding("MARKER_UNPLACED", f"tag marker at a/1 of net n: no place inside page {core_number}; stays unmet", core_number, "a,n")
     found = kernel_findings(model, [*written.short_findings, marker], symbol_subjects(written.model, written.kit), written.short_pages)
     first = next(f for f in found if f.code == "PAGE_OVERFLOW")
     assert first.message.startswith(f"page {pdf_page(model, page)}, row 0 (devices ")
-    unplaced = next(f for f in found if f.code == "MARKER_UNPLACED")
+    unplaced = next(f for f in found if f.code == "MARKER_UNPLACED" and "tag marker at a/1" in f.message)  # the layout has its own on page 5 (R2629)
     assert f"inside page {pdf_page(model, page)};" in unplaced.message
     with pytest.raises(ProblemError, match=f"on page {core_number}.*no sheet number"):
         kernel_findings(model, [marker], {}, {})

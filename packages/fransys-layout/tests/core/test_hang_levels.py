@@ -17,7 +17,7 @@ def _tag(box: Box, kind: str = "tag") -> Hanging:
 
 
 def test_two_overlapping_flags_above_stand_one_longest_box_apart() -> None:
-    _, second = raised([(0, _tag(Box(-6, -30, 12, 30))), (8, _tag(UP))])  # the first stretched to link_fit
+    _, second = raised([(0, _tag(Box(-6, -30, 12, 30))), (8, _tag(UP))])  # the first stretched to the tag's drawn box
     assert second == Box(-6, -48, 12, 48)  # the stem to the second level included
 
 

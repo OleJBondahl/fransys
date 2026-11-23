@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from options_fixtures import core_options
-from turn_fixtures import marker_views, turn_pin
+from turn_fixtures import marker_views, plain_boxes, turn_pin
 
 from fransys_layout.core import AnnexBox, Facts, PinRef, PlacementProblem, Size, Unit
 from fransys_layout.core.anchors import wire_keeps
@@ -17,7 +17,7 @@ from fransys_layout.core.arrow_reserve import leg_feet, leg_lines
 from fransys_layout.core.clearance import Keep, clear
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, Fan
-from fransys_layout.core.geometry import inside, marker_box, marker_box_at, marker_drawn_box, overlaps
+from fransys_layout.core.geometry import inside, marker_box, marker_box_at, overlaps
 from fransys_layout.core.hangings import hung_keeps
 from fransys_layout.core.outline import outline_keeps
 from fransys_layout.core.outputs import Anchored, Demand, Marker, Outline, Trunk, Wire
@@ -38,11 +38,12 @@ from fransys_layout.core.text_ends import (
     pin_stand,
 )
 from fransys_layout.core.text_markers import _missed, _order, placed_marks, stagger, stand_ref
-from fransys_layout.core.values import Box, Bundle, CutEnd, Finding, OutlineRoom, Pin, Ref, RefEnd, RefKind, StandClass
+from fransys_layout.core.values import Box, Bundle, CutEnd, Finding, MarkerBoxes, OutlineRoom, Pin, Ref, RefEnd, RefKind, StandClass
 
 from . import pipeline_fixtures
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import box_sym, net
+from .flow_builders import conductors
 from .text_fixtures import KIND_OF, PLANTS, marker_counts, plan_counts, star_two_tied
 
 AREA = Size(1312, 854)
@@ -54,7 +55,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.flow_values import CutResult
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
     marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}),
     marker_above="R270",
     marker_below="R90",
@@ -109,7 +110,7 @@ def test_the_near_edge_of_the_marker_option_sits_at_the_pin(side, xy) -> None:
         replace(
             env,
             options=core_options(
-                marker=marker_views(Box(4, -8, 44, 16)),
+                marker_boxes=plain_boxes(marker_views(Box(4, -8, 44, 16))),
             ),
         ),
         PIN,
@@ -151,8 +152,8 @@ def test_an_arrow_stands_at_the_right_end_of_the_first_row_and_the_left_end_of_t
     env = _fan_env()
     first, second = (end_stand(env, ref, e, i) for i, e in enumerate(ref.ends))
     assert (first.orient, second.orient) == ("R0", "R180")  # east of x1, west of x0
-    one = marker_box_at(first.x, first.y, OPTIONS, first.orient)
-    two = marker_box_at(second.x, second.y, OPTIONS, second.orient)
+    one = marker_box_at(first.x, first.y, OPTIONS, first.orient, (None, "tag"))
+    two = marker_box_at(second.x, second.y, OPTIONS, second.orient, (None, "tag"))
     assert (one.x, one.y + one.h // 2, first.end) == (500, 100, PIN)  # near edge at x1
     assert (two.x + two.w, two.y + two.h // 2, second.end) == (60, 300, PIN)  # near edge at x0
 
@@ -175,7 +176,7 @@ def test_a_copy_follows_the_pin_rule_like_a_tag() -> None:
     stand = end_stand(_fan_env(), ref, ref.ends[0], 0)
     want = pin_stand(_fan_env(), PIN, 1, ref)
     assert (stand.x, stand.y, stand.end, stand.orient) == (want.x, want.y, PIN, want.orient)
-    assert marker_box_at(stand.x, stand.y, OPTIONS, stand.orient).x == 100  # near edge at the pin
+    assert marker_box_at(stand.x, stand.y, OPTIONS, stand.orient, (None, "tag")).x == 100  # near edge at the pin
 
 
 # the planted problems, through the stages
@@ -225,11 +226,11 @@ def test_markers_come_in_the_plans_order_and_stand_on_their_ends_pages(built, na
     assert [(m.net, m.kind) for m in markers] == [(n, k) for n, k, pages in want for _ in pages]
 
 
-def test_a_stub_stands_at_each_boundary_net_one_for_the_pins_that_reach_one_outside_pin(built, missed) -> None:
-    """R1645 `_merged`, R1686: x.e and z.e both reach the outside pin out.x, so one bundled stub names it and stands for both pins."""
+def test_one_stub_per_pin_stands_at_each_pin_that_reaches_an_outside_pin(built, missed) -> None:
+    """CUT-CONTINUATION D1: x.e and z.e both reach the outside pin out.x, and each stands its own stub naming it (no bundle of legs)."""
     _, _, markers = built["unit_boundary_stubs"]
     stubs = [m for m in markers if m.kind == "stub"]
-    assert [(m.end, m.also, m.far) for m in stubs] == [(PinRef("x", "e"), (PinRef("z", "e"),), (PinRef("out", "x"),))]
+    assert [(m.end, m.also, m.far) for m in stubs] == [(PinRef(s, "e"), (), (PinRef("out", "x"),)) for s in ("x", "z")]
     assert missed["unit_boundary_stubs"] == ()  # no pin of the net is left without a stub: no CONNECTION_NOT_DRAWN
 
 
@@ -370,13 +371,14 @@ def test_the_spilled_pair_overlaps_without_the_levels() -> None:
 
 def test_a_tag_whose_drawn_box_leaves_the_page_gives_the_room_demand() -> None:
     """OUT_OF_PAGE (bank:71): a tag is placed by its plain box and drawn stretched (R543); the page test is on the drawn box."""
-    assert OPTIONS.marker is not None
-    tall = replace(OPTIONS, link_fit={o: Box(b.x, b.y - 60, b.w, b.h + 60) for o, b in OPTIONS.marker.items()})
+    plain = OPTIONS.marker_boxes[None, "tag"].footprint
+    tall_tag = MarkerBoxes(plain, {o: Box(b.x, b.y - 60, b.w, b.h + 60) for o, b in plain.items()})
+    tall = replace(OPTIONS, marker_boxes={**OPTIONS.marker_boxes, (None, "tag"): tall_tag})
     pairs = stand_ref(_pair_env(), _pair_ref())
     assert isinstance(stagger(pairs, tall, AREA, {}, {})[0], Marker)
     top = min(marker_box(m, tall).y for m, _ in pairs)
     up = [(replace(m, y=m.y - top + 5), replace(st, y=st.y - top + 5)) for m, st in pairs]
-    assert all(inside(marker_box(m, tall), AREA) and not inside(marker_drawn_box(m, tall), AREA) for m, _ in up)
+    assert all(inside(marker_box(m, tall), AREA) and not inside(marker_box(m, tall, drawn=True), AREA) for m, _ in up)
     assert all(isinstance(k, Demand) for k in stagger(up, tall, AREA, {}, {}))
 
 
@@ -482,7 +484,7 @@ def test_a_bundle_arrow_stands_at_the_hull_end_on_its_own_poles_lane() -> None:
     env = replace(_env("E", "R0", (trunk,)), fans={"f": fan})
     ends = [RefEnd(1, "c1", p, 0) for p in pins]
     stands = [end_stand(env, Ref("f", RefKind.ARROW, (e,)), e, 0) for e in ends]
-    boxes = [marker_box_at(s.x, s.y, OPTIONS, s.orient) for s in stands]
+    boxes = [marker_box_at(s.x, s.y, OPTIONS, s.orient, (None, "tag")) for s in stands]
     step = OPTIONS.wiring_grid
     assert [(b.x, b.y + b.h // 2) for b in boxes] == [(408, 100 + 2 * step), (508, 100), (308, 100 + step)]
 
@@ -495,7 +497,7 @@ def test_a_copy_of_a_bundle_stands_on_its_own_poles_lane_not_the_first() -> None
     env = replace(_env("E", "R0", (trunk,)), fans={"f": fan})
     end = RefEnd(1, "c1", pin, 0, StandClass.TRUNK_END)
     stand = end_stand(env, Ref("fa", RefKind.COPY, (end,)), end, 0)
-    box = marker_box_at(stand.x, stand.y, OPTIONS, stand.orient)
+    box = marker_box_at(stand.x, stand.y, OPTIONS, stand.orient, (None, "tag"))
     assert box.y + box.h // 2 == 100 + OPTIONS.wiring_grid
 
 
@@ -513,7 +515,7 @@ def _bundle_of_cut_pins(count: int = 8, pole: int | None = None) -> PlacementPro
         replace(net(f"n{i}", f"A1.p{i}", crosses_unit=True), bundle=Bundle("b", i if pole is None else pole), cut=(CutEnd(pins[i - 1]),))
         for i in range(1, count + 1)
     )
-    return PlacementProblem(AREA, (box,), nets, Facts(units=(Unit("U1", None, pins),), far_ends=()))
+    return PlacementProblem(AREA, (box,), nets, Facts(units=(Unit("U1", None, pins),), far_ends=conductors(nets)))
 
 
 def test_one_stub_per_bundle_per_page() -> None:
@@ -790,11 +792,11 @@ def test_a_marker_keeps_clear_of_a_label_the_round_before_stood() -> None:
     cut = pipeline_fixtures.cut_of(prob, OPTIONS)
     pl = place_pages(cut, prob, OPTIONS)
     free = placed_marks(cut, pl, prob, OPTIONS, {})[0][0]
-    label = AnnexBox("S", free.page, marker_drawn_box(free, OPTIONS), "TL")
+    label = AnnexBox("S", free.page, marker_box(free, OPTIONS, drawn=True), "TL")
     marks, findings, *_ = placed_marks(cut, pl, prob, OPTIONS, {free.page: Fixed(Drawn(), (label,))})
     assert findings == ()
     assert marks
-    assert not any(overlaps(marker_drawn_box(m, OPTIONS), label.box) for m in marks)
+    assert not any(overlaps(marker_box(m, OPTIONS, drawn=True), label.box) for m in marks)
 
 
 @pytest.mark.parametrize("kind", [RefKind.TAG, RefKind.STAR])

@@ -15,13 +15,11 @@ from fransys_model.derive import stub_far
 from fransys_model.kernel import make_id
 from fransys_model.layout import LinkMarker, MarkerPair, MarkerSide, Side, StarKind
 
-from .placement_ids import pin_names, symbol_ids
+from .placement_ids import pin_names, pin_ports, symbol_ids
 from .placement_kit import refuse
-from .placement_markers import ARROW, LONE, pin_ports, stub_fit
-from .placement_views import marker_boxes
-from .placement_widest import link_fit
+from .placement_markers import ARROW, LONE, TAG, marker_boxes_value
 from .write_pages import STAMP
-from .write_stubs import drawn_ports, far_port
+from .write_stubs import far_port
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -32,14 +30,13 @@ if TYPE_CHECKING:
     from fransys_model.vocab import Item, Port
 
     from .placement_kit import SymbolKit
-    from .placement_markers import Fit, StubLines, StubTable
+    from .placement_markers import Boxes, StubLines, StubTable
     from .write_pages import Written
 
 __all__ = ["link_markers", "marker_ids"]
 
 _PAIR = 2  # two ends are a plain pair
 _KEY = ("layout", "core", "link_marker")
-_TAG = "tag"  # a tag prints a reference line, so its record holds the wide box
 _FACES = {turn: Side[side] for side, turn in MARKER_FACING.items()}
 
 
@@ -96,10 +93,7 @@ class _Ctx:
     pin_ports: Mapping[PinRef, Sequence[Id[Port]]]
     pages: Mapping[int, Page]
     number: int
-    boxes: Mapping[Orientation, Box]
-    fit: tuple[Fit, StubLines, StubTable]
-    link: Mapping[Orientation, Box]
-    drawn: frozenset[tuple[Id[Port], Id[Port]]]
+    fit: tuple[Boxes, StubLines, StubTable]
 
 
 def _ends(ctx: _Ctx, marker: Marker) -> tuple[tuple[Id[Port], Id[Port], Id[Item] | None], ...]:
@@ -116,7 +110,7 @@ def _ends(ctx: _Ctx, marker: Marker) -> tuple[tuple[Id[Port], Id[Port], Id[Item]
     return tuple(found)
 
 
-def _stub_views(fit: tuple[Fit, StubLines, StubTable], marker: Marker) -> Mapping[Orientation, Box] | None:
+def _stub_views(fit: tuple[Boxes, StubLines, StubTable], marker: Marker) -> Mapping[Orientation, Box] | None:
     """The boxes the core sized the marker with: its ledger end's lines first (`stub_views`, R1597)."""
     return stub_views(fit[1], fit[2], marker.end, marker.also, marker.far)
 
@@ -131,7 +125,8 @@ def _record(
     """The record of `group[index]`: an off stub for a one-end kind, else a pair or star end."""
     marker, key = group[index], keys[index]
     ids = [make_id(LinkMarker, k) for k in keys]
-    views = ctx.link if kind in (ARROW, _TAG) else _stub_views(ctx.fit, marker) or ctx.fit[0].get((marker.end, kind)) or ctx.boxes
+    boxes = ctx.fit[0].get((marker.end, kind)) or ctx.fit[0][None, kind]
+    views = boxes.drawn if kind in (ARROW, TAG) else _stub_views(ctx.fit, marker) or boxes.footprint  # a tag record holds the wide box
     box, page, port = views[marker.orient], ctx.pages[marker.page], ctx.ports[marker.end]
     facing = _FACES[marker.orient]
     lone = kind in LONE
@@ -146,7 +141,7 @@ def _record(
         x=marker.x,
         y=marker.y,
         width=box.w,
-        height=box.h,
+        height=box.h + marker.span,
         produced_by=STAMP,
         star=StarKind.OFF if lone else _star(len(group), index),
         pairs=tuple(MarkerPair(port=a, far=b, carrier=c) for a, b, c in ends) if lone else (),
@@ -169,12 +164,9 @@ def link_markers(w: Written) -> tuple[LinkMarker, ...]:
     """
     model, kit, pages, library, unit = w.model, w.kit, w.pages, w.library, w.within
     markers = w.layout.annotations.markers
-    boxes = marker_boxes(library)
     pins = pin_ports(model, kit)
-    drawn = drawn_ports(pins, w.layout.drawn)
-    fit, lines, table = stub_fit(model, kit, (unit, library), {p for m in markers for p in (m.end, *m.also)}, [[m.end, *m.also] for m in markers])
-    link = link_fit(model, kit, library, unit)
-    ctx = _Ctx(model, _ports(model, kit), pins, pages, w.owner.number, boxes, (fit, lines, table), link, drawn)
+    fit = marker_boxes_value(model, kit, (unit, library), {p for m in markers for p in (m.end, *m.also)}, [[m.end, *m.also] for m in markers])
+    ctx = _Ctx(model, _ports(model, kit), pins, pages, w.owner.number, fit)
     keys = marker_keys(markers, w.owner.number)
     found = []
     for (net, _, kind), positions in _groups(markers).items():

@@ -22,7 +22,7 @@ def _ends(syms: list[Sym], nets: list[Net], net_id: str) -> tuple[NetEnd, ...]:
     elem_of_pin = {PinRef(sym.id, pin): e for sym in prob.symbols for e in elements(sym, wired) for pin in (e.n_pin, e.s_pin) if pin is not None}
     by_id = {sym.id: sym for sym in prob.symbols}
     found = next(n for n in prob.nets if n.id == net_id)
-    return net_ends(found, elem_of_pin, by_id)
+    return net_ends(found, elem_of_pin, by_id, {})
 
 
 def test_poles_with_equal_pin_dx_become_one_element_per_pole() -> None:

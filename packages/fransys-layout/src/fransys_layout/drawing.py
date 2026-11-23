@@ -1,6 +1,6 @@
 """The drawn values: what render draws from, in layout units (one G is eight; an A3 page is 1312 wide), with every string final (SW5, layout-0315).
 
-A `Drawing` is one page's things; a `Sheet` its frame; a `Style` the pens and sizes. Each is a
+A `Drawing` is one page's things; a `Style` the pens and sizes. Each is a
 frozen dataclass of numbers, strings and tuples, so `fransys_layout.core.to_plain` and `from_plain`
 give its JSON form. Imports the standard library and the core's plain values only.
 """
@@ -29,7 +29,6 @@ __all__ = (
     "DrawnText",
     "DrawnWire",
     "RowTerm",
-    "Sheet",
     "Style",
     "TextStyle",
     "WireStyle",
@@ -153,16 +152,6 @@ class Drawing:
     outlines: tuple[DrawnOutline, ...]
     library_version: str
     rows: tuple[DrawnRow, ...] = ()
-
-
-@dataclass(frozen=True, slots=True)
-class Sheet:
-    """A sheet in mm: its frame symbol key, and its title-block texts."""
-
-    width_mm: float
-    height_mm: float
-    frame_key: str
-    slots: tuple[tuple[str, str], ...]
 
 
 @dataclass(frozen=True, slots=True)

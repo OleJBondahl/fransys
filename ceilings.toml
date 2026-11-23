@@ -23,6 +23,8 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/handles.py" = 304
+"packages/fransys-layout/src/fransys_layout/core/arrow_reserve.py" = 305
+"packages/fransys-layout/src/fransys_layout/core/widen.py" = 312
 "packages/fransys/src/fransys/derive.py" = 327
 
 [surface_types]
@@ -47,7 +49,7 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/settings.py::Settings.table" = 1
 
 [md_tokens]
-"packages/fransys/src/fransys/guide/findings-render.md" = 5252
+"packages/fransys/src/fransys/guide/findings-render.md" = 5321
 
 [md_long_sentences]
 "CLAUDE.md" = 8

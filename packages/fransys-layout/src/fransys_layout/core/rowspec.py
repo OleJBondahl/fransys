@@ -27,7 +27,7 @@ def _window(
     problem: PlacementProblem,
     options: Options,
 ) -> RowSpec:
-    """The row of `cols` in the order given, over `blocks`: placed columns, attach and in_row.
+    """The row of `cols` in the order given, over `blocks`: placed columns and attach.
 
     A card block lists the columns hung on it; a column no card lists stands free.
     Its pin_pitch is empty: `one_row` fills it.
@@ -40,8 +40,7 @@ def _window(
     here = tuple(columns[c] for c in cols)
     attach = attachments(here, by_id)
     pcs = placed_columns(plan, columns, by_id, attach, syms)
-    in_row = frozenset(s.id for s in syms.values() if s.row_group)
-    return RowSpec(tuple(cols), tuple(blocks), pcs, syms, in_row, options, attach, {}, more_pins=lane_pins(here, by_id))
+    return RowSpec(tuple(cols), tuple(blocks), pcs, syms, options, attach, {}, more_pins=lane_pins(here, by_id))
 
 
 def one_row(

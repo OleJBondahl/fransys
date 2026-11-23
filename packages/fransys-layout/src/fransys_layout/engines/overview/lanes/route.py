@@ -7,6 +7,7 @@ lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.overview.lanes.corridor import LONG
 from fransys_layout.engines.overview.lanes.diagram_route import tidy
+from fransys_layout.engines.overview.lanes.frame_values import edge_x
 from fransys_layout.engines.overview.lanes.labels import label_lines
 from fransys_layout.engines.overview.sheet_values import (
     DiagramBox,
@@ -15,7 +16,7 @@ from fransys_layout.engines.overview.sheet_values import (
     PlacedText,
 )
 from fransys_layout.engines.overview.sizes import TRACK_PITCH, tab_reach
-from fransys_layout.geometry import PAGE_PAD, Box, Facing, Point
+from fransys_layout.geometry import PAGE_PAD, Box, Point
 lazy from fransys_layout.engines.overview.lanes.channels import Channel
 
 if TYPE_CHECKING:
@@ -44,9 +45,7 @@ def column_xs(plan: Plan, width: Mapping[Ident, int], chans: Sequence[Channel]) 
 
 def touch(rect: Box, end: FrameEnd) -> Point:
     """Where a line meets its end: the box edge, or the outer edge of the end's tab."""
-    reach = 0 if end.tab is None else tab_reach(end.tab)
-    x = rect.x + rect.width + reach if end.side is Facing.E else rect.x - reach
-    return Point(x=x, y=end.y)
+    return Point(x=edge_x(rect.x, rect.width, end.side, 0 if end.tab is None else tab_reach(end.tab)), y=end.y)
 
 
 def _middle(room: Room, s: int, line: int) -> list[Point]:

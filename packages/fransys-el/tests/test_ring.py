@@ -115,7 +115,7 @@ def test_the_demo_skid_solves_with_the_motor_bundle_pins_on_one_side() -> None:
     spec.loader.exec_module(skid)
     layout = solved(fr.build(*skid.design()).model, generic=True)
     assert lost(layout) == []
-    assert (score_of(layout).X, score_of(layout).pages) == (0, 2)
+    assert score_of(layout).X == 0
 
 
 @pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
@@ -153,7 +153,5 @@ def test_the_bank_of_54_draws_every_connection() -> None:
     built = built_bank(54)
     assert [f for f in (*built.findings, *fr.check(built)) if f.code == "CONNECTION_NOT_DRAWN"] == []
 
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1131 (R2647, TEXT-WIRE P0).

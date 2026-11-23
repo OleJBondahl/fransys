@@ -254,6 +254,14 @@ class PlacementProblem:
 
 
 @dataclass(frozen=True, slots=True)
+class MarkerBoxes:
+    """One marker kind's boxes at each orientation: `footprint` places and routes it, `drawn` is what a wire keeps off (a tag draws wider)."""
+
+    footprint: Mapping[Orientation, Box]
+    drawn: Mapping[Orientation, Box]
+
+
+@dataclass(frozen=True, slots=True)
 class Options:
     """Design 2.2 with E4: pins spread, justify on; flow is top to bottom (spec ruling)."""
 
@@ -299,12 +307,9 @@ class Options:
     widen_rounds_limit: int = field(kw_only=True)  # widen passes before it raises CoreError (R1981)
     # owner 2026-10-18: a designation stands in a corner of its symbol, top left by default
     corner_order: tuple[str, ...] = field(kw_only=True)
-    # layout-0305, SB4: the reference-marker symbol's keepout box at each orientation, in grid
-    # units relative to its origin; the symdef layer measures it, so the core types no size
-    marker: Mapping[Orientation, Box] | None = None
-    # R318: the boxes of a marker whose text the caller fitted, by (pin, kind text); the symdef
-    # layer measured each, and a marker not named here takes `marker`
-    marker_fit: Mapping[tuple[PinRef, str], Mapping[Orientation, Box]] = field(default_factory=frozendict)
+    # layout-0305, SB4, R318, R350: each marker kind's keepout boxes in grid units from its origin, by (pin, kind text); the
+    # symdef layer measured them. A key `(None, kind)` is the kind's box at any pin, `(pin, kind)` one fitted to that pin's text
+    marker_boxes: Mapping[tuple[PinRef | None, str], MarkerBoxes] = field(default_factory=frozendict)
     # R1597: the width (G) of each line a stub prints for the conductor (near pin, far pin), an upper bound that needs no
     # placement, and the box (by orientation) of a stub with that widest width and that many lines; the ledger's lines pick the box
     stub_lines: Mapping[tuple[PinRef, PinRef], tuple[int, ...]] = field(default_factory=frozendict)
@@ -320,10 +325,7 @@ class Options:
     marker_above: Orientation | None = None
     marker_below: Orientation | None = None
     outline: OutlineRoom | None = None  # R889, R900: the unit frame's room; None draws no frame
-    # R350: the box of an arrow, fitted to the widest text it can print
-    link_fit: Mapping[Orientation, Box] | None = None
     cells: tuple[int, int] = field(kw_only=True)
-    open_stub: int = field(kw_only=True)
     box_columns: bool = field(kw_only=True)
     # layout-0440: a pin on one side of a body wired to a column hung on its other side is a tag pair, not a wire round the body
     tag_across_body: bool = field(kw_only=True)

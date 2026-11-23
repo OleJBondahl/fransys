@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    drawn_pieces,
     far_pins,
     function_abroad,
     function_is_idle_terminal,
@@ -25,20 +26,19 @@ from fransys_model.derive.order import locations_in_order, units_in_order
 from fransys_model.kernel import render_id
 
 from .kit_keys import function_of
-from .placement_ids import symbol_key
-from .placement_markers import pin_ports
+from .placement_ids import net_key, pin_ports, symbol_key
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
     from fransys_layout.core import PinRef
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Unit
+    from fransys_model.vocab import AspectNode, Port, Unit
 
     from .placement_kit import PickKey, SymbolKit
 
 
-__all__ = ["DrawingScope", "bare_pins", "cut_lines", "drawing_scopes", "frame_titles"]
+__all__ = ["DrawingScope", "bare_pins", "cut_lines", "drawing_scopes", "frame_titles", "piece_names"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,3 +183,13 @@ def cut_lines(model: Model, kit: SymbolKit) -> Mapping[PinRef, str]:
         if ends and ends[0][2] is not None and function is not None:
             found[pin] = f"{ends[0][2].value}/{function.value}"
     return found
+
+
+def piece_names(model: Model, kit: SymbolKit, scope: DrawingScope, joins: Iterable[tuple[Id[Port], Id[Port]]]) -> Mapping[PinRef, str]:
+    """Each pin of `scope` with the name of the piece of its net that the scope itself joins (`derive.drawn_pieces`, KI-1090).
+
+    `joins` are the pairs a symbol holds at one node (`placement_joins.node_joins`). The name is the `net_key` of the piece's ports:
+    a net id that `net_ports` reads back to a port of the piece.
+    """
+    of_port = {port: pin for pin, ports in pin_ports(model, kit).items() if pin.sym in scope.symbols for port in ports}
+    return {of_port[port]: net_key(model, piece) for piece in drawn_pieces(model, of_port, joins) for port in piece}

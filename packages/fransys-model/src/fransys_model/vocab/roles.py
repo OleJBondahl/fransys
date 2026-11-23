@@ -4,6 +4,8 @@
 fails at import (`complete`). Each row's comment names the branch it reproduces.
 """
 
+from typing import Literal
+
 from fransys_model.elecdef import LinkKind
 
 from .enums import ConductorKind, Energy, FunctionKind, ItemKind, NetClass
@@ -114,7 +116,7 @@ _CONDUCTOR_ROWS: frozendict[ConductorKind, ConductorRole] = frozendict(
         _C.JUMPER: ConductorRole(joins_net=True, bridge=True),
         _C.BUSBAR: ConductorRole(joins_net=True),
         # enums.py:157 plug-on contacts
-        _C.MOUNT: ConductorRole(joins_net=True, mount=True),
+        _C.MOUNT: ConductorRole(joins_net=True),
         # leads.py:28 a device's own lead; contact_lines.py:12 _LANDING lands it
         _C.LEAD: ConductorRole(lands=True, joins_net=True, lead=True),
     }
@@ -136,3 +138,6 @@ _NET_ROWS: frozendict[NetClass, NetClassRole] = frozendict(
     }
 )
 NET_CLASS_ROLES = complete(_NET_ROWS, NetClass)
+
+LINK_STATES: tuple[Literal["rest"], Literal["operated"]] = ("rest", "operated")  # the states an item's switched links are enumerated over
+THROW_ROLES = ("common", "break", "make")  # a changeover contact's port roles: the common, then its two throws

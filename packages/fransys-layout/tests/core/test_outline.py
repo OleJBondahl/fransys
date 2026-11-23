@@ -14,7 +14,7 @@ from fransys_layout.core.outputs import Outline, PagePlacement, Placed, Placemen
 from fransys_layout.core.sym_values import Sym, Turned
 from fransys_layout.core.values import Box, Facts, Finding, Hints, Options, OutlineRoom, PlacementProblem, Size
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cycle_fixtures import acyclic_problem
 from .pipeline_fixtures import solved_of
 
@@ -77,7 +77,14 @@ _ROOM = OutlineRoom(4, Box(2, 2, 48, 8), Size(64, 48))
 
 def _opts(**given: Any) -> Options:
     return core_options(
-        marker=MARKER, tag_stagger=True, label_gap=8, parallel_pitch=48, flip_turn="R180", driver_first=True, arrow_sides=("E", "W"), **given
+        marker_boxes=MARKERS,
+        tag_stagger=True,
+        label_gap=8,
+        parallel_pitch=48,
+        flip_turn="R180",
+        driver_first=True,
+        arrow_sides=("E", "W"),
+        **given,
     )
 
 

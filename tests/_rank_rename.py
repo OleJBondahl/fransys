@@ -160,5 +160,5 @@ def check_all_mapped(problem: PlacementProblem, mapping: Mapping_) -> None:
 
 
 def rename_options(options: Any, mapping: Mapping_) -> Any:
-    """`options` with the ids it carries (the keys of `marker_fit`) respelled; other text stays."""
+    """`options` with the ids it carries (the keys of `marker_boxes`) respelled; other text stays."""
     return apply_mapping(options, mapping)[0]

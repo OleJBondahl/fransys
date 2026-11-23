@@ -53,7 +53,7 @@ def turned_size(label: Size) -> Size:
 
 
 def _ladder(label: Size, options: Options, body_h: int) -> tuple[Spot, ...]:
-    """The ladder (LABEL-PLACE 2): two corners, the turned left pair, the rest, then the turned tag centred on the body's height (R1849)."""
+    """The ladder (LABEL-PLACE 2): the turned pair, the rest, the turned tag centred (R1849), last the tag upright beside (R2665)."""
     step = options.wiring_grid
     corners = [[corner_spot(c, s, label, options.label_gap + s) for s in (0, step)] for c in options.corner_order]
     turned = turned_size(label)
@@ -61,7 +61,8 @@ def _ladder(label: Size, options: Options, body_h: int) -> tuple[Spot, ...]:
         return tuple(chain(*corners))
     side = [Spot("TL", "TL", -turned.w, s, "down", options.label_gap, turned=True) for s in (0, step)]
     centred = Spot("TL", "TL", -turned.w, (body_h - turned.h) // 2, "down", options.label_gap, turned=True)
-    return (*chain(*corners[:2]), *side, *chain(*corners[2:]), centred)
+    beside = Spot("TR", "TR", 0, (body_h - label.h) // 2, "down")
+    return (*chain(*corners[:2]), *side, *chain(*corners[2:]), centred, beside)
 
 
 def _annex(owner: str, sym: Sym, label: Size, options: Options) -> Annex:

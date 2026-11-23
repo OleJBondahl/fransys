@@ -38,6 +38,3 @@ def test_a_far_document_leads_the_position_room_with_its_own_scope_path(demo_cab
     assert position_room(model, 1, (8, 6), "9", far=[doc]) == f"{scope_path(model, doc)} p9:9F"
     assert printing_document(model, None, None) in {None, *documents(model)}
     assert printing_document(MODEL, None, None) is None
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

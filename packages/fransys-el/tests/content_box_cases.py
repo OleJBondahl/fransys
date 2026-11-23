@@ -10,10 +10,9 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 from _unit_outline_case import unit_outline_case_drafts
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 from input_card_designs import field_case
 from ring_cases import drawn_supply_model
 
@@ -56,8 +55,9 @@ def solved(name: str) -> tuple[CoreLayout, Options]:
     """The core layout of case `name` and the options it was solved with."""
     model = CASES[name]()
     conventions = house()
-    problem, _ = build(model, symbol_kit(model, LIBRARY), conventions, LIBRARY)
-    chosen = options(conventions, LIBRARY)
+    kit = symbol_kit(model, LIBRARY)
+    problem, _ = build(model, kit, conventions, LIBRARY)
+    chosen = drawn_options(model, kit, problem, conventions)
     return solve(problem, chosen), chosen
 
 
@@ -65,5 +65,6 @@ def solved_in(name: str, area: Size) -> CoreLayout:
     """Case `name` solved on a page of `area` instead of the house page."""
     model = CASES[name]()
     conventions = house()
-    problem, _ = build(model, symbol_kit(model, LIBRARY), conventions, LIBRARY)
-    return solve(replace(problem, area=area), options(conventions, LIBRARY))
+    kit = symbol_kit(model, LIBRARY)
+    problem, _ = build(model, kit, conventions, LIBRARY)
+    return solve(replace(problem, area=area), drawn_options(model, kit, problem, conventions))

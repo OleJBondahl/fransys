@@ -26,10 +26,10 @@ def test_a_hold_moves_its_cell_and_the_cells_below_by_the_hold() -> None:
     syms = {"U1": elem("U1")}
     plain = (_cell(), _cell(), _cell())
     held = (_cell(), _cell(hold=24), _cell())
-    ys, height = stack_lane(syms, plain, _options(), frozenset())
+    ys, height = stack_lane(syms, plain, _options())
     assert ys == (16, 56, 96)
     assert height == 112
-    held_ys, held_height = stack_lane(syms, held, _options(), frozenset())
+    held_ys, held_height = stack_lane(syms, held, _options())
     assert held_ys == (16, 80, 120)
     assert held_ys[1] - ys[1] == 24
     assert held_ys[2] - ys[2] == 24
@@ -39,7 +39,7 @@ def test_a_hold_moves_its_cell_and_the_cells_below_by_the_hold() -> None:
 def test_a_hold_on_the_first_cell_changes_nothing() -> None:
     """Nothing stands above the first cell, so its hold is ignored."""
     syms = {"U1": elem("U1")}
-    ys, height = stack_lane(syms, (_cell(hold=24), _cell(), _cell()), _options(), frozenset())
+    ys, height = stack_lane(syms, (_cell(hold=24), _cell(), _cell()), _options())
     assert ys == (16, 56, 96)
     assert height == 112
 
@@ -58,15 +58,15 @@ def test_placed_cells_moves_a_cell_below_a_hold_by_the_hold() -> None:
     options = _options()
     plain = PlacedColumn("c", ((_cell(), _cell()),), (0,), 0, flipped=False)
     held = PlacedColumn("c", ((_cell(), _cell(hold=24)),), (0,), 0, flipped=False)
-    assert [c.top for c in placed_cells(plain, syms, frozenset(), options)] == [0, 40]
-    assert [c.top for c in placed_cells(held, syms, frozenset(), options)] == [0, 64]
+    assert [c.top for c in placed_cells(plain, syms, options)] == [0, 40]
+    assert [c.top for c in placed_cells(held, syms, options)] == [0, 64]
 
 
 def test_a_cut_moves_up_to_the_held_cell_when_the_hold_pushes_it_past_room() -> None:
     """With room 80, the plain lane cuts at cell 2 (pieces 0 and 2); the hold on cell 1 pushes
     cell 1 past room, so the cut comes at cell 1 and the lane has one more piece."""
     syms = {"U1": elem("U1")}
-    env = Tall(syms, _options(), 0, 0, {}, frozenset(), {}, {}, {}, ())
+    env = Tall(syms, _options(), 0, 0, {}, {}, {}, {}, ())
     plain = (_cell(), _cell(), _cell())
     held = (_cell(), _cell(hold=24), _cell())
     assert _cuts(plain, env, 80, 0) == (0, 2, 3)

@@ -14,8 +14,8 @@ from demo_designs import cabinet_design
 from fransys.colours import BU
 from fransys_author.design import Design
 from fransys_el import symbol_kit
+from fransys_el.placement_markers import marker_boxes_value
 from fransys_el.placement_views import marker_boxes
-from fransys_el.placement_widest import link_fit
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import (
@@ -285,9 +285,9 @@ def test_a_reference_into_another_pdf_names_that_document_and_its_page(tmp_path)
 
 @pytest.mark.rule("PAGE-NUMBER")
 def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path):
-    """`link_fit` is as wide as `#n-<position>` for every page pair of one drawing set, cell and `+k` form (R2066)."""
+    """The arrow's box is as wide as `#n-<position>` for every page pair of one drawing set, cell and `+k` form (R2066)."""
     model = _two_documents(tmp_path).model
-    reserved = link_fit(model, symbol_kit(model, LIBRARY), LIBRARY, None)["R0"].w
+    reserved = marker_boxes_value(model, symbol_kit(model, LIBRARY), (None, LIBRARY), [])[0][None, "arrow"].drawn["R0"].w
     pages = tuple(layout_of(model, Page).values())
     lines = [
         f"#{len(pages)}-{position_at(model, own, partner, column, row_letter(row))}{more_text(9)}"
@@ -299,7 +299,5 @@ def test_every_printed_position_fits_the_marker_box_placement_reserves(tmp_path)
     ]
     assert max(marker_boxes(LIBRARY, line)["R0"].w for line in lines) <= reserved
 
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

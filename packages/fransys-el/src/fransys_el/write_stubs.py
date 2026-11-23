@@ -10,20 +10,14 @@ from fransys_model.derive import stub_far
 from fransys_model.kernel import ModelError
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Collection, Sequence
 
-    from fransys_layout.core import PinRef
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Item, Port
 
-__all__ = ["drawn_ports", "far_port"]
+__all__ = ["far_port"]
 
 type PortPairs = Collection[tuple[Id[Port], Id[Port]]]
-
-
-def drawn_ports(pins: Mapping[PinRef, Sequence[Id[Port]]], drawn: Collection[tuple[PinRef, PinRef]]) -> frozenset[tuple[Id[Port], Id[Port]]]:
-    """The `(port, far port)` pairs the layout's drawn `(pin, far pin)` pairs stand for (R777)."""
-    return frozenset((a, b) for p, q in drawn for a in pins.get(p, ()) for b in pins.get(q, ()))
 
 
 def far_port(model: Model, ports: Sequence[Id[Port]]) -> tuple[Id[Port], Id[Port], Id[Item] | None]:

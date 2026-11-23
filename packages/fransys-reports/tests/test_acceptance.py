@@ -40,14 +40,14 @@ def test_terminal_csv_names_where_each_conductor_goes_and_the_jumper_group(cabin
 
 def test_terminal_csv_of_a_strip_with_no_terminals_is_the_header(new_plant):
     plant = new_plant()
-    plant.item("x1", "X1")
+    plant.item("x1", designation="X1")
     assert terminal_csv(plant.model()) == ("designation,group,index,side_a,side_b,jumper_group\n")
 
 
 def test_terminal_csv_lists_every_strip_in_natural_designation_order(new_plant):
     plant = new_plant()
     for key, tag in (("x10", "X10"), ("x2", "X2")):
-        plant.terminal(plant.item(key, tag), "L", 1)
+        plant.terminal(plant.item(key, designation=tag), "L", 1)
     lines = terminal_csv(plant.model()).splitlines()[1:]
     assert [line.split(",")[0] for line in lines] == ["-X2:L:1", "-X10:L:1"]
 

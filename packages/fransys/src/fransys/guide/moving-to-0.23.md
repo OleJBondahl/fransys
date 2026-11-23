@@ -4,6 +4,14 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.36
+
+- A cut rail end now draws one reference that points to where the wire continues.
+- The bundle arrow spans every lane it carries.
+- West arrows are mirrored, so they point the way the wire leaves.
+- The far-pin leg tables are gone.
+- These are drawing moves under the rules BUNDLE-ARROW and MARKER-FREE-SIDE.
+
 ## New in 0.23.35
 
 0.23.34 was not published; this release carries its changes too.
@@ -24,6 +32,8 @@ BREAKING: a board that shares its unit with another top-level device is refused 
 - New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.
 - An unnamed rack channel is named by its drawn pin label, for example `DO3`.
 - Page titles now state what the page draws.
+- `cores.csv` prints the far end in full form, for example `+EXT-M1:U1`.
+- A terminal row's `side_a` no longer names the bridge partner; the bridge is the shared `jumper_group`.
 
 ## New in 0.23.33
 

@@ -64,7 +64,7 @@ def _lines_in_bodies(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -
             for lane, cells in enumerate(pc.lanes):
                 for i, cell in enumerate(cells):
                     sym = env.syms[cell.sym]
-                    hard, _ = hard_soft(sym, cell, in_row=cell.sym in env.in_row, tag_stagger=True)
+                    hard, _ = hard_soft(sym, cell, tag_stagger=True)
                     left = x[col_node(col)] + pc.offsets[lane] - cell_anchor(sym, cell)[0] + hard.x
                     top = y[cell_node(pc.id, lane, i)] + hard.y
                     meets = left < span.x1 and span.x0 < left + hard.w

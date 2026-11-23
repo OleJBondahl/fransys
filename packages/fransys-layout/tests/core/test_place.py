@@ -15,7 +15,7 @@ from fransys_layout.core.place_env import page_envs
 from fransys_layout.core.place_x import row_specs
 lazy from fransys_layout.core import PlacementProblem
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_respell import id_sets, make_maps, respell_problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .place_fixtures import (
@@ -43,7 +43,7 @@ PLANTED = {
 @pytest.mark.parametrize("name", PLANTED)
 def test_every_pin_of_every_placed_symbol_lies_on_the_wiring_grid(name: str) -> None:
     step = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     ).wiring_grid
     for (sym, pin), (x, y) in all_pins(placed_of(PLANTED[name]())).items():
         assert x % step == 0, (sym, pin, x)
@@ -67,7 +67,7 @@ def test_no_two_footprints_of_one_row_overlap(name: str) -> None:
 def _row_extent(prob: PlacementProblem) -> tuple[int, int]:
     """(placed extent, row_width) of the first row of the first page."""
     options = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     cut = cut_of(prob, options)
     env = page_envs(cut, prob, options)[0]

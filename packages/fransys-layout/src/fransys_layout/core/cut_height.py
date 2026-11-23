@@ -14,17 +14,20 @@ if TYPE_CHECKING:
 def _reach(column: Column, options: Options, *, head: bool) -> int:
     """The G the fitted boxes of a column's head (up) or other (down) pins reach beyond them.
 
-    A box equal to the plain marker's adds nothing: the cut counted it already.
+    A box equal to its kind's own adds nothing: the cut counted it already.
     """
     cells = [c for lane in column.lanes for c in lane.cells]
     syms, heads = {c.sym for c in cells}, {(c.sym, c.top_pin) for c in cells}
     return max(
         (
-            max(-b.y for o, b in views.items() if o in options.marker_vertical)
+            max(-b.y for o, b in boxes.footprint.items() if o in options.marker_vertical)
             if head
-            else max(b.y + b.h for o, b in views.items() if o in options.marker_vertical)
-            for (pin, _), views in options.marker_fit.items()
-            if pin.sym in syms and ((pin.sym, pin.pin) in heads) is head and views != options.marker
+            else max(b.y + b.h for o, b in boxes.footprint.items() if o in options.marker_vertical)
+            for (pin, kind), boxes in options.marker_boxes.items()
+            if pin is not None
+            and pin.sym in syms
+            and ((pin.sym, pin.pin) in heads) is head
+            and boxes.footprint != options.marker_boxes[None, kind].footprint
         ),
         default=0,
     )

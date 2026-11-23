@@ -21,14 +21,15 @@ from fransys_layout.core.values import Ref, RefEnd, RefKind, StandClass
 from fransys_layout.core.widen import measured_of, reserves_of
 lazy from fransys_layout.core.flow_values import CutResult
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, chain, elem, free, net, page_of
+from .flow_builders import conductors, hub_pins, problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_from, routed_from
 from .place_fixtures import card_with_coils, wide_row
 from .widen_fixtures import gap_width
 
 PLAIN = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 
@@ -37,7 +38,7 @@ def three_columns() -> PlacementProblem:
     names = [[f"{c}{k}" for k in range(2)] for c in "abc"]
     syms = tuple(elem(n) for col in names for n in col)
     nets = tuple(n for col in names for n in chain(col, prefix=col[0]))
-    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
+    return PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=conductors(nets)))
 
 
 def planted() -> list[PlacementProblem]:
@@ -109,12 +110,7 @@ def test_a_measured_width_over_the_page_moves_the_column_to_a_new_row() -> None:
 
 def fan_legs() -> PlacementProblem:
     syms = (free("t0"), *(elem(f"k{i}", 40, 32) for i in (1, 2, 3)))
-    return PlacementProblem(
-        Size(100, 854),
-        syms,
-        (net("feed", "t0.e", "k1.n", "k2.n", "k3.n"),),
-        facts=Facts(far_ends=()),
-    )
+    return problem(list(syms), [net("feed", *hub_pins("t0"), "k1.n", "k2.n", "k3.n")], area=Size(100, 854))
 
 
 def test_a_measured_height_over_the_page_moves_the_block_down_and_its_reference_follows() -> None:
@@ -132,7 +128,7 @@ def two_heights() -> PlacementProblem:
     """Two columns in one row: a stack of two 150 G elements and a stack of two 60 G ones."""
     syms = (elem("a0", 16, 150), elem("a1", 16, 150), elem("b0", 16, 60), elem("b1", 16, 60))
     nets = (*chain(["a0", "a1"], "a"), *chain(["b0", "b1"], "b"))
-    return PlacementProblem(AREA, syms, tuple(nets), facts=Facts(far_ends=()))
+    return PlacementProblem(AREA, syms, tuple(nets), facts=Facts(far_ends=conductors(nets)))
 
 
 def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
@@ -153,8 +149,8 @@ def test_measured_height_is_the_blocks_own_extent_never_its_rows() -> None:
 def fan_rows() -> PlacementProblem:
     """One fan block of five 40 x 32 legs 100 G wide: its legs stack in five rows."""
     syms = (free("t0"), *(elem(f"k{i}", 40, 32) for i in range(1, 6)))
-    pins = ["t0.e", *(f"k{i}.n" for i in range(1, 6))]
-    return PlacementProblem(Size(100, 854), syms, (net("feed", *pins),), facts=Facts(far_ends=()))
+    pins = [*hub_pins("t0"), *(f"k{i}.n" for i in range(1, 6))]
+    return problem(list(syms), [net("feed", *pins)], area=Size(100, 854))
 
 
 def test_a_columns_measured_height_is_its_own_never_its_blocks_so_its_rows_stay_on_a_page() -> None:
@@ -195,7 +191,7 @@ def test_a_fold_piece_is_placed_within_the_page_room_with_the_tags_it_places() -
     cut = cut_of(prob, PLAIN)
     placement = placed_from(cut, prob, PLAIN)
     sized = {c.id for c in cut.flow.columns if "#" in c.id}
-    room = AREA.h - PLAIN.page_headroom - with_wires(0, PLAIN) - 2 * PLAIN.open_stub
+    room = AREA.h - PLAIN.page_headroom - with_wires(0, PLAIN)
     placed = {k: bottom - top for page in placement.pages for k, (top, bottom) in page.spans.items() if k in sized}
     assert len(sized) > 1
     assert all(h <= room for h in placed.values())

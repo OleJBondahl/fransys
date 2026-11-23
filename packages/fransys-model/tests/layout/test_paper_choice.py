@@ -2,20 +2,19 @@
 
 import pytest
 from derive_helpers import frozen_with_library
+from sheet_formats import a2, a3
 
 from fransys_model.kernel import Draft, Model, Origin, Record, SchemaError, freeze, make_id
 from fransys_model.layout import (
     PaperChoice,
     SheetFormat,
-    a2_sheet_format,
-    default_sheet_format,
     sheet_for,
     sheet_format_of,
 )
 from fransys_model.vocab import PageKind
 
 _ORIGIN = Origin(file="test_paper_choice.py", line=1, note="fixture")
-A3, A2 = default_sheet_format(), a2_sheet_format()
+A3, A2 = a3(), a2()
 
 
 def _model(default: SheetFormat, by_kind: dict[PageKind, SheetFormat], *extra: Record) -> Model:

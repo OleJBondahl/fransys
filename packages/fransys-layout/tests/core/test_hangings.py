@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
 from options_fixtures import core_options
 
 from fransys_layout.core import Facts, PlacementProblem
 from fransys_layout.core.cut_drawn import stand_pins
 from fransys_layout.core.flow_values import Attach, Fan
-from fransys_layout.core.geometry import marker_box, marker_box_at, marker_drawn_box, shift
+from fransys_layout.core.geometry import marker_box, marker_box_at, shift
 from fransys_layout.core.hang_build import page_hangings
 from fransys_layout.core.hangings import hanging_keep
 from fransys_layout.core.outputs import Marker
@@ -21,6 +20,7 @@ from fransys_layout.core.text_ends import abut
 from fransys_layout.core.values import (
     Anchor,
     Box,
+    MarkerBoxes,
     Options,
     PinRef,
     Pose,
@@ -30,22 +30,21 @@ from fransys_layout.core.values import (
     Side,
 )
 
-from .conftest import MARKER
+from .conftest import MARKER, MARKERS
 from .cut_fixtures import AREA, box_sym, elem, free
-from .cut_fixtures import cut_of as cut_of_syms
 from .cut_fixtures import net as cut_net
-from .flow_builders import net, poles
+from .flow_builders import conductors, hub_pins, net, poles
 from .pipeline_fixtures import cut_of
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 
 def _env():
     syms = (box_sym(1), poles("L", 2))
     nets = (net("n1", "A1.p1", "L.n0"), net("n2", "A1.p1", "L.n1"))
-    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=()))
+    prob = PlacementProblem(AREA, syms, nets, facts=Facts(far_ends=conductors(nets)))
     (env,) = page_envs(cut_of(prob, OPTIONS), prob, OPTIONS)
     return env
 
@@ -85,21 +84,6 @@ def _marker_at(key: tuple[str, str, str], side: Side, kind: RefKind) -> Box:
     depth = {"E": -box.x, "W": box.x + box.w, "S": -box.y, "N": box.y + box.h}[side]
     dx, dy = SIDE_STEP[side]
     return shift(box, dx * depth, dy * depth)
-
-
-@pytest.mark.parametrize("open_stub", [0, 40])
-def test_a_stub_marker_moves_out_by_open_stub_along_each_side(open_stub: int) -> None:
-    boxes = _kind_boxes(RefKind.STUB, replace(OPTIONS, open_stub=open_stub))
-    assert {side for side, _ in boxes.values()} == {"N", "E", "S", "W"}
-    for key, (side, box) in boxes.items():
-        dx, dy = SIDE_STEP[side]
-        assert box == shift(_marker_at(key, side, RefKind.STUB), open_stub * dx, open_stub * dy)
-
-
-def test_a_tag_does_not_move_with_open_stub() -> None:
-    boxes = _kind_boxes(RefKind.TAG, replace(OPTIONS, open_stub=40))
-    for key, (side, box) in boxes.items():
-        assert box == _marker_at(key, side, RefKind.TAG)
 
 
 def _pose(i: int) -> Pose:
@@ -169,16 +153,11 @@ def test_an_arrow_and_another_pages_end_get_no_hanging() -> None:
     assert [h.kind for h in found[("H", "n", "R0")]].count("tag") == 2
 
 
-def test_a_missing_marker_size_skips_the_marker_but_not_the_anchor() -> None:
-    _, _, found = _b2_hangings(replace(OPTIONS, marker=None))
-    assert {h.kind for hs in found.values() for h in hs} == {"anchor"}
-
-
 def test_page_hangings_over_a_real_cut_count_the_non_arrow_ends_and_anchors() -> None:
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    nets = [cut_net("feed", "t0.e", "k1.n", "k2.n", "k3.n")]
-    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
-    cut = cut_of_syms(syms, nets, options=OPTIONS)
+    nets = [cut_net("feed", *hub_pins("t0"), "k1.n", "k2.n", "k3.n")]
+    prob = PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=conductors(nets)))
+    cut = cut_of(prob, OPTIONS)
     envs = page_envs(cut, prob, OPTIONS)
     assert len(envs) == 2
     counts = []
@@ -194,14 +173,14 @@ def test_page_hangings_over_a_real_cut_count_the_non_arrow_ends_and_anchors() ->
 def test_a_tags_hanging_box_is_the_route_obstacle_box_of_the_marker_standing_there() -> None:
     """layout-0406: one tag box for the hanging and the route obstacle, both the stretched one."""
     wide = {o: Box(b.x, b.y, b.w + 20, b.h + 20) for o, b in MARKER.items()}
-    options = replace(OPTIONS, link_fit=wide)
+    options = replace(OPTIONS, marker_boxes={**OPTIONS.marker_boxes, (None, "tag"): MarkerBoxes(MARKER, wide)})
     boxes = _kind_boxes(RefKind.TAG, options)
     assert boxes
     for (sym, pin, _), (side, box) in boxes.items():
         end = PinRef(sym, pin)
         stand = abut(options, side, 0, 0, (end, "tag"))
         tag = Marker("n1", RefKind.TAG, 1, "c", stand.x, stand.y, end, stand.orient)
-        assert box == marker_drawn_box(tag, options)
+        assert box == marker_box(tag, options, drawn=True)
         assert box != marker_box(tag, options)
 
 

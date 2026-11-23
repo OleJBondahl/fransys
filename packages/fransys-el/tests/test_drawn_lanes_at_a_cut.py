@@ -6,17 +6,23 @@ Owner 2026-10-23: one arrow stands for the bundle; the other lanes pair k-th wit
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from fransys_el.drawn_graph import Union
 from fransys_el.drawn_lanes import join_lanes
 
 
-def _side(union: Union, name: str, *lanes: tuple[str, int, int], style: str = "trunk", ports: bool = True) -> tuple[str, Any, dict[str, str]]:
-    """A page `name` with a wire per `(net, y, x end)` from x 0, and (unless `ports` is off) a port of the net at its start."""
+def _side(
+    union: Union, name: str, *lanes: tuple[str, int, int], style: str = "trunk", ports: bool = True, inked: int | None = None
+) -> tuple[str, Any, dict[str, str]]:
+    """A page `name` with a wire per `(net, y, x end)` from x 0, a port at its start (unless `ports` is off), a marker over `inked` lanes."""
+    ys = [y for _, y, _ in lanes[:inked]]
+    box = SimpleNamespace(x=0, w=max(x for _, _, x in lanes), y=min(ys) - 4, h=max(ys) - min(ys) + 8)
+    marks = [SimpleNamespace(slots=(("ref", "#1"),), x=x, y=ys[0], outline=box) for x in {0, *(x for _, _, x in lanes)}]  # one flag per lane end x
     wires = [SimpleNamespace(points=((0, y), (x, y)), style=style) for _, y, x in lanes]
     for _, y, x in lanes:
         union.join((name, (0, y)), (name, (x, y)))
     held = {f"{name}{net}": (0, y) for net, y, _ in lanes} if ports else {}
-    return name, SimpleNamespace(drawing=SimpleNamespace(wires=wires), ports=held), {f"{name}{net}": net for net, _, _ in lanes}
+    return name, SimpleNamespace(drawing=SimpleNamespace(wires=wires, symbols=marks), ports=held), {f"{name}{net}": net for net, _, _ in lanes}
 
 
 def _join(*sides: tuple[str, Any, dict[str, str]], at: list[tuple[str, tuple[int, int]]], union: Union, stubs: dict[Any, set[str]] | None = None):
@@ -33,6 +39,23 @@ def test_lanes_pair_across_the_ends_of_a_star_though_one_page_lacks_a_lane() -> 
     _join(a, b, c, at=[("A", (100, 8)), ("B", (50, 8)), ("C", (60, 8))], union=union)
     assert union.find(("B", (50, 8))) == union.find(("A", (100, 8)))
     assert union.find(("B", (50, 8))) != union.find(("B", (50, 16)))  # different nets stay apart
+
+
+@pytest.mark.parametrize(
+    ("outline_y", "outline_h", "foot_y", "pairs"),
+    [(4, 8, 16, False), (8, 40, 48, False), (4, 20, 16, True)],
+    ids=["off the ink", "port on the outline's end", "strictly inside"],
+)
+def test_a_foot_pairs_only_at_the_arrows_port_or_inside_its_ink(outline_y: int, outline_h: int, foot_y: int, *, pairs: bool) -> None:
+    """R3541, R3568: the port's lane pairs even on its outline's end; another lane only where its end is inside the ink."""
+    union = Union()
+    a = _side(union, "A", ("L1", 8, 100), ("L2", foot_y, 100), inked=1)
+    for mark in a[1].drawing.symbols:
+        mark.outline = SimpleNamespace(x=0, w=100, y=outline_y, h=outline_h)
+    b = _side(union, "B", ("L1", 8, 50), ("L2", foot_y, 50))
+    _join(a, b, at=[("A", (100, 8)), ("B", (50, 8))], union=union)
+    assert union.find(("A", (100, 8))) == union.find(("B", (50, 8)))
+    assert (union.find(("A", (100, foot_y))) == union.find(("B", (50, foot_y)))) is pairs
 
 
 def test_lanes_the_other_side_reads_in_another_order_pair_nothing() -> None:

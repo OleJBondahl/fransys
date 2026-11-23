@@ -19,8 +19,9 @@ def test_only_a_table_spot_is_a_table_spot() -> None:
 def _lines_under(text: DrawnText, monkeypatch: pytest.MonkeyPatch) -> list[DrawnText]:
     monkeypatch.setattr(write_tables, "where_text", lambda _m, _here, there: f"p{there[0]}")
     monkeypatch.setattr(write_tables, "where_link", lambda *_: None)
+    monkeypatch.setattr(write_tables, "where_targets", lambda _m, _f, rows, page: [r for r in rows if r[0] != page])
     rows = [("a", None), ("b", None), ("c", None)]
-    return write_tables._lines(None, (LIBRARY, 3), text, rows, "a")  # ty: ignore[invalid-argument-type] - doubles
+    return write_tables._lines(None, (LIBRARY, 3, "a"), text, rows, None)  # ty: ignore[invalid-argument-type] - doubles (R2997)
 
 
 def test_where_lines_step_one_line_pitch_down_under_an_upright_tag_and_right_of_a_turned_one(monkeypatch: pytest.MonkeyPatch) -> None:

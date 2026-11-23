@@ -33,6 +33,7 @@ class NetEnd:
     elem: str | None
     pin: PinRef
     site: str
+    far: frozenset[PinRef] = frozenset()
 
 
 def is_free_sided(sym: Sym) -> bool:
@@ -78,9 +79,12 @@ def _poles_and_singles(sym: Sym, pins: Sequence[Pin]) -> tuple[Elem, ...]:
     return tuple(out)
 
 
-def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym]) -> tuple[NetEnd, ...]:
+def net_ends(
+    net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sym], far_ends: Mapping[PinRef, frozenset[PinRef]]
+) -> tuple[NetEnd, ...]:
     """The ends of one wiring net; a free element with both pins on it is one through end.
 
+    An end's `far` is the net pins its conductors reach, from `far_ends` (a through end: all its symbol's pins; with one pin on the net: `_lone`).
     A pole with both pins on the net is a short: each pin is its own end. A linked pole stands between two nets (R2071).
     """
     seen: set[str] = set()
@@ -96,7 +100,8 @@ def net_ends(net: Net, elem_of_pin: Mapping[PinRef, Elem], syms: Mapping[str, Sy
             continue
         seen.add(elem.key)
         role = _role(elem, ref, syms[ref.sym], folds=folds, cut=ref in {c.pin for c in net.cut})
-        out.append(NetEnd(net.id, elem.key, ref, role))
+        own = (ref,) if role != "through" or _lone(elem, ref, far_ends, on_net) else [p for p in on_net if p.sym == ref.sym] if folds else ()
+        out.append(NetEnd(net.id, elem.key, ref, role, frozenset(f for p in own for f in far_ends.get(p, ())) & on_net))
     return tuple(out)
 
 
@@ -105,6 +110,11 @@ def _folds(elem: Elem, on_net: AbstractSet[PinRef]) -> bool:
     if elem.form != "free" or elem.n_pin is None or elem.s_pin is None:
         return False
     return {PinRef(elem.sym, elem.n_pin), PinRef(elem.sym, elem.s_pin)} <= on_net
+
+
+def _lone(elem: Elem, ref: PinRef, far_ends: Mapping[PinRef, frozenset[PinRef]], on_net: AbstractSet[PinRef]) -> bool:
+    """A free element on the net by its foot pin only, with one conductor there: it reaches by it, over a trunk. Any other one-pin end is a leaf."""
+    return ref.pin == elem.s_pin and sum(p.sym == ref.sym for p in on_net) == 1 and len(far_ends.get(ref, frozenset()) & on_net) == 1
 
 
 def _role(elem: Elem, ref: PinRef, sym: Sym, *, folds: bool, cut: bool) -> str:

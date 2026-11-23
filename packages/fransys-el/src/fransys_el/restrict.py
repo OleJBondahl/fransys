@@ -66,23 +66,28 @@ def _net(
     symbols: Collection[str],
     carry: tuple[Collection[PinRef], Collection[PinRef], Collection[PinRef]],
     ends: Collection[tuple[PinRef, PinRef]],
-) -> Net | None:
-    """`net` with the pins inside `symbols`, `None` when none is inside or a cut one has no carrier.
+    pieces: Mapping[PinRef, str],
+) -> tuple[Net, ...]:
+    """`net` with the pins inside `symbols`: one `Net` per piece the set itself joins that has a carrier, none when no pin is inside.
 
-    A net the scope cuts keeps its in-set pins and names in `cut` the one that continues outside.
+    A cut piece names in `cut` the pin that continues outside. `pieces`: each pin's piece (`scopes.piece_names`); the first keeps the bundle.
     `carry` is the `_carriers` boundary, bare and outward pins; `ends` the far ends, to find a conductor between in-set pins.
     """
     pins = tuple(p for p in net.pins if p.sym in symbols)
-    if not pins:
-        return None
-    if len(pins) == len(net.pins):
-        return net
-    cut = _carriers(pins, *carry)
-    if not cut:
-        return None
-    if len({p.sym for p in pins}) == 1 and not any(a in pins and b in pins for a, b in ends):
-        pins = cut  # one symbol's pins joined by no conductor need no wire between them: only the stub is drawn
-    return replace(net, pins=pins, cut=tuple(CutEnd(p) for p in cut))
+    if len(pins) == len(net.pins) or not pins:
+        return (net,) if pins else ()
+    held: dict[str, list[PinRef]] = {}
+    for pin in pins:
+        held.setdefault(pieces.get(pin, net.id), []).append(pin)
+    found: list[Net] = []
+    for name, part in held.items():
+        cut = _carriers(tuple(part), *carry)
+        # one symbol's pins joined by no conductor need no wire between them: only the stub is drawn
+        alone = len({p.sym for p in part}) == 1 and not any(a in part and b in part for a, b in ends)
+        if cut:
+            one = replace(net, pins=cut if alone else tuple(part), cut=tuple(CutEnd(p) for p in cut))
+            found.append(one if len(held) == 1 else replace(one, id=name, bundle=None if found else net.bundle))
+    return tuple(found)
 
 
 def _whole(net: Net, scope: DrawingScope, boundary: Collection[PinRef]) -> Net:
@@ -165,12 +170,13 @@ class Restriction:
     dropped: frozenset[str]
 
 
-def _scoped(
+def _scoped(  # noqa: PLR0913, PLR0917 -- the scope cut takes the set's cut facts, as `restriction` does [R1867]
     problem: PlacementProblem,
     scope: DrawingScope,
     bare: Collection[PinRef],
     lines: Mapping[PinRef, str] | None,
     scopes: Sequence[DrawingScope],
+    pieces: Mapping[PinRef, str],
 ) -> tuple[tuple[Net, ...], frozenset[str]]:
     """The scope's nets and the ids it drops."""
     boundary = {p for u in problem.facts.units for p in u.boundary}
@@ -178,9 +184,9 @@ def _scoped(
     own = scopes.index(scope) if scope in scopes else -1
     joined = {n.id for n in problem.nets if _joined(n, own, scopes)}
     ended = {*bare, *(a.pin for a in problem.anchors)}  # an anchored pin ends its net: no conductor leaves it
-    cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), problem.facts.far_ends)) for n in problem.nets if n.id not in joined]
-    nets = tuple(_lined(n, lines or {}) for _, n in cut if n is not None) + tuple(_whole(n, scope, boundary) for n in problem.nets if n.id in joined)
-    dropped = frozenset(o.id for o, n in cut if n is None and any(p.sym in scope.symbols for p in o.pins))
+    cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), problem.facts.far_ends, pieces)) for n in problem.nets if n.id not in joined]
+    nets = tuple(_lined(p, lines or {}) for _, ps in cut for p in ps) + tuple(_whole(n, scope, boundary) for n in problem.nets if n.id in joined)
+    dropped = frozenset(o.id for o, ps in cut if not ps and any(p.sym in scope.symbols for p in o.pins))
     return nets, dropped
 
 
@@ -193,11 +199,12 @@ def restriction(  # noqa: PLR0913 -- the scope's problem takes the set's cut fac
     *,
     options: Options,
     tags: Mapping[str, Mapping[str, Size]],
+    pieces: Mapping[PinRef, str] | None = None,
 ) -> Restriction:
     """The problem of one scope with its cut nets; the whole problem unchanged when it holds all.
 
-    `scopes` are every set: a net they share a terminal of is whole where its ends stand (R652).
-    Labels are the scope's own (`Sym.labels`), annexes made again with `options`. `bare` pins never end a cut; `lines` names one's line.
+    `scopes` are every set: a net they share a terminal of is whole where its ends stand (R652). Labels are the scope's own (`Sym.labels`).
+    `bare` pins never end a cut; `lines` names one's line; `pieces` (`scopes.piece_names`) names each pin's piece: a cut net is one `Net` per piece.
     """
     home = "" if scope.of_unit is None else scope.of_unit.value  # a copy is paged with its set: its unit
     inside = tuple(replace(s, unit=home) if s.id in scope.away else s for s in problem.symbols if s.id in scope.symbols)
@@ -212,7 +219,7 @@ def restriction(  # noqa: PLR0913 -- the scope's problem takes the set's cut fac
             ),
             frozenset(),
         )
-    nets, dropped = _scoped(problem, scope, bare, lines, scopes)
+    nets, dropped = _scoped(problem, scope, bare, lines, scopes, pieces or {})
     anchors = tuple(a for a in problem.anchors if a.pin.sym in scope.symbols)
     touched = {p.sym for n in nets for p in n.pins} | {a.pin.sym for a in anchors}
     syms = tuple(s for s in inside if s.id in touched)

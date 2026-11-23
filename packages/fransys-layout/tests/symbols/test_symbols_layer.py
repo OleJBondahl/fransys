@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 import symdef
 from diagram_models import station
+from sheet_formats import a3
 from symdef import ReferenceCellError
 
 from electrical_symbols import LIBRARY
@@ -28,7 +29,6 @@ from fransys_layout.symbols import (
     symbol_views,
     text_room_on,
 )
-from fransys_model.layout import default_sheet_format
 
 
 def views(symbol, orients, **kw):
@@ -172,14 +172,14 @@ def test_a_table_without_a_heading_is_the_unheaded_table() -> None:
 
 def test_the_text_room_is_the_label_height_over_one_g_rounded_up() -> None:
     """The house label is 8 G on the house sheet; a module of 1.2 mm gives 16.46 G, which rounds up to 17 (SIZES, R857)."""
-    model, sheet = station(), default_sheet_format()
+    model, sheet = station(), a3()
     assert text_room_on(model, sheet, LIBRARY) == 8
     assert text_room_on(model, replace(sheet, module_mm=Decimal("1.25")), LIBRARY) == 16
     assert text_room_on(model, replace(sheet, module_mm=Decimal("1.2")), LIBRARY) == 17
 
 
 def test_the_frame_cell_reads_the_house_sheet_through_symdef() -> None:
-    sheet = default_sheet_format()  # 410 x 267 mm at 2.5 mm a module: 1312 x 854 G, 8 x 6 cells
+    sheet = a3()  # 410 x 267 mm at 2.5 mm a module: 1312 x 854 G, 8 x 6 cells
     assert frame_extent(LIBRARY, sheet) == (1312, 854)
     assert frame_cell(LIBRARY, sheet, 0, 0) == (1, "A")
     assert frame_cell(LIBRARY, sheet, 656, 427) == (5, "D")  # the shared edge goes to the max-side cell
@@ -188,7 +188,7 @@ def test_the_frame_cell_reads_the_house_sheet_through_symdef() -> None:
 
 def test_a_point_outside_the_content_box_has_no_frame_cell() -> None:
     with pytest.raises(ReferenceCellError):
-        frame_cell(LIBRARY, default_sheet_format(), 1313, 0)
+        frame_cell(LIBRARY, a3(), 1313, 0)
 
 
 def test_the_outline_room_is_the_margin_and_the_label_slot_of_the_unit_outline_symbol() -> None:

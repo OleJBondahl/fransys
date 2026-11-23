@@ -120,11 +120,6 @@ def test_a_head_end_with_a_lane_marks_only_that_lanes_cell_attached():
     assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"), lane=1)) == {"F"}
 
 
-def test_a_multi_lane_head_end_marks_only_the_lane_on_the_pin():
-    """The head end names lane 0, so only lane 0 hangs on K.c1."""
-    assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"), lane=0)) == {"A"}
-
-
 @pytest.mark.parametrize(
     ("cls", "field"),
     [
@@ -138,3 +133,12 @@ def test_a_new_scene_field_has_no_default(cls, field):
     given = {f.name: None for f in dataclasses.fields(cls) if f.name != field}
     with pytest.raises(TypeError, match=field):
         cls(**given)
+
+
+def test_a_foot_end_marks_the_last_cell_of_its_lane_attached():
+    """A foot end on lane 0 hangs the lane's last cell, not its first."""
+    lane = Lane((Cell("A", "R0", "in", "out"), Cell("T", "R0", "in", "out")), 0)
+    foot = End("boxpin", "n1", PinRef("K", "c1"), lane=0)
+    column = Column("C1", (lane,), (End("open"),), (foot,), 64, 16)
+    boxes = outputs.scene(layout(), problem(), dataclasses.replace(flow(), columns=(column,))).boxes
+    assert {b.sym for b in boxes if b.attached} == {"T"}

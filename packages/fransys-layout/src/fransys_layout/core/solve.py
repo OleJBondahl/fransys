@@ -100,7 +100,6 @@ def _solve(problem: PlacementProblem, options: Options) -> CoreLayout:
         _wired(problem),
         None,
         found,
-        cut.spec.drawn,
         row_measures(placement, cut, problem, options),
     )
     return scored(layout, problem, cut.flow)

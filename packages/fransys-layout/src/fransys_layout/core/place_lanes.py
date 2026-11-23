@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
-from .arrow_reserve import end_widths, leg_fit, leg_pins, leg_rows, leg_unit
+from .arrow_reserve import end_widths, leg_fit, leg_pins, leg_rows, leg_unit, reserve
 from .band import arrow_box, lane_offset, lane_rows
 from .clearance import Keep
 from .cut_end_rooms import arrow_ends, arrow_leads, arrow_poles, cut_ends
@@ -265,8 +265,7 @@ def stand_of(
     lines = (
         Keep("", Box(h[0], ty, h[1] - h[0], 0), "wire", fid) for fid, ty, ts in cols if (h := _hull([px for _, px, _ in ts]))
     )  # R1331: other fans' trunks
-    marker = env.options.link_fit or env.options.marker
-    right = env.problem.area.w - env.options.margin.w - (marker["R0"].w if marker else 0)
+    right = env.problem.area.w - env.options.margin.w - reserve(1, env.options)
     return Stand(
         env.options.wiring_grid,
         y,

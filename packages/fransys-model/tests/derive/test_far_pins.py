@@ -7,7 +7,7 @@ from connector_builders import make_connector
 from plant import Plant
 from query_builders import make_part, make_pin
 
-from fransys_model.derive import far_pins, port_designation, stub_far
+from fransys_model.derive import drawn_pieces, far_pins, port_designation, stub_far
 from fransys_model.derive.designation import _marking_counts, port_marking
 from fransys_model.derive.designation_connector import connector_ports
 from fransys_model.kernel import make_id
@@ -145,3 +145,18 @@ def test_a_connectors_ports_are_its_own_and_those_naming_a_pin_it_has_no_port_fo
     """GAP-8b: the one reader of a connector's ports (`connector_ports`) adds a named port only where no header port stands."""
     model, ports = _named_pins(("a", "j1", "1"), ("b", "j1", "2"))
     assert connector_ports(model, make_id(Function, ("u", "j1"))) == (ports["j1.1"], ports["b"])
+
+
+def test_a_port_set_joins_only_what_its_own_conductors_join() -> None:
+    """KI-1090: two wired pairs that meet through a mate and a far pin are two pieces of a set that holds neither the mate's half nor the pin."""
+    plant = Plant()
+    for key, tag in (("plug", "X1"), ("socket", "X2"), ("dev", "X9"), ("far", "X8")):
+        plant.item(key, designation=tag)
+    plug, socket, dev, far = (plant.pin(k, "J1", "1") for k in ("plug", "socket", "dev", "far"))
+    plant.mate(Plant.function_id("plug", "J1"), Plant.function_id("socket", "J1"))
+    plant.wire(plug, dev, key="w1")
+    plant.wire(socket, far, key="w2")
+    model = plant.model()
+    assert {frozenset(p) for p in drawn_pieces(model, [plug, dev, socket, far])} == {frozenset((plug, dev)), frozenset((socket, far))}
+    assert len(drawn_pieces(model, [dev, far])) == 2  # the conductors' other ends are off the set: nothing joins the two
+    assert drawn_pieces(model, [dev, far], [(dev, far)]) == (tuple(sorted((dev, far))),)  # a pair the drawing holds at one point

@@ -174,7 +174,7 @@ def _retree(env: RouteEnv, grid: Occupancy, drawn: Drawn, i: int) -> tuple[Wire,
 
 
 def _pins(env: RouteEnv, drawn: Drawn, i: int) -> tuple[tuple[PinRef, ...], tuple[int, ...], tuple[Rise, ...]]:
-    """The pins at the ends and taps of the trunk wire `i`, with the taps and rises it took over: the one read of what a trunk joins."""
+    """The pins at the ends and taps of the trunk wire `i`, with its taps and rises: pins only; what a loss joins is `cut_loss.withdrawn`."""
     wire = drawn.wires[i]
     taps, aimed = _taps(drawn, wire)
     at = (wire.points[0], wire.points[-1], *(drawn.wires[j].points[0] for j in taps))

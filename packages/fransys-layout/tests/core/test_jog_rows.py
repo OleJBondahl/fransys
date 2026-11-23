@@ -2,7 +2,7 @@
 
 import pytest
 
-from fransys_layout.core.clearance import footprint_keeps
+from fransys_layout.core.clearance import Keep, footprint_keeps
 from fransys_layout.core.jog_rows import bend_rows, taken_rows
 from fransys_layout.core.values import Box
 
@@ -11,7 +11,7 @@ ROWS = [572, 580, 588, 596]  # y0 564 and a grid step of 8
 
 
 def _rows(ys, spans, taken, keeps=()):
-    return bend_rows(ys, spans, taken, keeps, grid=8)
+    return bend_rows(ys, spans, taken, (keeps, {}), grid=8)
 
 
 def test_a_level_beside_a_taken_run_picks_the_next_free_row() -> None:
@@ -48,3 +48,9 @@ def test_a_bend_row_across_another_nets_footprint_is_refused_but_its_own_is_not(
     keeps = tuple(footprint_keeps((("", "K9"),), Box(650, 570, 40, 20)))  # rows 572, 580 and 588 run through it
     assert _rows(ROWS, [[(660, 676, NONE)]], [], keeps) == [3]
     assert _rows(ROWS, [[(660, 676, frozenset({"K9"}))]], [], keeps) == [0]
+
+
+def test_a_bend_row_along_a_body_outline_is_refused_so_the_leg_is_drawn_on_the_next_row() -> None:
+    """CFH-CND-1: a Z bent on a body's top edge is a body hit, so its wire was lost; the row beyond the edge is taken."""
+    body = Keep("", Box(650, 580, 40, 4), "body", "M1", None, None, ())  # its top edge is row 580, its body ends above row 588
+    assert _rows(ROWS, [[(660, 676, NONE)]], [(572, 0, 999)], (body,)) == [2]

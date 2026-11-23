@@ -6,7 +6,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Literal
 
 from .errors import CoreError
-from .values import Box, Options, Orientation, Pin, RefKind, Size
+from .values import Box, MarkerBoxes, Options, Orientation, Pin, Size
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -15,9 +15,6 @@ if TYPE_CHECKING:
     from .outputs import Marker
     from .sym_values import PinTurn, Sym, Turned
     from .values import PinRef
-
-
-_LINKS = (RefKind.ARROW,)  # R350: only an arrow is sized by its widest text; its flag is level
 
 
 def row_of(bands: Sequence[tuple[int, int]], y: int) -> int:
@@ -58,69 +55,44 @@ def stub_views(
     return table[max(widths), len(widths)]
 
 
-def marker_box_at(
-    x: int,
-    y: int,
-    options: Options,
-    orient: Orientation = "R0",
-    key: tuple[PinRef, str] | None = None,
-) -> Box:
-    """A marker's footprint at orient, moved to the symbol origin (x, y).
-
-    The box is `Options.marker_fit[key]` (the marker's pin
-    and kind) when named, else `link_fit` for a link kind, else `Options.marker`; the symdef layer measured every orientation (SB4).
-    """
-    boxes = options.marker_fit.get(key) if key is not None else None
-    if boxes is None and key is not None and key[1] in _LINKS:
-        boxes = options.link_fit
-    boxes = boxes or options.marker
+def _boxes(options: Options, key: tuple[PinRef | None, str]) -> MarkerBoxes:
+    """The one lookup of `Options.marker_boxes`: the key's own boxes, else the kind's at any pin (SB4)."""
+    boxes = options.marker_boxes.get(key) or options.marker_boxes.get((None, key[1]))
     if boxes is None:
-        msg = "Options.marker is unset; the symdef layer sets the marker symbol's keepout boxes"
+        msg = f"Options.marker_boxes has no box for {key}: pass `(None, {key[1]!r})`, the kind's box at any pin"
         raise CoreError(msg)
-    if orient not in boxes:
-        msg = f"Options.marker has no box for {orient}; the symdef layer measures all eight"
+    return boxes
+
+
+def _box_at(x: int, y: int, views: Mapping[Orientation, Box], orient: Orientation, key: tuple[PinRef | None, str]) -> Box:
+    """The box of `views` at `orient`, moved to the origin (x, y)."""
+    if orient not in views:
+        msg = f"Options.marker_boxes has no box for {key} at {orient}; the symdef layer measures all eight"
         raise CoreError(msg)
-    return shift(boxes[orient], x, y)
+    return shift(views[orient], x, y)
+
+
+def marker_box_at(x: int, y: int, options: Options, orient: Orientation, key: tuple[PinRef | None, str]) -> Box:
+    """A marker's footprint at orient, moved to the symbol origin (x, y): what places and routes it (R350)."""
+    return _box_at(x, y, _boxes(options, key).footprint, orient, key)
+
+
+def marker_drawn_at(x: int, y: int, options: Options, orient: Orientation, key: tuple[PinRef | None, str]) -> Box:
+    """The box a marker is drawn in at (x, y), the reserve a wire keeps off: a tag is drawn as wide as its text can be (R543)."""
+    return _box_at(x, y, _boxes(options, key).drawn, orient, key)
 
 
 def sized(options: Options, key: tuple[PinRef, str], also: Sequence[PinRef], far: Sequence[PinRef]) -> Options:
     """`options` with the boxes of the stub at `key` for the lines its ledger end holds, else as they were (R1597)."""
     views = stub_views(options.stub_lines, options.stub_table, key[0], also, far)
-    return replace(options, marker_fit={key: views}) if views else options
+    return replace(options, marker_boxes={**options.marker_boxes, key: MarkerBoxes(views, views)}) if views else options
 
 
-def marker_box(marker: Marker, options: Options) -> Box:
-    """The one home of a marker's footprint: `marker_box_at` its origin, orientation and key."""
-    return marker_box_at(
-        marker.x, marker.y, sized(options, (marker.end, str(marker.kind)), marker.also, marker.far), marker.orient, (marker.end, str(marker.kind))
-    )
-
-
-def marker_drawn_box_at(
-    x: int,
-    y: int,
-    options: Options,
-    orient: Orientation = "R0",
-    key: tuple[PinRef, str] | None = None,
-) -> Box:
-    """The box a marker is drawn in at the origin (x, y): a tag is stretched to `link_fit`.
-
-    `marker_box_at` places by the plain tag (R350); the drawing stretches it (R543), so a wire
-    keeps off this box. This is the reserve; the outline `fransys_el` draws is inside it (a tag is drawn as long as its own text needs).
-    """
-    if key is not None and key[1] == RefKind.TAG and options.link_fit:
-        if orient not in options.link_fit:
-            msg = f"link_fit has no box for orientation {orient}: add a {orient} entry to options.link_fit"
-            raise CoreError(msg)
-        return shift(options.link_fit[orient], x, y)
-    return marker_box_at(x, y, options, orient, key)
-
-
-def marker_drawn_box(marker: Marker, options: Options) -> Box:
-    """The box a marker is drawn in: `marker_drawn_box_at` its origin, orientation and key."""
-    return marker_drawn_box_at(
-        marker.x, marker.y, sized(options, (marker.end, str(marker.kind)), marker.also, marker.far), marker.orient, (marker.end, str(marker.kind))
-    )
+def marker_box(marker: Marker, options: Options, *, drawn: bool = False) -> Box:
+    """The one home of a marker's box: `marker_box_at` its origin, orientation and key, sized by its ledger end."""
+    key = (marker.end, str(marker.kind))
+    box = (marker_drawn_at if drawn else marker_box_at)(marker.x, marker.y, sized(options, key, marker.also, marker.far), marker.orient, key)
+    return replace(box, h=box.h + marker.span)
 
 
 def union(a: Box, b: Box) -> Box:
@@ -176,10 +148,10 @@ def pin_turn(sym: Sym, orient: Orientation, pin_id: str) -> PinTurn:
     raise CoreError(msg)
 
 
-def cell_footprint(sym: Sym, cell: Cell, *, in_row: bool) -> Box:
+def cell_footprint(sym: Sym, cell: Cell) -> Box:
     """The footprint at the cell's orient; the row variant when the cell stands in a row group."""
     view = view_of(sym, cell.orient)
-    return view.row_footprint if in_row and view.row_footprint is not None else view.footprint
+    return view.row_footprint if sym.in_row and view.row_footprint is not None else view.footprint
 
 
 def cell_anchor(sym: Sym, cell: Cell) -> tuple[int, int]:
@@ -196,7 +168,7 @@ def pin_xy(sym: Sym, cell: Cell, pin_id: str) -> tuple[int, int]:
     return turn.dx, turn.dy
 
 
-def stack_lane(syms: Mapping[str, Sym], cells: tuple[Cell, ...], options: Options, in_row: frozenset[str]) -> tuple[tuple[int, ...], int]:
+def stack_lane(syms: Mapping[str, Sym], cells: tuple[Cell, ...], options: Options) -> tuple[tuple[int, ...], int]:
     """Origin y of each cell stacked from y 0: wire_min plus its hold above each cell but the first.
 
     A hold on the first cell is ignored; nothing stands above it. Also returns the lane height.
@@ -205,7 +177,7 @@ def stack_lane(syms: Mapping[str, Sym], cells: tuple[Cell, ...], options: Option
     bottom = 0
     for i, cell in enumerate(cells):
         sym = syms[cell.sym]
-        fp = cell_footprint(sym, cell, in_row=cell.sym in in_row)
+        fp = cell_footprint(sym, cell)
         top = bottom + (options.wire_min + cell.hold if i else 0)
         origin = top - fp.y
         ys.append(origin)
@@ -213,23 +185,23 @@ def stack_lane(syms: Mapping[str, Sym], cells: tuple[Cell, ...], options: Option
     return tuple(ys), bottom
 
 
-def lane_extent(syms: Mapping[str, Sym], cells: tuple[Cell, ...], in_row: frozenset[str], *, body: bool = False) -> tuple[int, int]:
+def lane_extent(syms: Mapping[str, Sym], cells: tuple[Cell, ...], *, body: bool = False) -> tuple[int, int]:
     """Left and right reach of a lane's footprints (its bodies when `body`) against the lane's wire x."""
     left, right = 0, 0
     for cell in cells:
         sym = syms[cell.sym]
-        fp = view_of(sym, cell.orient).body if body else cell_footprint(sym, cell, in_row=cell.sym in in_row)
+        fp = view_of(sym, cell.orient).body if body else cell_footprint(sym, cell)
         ax, _ = cell_anchor(sym, cell)
         left = min(left, fp.x - ax)
         right = max(right, fp.x + fp.w - ax)
     return left, right
 
 
-def column_extent(syms: Mapping[str, Sym], lanes: tuple[Lane, ...], in_row: frozenset[str]) -> tuple[int, int]:
+def column_extent(syms: Mapping[str, Sym], lanes: tuple[Lane, ...]) -> tuple[int, int]:
     """Left and right reach of a column against lane 0's x, over all lanes and their offsets."""
     left, right = 0, 0
     for lane in lanes:
-        a, b = lane_extent(syms, lane.cells, in_row)
+        a, b = lane_extent(syms, lane.cells)
         left = min(left, lane.offset + a)
         right = max(right, lane.offset + b)
     return left, right

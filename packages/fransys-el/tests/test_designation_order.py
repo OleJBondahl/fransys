@@ -7,11 +7,10 @@ designation. Twelve independent lamp pairs are equal columns: only the id orders
 from typing import Any
 
 import fransys as fr
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys.colours import BU
 from fransys_el import build, symbol_kit
 from fransys_el.placement_ids import symbol_key
-from fransys_el.placement_options import options
 from placement_fixtures import leads
 
 from electrical_symbols import LIBRARY
@@ -33,7 +32,7 @@ def _placed_tags() -> tuple[list[Any], list[Any]]:
     kit = symbol_kit(model, LIBRARY)
     conventions = house()
     problem, _ = build(model, kit, conventions, LIBRARY)
-    layout = solve(problem, options(conventions, LIBRARY))
+    layout = solve(problem, drawn_options(model, kit, problem, conventions))
     tag = {f.id: items(model)[f.item].tag for f in functions(model).values()}
     tag_of = {symbol_key(model, f): tag[f] for f in leads(kit)}
     placed = [p for page in layout.placement.pages for p in page.placed]

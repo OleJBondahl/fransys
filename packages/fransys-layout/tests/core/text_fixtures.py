@@ -19,9 +19,9 @@ lazy from fransys_layout.core.flow_values import CutResult
 lazy from fransys_layout.core.outputs import Marker
 
 from . import pipeline_fixtures
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net, side
-from .flow_builders import poles
+from .flow_builders import conductors, hub_pins, poles
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -38,7 +38,7 @@ def marked_of(prob: PlacementProblem, options: Options | None = None) -> tuple[M
     from fransys_layout.core.text_markers import placed_marks
 
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     cut = pipeline_fixtures.cut_of(prob, opts)
     return placed_marks(cut, place_pages(cut, prob, opts), prob, opts, {})[0]
@@ -110,13 +110,13 @@ def copied_hub() -> PlacementProblem:
     The copy is the reference the cut plans for the hub onto pages 2 and 3.
     """
     syms = [free("t2"), *(elem(f"a2x{i}", 700, 400, "G2") for i in (1, 2, 3))]
-    nets = (net("feed2", "t2.e", "a2x1.n", "a2x2.n", "a2x3.n"),)
+    nets = (net("feed2", *hub_pins("t2"), "a2x1.n", "a2x2.n", "a2x3.n"),)
     return PlacementProblem(
         AREA,
         tuple(syms),
         nets,
         hints=Hints(group_order=("G2",)),
-        facts=Facts(far_ends=()),
+        facts=Facts(far_ends=conductors(nets)),
     )
 
 

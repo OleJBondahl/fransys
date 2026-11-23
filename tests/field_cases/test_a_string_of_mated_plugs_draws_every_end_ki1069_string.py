@@ -1,6 +1,6 @@
 """Field case: one string of a cabinet unit whose board and precharge plugs mate through connectors (KI-1069, R2593, R2598).
 The bug: CONNECTION_NOT_DRAWN on six plug pins (S1 plugs 1, 2, 3, 6 and 3, and a sensor plug 2); dropping any one plug gives none.
-Fixed: KI1069-B (layout-0628, R2596); KI-1069 stays open until the real cabinet shows none."""
+Fixed: KI1069-B (layout-0628, R2596); KI-1069 stays open until the real cabinet shows none. Anchors KI-1090: INK_WITHOUT_CONDUCTOR (R2822)."""
 
 import fransys as fr
 import pytest
@@ -19,3 +19,6 @@ def test_a_string_of_mated_plugs_draws_every_end() -> None:
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).
+
+
+# CARD_OVERFULL: a looks finding of this file's builds, on KI-1378 (R3557).

@@ -219,8 +219,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severity=Severity.ERROR,
         stage="validators",
         who="consumer",
-        cause="Two rail groups of one unit carry the same potential.",
-        fix='Flag one bridged group per potential in a unit. Write: x.run("24V", 4, bridged=True, rail=True)',
+        cause="Two rail groups of one potential in one unit are joined by no wiring inside the unit.",
+        fix='Bond them inside the unit, or flag one group per potential across a unit boundary. Write: x.run("24V", 4, bridged=True, rail=True)',
         page="findings-validators",
     ),
     CodeInfo(

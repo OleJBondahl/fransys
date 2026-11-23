@@ -37,6 +37,7 @@ from fransys_model.derive.facts.current.bounds import highest
 from fransys_model.derive.facts.current.graph import Edge, Raw, Wire, group, solve
 from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, UnionFind
+from fransys_model.vocab.roles import LINK_STATES
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Item, Port
 
 MAX_ENUMERATED_ITEMS: Final = 8
-_THROWS: Final[tuple[LinkState, ...]] = ("rest", "operated")
+_THROWS: Final[tuple[LinkState, ...]] = LINK_STATES
 type _States = tuple[tuple[Id[Item], LinkState], ...]
 
 

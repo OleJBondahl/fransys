@@ -95,7 +95,6 @@ class ConductorRole:
     lands: bool = False
     joins_net: bool = False
     bridge: bool = False
-    mount: bool = False
     lead: bool = False
 
 

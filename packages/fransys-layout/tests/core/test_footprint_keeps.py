@@ -16,7 +16,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import _spans
 from fransys_layout.core.values import Box
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, box_sym, elem
 from .flow_builders import net
 from .pipeline_fixtures import cut_of
@@ -25,7 +25,7 @@ from .place_fixtures import bundle_fan
 
 def _page():
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     prob = bundle_fan()
     (env,) = page_envs(cut_of(prob, opts), prob, opts)
@@ -54,7 +54,6 @@ def test_every_cell_gives_a_foreign_keep_of_its_hard_box() -> None:
         hard, _ = hard_soft(
             env.syms[cell.sym],
             cell,
-            in_row=cell.sym in env.in_row,
             tag_stagger=env.options.tag_stagger,
         )
         assert (k.kind, k.owner, k.box.y, k.box.w, k.box.h) == (
@@ -88,7 +87,7 @@ def _two_cards():
     """Box A1 fans p1 to k1 and k3; box A2 (a card too) is wired to its own element: foreign to that fan."""
     syms = (box_sym(4), replace(box_sym(2), id="A2"), *(elem(s, 40) for s in ("k1", "k3", "k5")))
     nets = [net("v", "A1.p1", "k1.n", "k3.n"), net("w", "A2.p1", "k5.n")]
-    opts = core_options(marker=MARKER)
+    opts = core_options(marker_boxes=MARKERS)
     prob = PlacementProblem(AREA, syms, tuple(nets), Facts(far_ends=()))
     (env,) = page_envs(cut_of(prob, opts), prob, opts)
     return env, place_x(env)[0]

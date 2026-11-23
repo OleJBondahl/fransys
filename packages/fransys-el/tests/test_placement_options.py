@@ -8,6 +8,7 @@ import pytest
 from conventions_fixtures import LAYOUT, SHEET, house
 from fransys_el import house_conventions
 from fransys_el.placement_options import GENERAL, options
+from fransys_el.placement_views import marker_boxes
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Box, Options, Orientation, Size
@@ -16,7 +17,7 @@ from fransys_layout.symbols import outline_room
 
 @pytest.mark.rule("SETTINGS")
 def test_default_options_are_the_layout_toml_with_the_placement_conventions() -> None:
-    """Every `[layout]` key reaches `Options` as written; the marker is the library's."""
+    """Every `[layout]` key reaches `Options` as written."""
     got = options(house(), LIBRARY)
     assert got.box_pins == "spread"
     assert got.bundle_direction is True
@@ -34,12 +35,11 @@ def _tuple(value: object) -> object:
 
 def test_the_marker_is_measured_from_the_library_symbol_at_all_eight_orientations() -> None:
     """The reference marker's keep-out box at R0 is 48 by 16 G; the other seven are measured."""
-    marker = options(house(), LIBRARY).marker
-    assert marker is not None
+    marker = marker_boxes(LIBRARY)
     assert marker["R0"] == Box(0, -8, 48, 16)
     assert set(marker) == set(typing.get_args(Orientation))
     assert options(house(), LIBRARY).outline == outline_room(LIBRARY)
-    given = replace(house().options, marker={"R0": Box(1, 2, 3, 4)}, outline=replace(outline_room(LIBRARY), margin=9))
+    given = replace(house().options, row_gap=9, outline=replace(outline_room(LIBRARY), margin=9))
     assert options(dataclasses.replace(house(), options=given), LIBRARY) == given
 
 

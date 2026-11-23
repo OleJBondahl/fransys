@@ -6,17 +6,19 @@ The pairing skips earth pins and does not filter by name: a pin never vanishes (
 import pytest
 from plant import Plant
 
+from fransys_model.derive import changeover_throws
 from fransys_model.derive.contact_entries import contact_entries
 from fransys_model.elecdef import PinRole
-from fransys_model.kernel import make_id
+from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab import FunctionKind, PartCategory
 from fransys_model.vocab.enums import PortBoundary
 from fransys_model.vocab.tables import functions
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
+lazy from fransys_model.vocab.core import Function
 
 
-def _entries(pins: dict[str, PortBoundary | PinRole]) -> list[str]:
-    """The NO entries' marks of one `contact_no` function with `pins` and no link."""
+def _built(pins: dict[str, PortBoundary | PinRole]) -> tuple[Model, Id[Function]]:
+    """A model with one `contact_no` function with `pins` and no link, and that function."""
     plant = Plant()
     part = Part(
         id=make_id(Part, ("blk",)),
@@ -48,7 +50,12 @@ def _entries(pins: dict[str, PortBoundary | PinRole]) -> list[str]:
         )
         plant.add(pin)
         plant.port(function, name, template=pin.id)
-    model = plant.model()
+    return plant.model(), function
+
+
+def _entries(pins: dict[str, PortBoundary | PinRole]) -> list[str]:
+    """The NO entries' marks of one `contact_no` function with `pins` and no link."""
+    model, function = _built(pins)
     no, nc = contact_entries(model, functions(model)[function])
     assert nc == []
     return [mark for _, _, mark in no]
@@ -66,3 +73,9 @@ def _entries(pins: dict[str, PortBoundary | PinRole]) -> list[str]:
 def test_unlinked_pins_pair_and_the_odd_pin_is_listed_last(pins, marks) -> None:
     """Catches the odd pin or a non-digit pin vanishing, and an earth pin joining a pole."""
     assert _entries(pins) == marks
+
+
+def test_a_function_that_is_not_a_changeover_has_no_throws() -> None:
+    """Catches `changeover_throws` answering a non-changeover with a pole (the caller's kind guard relied on it)."""
+    model, function = _built({"1": PortBoundary.GENERIC, "2": PortBoundary.GENERIC})
+    assert changeover_throws(model, function) == ()

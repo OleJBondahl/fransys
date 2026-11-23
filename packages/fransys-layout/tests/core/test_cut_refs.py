@@ -7,7 +7,7 @@ Size(16, 8) everywhere (cut_fixtures).
 from __future__ import annotations
 
 from dataclasses import replace
-from itertools import accumulate, permutations
+from itertools import accumulate, combinations, permutations, product
 from types import SimpleNamespace
 from typing import Any
 
@@ -27,28 +27,32 @@ from fransys_layout.core import (
 )
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
-from fransys_layout.core.cut_bundle import leg_stubs
 from fransys_layout.core.cut_ends import ReferenceLaneError, lane_ends
 from fransys_layout.core.cut_ledger import _pole_carried, account
+from fransys_layout.core.cut_loss import arrowed, restood, whole, withdrawn
 from fransys_layout.core.cut_refs import _column_pin, across
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Attach, CrossLink, CutResult, Fan, FlowGraph
 from fransys_layout.core.geometry import marker_box_at
-from fransys_layout.core.outputs import Trunk
+from fransys_layout.core.outputs import Refused, Trunk
 from fransys_layout.core.text_ends import MarkEnv, pinned_stand
 from fransys_layout.core.unionfind import UnionFind
 from fransys_layout.core.values import CutEnd, PagePlan, Ref, RefEnd, RefKind, RowPlan, StandClass
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, box_sym, chain, cut_of, elem, free, net, page_of, refs_of, side
+from .flow_builders import conductors, hub_pins
 
 # copies and the P3 check
+
+FEED = net("feed", *hub_pins("t0"), "k1.n", "k2.n", "k3.n")
+HUB_FACTS = Facts(far_ends=tuple((PinRef("t0", "n"), p) for p in FEED.pins[2:]))  # a star: the hub t0 has a conductor to each leg
 
 
 def test_a_free_sided_hub_is_copied_onto_the_other_page_of_its_fan() -> None:
     """The hub t0 heads leg k1; legs k2 and k3 stand on page 2: page 2 draws t0 again, no arrow."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n")])
+    result = cut_of(syms, [FEED], HUB_FACTS)
     assert page_of(result) == {"c:k1": 1, "c:k2": 2, "c:k3": 2}
     assert [(p.page, [r.columns for r in p.rows]) for p in result.spec.pages] == [
         (1, [("c:k1",)]),
@@ -67,7 +71,7 @@ def test_a_free_sided_hub_is_copied_onto_the_other_page_of_its_fan() -> None:
 def test_a_copy_has_one_end_for_each_page_beyond_the_hubs_own() -> None:
     """Three legs of 700 G each take a page; the hub is copied onto pages 2 and 3, P3 is silent."""
     syms = [free("t0"), *(elem(f"k{i}", 700, 400) for i in (1, 2, 3))]
-    result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n")])
+    result = cut_of(syms, [FEED], HUB_FACTS)
     assert page_of(result) == {"c:k1": 1, "c:k2": 2, "c:k3": 3}
     assert result.spec.reference_plan == (
         Ref(
@@ -81,7 +85,7 @@ def test_a_copy_has_one_end_for_each_page_beyond_the_hubs_own() -> None:
 
 def test_the_p3_check_is_silent_when_the_head_page_holds_the_most_legs() -> None:
     syms = [free("t0"), elem("k1", 500, 400), elem("k2", 500, 400), elem("k3", 900, 400)]
-    result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n")])
+    result = cut_of(syms, [FEED], HUB_FACTS)
     assert page_of(result) == {"c:k1": 1, "c:k2": 1, "c:k3": 2}
     assert [r.kind for r in result.spec.reference_plan] == ["copy"]
     assert result.spec.findings == ()
@@ -136,7 +140,8 @@ def test_a_row_wrap_inside_one_page_plans_no_copy_and_no_finding() -> None:
 def hub_case(widths: tuple[int, int, int], heights: tuple[int, int, int]) -> CutResult:
     """Trunk u (a free-sided hub j) joins k1, k2; trunk v (a free-sided hub t) joins k2, k3."""
     cols = [elem(f"k{i}", w, h) for i, (w, h) in enumerate(zip(widths, heights, strict=True), 1)]
-    return cut_of([*cols, free("j"), free("t")], [net("u", "k1.s", "k2.s", "j.e"), net("v", "t.e", "k2.n", "k3.n")])
+    nets = [net("u", *hub_pins("j"), "k1.s", "k2.s"), net("v", *hub_pins("t"), "k2.n", "k3.n")]
+    return cut_of([*cols, free("j"), free("t")], nets, Facts(far_ends=conductors(nets)))
 
 
 def test_a_row_wrap_through_the_trunk_of_a_free_sided_hub_is_not_priced_as_a_copy() -> None:
@@ -163,24 +168,26 @@ def test_an_end_that_carries_an_arrow_gets_no_stub() -> None:
     assert {e.pin for r in arrows for e in r.ends} >= {PinRef("x", "e"), PinRef("z", "e")}
 
 
-def test_a_copied_hub_end_on_a_page_cut_keeps_the_stub_for_its_conductor_out_of_the_set() -> None:
+def test_a_copied_hub_end_on_a_page_cut_keeps_one_stub_per_pin_for_its_conductors_out_of_the_set() -> None:
     """The copy of t0 on page 2 names k2.n, wired out: the copy carries the net, the stub still names k2.n's conductor (KI1069-B)."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
     out = tuple((PinRef(k, "n"), PinRef("out", k)) for k in ("k2", "k3"))
     facts = _wired(*out, units=(Unit("U1", None, tuple(a for a, _ in out)),))
+    facts = replace(
+        facts, far_ends=(*facts.far_ends, (PinRef("t0", "n"), PinRef("k1", "n")), (PinRef("t0", "n"), PinRef("k2", "n")))
+    )  # the hub's own conductors
     syms = [replace(s, unit="U1") if s.id in ("k2", "k3") else s for s in syms]
-    result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n", crosses_unit=True)], facts)
+    result = cut_of(syms, [net("feed", *hub_pins("t0"), "k1.n", "k2.n", "k3.n", crosses_unit=True)], facts)
     (copy,) = refs_of(result, "copy")
     assert copy.ends == (RefEnd(2, "c:k1", PinRef("k2", "n")),)
-    (stub,) = refs_of(result, "stub")
-    assert [(e.pin, e.also) for e in stub.ends] == [(PinRef("k2", "n"), (PinRef("k3", "n"),))]  # one bundled end at k2.n stubs both conductors
+    assert [(e.pin, e.also) for r in refs_of(result, "stub") for e in r.ends] == [(PinRef("k2", "n"), ()), (PinRef("k3", "n"), ())]  # a leg each
 
 
 def test_a_hub_with_boundary_pins_on_both_sides_is_cut_by_an_arrow_pair_not_copied() -> None:
     """R455: the copy of a unit's boundary terminal tells a reader nothing the arrow pair does."""
     syms = [free("t0"), elem("k1", 700, 400), elem("k2", 600, 400), elem("k3", 600, 400)]
-    facts = Facts(units=(Unit("U1", None, (PinRef("t0", "n"), PinRef("t0", "s"))),), far_ends=())
-    result = cut_of(syms, [net("feed", "t0.e", "k1.n", "k2.n", "k3.n")], facts)
+    facts = replace(HUB_FACTS, units=(Unit("U1", None, (PinRef("t0", "n"), PinRef("t0", "s"))),))
+    result = cut_of(syms, [FEED], facts)
     assert page_of(result) == {"c:k1": 1, "c:k2": 2, "c:k3": 2}
     assert refs_of(result, "copy") == []
     assert {r.net for r in refs_of(result, "arrow")} == {"f:feed"}
@@ -244,7 +251,7 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
         facts=Facts(far_ends=()),
     )
     options = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     flow = build_flow(prob, options)
     (_tail,) = flow.fans
@@ -469,7 +476,7 @@ def test_every_row_piece_of_a_net_on_one_page_gets_a_stub_naming_a_pin_outside_i
     """R676: twelve 150 G legs wrap to two rows; each row is a drawn piece and carries a stub at a pin wired to the other row."""
     legs = [f"l{i:02d}" for i in range(12)]
     syms = [free("t0"), *(elem(leg, 150) for leg in legs)]
-    names = ["t0.e", *(f"{leg}.n" for leg in legs)]
+    names = [*hub_pins("t0"), *(f"{leg}.n" for leg in legs)]
     pins = [PinRef(*n.split(".")) for n in names]
     facts = Facts(far_ends=tuple(pr for p in pins[1:] for pr in ((pins[0], p), (p, pins[0]))), groups=(tuple(pins),))
     nets = [net("bus", *names)]
@@ -491,7 +498,7 @@ def _legs_of(far: tuple[tuple[PinRef, PinRef], ...], ink: set[tuple[PinRef, PinR
     page = PagePlan(1, "", (RowPlan(("c:x",), ()),), ())
     problem = PlacementProblem(AREA, (side("x", 40, 40),), (net("m", "x.e", "y.e"),), Facts(far_ends=far))
     made = [Ref("m", RefKind.STUB, (RefEnd(1, None, x),))]
-    flow: Any = SimpleNamespace(fans=[fan] if fanned else [])
+    flow: Any = SimpleNamespace(fans=[fan] if fanned else [], columns=())
     return _legs(problem, flow, {"x": 1, "y": 1, "z": 2, "c:x": 1}, [page], (ink, made, []))
 
 
@@ -511,37 +518,28 @@ def test_a_fan_pin_drawn_to_every_far_end_keeps_no_stub_and_no_leg() -> None:
     assert legs == []
 
 
-def _leg(pin: str) -> RefEnd:
-    return RefEnd(1, "C1", PinRef("K1", pin), 0, StandClass.LEG)
+def _lane_legs(poles: int, far: str, *, arrow: bool) -> list[Ref]:
+    """`_legs` on `poles` driver pins x.e* with conductors to y.e* on page 2; `far`: y is on x's fan, on another fan or on none."""
+    from fransys_layout.core.cut_ledger import _legs
+
+    xs, ys = ([PinRef(s, f"e{i}") for i in range(poles)] for s in "xy")
+    on_x, on_y = (tuple(Attach(f"c:{p[0].sym}", i, 0, q, net=f"n{i}") for i, q in enumerate(p)) for p in (xs, ys))
+    fans = [Fan("f", tuple(f"n{i}" for i in range(poles)), on_x, on_y if far == "same" else (), None, poles, "H")]
+    fans += [Fan("g", fans[0].nets, on_y, (), None, poles, "H")] if far == "other" else []
+    pages = [PagePlan(1, "", (RowPlan(("c:x",), ()),), ()), PagePlan(2, "", (RowPlan(("c:y",), ()),), ())]
+    nets = tuple(net(f"n{i}", f"x.e{i}", f"y.e{i}") for i in range(poles))
+    problem = PlacementProblem(AREA, (side("x", 40, 40), side("y", 40, 40)), nets, Facts(far_ends=tuple(zip(xs, ys, strict=True))))
+    made = [Ref(f"n{i}", RefKind.STUB, (RefEnd(1, None, p),)) for i, p in enumerate(xs)]
+    arrows = [Ref(f"n{i}", RefKind.ARROW, (RefEnd(1, None, a), RefEnd(2, None, b))) for i, (a, b) in enumerate(zip(xs, ys, strict=True))]
+    flow: Any = SimpleNamespace(fans=fans, columns=())
+    return _legs(problem, flow, {"x": 1, "y": 2, "c:x": 1, "c:y": 2}, pages, (set(), made, arrows if arrow else []))[1]
 
 
-def test_a_bundle_of_legs_on_one_page_is_one_stub_that_lists_every_pin_it_ends() -> None:
-    """BUNDLE (R1319): one end stands for the bundle and names the other pins' conductors."""
-    pins = [PinRef("K1", n) for n in "123"]
-    ends = [_leg(p.pin) for p in pins]
-    far = {p: {(2, "B1")} for p in pins}
-    (stub,) = leg_stubs(ends, far, {p: f"n{p.pin}" for p in pins})
-    assert (stub.ends[0].pin, stub.ends[0].also) == (pins[0], (pins[1], pins[2]))
-
-
-def test_legs_that_leave_to_one_far_device_outside_the_set_are_one_bundle() -> None:
-    """KI-615: a far end in no page of the set is page 0, so pins wired to one outside device bundle like those of one far page."""
-    from fransys_layout.core.cut_ledger import _far_pages
-
-    pins = [PinRef("K1", n) for n in "12"]
-    out = PinRef("far", "e")
-    far = _far_pages(tuple((p, out) for p in pins), set(), {"K1": 1})
-    assert far == {p: {(0, "far")} for p in pins}
-    (stub,) = leg_stubs([_leg(p.pin) for p in pins], far, {p: f"n{p.pin}" for p in pins})
-    assert stub.ends[0].also == (pins[1],)
-
-
-def test_legs_that_leave_to_different_far_devices_are_a_stub_each() -> None:
-    pins = [PinRef("K1", n) for n in "12"]
-    ends = [_leg(p.pin) for p in pins]
-    far = {pins[0]: {(2, "B1")}, pins[1]: {(2, "B2")}}
-    stubs = leg_stubs(ends, far, {p: f"n{p.pin}" for p in pins})
-    assert [r.ends[0].also for r in stubs] == [(), ()]
+@pytest.mark.parametrize("poles", [1, 2, 3])
+@pytest.mark.parametrize(("far", "arrow", "leg"), [("same", True, False), ("same", False, True), ("other", True, True), ("none", True, True)])
+def test_a_pin_gets_a_leg_only_when_a_conductor_leaves_its_lane_or_no_pair_joins(poles: int, far: str, *, arrow: bool, leg: bool) -> None:
+    """CUT-CONTINUATION C2, C3 (R3564): a far pin on the pin's fan, joined by a pair, is drawn and needs no leg; any other keeps its leg."""
+    assert bool(_lane_legs(poles, far, arrow=arrow)) is leg
 
 
 def test_a_tagged_link_gets_its_tag_unless_every_pin_is_already_a_planned_end() -> None:
@@ -767,14 +765,14 @@ def _stub_env(lane_ends: tuple[tuple[int, int] | None, ...]) -> tuple[MarkEnv, R
     attach = tuple(Attach(None, 0, k, pins[k], k, net=f"n{k}") for k in (0, 1))
     fan = Fan("f", ("n0", "n1"), (), attach, None, 2, "S")
     trunk = Trunk("f", 1, 256, 498, 530, 2, 0, lane_ends)
-    options = core_options(marker=MARKER, marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}), marker_above="R270", marker_below="R90")
+    options = core_options(marker_boxes=MARKERS, marker_vertical=frozenset({"R90", "R270", "MR90", "MR270"}), marker_above="R270", marker_below="R90")
     env = MarkEnv(options, Size(1312, 854), {}, {}, {(1, "f"): (trunk,)}, {"f": fan})
     ref = Ref("n0", RefKind.STUB, ())
     ends = [RefEnd(1, None, p, row=0, stand=StandClass.TRUNK_END) for p in pins]
     return env, ref, ends
 
 
-def test_a_bundled_stub_with_no_leg_line_stands_on_its_own_poles_lane_end() -> None:
+def test_one_stub_per_pin_with_no_leg_line_stands_on_its_own_poles_lane_end() -> None:
     """P2 (R1938): lane_ends ((498, 498), (530, 530)) and no leg line: pole 0's stub abuts x=498, pole 1's x=530."""
     env, ref, ends = _stub_env(((498, 498), (530, 530)))
     for end in ends:
@@ -782,7 +780,7 @@ def test_a_bundled_stub_with_no_leg_line_stands_on_its_own_poles_lane_end() -> N
         pole = int(end.pin.sym[1:])
         ref = replace(ref, net=f"n{pole}")
         stand = pinned_stand(env, ref, end)
-        assert marker_box_at(stand.x, stand.y, env.options, stand.orient).x == (498, 530)[pole], end
+        assert marker_box_at(stand.x, stand.y, env.options, stand.orient, (None, "tag")).x == (498, 530)[pole], end
 
 
 def test_a_trunk_end_stub_stands_at_the_fans_trunk_in_its_own_row_not_the_first_of_the_page() -> None:
@@ -792,7 +790,7 @@ def test_a_trunk_end_stub_stands_at_the_fans_trunk_in_its_own_row_not_the_first_
     own = Trunk("f", 1, 256, 498, 530, 2, 0, ((498, 498), (530, 530)))
     env = replace(env, trunks={(1, "f"): (first, own)})
     stand = pinned_stand(env, replace(ref, net="n1"), ends[1])
-    assert marker_box_at(stand.x, stand.y, env.options, stand.orient).x == 530
+    assert marker_box_at(stand.x, stand.y, env.options, stand.orient, (None, "tag")).x == 530
 
 
 def test_a_bundled_stub_whose_pole_has_no_lane_end_raises_naming_the_stub_and_the_pole() -> None:
@@ -826,3 +824,202 @@ def test_a_far_groups_copy_and_stub_end_on_the_same_pin_of_its_page() -> None:
     stubs, _ = _fan_refs(problem, flow, where)  # ty: ignore[invalid-argument-type]  # SimpleNamespace stands for PlacementProblem and FlowGraph
     stub_end = next(e for s in stubs for e in s.ends if e.page == 2)
     assert copy.ends[0].pin == stub_end.pin == PinRef("k9", "n")
+
+
+# what a loss withdraws and the plan it makes (ACCOUNT-IN-PLAN, R3430)
+
+
+def _pins_case(pages: tuple[int, ...]):
+    """One net of one fan on `pages` (a page per pin): its fan, every conductor end, and the ends drawn on one page."""
+    pins = tuple(PinRef(f"s{i}", "e") for i in range(len(pages)))
+    attach = [Attach(None, 0, 0, p, net="n") for p in pins]
+    fan = Fan("f", ("n",), tuple(attach[:1]), tuple(attach[1:]), None, 1, "S")
+    far_ends = tuple((a, b) for a in pins for b in pins if a != b)
+    ink = frozenset((a, b) for a, b in far_ends if pages[pins.index(a)] == pages[pins.index(b)])
+    return pins, fan, far_ends, ink
+
+
+def _placed(far_ends) -> set[str]:
+    """The symbols a page holds: every pin of a conductor end, but those a test names off the pages."""
+    return {p.sym for pair in far_ends for p in pair} - {"out"}
+
+
+def _single_losses(pins: tuple[PinRef, ...]) -> list[Refused]:
+    return [Refused("n", c) for k in (1, 2) for c in combinations(pins, k)]
+
+
+def _joined(pins: tuple[PinRef, ...], losses: list[Refused], groups: tuple[Refused, ...]) -> list[set[PinRef]]:
+    """The oracle: the live pins are one trunk (its arrows join the pages), and each carrier group joins its pins. It never calls `withdrawn`."""
+    down = {p for r in losses for p in r.ends or ()}
+    classes = [{p for p in pins if p not in down}, *(set(g.ends or ()) for g in groups)]
+    merged: list[set[PinRef]] = []
+    for c in classes:
+        hit = [m for m in merged if m & c]
+        merged = [m for m in merged if m not in hit] + [c.union(*hit)]
+    return merged
+
+
+def _plan_of_loss(pages: tuple[int, ...], loss: Refused):
+    """`(groups, stood, far_ends, ink, pins)`: the loop's plan step on the fan, with a stub and a copy end at every pin."""
+    pins, fan, far_ends, ink = _pins_case(pages)
+    gone = withdrawn([loss], far_ends, ink, [fan])
+    groups = whole([loss], far_ends, ink, (gone, _placed(far_ends)), [fan])[0]
+    stubs = Ref(
+        "n",
+        RefKind.STUB,
+        tuple(
+            RefEnd(pg, None, p, stand=StandClass.TRUNK_END, far=tuple(b for a, b in far_ends if a == p and (a, b) not in ink))
+            for p, pg in zip(pins, pages, strict=True)
+        ),
+    )
+    copy = Ref("n", RefKind.COPY, tuple(RefEnd(pg, "c", p, 0, StandClass.TRUNK_END) for p, pg in zip(pins, pages, strict=True)))
+    return groups, restood([stubs, copy], set(loss.ends or ()), groups, gone, ink), far_ends, ink, pins
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+@pytest.mark.parametrize("pages", list(product((1, 2), repeat=3)))
+def test_every_conductor_end_is_reached_after_any_loss_of_one_pin_or_two(pages: tuple[int, ...]) -> None:
+    """G2, loss half: every `(near, far)` end of a fan on up to two pages is on one trunk with its far pin, or in a carrier group."""
+    for loss in _single_losses(_pins_case(pages)[0]):
+        groups, _, far_ends, _, pins = _plan_of_loss(pages, loss)
+        classes = _joined(pins, [loss], groups)
+        assert [(a, b) for a, b in far_ends if not any(a in c and b in c for c in classes)] == [], (pages, loss.ends)
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+@pytest.mark.parametrize("pages", list(product((1, 2), repeat=3)))
+def test_a_conductor_end_at_a_lost_pin_is_named_once(pages: tuple[int, ...]) -> None:
+    """R2766 D: a far pin a carrier group names is dropped from the stub end that listed it; an end left with no far pin goes."""
+    for loss in _single_losses(_pins_case(pages)[0]):
+        groups, stood, far_ends, *_ = _plan_of_loss(pages, loss)
+        down = set(loss.ends or ())
+        listed = {(e.pin, f) for r in stood if r.kind is RefKind.STUB for e in r.ends for f in e.far}
+        for a, b in far_ends:
+            if a in down or b in down:
+                joined = any(a in g.ends and b in g.ends for g in groups)
+                assert joined + ((a, b) in listed) == 1, (pages, loss.ends, a, b)
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+@pytest.mark.parametrize("pages", list(product((1, 2), repeat=3)))
+def test_an_end_at_a_lost_pin_is_asked_again_from_the_ink_the_loss_leaves(pages: tuple[int, ...]) -> None:
+    """CL2: a lost pin draws no wire, so a copy end at it stands at its pin whatever live pins share its page."""
+    for loss in _single_losses(_pins_case(pages)[0]):
+        _, stood, *_ = _plan_of_loss(pages, loss)
+        (copy,) = [r for r in stood if r.kind is RefKind.COPY]
+        assert {e.pin: e.stand for e in copy.ends if e.pin in set(loss.ends or ())} == dict.fromkeys(loss.ends or (), StandClass.PIN)
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_loss_that_withdraws_nothing_gets_no_carrier() -> None:
+    """R3430 Q2: a lost pin on no fan with no conductor between lost pins leaves every conductor on its drawn wire."""
+    _, fan, far_ends, ink = _pins_case((1, 1))
+    alone = PinRef("z", "e")
+    loss = Refused("n", (alone,))
+    assert whole([loss], far_ends, ink, (withdrawn([loss], far_ends, ink, [fan]), _placed(far_ends)), [fan])[0] == ()
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lone_lost_pin_with_no_page_partner_is_joined_to_the_pins_its_arrows_carry() -> None:
+    """KI-1122: Q:4 alone on page 2, F:1 on page 1 and G:1 on page 3: the star {Q4, F1, G1} joins it to both."""
+    q, f, g = (PinRef(s, "e") for s in "QFG")
+    fan = Fan("f", ("n",), (Attach(None, 0, 0, q, net="n"),), (Attach(None, 0, 0, f, net="n"), Attach(None, 0, 0, g, net="n")), None, 1, "S")
+    far_ends = tuple((a, b) for a in (q, f, g) for b in (q, f, g) if a != b)
+    gone = withdrawn([Refused("n", (q,))], far_ends, frozenset(), [fan])
+    assert gone == {(q, f), (f, q), (q, g), (g, q)}
+    assert [r.ends for r in whole([Refused("n", (q,))], far_ends, frozenset(), (gone, _placed(far_ends)), [fan])[0]] == [(q, f, g)]
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lost_pin_with_a_live_page_partner_is_grown_by_the_partner_alone() -> None:
+    """R3430 Q6 (b): K:1 shares page 2 with Q:4, so the group is {Q4, K1}, as main grew it; F:1 and G:1 ride the arrows and join by K1."""
+    q, k, f, g = (PinRef(s, "e") for s in "QKFG")
+    pins = (q, k, f, g)
+    fan = Fan("f", ("n",), (Attach(None, 0, 0, q, net="n"),), tuple(Attach(None, 0, 0, p, net="n") for p in pins[1:]), None, 1, "S")
+    far_ends = tuple((a, b) for a in pins for b in pins if a != b)
+    ink = frozenset({(q, k), (k, q)})
+    gone = withdrawn([Refused("n", (q,))], far_ends, ink, [fan])
+    assert [r.ends for r in whole([Refused("n", (q,))], far_ends, ink, (gone, _placed(far_ends)), [fan])[0]] == [(q, k)]
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_drawn_link_at_a_lost_pin_is_not_named_by_the_loss() -> None:
+    """Spec case 3: J:1 on no fan is linked to Q:4 (lost with it) and to L:1; the J1-L1 link is drawn still, so no group names L1."""
+    q, j, lamp, f = (PinRef(s, "e") for s in "QJLF")
+    fan = Fan("f", ("n",), (Attach(None, 0, 0, q, net="n"),), (Attach(None, 0, 0, f, net="n"),), None, 1, "S")
+    far_ends = ((q, f), (f, q), (q, j), (j, q), (j, lamp), (lamp, j))
+    ink = frozenset({(q, j), (j, q), (j, lamp), (lamp, j)})
+    loss = Refused("n", (q, j))
+    gone = withdrawn([loss], far_ends, ink, [fan])
+    assert (j, lamp) not in gone
+    assert lamp not in (whole([loss], far_ends, ink, (gone, _placed(far_ends)), [fan])[0][0].ends or ())
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lost_link_of_two_pins_no_conductor_joins_still_gets_its_carrier() -> None:
+    """A terminal's side pin ends the lost wire while its conductors stand on the other side: the wire is withheld, so its pins are one group."""
+    s, n = PinRef("x", "s"), PinRef("q", "in")
+    far_ends = ((PinRef("x", "n"), n), (n, PinRef("x", "n")))
+    loss = Refused("n", (s, n))
+    assert [
+        r.ends for r in whole([loss], far_ends, frozenset(far_ends), (withdrawn([loss], far_ends, frozenset(far_ends), []), _placed(far_ends)), [])[0]
+    ] == [(s, n)]
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lone_lost_fan_pin_whose_conductor_leaves_the_pages_is_a_one_pin_group() -> None:
+    """A pin wired out of the set rides its fan's stub: when its leg is withheld nothing else carries that conductor, so it stands a stub."""
+    a, b, out = PinRef("a", "e"), PinRef("b", "e"), PinRef("out", "e")
+    fan = Fan("f", ("n",), (Attach(None, 0, 0, a, net="n"),), (Attach(None, 0, 0, b, net="n"),), None, 1, "S")
+    far_ends = ((a, out), (b, out))
+    loss = Refused("n", (a,))
+    gone = withdrawn([loss], far_ends, frozenset(), [fan])
+    assert gone == {(a, out)}
+    assert [r.ends for r in whole([loss], far_ends, frozenset(), (gone, _placed(far_ends)), [fan])[0]] == [(a,)]
+
+
+def _bundle_loss(loss: Refused) -> tuple[list[Ref], dict[PinRef, str]]:
+    """A 3-lane bundle fan (drivers B on page 1, legs X on page 1 and Q on page 2) cut by an arrow and a leg stub, after `loss`."""
+    b, x, q = ([PinRef(f"{s}{k}", "e") for k in range(3)] for s in "BXQ")
+    legs = tuple(Attach(c, 0, k, p[k], k, net=f"n{k}") for c, p in (("d", x), ("e", q)) for k in range(3))
+    fan = Fan("f", ("n0", "n1", "n2"), tuple(Attach("c", 0, k, b[k], k, net=f"n{k}") for k in range(3)), legs, None, 3, "S")
+    far_ends = tuple(pair for k in range(3) for pair in ((b[k], x[k]), (x[k], b[k]), (b[k], q[k]), (q[k], b[k])))
+    ink = frozenset(pair for pair in far_ends if "Q" not in (pair[0].sym[0], pair[1].sym[0]))  # B-X share page 1; B-Q rides the arrow
+    arrow = Ref(
+        "f", RefKind.ARROW, (RefEnd(1, "c", b[0], 0, StandClass.PIN, also=(b[1], b[2])), RefEnd(2, "e", q[0], 0, StandClass.PIN, also=(q[1], q[2])))
+    )
+    stub = Ref("n0", RefKind.STUB, (RefEnd(1, "c", b[0], 0, StandClass.LEG, also=(b[1], b[2]), far=tuple(q)),))
+    pages = (PagePlan(1, "u", (RowPlan(("c", "d"), ()),), ()), PagePlan(2, "u", (RowPlan(("e",), ()),), ()))
+    gone = withdrawn([loss], far_ends, ink, [fan])
+    groups, down = whole([loss], far_ends, ink, (gone, {p.sym for p in (*b, *x, *q)}), [fan])
+    return [*restood(arrowed([arrow, stub], [fan], pages, down.keys()), down.keys(), groups, gone, ink)], down
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_lost_lead_lane_leaves_its_bundles_arrow_and_stub_to_the_lanes_that_stand() -> None:
+    """R3551 (mcc_large M14): the guard hands pole 0 of a 3-lane bundle cut by an arrow; the arrow and the leg stub lead with pole 1."""
+    stood, down = _bundle_loss(Refused("n0", (PinRef("B0", "e"), PinRef("X0", "e"))))
+    assert PinRef("Q0", "e") in down  # the rider's leg carries nothing more
+    (arrow,) = [r for r in stood if r.kind is RefKind.ARROW]
+    assert [(e.pin.sym if e.pin else None, tuple(a.sym for a in e.also)) for e in arrow.ends] == [("B1", ("B2",)), ("Q1", ("Q2",))]
+    stub = [
+        (e.pin.sym if e.pin else None, tuple(a.sym for a in e.also), tuple(f.sym for f in e.far))
+        for r in stood
+        if r.kind is RefKind.STUB
+        for e in r.ends
+        if e.also
+    ]
+    assert stub == [("B1", ("B2",), ("Q1", "Q2"))]
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+@pytest.mark.parametrize(("second", "kept"), [(False, 0), (True, 2)], ids=["end-of-the-line", "relay"])
+def test_an_arrow_to_a_page_with_no_pin_left_goes_unless_its_lane_relays(kept: int, *, second: bool) -> None:
+    """R3551 (bank:41): the one lane's only pin on page 2 is lost; its arrow goes, but a second arrow leaving page 2 keeps both."""
+    a, k, m = (PinRef(s, "e") for s in "AKM")
+    fan = Fan("f", ("n",), (Attach("a", 0, 0, a, net="n"),), (Attach("k", 0, 0, k, net="n"), Attach("m", 0, 0, m, net="n")), None, 1, "S")
+    arrows = [Ref("f", RefKind.ARROW, (RefEnd(1, "k", k, 0, StandClass.PIN), RefEnd(2, "a", a, 0, StandClass.PIN)))]
+    if second:
+        arrows.append(Ref("f", RefKind.ARROW, (RefEnd(2, "a", a, 0, StandClass.PIN), RefEnd(3, "m", m, 0, StandClass.PIN))))
+    pages = tuple(PagePlan(i, "u", (RowPlan((c,), ()),), ()) for i, c in enumerate("kam", 1))
+    assert len([r for r in arrowed(arrows, [fan], pages, {a}) if r.ends]) == kept

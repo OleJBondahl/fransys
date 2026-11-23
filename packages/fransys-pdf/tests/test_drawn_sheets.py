@@ -3,6 +3,7 @@
 from typing import Any
 
 from _build import document, drawing_set, layout_page, location, model, sheet_format
+from sheet_formats import a2
 
 from fransys_model.derive import (
     document_sheet,
@@ -10,7 +11,6 @@ from fransys_model.derive import (
     mixed_sheet_groups,
     schematic_page_ids,
 )
-from fransys_model.layout import a2_sheet_format
 from fransys_model.vocab import DocumentPreset, PageKind
 
 K = PageKind
@@ -62,7 +62,7 @@ def test_document_sheet_is_the_first_pages_format_in_mm() -> None:
 
 
 def test_kind_sheet_of_a_block_diagram_is_the_house_a2_sheet() -> None:
-    a2 = a2_sheet_format()
+    sheet = a2()
     m, _doc = _cabinet(None)
     row = kind_sheet(m, K.BLOCK_DIAGRAM)
-    assert (row.width_mm, row.height_mm, row.module_mm) == (a2.width_mm, a2.height_mm, a2.module_mm)
+    assert (row.width_mm, row.height_mm, row.module_mm) == (sheet.width_mm, sheet.height_mm, sheet.module_mm)

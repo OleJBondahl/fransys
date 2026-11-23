@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .flow_builders import OPTIONS, elem, flow_of, free, net, poles
+from .flow_builders import OPTIONS, elem, flow_of, free, hub_pins, net, poles
 
 if TYPE_CHECKING:
     from fransys_layout.core.flow_values import FlowGraph
@@ -78,7 +78,7 @@ def test_lanes_the_pole_boxes_leave_at_one_offset_stand_a_hub_apart() -> None:
         net("n1", "a.s1", "q.n2"),
         net("n2", "t2.s", "q.n1"),
         net("n3", "t3.s", "q.n3"),
-        *(net(f"f{k}", f"h{k}.n", head) for k, head in enumerate(heads)),
+        *(net(f"f{k}", *hub_pins(f"h{k}"), head) for k, head in enumerate(heads)),
     ]
     at = sorted(o for k in range(4) for o in offsets(flow_of(syms, nets), f"h{k}"))
     assert min(b - a for a, b in itertools.pairwise(at)) >= 16

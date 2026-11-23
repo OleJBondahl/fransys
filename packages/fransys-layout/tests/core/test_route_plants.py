@@ -11,12 +11,12 @@ from options_fixtures import core_options
 
 from fransys_layout.core.route import route_pages
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of, placed_from
 from .route_fixtures import jog_stair
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 

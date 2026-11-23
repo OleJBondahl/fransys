@@ -66,6 +66,7 @@ from .operating import Operating
 from .project import Project
 from .rail_defaults import RAIL_DEFAULTS
 from .revision import Revision
+from .roles import LINK_STATES, THROW_ROLES
 from .schema_version import SCHEMA_VERSION
 from .supply_system import Rail, SupplySystem, supply_rail_row
 from .tables import (
@@ -106,9 +107,11 @@ __all__ = [
     "CONDUCTOR_MARKS",
     "DESIGNATION_SCHEME",
     "FINDING_CODES",
+    "LINK_STATES",
     "RAIL_DEFAULTS",
     "RESERVED_CODES",
     "SCHEMA_VERSION",
+    "THROW_ROLES",
     "Aspect",
     "AspectNode",
     "AssignedDesignationFacet",

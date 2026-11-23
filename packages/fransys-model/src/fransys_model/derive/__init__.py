@@ -162,7 +162,7 @@ from .facts.closure import (
 )
 from .facts.conductor_facts import conductor_ends, is_bridge, is_pe_conductor
 from .facts.cores import cores_past_product
-from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets
+from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets, drawn_pieces
 from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.house_settings import export_form_of
 from .facts.ink_net import ink_net
@@ -334,6 +334,7 @@ from .pole_gangs import pole_gangs
 from .potential import port_potential_current, port_potential_rank
 from .power import is_rail_terminal, port_power_kind, port_power_text, power_kind, power_text
 from .printed_sets import document_drawing_sets, printed_drawing_sets
+from .printed_tag import printed_strip_tag, printed_tag
 from .queries import (
     TOP_LEVEL,
     board_netlist,
@@ -841,6 +842,7 @@ __all__ = [
     "drawn_net_of",
     "drawn_pages",
     "drawn_physical_nets",
+    "drawn_pieces",
     "drawn_stands",
     "drawn_with",
     "draws_as_line",
@@ -1062,6 +1064,8 @@ __all__ = [
     "previous_release_listing",
     "printed_designation",
     "printed_drawing_sets",
+    "printed_strip_tag",
+    "printed_tag",
     "printing_document",
     "profile_of",
     "project_facts",

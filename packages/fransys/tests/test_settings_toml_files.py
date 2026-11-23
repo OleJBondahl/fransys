@@ -10,7 +10,6 @@ from fransys_el.ref_tints import REF_TINTS
 
 import fransys_layout
 from fransys_layout.core import Options
-from fransys_model.layout import SheetFormat, a2_sheet_format, default_sheet_format
 
 # Options fields with no TOML home yet: no home, a nested dataclass, a callable or None.
 LEFT_OUT = {
@@ -21,13 +20,11 @@ LEFT_OUT = {
     "trunk_forms",
     "arrow_sides",
     "wiring_grid",
-    "marker",
     "outline",
-    "marker_fit",
     "untitled",
     "stub_lines",
     "stub_table",
-    "link_fit",
+    "marker_boxes",
     "marker_vertical",
     "marker_above",
     "marker_facing",
@@ -35,14 +32,6 @@ LEFT_OUT = {
 }
 # The general `[layout]` keys the el conventions take: text values (R338 phase 2).
 GENERAL = {"step", "pad"}
-SHEET_DROPPED = {"id", "key", "module_mm", "ext"}
-
-
-def _sheet_table(sheet: SheetFormat) -> dict[str, object]:
-    """A sheet's fields as the settings file keeps them."""
-    return {f.name: getattr(sheet, f.name) for f in fields(sheet) if f.name not in SHEET_DROPPED}
-
-
 LAYOUT_VALUES = {
     "step": 8,
     "pad": 2,
@@ -85,7 +74,6 @@ LAYOUT_VALUES = {
     "corner_order": ["TL", "BL", "TR", "BR"],
     "cells": [8, 6],
     "label_gap": 8,
-    "open_stub": 0,
     "box_columns": True,
     "top_headroom_lanes": 3,
     "bottom_headroom_lanes": 1,
@@ -114,20 +102,9 @@ def test_layout_toml_keys_are_options_fields() -> None:
     assert names - keys == LEFT_OUT
 
 
-def test_settings_toml_matches_constants() -> None:
+def test_settings_toml_ref_tints_match_constants() -> None:
     path = Path(fransys.__file__).parent / "settings.toml"
-    expected = {
-        "paper": {
-            "default": "A3",
-            "formats": {
-                "A3": _sheet_table(default_sheet_format()),
-                "A2": _sheet_table(a2_sheet_format()),
-            },
-        },
-        "look": {"ref_tints": list(REF_TINTS)},
-    }
-    loaded = tomllib.loads(path.read_text(encoding="utf-8"))
-    assert {"paper": loaded["paper"], "look": loaded["look"]} == expected
+    assert tomllib.loads(path.read_text(encoding="utf-8"))["look"] == {"ref_tints": list(REF_TINTS)}
 
 
 def _table(name: str) -> dict[str, Any]:

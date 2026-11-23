@@ -158,7 +158,8 @@ def test_bank40_overflows_no_page_and_strands_no_leg_at_any_salt(salt: str) -> N
     assert laid
     assert not codes & {"PAGE_OVERFLOW", "OUT_OF_PAGE", "WIDER_THAN_PAGE"}
     # KI-636, R1735: R1719's arrow room makes rows taller, so one head's page holds 18 of 40 legs; every leg is joined (looks)
-    assert [entry for lay in laid for entry in lay["findings"] if entry.startswith("HEAD_OFF_LEGS")] == ["HEAD_OFF_LEGS*1"]
+    # KI-1264 (R3062): D7's P3 guard leaves one head off its legs; looks. Salt "-" is a strict xfail (GAP-FLIP-1264, R3566): CUT-CONT-D1 leaves one
+    assert [entry for lay in laid for entry in lay["findings"] if entry.startswith("HEAD_OFF_LEGS")] == []
 
 
 def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps() -> None:
@@ -179,7 +180,5 @@ def test_bank40_trunks_with_legs_hold_their_leg_depth_in_the_room_the_row_keeps(
             deep = deep or depth > 0
     assert deep
 
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

@@ -63,3 +63,11 @@ def test_three_used_contacts_of_a_four_changeover_relay_draw_no_shorted_nets(
     codes = _error_codes(3, tmp_path)
     assert "DRAWING_SHORTS_NETS" not in codes
     assert codes == []
+
+
+def test_the_four_changeover_relay_case_draws_every_unit_frame_with_room(tmp_path: Path) -> None:
+    d = fr.design("demo_parts")
+    d.add(_contacts(3), "U1")
+    (tmp_path / "cover.md").write_text("# cover\n", encoding="utf-8")
+    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "fc-sh", cover=tmp_path / "cover.md"))
+    assert "OUTLINE_NO_ROOM" not in {f.code for f in result.findings}

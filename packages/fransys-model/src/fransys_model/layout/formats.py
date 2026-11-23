@@ -35,35 +35,6 @@ class SheetFormat:
     ext: frozendict[str, Value] = frozendict()
 
 
-def default_sheet_format() -> SheetFormat:
-    """The house sheet: A3 landscape, content 410 x 267 mm at (5, 5), 8 x 6 frame, 2.5 mm module.
-
-    Stock until SETTINGS-C: `settings.toml` holds the same numbers (a test keeps them equal) and
-    the facade writes the build's A3 record from it. `sheet_for` reads the build's `PaperChoice`,
-    not this. The content box sits at (5, 5), not
-    (10, 10): the owner's second appearance pass (decision
-    model-0051) halves the margin to 5 mm on every side, cutting in half the default margin
-    without narrowing the title-block band, which stays 20 mm between the bottom of the
-    content box (`5 + 267 = 272`) and the frame's bottom edge (`297 - 5 = 292`).
-    A page kind's sheet is `sheet_for` (layout/tables.py).
-    """
-    key = ("house", "sheet")
-    return SheetFormat(
-        id=make_id(SheetFormat, key),
-        key=key,
-        name="A3 landscape",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=5,
-        content_y_mm=5,
-        content_width_mm=410,
-        content_height_mm=267,
-        frame_columns=8,
-        frame_rows=6,
-        module_mm=Decimal("2.5"),
-    )
-
-
 @record(kind="layout.profile")
 class Profile:
     """The tunable numbers of the layout rules; at most one per unit and one for the top.
@@ -92,27 +63,3 @@ def default_profile() -> Profile:
     """
     key = ("house", "profile")
     return Profile(id=make_id(Profile, key), key=key)
-
-
-def a2_sheet_format() -> SheetFormat:
-    """The house A2 landscape sheet: 594 x 420 mm, content 584 x 390 at (5, 5), 12 x 8 frame.
-
-    The ISO 5457 A2 frame with the house margins, 5 mm on every side and a 20 mm title band
-    (`5 + 390 = 395`, to the frame's bottom edge at `420 - 5 = 415`), for a block-diagram page.
-    A constant of the model, not a record of any model, like `default_sheet_format()`.
-    """
-    key = ("house", "sheet-a2")
-    return SheetFormat(
-        id=make_id(SheetFormat, key),
-        key=key,
-        name="A2 landscape",
-        width_mm=594,
-        height_mm=420,
-        content_x_mm=5,
-        content_y_mm=5,
-        content_width_mm=584,
-        content_height_mm=390,
-        frame_columns=12,
-        frame_rows=8,
-        module_mm=Decimal("2.5"),
-    )

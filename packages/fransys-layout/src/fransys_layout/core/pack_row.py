@@ -40,7 +40,6 @@ class RowSpec:
     blocks: tuple[Block, ...]
     pcs: dict[str, PlacedColumn]
     syms: dict[str, Sym]
-    in_row: frozenset[str]
     options: Options
     attach: Attached
     pin_pitch: dict[tuple[str, str, str], int]  # a block's pin pitches, from the block's own columns (`pin_pitches`)
@@ -68,7 +67,7 @@ def segments(cols: tuple[str, ...], blocks: tuple[Block, ...]) -> list[tuple[Blo
 def extent(spec: RowSpec, col: str) -> tuple[int, int]:
     pc = spec.pcs[col]
     lanes = tuple(Lane(cells, off) for cells, off in zip(pc.lanes, pc.offsets, strict=True))
-    return column_extent(spec.syms, lanes, spec.in_row)
+    return column_extent(spec.syms, lanes)
 
 
 def _ends(spec: RowSpec, box: str) -> BoxSpec:
@@ -81,7 +80,7 @@ def _ends(spec: RowSpec, box: str) -> BoxSpec:
 
 
 def _sep(spec: RowSpec, a: str, b: str) -> int:
-    return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.in_row, spec.options)
+    return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.options)
 
 
 def reserve_extra(spec: RowSpec, a: str, b: str) -> int:

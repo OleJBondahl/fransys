@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from fransys_model.vocab import THROW_ROLES
+
 from . import _toml
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
-_COMMONS = ["common"]
-_THROWS = ["break", "make"]
-_THROW_ROLES: frozenset[str] = frozenset(_COMMONS + _THROWS)
-_CHANGEOVER_PAIRS: tuple[set[str], ...] = tuple({c, t} for c in _COMMONS for t in _THROWS)
+_COMMON, *_THROWS = THROW_ROLES  # the common role, then the two throws
+_THROW_ROLES: frozenset[str] = frozenset(THROW_ROLES)
+_CHANGEOVER_PAIRS: tuple[set[str], ...] = tuple({_COMMON, t} for t in _THROWS)
 
 
 def check(entry: _toml.Table, path: str, line: int) -> list[Finding]:

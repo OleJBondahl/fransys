@@ -23,7 +23,7 @@ from fransys_layout.core.values import Finding, Hints, OutlineRoom
 from fransys_layout.core.widen import route_round
 
 from . import pipeline_fixtures
-from .conftest import MARKER
+from .conftest import MARKERS
 from .label_fixtures import (
     bl_first_options,
     colliding_neighbours,
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.outputs import Placed
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 OVER_WIRE = AnnexBox("S1", 1, Box(80, 112, 16, 8), "BL")
 LABEL_NO_ROOM = Finding("LABEL_NO_ROOM", "no free corner", page=1, subject="S1")
@@ -204,7 +204,7 @@ def test_corner_order_bl_only_leaves_one_neighbour_to_the_turned_rungs() -> None
     case = colliding_neighbours()
     only = core_options(
         corner_order=("BL",),
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     _, labels, findings = _corners(case, only)
     assert any(label.turned for label in labels)
@@ -216,7 +216,7 @@ def test_an_unknown_corner_names_the_corner_and_the_choices(corners, name) -> No
     """KL and KR left with text_label_cands (R345): el names them as unknown corners."""
     only = core_options(
         corner_order=corners,
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     with pytest.raises(ValueError, match=rf"unknown label corner '{name}'.*BL"):
         lone().run(only)

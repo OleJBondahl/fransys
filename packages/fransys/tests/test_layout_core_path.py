@@ -80,6 +80,3 @@ def test_a_core_page_svg_is_the_sheet_with_its_drawing_at_the_content_box() -> N
     page = next(iter(built.page_svgs.values()))
     assert f'viewBox="0 0 {sheet.width_mm} {sheet.height_mm}"' in page
     assert f'<g transform="translate({sheet.content_x_mm} {sheet.content_y_mm})">' in page
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

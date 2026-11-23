@@ -255,7 +255,8 @@ def _ends_of(
 ) -> Ends:
     elem_of_pin = {PinRef(e.sym, p.id): e for e in elems.values() for p in drawn[e.sym].pins if e.form == "free" or p.id in (e.n_pin, e.s_pin)}
     live = set(wired.values())
-    return {n.id: net_ends(n, elem_of_pin, drawn) for n in problem.nets if n.id in live}
+    far = {a: frozenset(b for x, b in problem.facts.far_ends if x == a) for a, _ in problem.facts.far_ends}
+    return {n.id: net_ends(n, elem_of_pin, drawn, far) for n in problem.nets if n.id in live}
 
 
 def _nets_of(fans: tuple[Fan, ...], cross: tuple[CrossLink, ...]) -> tuple[dict[str, str], set[str]]:
@@ -286,9 +287,8 @@ def build_column(
     options: Options,
 ) -> Column:
     """The one home of a column's height and width: stages 1 and 4 build every column here."""
-    in_row = frozenset(s.id for s in syms.values() if s.row_group)
-    height = max(stack_lane(syms, ln.cells, options, in_row)[1] for ln in lanes)
-    left, right = column_extent(syms, lanes, in_row)
+    height = max(stack_lane(syms, ln.cells, options)[1] for ln in lanes)
+    left, right = column_extent(syms, lanes)
     return Column(col_id, lanes, ends[0], ends[1], height, right - left)
 
 

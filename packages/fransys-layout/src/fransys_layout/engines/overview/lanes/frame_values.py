@@ -10,6 +10,11 @@ from fransys_layout.geometry import Facing
 from fransys_model.kernel import value
 
 
+def edge_x(x: int, width: int, side: Facing, reach: int) -> int:
+    """The x `reach` out from a box's `side` edge: where a line, or a tab's outer edge, touches."""
+    return x + width + reach if side is Facing.E else x - reach
+
+
 @value
 class FrameEnd:
     """A line's end on a box edge: `y` is where the line attaches, `tab` the tab's text width."""
@@ -34,8 +39,7 @@ class FrameBox:
 
     def touch_x(self, end: FrameEnd) -> int:
         """Where the line touches: the box edge, or the outer edge of the end's tab."""
-        reach = 0 if end.tab is None else tab_reach(end.tab)
-        return self.x + self.width + reach if end.side is Facing.E else self.x - reach
+        return edge_x(self.x, self.width, end.side, 0 if end.tab is None else tab_reach(end.tab))
 
 
 @value

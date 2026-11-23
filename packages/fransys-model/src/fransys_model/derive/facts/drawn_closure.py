@@ -3,8 +3,12 @@
 Above `power` in the import order: which conductors a drawing leaves out can depend on a net's kind.
 """
 
+lazy from collections.abc import Iterable, Sequence
+
 from fransys_model.derive.facts.closure import PhysicalNet, _physical, board_nets, joined_nets, link_groups, required_groups
+from fransys_model.derive.facts.components import components
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
+from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import item_of_port
@@ -14,7 +18,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.tables import conductors
 lazy from fransys_model.vocab.core import Port
 
-__all__ = ["drawn_groups", "drawn_net_of", "drawn_physical_nets"]
+__all__ = ["drawn_groups", "drawn_net_of", "drawn_physical_nets", "drawn_pieces"]
 
 
 def _all_rail(model: Model, group: tuple[Id[Port], ...]) -> bool:
@@ -46,8 +50,27 @@ def drawn_physical_nets(model: Model) -> tuple[PhysicalNet, ...]:
     A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
     A terminal function's link stays, a strip terminal or a panel receptacle: its ports draw as one node.
     """
+    return joined_nets(model, _wired(model))
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _wired(model: Model) -> tuple[tuple[Id[Port], ...], ...]:
+    """The groups `drawn_physical_nets` joins: `drawn_groups` less the conductive links of a function that is no terminal."""
     links = {frozenset(g.ports) for g in link_groups(model, _physical) if not function_role(model, g.function).terminal}
-    return joined_nets(model, (g for g in drawn_groups(model) if frozenset(g) not in links))
+    return tuple(g for g in drawn_groups(model) if frozenset(g) not in links)
+
+
+def drawn_pieces(model: Model, ports: Iterable[Id[Port]], joins: Iterable[Sequence[Id[Port]]] = ()) -> tuple[tuple[Id[Port], ...], ...]:
+    """`ports` split into the pieces they join among themselves: what one drawing set may join with a wire.
+
+    Each group `drawn_physical_nets` joins counts by its ends among `ports`; one end there joins nothing.
+    A mate is left out: it joins its two halves and draws no wire. `joins` are the groups the caller's drawing
+    holds at one point (a symbol's node, a bridge). A port nothing reaches is a piece alone.
+    """
+    held = frozenset(ports)
+    mates = {frozenset((a, b)) for _, a, b in mate_pairs(model)}
+    inside = (tuple(p for p in g if p in held) for g in _wired(model) if frozenset(g) not in mates)
+    return tuple(piece for piece in (tuple(p for p in found if p in held) for found in components(held, (*inside, *joins))) if piece)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

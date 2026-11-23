@@ -40,9 +40,9 @@ def test_the_spread_interleaved_card_has_no_wire_attached_off_its_pin() -> None:
 
 
 def test_the_p02_count_fails_when_the_card_has_no_movable_pins() -> None:
-    _, problem = built("p02")
+    model, problem = built("p02")
     fixed = replace(problem, symbols=tuple(replace(s, box=None) for s in problem.symbols))
-    found = counts(solve_problem(fixed))
+    found = counts(solve_problem(model, fixed))
     assert found["X"] > 0, f"p02: {found}"
 
 

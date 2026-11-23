@@ -16,12 +16,6 @@ FACTOR_NAMES = {"G_PER_MODULE", "DIVISIONS_PER_MODULE"}
 CONVERTERS = {"_g", "to_grid"}
 FONT_PAIR = re.compile(r"\b20=585\b")
 
-# Named stock, not an exception: sheet formats declare their own module_mm (same 2.5 today).
-# Fate GRID-HOME-B (designer 2026-10-16); library.toml [grid] module_mm = 2.5 is right.
-STOCK = {
-    "packages/fransys-model/src/fransys_model/layout/formats.py": ("        module_mm=Decimal", 2),
-}
-
 
 def _is_eight(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and node.value == 8 and isinstance(node.value, int)
@@ -107,11 +101,6 @@ def test_the_scan_passes_a_read_of_the_name(tmp_path: Path) -> None:
     src.mkdir(parents=True)
     (src / "a.py").write_text("from e import G_PER_MODULE\ndef to_grid(m):\n    return m * G\n")
     assert scan(tmp_path) == []
-
-
-def test_the_named_stock_is_still_there() -> None:
-    for rel, (needle, count) in STOCK.items():
-        assert (ROOT / rel).read_text().count(needle) == count, f"{rel}: stock changed (GRID-HOME-B)"
 
 
 def test_the_models_record_of_the_factor_equals_the_library_grid() -> None:

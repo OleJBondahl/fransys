@@ -72,6 +72,3 @@ def test_the_guard_sees_tag_ends(salt: str) -> None:
 def test_a_fan_deals_the_same_lanes_at_every_salt(built: dict[str, Any], default: dict[str, Any]) -> None:
     """NUMBER-SORT, layout-0465: a fan deals in the model's order, so the six-coil shape fills the same lanes."""
     assert built["lanes"] == default["lanes"]
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

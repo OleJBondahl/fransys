@@ -4,6 +4,7 @@ A core id is the function's order text, then its Id text. A pin is a
 `PinRef(symbol, symbol port name)`.
 """
 
+from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
 from fransys_layout.core import PinRef
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Port
 
-__all__ = ["net_key", "net_lead", "pin_names", "symbol_ids", "symbol_key", "symbol_of"]
+__all__ = ["net_key", "net_lead", "pin_names", "pin_ports", "symbol_ids", "symbol_key", "symbol_of"]
 
 
 def symbol_key(model: Model, key: PickKey) -> str:
@@ -94,3 +95,11 @@ def pin_names(model: Model, kit: SymbolKit, ids: frozendict[PickKey, str]) -> fr
         _check(model, lead, pick, ids[lead])
         found.update({port: PinRef(ids[lead], name) for port, name in pick.ports.items()})
     return frozendict(found)
+
+
+def pin_ports(model: Model, kit: SymbolKit) -> dict[PinRef, list[Id[Port]]]:
+    """Every model port that each symbol pin draws."""
+    found: dict[PinRef, list[Id[Port]]] = defaultdict(list)
+    for port, pin in pin_names(model, kit, symbol_ids(model, kit)).items():
+        found[pin].append(port)
+    return found

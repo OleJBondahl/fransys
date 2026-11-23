@@ -207,6 +207,3 @@ def test_the_docs_scan_excludes_only_the_named_directories(tmp_path):
 def test_the_import_scan_can_fail():
     assert first_party_violations("import fransys_model") == {"fransys_model"}
     assert first_party_violations("import fransys\nfrom pathlib import Path") == set()
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

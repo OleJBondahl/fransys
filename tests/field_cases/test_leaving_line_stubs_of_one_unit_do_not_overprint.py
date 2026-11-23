@@ -78,3 +78,6 @@ def test_no_line_runs_through_a_stub_box(built: fr.BuildResult) -> None:
 
 if TYPE_CHECKING:
     from fransys_layout.drawing import DrawnSymbol
+
+
+# OVERLAP: a looks finding of this file's builds, on KI-1380 (R3557).

@@ -20,7 +20,7 @@ from fransys_layout.core.values import RefKind, StandClass
 
 from .chain_fixtures import facing_chain
 from .place_fixtures import card_with_coils
-from .route_fixtures import envs_of, link_across_box, link_env, open_end_env, stub_of
+from .route_fixtures import envs_of, link_across_box, link_env
 
 
 def card_env() -> RouteEnv:
@@ -223,36 +223,6 @@ def test_a_cell_pin_with_no_net_draws_no_lane_wire_and_is_a_finding() -> None:
     drawn = lane_wires(replace(env, net_of=bare), col)
     assert [f.code for f in drawn.findings] == ["LANE_WIRE_DROPPED"]
     assert len(drawn.wires) == len(whole.wires) - 1
-
-
-def stub_points(orient: str = "R0", open_stub: int = 8) -> list[tuple[tuple[int, int], ...]]:
-    env, col = open_end_env(orient, open_stub)
-    return [w.points for w in stub_of(lane_wires(env, col))]
-
-
-def test_an_open_end_draws_a_stub_of_open_stub_out_along_its_side() -> None:
-    assert stub_points() == [((656, 184), (656, 192))]
-
-
-def test_a_turned_symbol_draws_its_stub_along_the_turned_side() -> None:
-    assert stub_points("R180") == [((656, 184), (656, 176))]
-
-
-def test_open_stub_zero_draws_no_stub() -> None:
-    assert stub_points(open_stub=0) == []
-
-
-def test_an_open_end_with_no_pin_draws_nothing() -> None:
-    env, col = open_end_env(has_pin=False)
-    assert stub_of(lane_wires(env, col)) == ()
-
-
-@pytest.mark.parametrize(("sym", "pin"), [("k2", "nope"), ("ghost", "s")])
-def test_an_open_end_naming_a_pin_not_on_the_page_raises_not_an_empty_stub(sym: str, pin: str) -> None:
-    env, col = open_end_env()
-    col = replace(col, feet=(End("open", "dangling", PinRef(sym, pin)),))
-    with pytest.raises(CoreError, match=f"open end {sym}.{pin} of net dangling"):
-        lane_wires(env, col)
 
 
 def far_box_env(*, foot: bool = False, box_y: int = 40) -> RouteEnv:

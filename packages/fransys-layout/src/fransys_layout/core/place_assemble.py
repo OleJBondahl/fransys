@@ -47,7 +47,7 @@ def _placed_cell(env: PageEnv, cell: Cell, ox: int, oy: int) -> Placed:
     sym = env.syms[cell.sym]
     view = view_of(sym, cell.orient)
     body = shift(view.body, ox, oy)
-    fp = shift(cell_footprint(sym, cell, in_row=cell.sym in env.in_row), ox, oy)
+    fp = shift(cell_footprint(sym, cell), ox, oy)
     offsets = {p.id: pin_xy(sym, cell, p.id) for p in sym.pins}
     pins = tuple(PinXY(pin, ox + dx, oy + dy) for pin, (dx, dy) in offsets.items())
     return Placed(sym.id, env.plan.page, ox, oy, cell.orient, body, fp, pins, shift(view.ink or view.keepout, ox, oy))
@@ -99,7 +99,7 @@ def _boxes(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int]) -> dict[str
 
 def _extent(env: PageEnv, pc: PlacedColumn) -> tuple[int, int]:
     lanes = tuple(Lane(cells, off) for cells, off in zip(pc.lanes, pc.offsets, strict=True))
-    return column_extent(env.syms, lanes, env.in_row)
+    return column_extent(env.syms, lanes)
 
 
 def _row_bounds(env: PageEnv, y: Mapping[str, int], r: int) -> tuple[int, int]:

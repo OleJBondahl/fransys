@@ -7,21 +7,22 @@ from typing import Any
 
 from options_fixtures import core_options
 
-from fransys_layout.core import Box, PinRef
+from fransys_layout.core import Box, MarkerBoxes, PinRef
 from fransys_layout.core.cut_height import lowered
 from fransys_layout.core.flow_values import Cell, Column, Lane
 lazy from fransys_layout.core.values import Options
 
-from .conftest import MARKER
+from .conftest import MARKER, MARKERS
 
 COLUMN = Column("c", (Lane((Cell("A", "R0", "a1", "a2"),), 0),), (), (), 100, 16)
 
 
 def _options(fit: dict[Any, Any]) -> Options:
     base = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
-    return replace(base, marker_fit=fit, marker_vertical=frozenset({"R90"}))
+    boxes = {**base.marker_boxes, **{k: MarkerBoxes(v, v) for k, v in fit.items()}}
+    return replace(base, marker_boxes=boxes, marker_vertical=frozenset({"R90"}))
 
 
 def test_a_fitted_head_box_adds_its_reach_up_and_a_foot_box_its_reach_down() -> None:

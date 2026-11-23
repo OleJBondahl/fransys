@@ -8,6 +8,7 @@ from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
 from fransys_model.derive.facts.potentials import on_declared_net, on_pe_net, pe_ports_off_pe
 from fransys_model.derive.facts.roles import conductor_role, port_pin_role
 from fransys_model.vocab.codes import finding
+from fransys_model.vocab.colours import RESERVED_CODES
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, ports
 lazy from fransys_model.kernel import Finding
@@ -21,7 +22,7 @@ GNYE_NOT_PE_DECLARED: Final[str] = "GNYE_NOT_PE_DECLARED"
 GNYE_NOT_PE_UNDECLARED: Final[str] = "GNYE_NOT_PE_UNDECLARED"
 PE_NOT_GNYE: Final[str] = "PE_NOT_GNYE"
 PE_PORT_OFF_PE: Final[str] = "PE_PORT_OFF_PE"
-_GNYE: Final[str] = "GNYE"
+_GNYE: Final[str] = RESERVED_CODES["protective earth"]
 
 
 def _gnye_finding(model: Model, conductor: Conductor, subjects: tuple[Id[Any], ...]) -> Finding:

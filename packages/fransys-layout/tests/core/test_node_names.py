@@ -71,7 +71,7 @@ def test_every_node_pack_row_emits_is_one_of_the_names() -> None:
     attach = attachments(cols, {block.id: block})
     pcs = {c.id: PlacedColumn(c.id, (c.lanes[0].cells,), (0,), 0, flipped=False) for c in cols}
     options = core_options()
-    spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, frozenset(), options, attach, {}))
+    spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, options, attach, {}))
     nodes = solve_row(spec, 1312)[0]
     assert nodes
     for node in (n for n in nodes if n != ORIGIN):  # the solver anchor is no pack_row name

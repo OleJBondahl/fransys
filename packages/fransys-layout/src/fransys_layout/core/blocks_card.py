@@ -67,10 +67,8 @@ class _Trial:
 
 def box_pin(column: Column) -> str | None:
     """The id of the box pin the column's head or foot meets, the first found."""
-    for end in (*column.heads, *column.feet):
-        if end.kind == "boxpin" and end.pin is not None:
-            return end.pin.pin
-    return None
+    ends = column.box_pins
+    return ends[0].pin.pin if ends else None
 
 
 def pin_order(cols: Sequence[str], columns: Mapping[str, Column], spec: BoxSpec) -> list[str]:

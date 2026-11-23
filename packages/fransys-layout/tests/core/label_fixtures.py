@@ -38,7 +38,7 @@ from fransys_layout.core.outputs import (
 )
 from fransys_layout.core.values import Finding, RefKind
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import with_annexes
 
 if TYPE_CHECKING:
@@ -74,7 +74,7 @@ def keeps_of(placed: Mapping[str, Placed], boxes: Sequence[Box] = ()) -> list[Ke
 def house_options(*, label_gap: int = 8, **fields: Any) -> Options:
     """Options with the house defaults for a label case; `fields` overrides any of them."""
     return core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
         label_gap=label_gap,
         **fields,
     )

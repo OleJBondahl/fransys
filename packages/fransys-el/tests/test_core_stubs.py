@@ -11,10 +11,9 @@ import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.placement_env import make_env
-from fransys_el.placement_markers import facing_views, stub_fit
+from fransys_el.placement_markers import facing_views, marker_boxes_value
 from fransys_el.placement_options import options
 from fransys_el.placement_syms import strip_tags
-from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
 from fransys_el.restrict import restriction
 from fransys_el.scopes import bare_pins, cut_lines, drawing_scopes
@@ -35,16 +34,15 @@ _CORE = ("layout", "core", "link_marker")
 def _solved(model, kit, scope, part, chosen):
     """One set's own solve, with the marker boxes `lay_out` fits to its pins (a lead moves them)."""
     pins = [PinRef(s.id, p.id) for s in part.symbols for p in s.pins]
-    fit, lines, table = stub_fit(model, kit, (scope.of_unit, LIBRARY), pins)
+    boxes, lines, table = marker_boxes_value(model, kit, (scope.of_unit, LIBRARY), pins)
     turned, above, below = facing_views()
     return solve(
         part,
         replace(
             chosen,
-            marker_fit=fit,
+            marker_boxes=boxes,
             stub_lines=lines,
             stub_table=table,
-            link_fit=link_fit(model, kit, LIBRARY, scope.of_unit),
             marker_vertical=turned,
             marker_above=above,
             marker_below=below,

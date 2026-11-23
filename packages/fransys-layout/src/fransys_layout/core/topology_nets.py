@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from .flow_values import Attach, CrossLink, Fan
 from .net_keys import is_lone_cut
-from .topology_fans import Att, FanDraft, LaneDraft, Slot, attached_pin, classify, deal, resolve, turn_foot_hub
+from .topology_fans import Att, FanDraft, LaneDraft, Slot, attached_pin, classify, deal, own_wired, resolve, turn_foot_hub
 from .values import Finding, PinRef
 
 if TYPE_CHECKING:
@@ -54,11 +54,18 @@ def fans_of(
         key = None if pin is None else _attach_key(net, ends, env)
         if pin is not None and key is not None:
             attached[key], held[key] = pin, (net, ends)
-        elif (split := _spans(ends, env.syms) if env.tag_across else ()) or not _fan_net(net, ends, parts, env):
-            _lane_through(net, ends, env)
-            cross.append((net, _cross_ends(ends, env.elems), split))
+        else:
+            cross.extend(_net_cross(net, ends, parts, env))
     fans = tuple(_fan(_merged(key, items, one_side=env.one_side)) for key, items in parts.items())
     return (fans, *_links(cross, attached, held, env))
+
+
+def _net_cross(net: str, ends: tuple[NetEnd, ...], parts: Parts, env: FanEnv) -> list[tuple[str, list[NetEnd], tuple[str, ...]]]:
+    """The cross entries of a net that is no attachment: one cross-link, or, when it fans, a join for each own-wired end."""
+    if (split := _spans(ends, env.syms) if env.tag_across else ()) or not _fan_net(net, ends, parts, env):
+        _lane_through(net, ends, env)
+        return [(net, _cross_ends(ends, env.elems), split)]
+    return [(net, [own, mate], ()) for own, mate in own_wired(ends)]
 
 
 def _links(
@@ -131,7 +138,7 @@ def _lane_through(net: str, ends: tuple[NetEnd, ...], env: FanEnv) -> None:
     pin = next((e.pin for e in ends if e.site != "through"), None)
     if through is None or pin is None or (key := (through.elem or "", env.elems[through.elem or ""].n_pin or "")) in env.slot:
         return  # an element stands once, keyed by its n pin whichever pin its nets use
-    made = deal(FanDraft("f:x", [net], [Att(None, "boxpin", pin)], []), [key[0]], env.elems, "c:", env.apart)
+    made = deal(FanDraft("f:x", [net], [Att(None, "boxpin", pin)], []), [through], env.elems, "c:", env.apart)
     env.lanes.extend(made)
     env.slot[key] = (made[0], "head" if through.pin.pin == key[1] else "foot")
 
@@ -171,7 +178,8 @@ def _facing(ends: Sequence[NetEnd], elems: Mapping[str, Elem]) -> dict[str, str]
 
 def _fan_net(net: str, ends: tuple[NetEnd, ...], parts: Parts, env: FanEnv) -> bool:
     """Deal one net into its fan with its lane index (a bundle shares a fan); False: cross-link."""
-    drivers, legs, throughs, is_cross = classify(ends, env.slot, env.syms)
+    own = {id(e) for e, _ in own_wired(ends)}  # an own-wired end is joined to its mate, never a trunk attachment
+    drivers, legs, throughs, is_cross = classify(tuple(e for e in ends if id(e) not in own), env.slot, env.syms)
     bundle = env.bundle_of.get(net)
     # R499: the one cut end of a bundled net is a lane of its bundle's fan
     alone = bundle is not None and is_lone_cut(is_cut=net in env.cut, pin_count=len(ends))
@@ -189,23 +197,23 @@ def _fan_net(net: str, ends: tuple[NetEnd, ...], parts: Parts, env: FanEnv) -> b
     return True
 
 
-def _stand_hubs(one: FanDraft, ends: tuple[NetEnd, ...], env: FanEnv) -> list[str]:
+def _stand_hubs(one: FanDraft, ends: tuple[NetEnd, ...], env: FanEnv) -> list[NetEnd]:
     """Through elements with no cell yet; one already standing is this net's driver, at the pin the net uses."""
-    rest: list[str] = []
+    rest: list[NetEnd] = []
     for e in ends:
         if e.site != "through" or not e.elem:
             continue
         hit = env.slot.get((e.elem, env.elems[e.elem].n_pin or ""))
         if hit is None:
-            rest.append(e.elem)
+            rest.append(e)
         else:
             one.drivers.append(Att(hit[0], "hub-head", e.pin))
     return rest
 
 
-def _register_hubs(one: FanDraft, throughs: Sequence[str], env: FanEnv) -> None:
+def _register_hubs(one: FanDraft, throughs: Sequence[NetEnd], env: FanEnv) -> None:
     """Record the lane each dealt through element heads, so its later nets find it: an element stands once."""
-    by_cell = {(env.elems[t].sym, env.elems[t].n_pin): t for t in throughs}
+    by_cell = {(env.elems[t.elem or ""].sym, env.elems[t.elem or ""].n_pin): t.elem or "" for t in throughs}
     for att in one.legs:
         if att.lane and att.lane.cells and (t := by_cell.get((att.lane.cells[0].sym, att.lane.cells[0].top_pin))):
             env.slot.setdefault((t, env.elems[t].n_pin or ""), (att.lane, "head"))

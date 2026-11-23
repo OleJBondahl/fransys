@@ -10,7 +10,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, NamedTuple
 
 from .anchors import Stood, anchor_leads, anchor_pages, page_keeps
-from .cut_ledger import restood, whole
+from .cut_loss import arrowed, restood, whole, withdrawn
 from .fallback import fallback
 from .outputs import Demand, Placement, Refused, Routes
 from .route import route_pages
@@ -55,12 +55,18 @@ class Round(NamedTuple):
 
 
 def plan_of(cut: CutResult, placement: Placement, problem: PlacementProblem, lost: Mapping[LostKey, Refused]) -> Plan:
-    """The carriers after `lost`: each loss whole, as a fallback reference beside the cut's joins; each planned end at a lost pin asked again."""
-    groups = whole(lost.values(), problem.facts.far_ends, cut.spec.drawn)
+    """The carriers after `lost`: each loss whole, as a fallback reference beside the cut's joins; each planned end at a withheld pin asked again."""
+    gone = withdrawn(lost.values(), problem.facts.far_ends, cut.spec.drawn, cut.flow.fans)
+    groups, down = whole(
+        lost.values(), problem.facts.far_ends, cut.spec.drawn, (gone, {p.sym for pg in placement.pages for p in pg.placed}), cut.flow.fans
+    )
     apart = tuple(Refused(n, pair) for n, pair in cut.spec.unjoined)
     refs = fallback(cut, placement, (*groups, *apart))
-    stood = restood(cut.spec.reference_plan, lost.values(), cut.spec.drawn)
-    return Plan(replace(cut, spec=replace(cut.spec, reference_plan=(*stood, *refs))), refs, frozenset(lost), apart)
+    plan = arrowed(cut.spec.reference_plan, cut.flow.fans, cut.spec.pages, down.keys())
+    stood = restood(plan, down.keys(), groups, gone, cut.spec.drawn)
+    lost_pins = {p for r in lost.values() for p in r.ends or ()}
+    withheld = frozenset(lost) | {lost_key(net, (pin,)) for pin, net in down.items() if pin not in lost_pins}
+    return Plan(replace(cut, spec=replace(cut.spec, reference_plan=(*stood, *refs))), refs, withheld, apart)
 
 
 def routed(placement: Placement, cut: CutResult, problem: PlacementProblem, options: Options, laid: Laid) -> Routes:

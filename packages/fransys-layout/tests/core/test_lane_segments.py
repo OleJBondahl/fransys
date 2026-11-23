@@ -17,7 +17,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import place_y
 from fransys_layout.core.values import Ref, RefEnd, RefKind, StandClass
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of
 from .place_fixtures import bundle_fan
 
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 def _page() -> tuple[PageEnv, dict[str, int], PagePlacement, Fan]:
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     prob = bundle_fan()
     (env,) = page_envs(cut_of(prob, opts), prob, opts)

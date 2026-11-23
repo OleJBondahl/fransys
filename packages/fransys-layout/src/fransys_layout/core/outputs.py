@@ -220,6 +220,7 @@ class Marker:
     also is the RefEnd's: the other pins whose conductors the marker ends (BUNDLE).
     far is the RefEnd's: the far pins of the conductors the marker names, a line each (R1581).
     stand is the RefEnd's: PIN for a marker at its pin, so a lead wire runs to it (layout-0544).
+    span is the G from an arrow's lane to the last lane below it at its end: its box and flat edge reach over it (BUNDLE-ARROW).
     """
 
     net: str
@@ -234,6 +235,7 @@ class Marker:
     also: tuple[PinRef, ...] = ()
     far: tuple[PinRef, ...] = ()
     stand: StandClass = StandClass.PIN
+    span: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,7 +308,6 @@ class CoreLayout:
     """The placer core's full result: area, pages, placement, routes, text, score, findings.
 
     wired: each pin a wire or an anchored lead reaches, with its net (the empty net for an anchored lead), as `solve` computed them.
-    drawn: the (pin, far pin) pairs drawn as a wire on their page, as the cut found them.
     narrow: the symbols laid in their narrow view (`Sym.narrow`).
     """
 
@@ -319,7 +320,6 @@ class CoreLayout:
     wired: frozenset[tuple[PinRef, str]]
     score: Score | None = None
     findings: tuple[Finding, ...] = ()
-    drawn: frozenset[tuple[PinRef, PinRef]] = frozenset()
     rows: tuple[RowMeasure, ...] = ()
     """Each placed row with blocks, page by page, as `row_measures` measured it: the figures PAGE_OVERFLOW reads."""
     narrow: frozenset[str] = frozenset()

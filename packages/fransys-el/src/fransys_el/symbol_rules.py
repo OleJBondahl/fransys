@@ -7,6 +7,7 @@ kept until the flip (SB9). A kind row, then a state row, as the engine's two loo
 from typing import TYPE_CHECKING, NamedTuple
 
 from fransys_model.layout import SymbolChoice, layout_of
+from fransys_model.vocab import LINK_STATES
 
 from .placement_ids import symbol_key
 from .placement_kit import refuse
@@ -63,7 +64,7 @@ def _by_type(symbol: str, value: str) -> Row:
 
 
 _REST = ("rest", "rest")
-_OPERATED = ("rest", "operated")
+_OPERATED = LINK_STATES
 
 TABLE: tuple[Row, ...] = (
     _operated("push-button", "push", "operated"),

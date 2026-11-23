@@ -64,7 +64,7 @@ def column(col_id: str, *lanes: Lane, head: End | None = None, foot: End | None 
 
 
 def boxpin_end(box: str, pin: str) -> End:
-    return End("boxpin", pin=PinRef(box, pin))
+    return End("boxpin", pin=PinRef(box, pin), lane=0)
 
 
 def card_block(box: str, columns: tuple[str, ...], edges: tuple[tuple[str, str], ...], block_id: str = "") -> Block:

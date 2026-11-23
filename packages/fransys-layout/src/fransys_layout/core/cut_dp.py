@@ -68,7 +68,7 @@ Plan = list[tuple[int, int, RowState]]
 
 def wide_room(page_w: int, options: Options) -> int:
     """The width a keep-whole fan or column may have: the page less the arrow reserve at each row end (layout-0464)."""
-    return page_w - (2 * reserve(1, options) if options.marker else 0)  # no marker symbol, no arrow to reserve for
+    return page_w - 2 * reserve(1, options)
 
 
 def wraps(block: Block, page_w: int, options: Options) -> bool:

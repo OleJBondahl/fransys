@@ -25,7 +25,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import grid_up, place_y
 
 from .cut_fixtures import AREA, box_sym, elem
-from .flow_builders import net
+from .flow_builders import conductors, net
 from .place_fixtures import bundle_fan, card_with_coils, row_group_three
 from .test_place_x import env_of
 
@@ -51,7 +51,7 @@ def _footprints(env: PageEnv, y: dict[str, int]) -> list[tuple[str, int, int, Bo
             for i, cell in enumerate(cells):
                 sym = env.syms[cell.sym]
                 ax, _ = cell_anchor(sym, cell)
-                fp = cell_footprint(sym, cell, in_row=cell.sym in env.in_row)
+                fp = cell_footprint(sym, cell)
                 ox = x[col_node(pc.id)] + pc.offsets[li] - ax
                 out.append((pc.id, li, i, shift(fp, ox, y[cell_node(pc.id, li, i)])))
     return out
@@ -103,7 +103,7 @@ def _two_heights() -> PlacementProblem:
     """Two coils of different heights hang on one box, both in row group G."""
     coils = [replace(elem("k1", 84, 32), row_group="G"), replace(elem("k2", 84, 48), row_group="G")]
     nets = [net(f"c{i}", f"A1.p{i}", f"k{i}.n") for i in (1, 2)]
-    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets), facts=Facts(far_ends=()))
+    return PlacementProblem(AREA, (box_sym(2), *coils), tuple(nets), facts=Facts(far_ends=conductors(nets)))
 
 
 def test_a_row_group_that_contradicts_a_stack_is_dropped_with_the_finding() -> None:
@@ -153,7 +153,7 @@ def test_a_card_box_clears_every_lane_end_by_box_gap_or_the_footprint_or_keepout
     cells = [SimpleNamespace(sym=n, orient="R0", top_pin=None, bottom_pin=None, hold=0, dy=dy) for n, dy in (("A", 0), ("B", 0), ("C", 0))]
     card = SimpleNamespace(body=Box(0, 0, 40, 10), footprint=Box(0, 0, 40, 10))
     syms = {"BOX": card, **{c.sym: None for c in cells}}
-    env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=4, box_gap=8, wiring_grid=1), syms=syms, attach={"c": ("BOX",)}, in_row=())
+    env: Any = SimpleNamespace(options=SimpleNamespace(wire_min=4, box_gap=8, wiring_grid=1), syms=syms, attach={"c": ("BOX",)})
     pc: Any = SimpleNamespace(id="c", lanes=[[cells[0]], [cells[1], cells[2]] if above else [cells[1]]])
     g = Graph()
     home.stack_constraints(g, pc, env, {}, rigid=above)
@@ -166,3 +166,36 @@ def test_a_card_box_clears_every_lane_end_by_box_gap_or_the_footprint_or_keepout
     ]
     assert min(clear) == want
     assert clear[1] == want  # the longer lane reaches the box first and holds it
+
+
+def test_a_foreign_clearance_the_classes_refuse_loosens_the_trunk_that_holds_its_legs_rigid(monkeypatch) -> None:
+    """R2294, the four-edge ring: legs hold the trunk 24 above pole 1, the box holds poles 1 and 2 level, the clearance wants 99 above pole 2."""
+    trunk, pole1, pole2 = "trunk:f:0", "cell:Q:1", "cell:Q:2"
+
+    def graph(_env, _spans, flags, _rooms):
+        g = Graph()
+        g.equal(pole1, pole2, 0)
+        if trunk in flags[0]:
+            g.after(trunk, pole1, 24)
+        else:
+            g.equal(trunk, pole1, 24)
+        return g, None, None
+
+    def clear(g, _env, _x, _spans):
+        g.after(trunk, pole2, 99)
+        return {pole2}
+
+    for name, value in {
+        "_with_spans": lambda env, _x: (env, []),
+        "_steps": lambda *_: {},
+        "_settle": lambda *_: (frozenset(), ()),
+        "_y_graph": graph,
+        "clear_foreign": clear,
+        "page_aligns": lambda _env: (),
+        "_loosened": lambda *_: (),
+        "_unmet": lambda _env: (),
+    }.items():
+        monkeypatch.setattr(home, name, value)
+    y, findings = place_y(SimpleNamespace(attach={"Q"}), {})  # ty: ignore[invalid-argument-type] the stages are stubbed, the env is never read
+    assert y[pole2] - y[trunk] >= 99
+    assert findings == ()

@@ -207,14 +207,18 @@ def _cost(box: Box, foot: Box, room: OutlineRoom | None) -> int:
     return u.w * u.h
 
 
-def _rung(spots: Cands, ink: Ink, area: Size | None, framed: tuple[str, OutlineRoom | None], foot: Box) -> Box:
+def _rung(spots: Cands, ink: Ink, area: Size | None, framed: tuple[str, OutlineRoom | None], placed: Mapping[str, Placed]) -> Box:
     """The rung a blocked label asks its owner to free: the first inside the content box that growing the owner's frame (`framed`: owner, room) frees.
 
-    A rung another keep blocks stays blocked however the frame grows; with none freed, the first inside the content box.
+    A rung another keep blocks stays blocked however the frame grows; a rung whose grown footprint meets a placed neighbour's
+    footprint it did not already meet is taken last (R2958); with none freed, the first inside the content box.
     """
+    foot = placed[framed[0]].footprint
     held = [c.box for c in spots if area is None or inside(c.box, area)]
     freed = [b for b in held if _frees(b, [*ink[0], *ink[1]], *framed)]
-    return min(freed, key=lambda b: _cost(b, foot, framed[1]), default=None) or next(iter(held), spots[0].box)
+    near = [p.footprint for p in placed.values() if p.page == placed[framed[0]].page and not overlaps(foot, p.footprint)]
+    fits = [b for b in freed if not any(overlaps(union(foot, _reach(b, framed[1])), f) for f in near)]
+    return min(fits or freed, key=lambda b: _cost(b, foot, framed[1]), default=None) or next(iter(held), spots[0].box)
 
 
 def place_labels(
@@ -240,7 +244,7 @@ def place_labels(
         if roomed is not None:
             labels = roomed
             blocked.remove(i)
-    rung = {i: _rung(cands[i], ink, area, (annexes[i].owner, room), placed[annexes[i].owner].footprint) for i in blocked}
+    rung = {i: _rung(cands[i], ink, area, (annexes[i].owner, room), placed) for i in blocked}
     asks = {i: _asks(annexes[i], placed[annexes[i].owner], rung[i]) for i in blocked}
     return labels, [_unplaced(annexes[i], page, asks[i]) for i in blocked], asks
 

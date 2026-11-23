@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from .cut_costs import with_wires
 from .cut_dp import wide_room
 from .flow_values import Attach, Block, Column, End, Lane, block_id
-from .geometry import lane_extent, marker_drawn_box_at, stack_lane
+from .geometry import lane_extent, marker_drawn_at, stack_lane
 from .row_extent import grid_up
 from .topology import build_column
 from .values import PinRef, Ref, RefEnd, RefKind
@@ -54,16 +54,10 @@ class Tall:
     page_h: int
     page_w: int
     net_of: Mapping[PinRef, str]
-    in_row: frozenset[str]
     pins_of: Mapping[str, Sequence[PinRef]]
     height: Mapping[str, int]
     extra: Mapping[str, int]
     fans: Sequence[Fan]
-
-
-def _reserve(options: Options) -> int:
-    """What a row adds to a piece: its wires margin and an open stub at each end."""
-    return with_wires(0, options) + 2 * options.open_stub
 
 
 def _extra(height: Mapping[str, int], blocks: tuple[BlockList, ...]) -> dict[str, int]:
@@ -82,10 +76,9 @@ def split_tall(
     env = Tall(
         {s.id: s for s in problem.symbols},
         options,
-        problem.area.h - options.page_headroom - _reserve(options),
+        problem.area.h - options.page_headroom - with_wires(0, options),
         problem.area.w - 2 * options.margin.w,
         {ref: n.id for n in problem.nets for ref in n.pins},
-        frozenset(s.id for s in problem.symbols if s.row_group),
         {n.id: n.pins for n in problem.nets},
         heights := {c.id: c.height for c in flow.columns},
         _extra(heights, blocks),
@@ -133,7 +126,7 @@ def _fold_wide(c: Column, env: Tall) -> Fold | None:
     firsts = [0]
     lo, hi = 0, 0
     for i, ln in enumerate(c.lanes):
-        a, b = lane_extent(env.syms, ln.cells, env.in_row)
+        a, b = lane_extent(env.syms, ln.cells)
         if i > firsts[-1] and max(hi, ln.offset + b) - min(lo, ln.offset + a) > room:
             firsts.append(i)
             lo, hi = ln.offset + a, ln.offset + b
@@ -149,13 +142,13 @@ def _fold_wide(c: Column, env: Tall) -> Fold | None:
 
 def _tag_room(options: Options) -> int:
     """The G a tag the fold places at a piece end holds: its drawn box on the wiring grid (R1430)."""
-    drawn = marker_drawn_box_at(0, 0, options, options.marker_facing["S"], (PinRef("", ""), str(RefKind.TAG))).h
+    drawn = marker_drawn_at(0, 0, options, options.marker_facing["S"], (None, str(RefKind.TAG))).h
     return grid_up(drawn, options.wiring_grid)
 
 
 def _cuts(cells: Sequence[Cell], env: Tall, room: int, tag: int) -> tuple[int, ...]:
     """Where each piece of a lane starts, and its length last; a piece and the tags at its ends stand in the page."""
-    ys, _ = stack_lane(env.syms, tuple(cells), env.options, env.in_row)
+    ys, _ = stack_lane(env.syms, tuple(cells), env.options)
     starts, top = [0], 0
     for i, (cell, y) in enumerate(zip(cells, ys, strict=True)):
         fp = env.syms[cell.sym].footprint

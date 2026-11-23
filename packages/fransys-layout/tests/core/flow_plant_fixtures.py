@@ -35,8 +35,10 @@ def _part(
     )
 
 
-def tree3(*, one_leaf: bool = False) -> PlacementProblem:
-    """Hub H with four S pins, children C1 and C2 (one node, two S pins each), leaves G1 to G4; one_leaf: G1 and G3 only."""
+def tree3(*, one_leaf: bool = False, device_children: bool = False) -> PlacementProblem:
+    """Hub H with four S pins, children C1 and C2 (one node, two S pins each), leaves G1 to G4; one_leaf: G1 and G3 only.
+
+    device_children: the children are devices (nodes n-s1 and s2), not hubs."""
     hub_pins = tuple(Pin(f"s{i}", "S", 16 * i, 32, i - 1) for i in range(1, 5))
     hub_spec = BoxSpec(tuple(p.id for p in hub_pins), 16, 16)
     hub = _part("H", Box(0, 0, 80, 32), hub_pins, box=hub_spec)
@@ -60,7 +62,13 @@ def tree3(*, one_leaf: bool = False) -> PlacementProblem:
     if one_leaf:
         nets = [n for n in nets if n.id not in ("C1.s2-G2.n", "C2.s2-G4.n")]
     nets.sort(key=lambda n: (n.pins[0].sym, n.pins[0].pin))  # the model's order: by first pin (layout-0465)
-    return problem([hub, *children, *leaves], nets)
+    wired = problem([hub, *children, *leaves], nets)
+    far = wired.facts.far_ends
+    wired = replace(wired, facts=replace(wired.facts, far_ends=(*far, *((b, a) for a, b in far))))  # each conductor known from both ends
+    hubbed = [net(c, *dict.fromkeys(f"{r.sym}.{r.pin}" for n in nets if any(r.sym == c for r in n.pins) for r in n.pins)) for c in ("C1", "C2")]
+    if device_children:
+        return replace(wired, symbols=tuple(replace(s, nodes=(("n", "s1"), ("s2",))) if s.id in ("C1", "C2") else s for s in wired.symbols))
+    return replace(wired, nets=tuple(hubbed))  # each child a legal one-net hub (NET-END-THROUGH); the conductors stay the old nets'
 
 
 def _box_and_foot() -> tuple[Sym, Sym, list[Net]]:

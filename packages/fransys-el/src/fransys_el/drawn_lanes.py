@@ -9,9 +9,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+from electrical_symbols import MARKER_SLOT
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Mapping
+
+    from fransys_layout.core import Box
     from fransys_model.kernel import Id
     from fransys_model.layout import Page
 
@@ -19,7 +22,7 @@ if TYPE_CHECKING:
     from .drawn_netlist import PagePart
     from .drawn_references import References
 
-__all__ = ["Lanes", "join_lanes", "lane_chain"]
+__all__ = ["Lanes", "join_lanes", "lane_chain", "on_flag_edge"]
 
 XY = tuple[int, int]
 type _Node = tuple[Id[Page], XY]
@@ -34,6 +37,14 @@ class Lanes:
 
     joined: set[_Node] = field(default_factory=set)
     bare: set[_Node] = field(default_factory=set)
+
+
+def on_flag_edge(box: Box, at: XY, point: XY) -> bool:
+    """True when `point` lies on the flat edge of the flag at `at` (its port) with outline `box` (R3568).
+
+    On the port's x, at the port or strictly in its y span: a point on the outline's end other than the port is off it.
+    """
+    return point[0] == at[0] and (point == at or box.y < point[1] < box.y + box.h)
 
 
 def lane_chain(part: PagePart, at: XY, pitch: int) -> set[int]:
@@ -89,16 +100,19 @@ def _order(page: Id[Page], feet: list[tuple[XY, set[str]]], nets: Mapping[str, s
 
 
 def _pairs(
-    sides: list[tuple[Id[Page], list[tuple[XY, set[str]]]]], nets: Mapping[str, str], through: Mapping[_Node, str]
+    sides: list[tuple[Id[Page], list[tuple[XY, set[str]]]]],
+    nets: Mapping[str, str],
+    through: Mapping[_Node, str],
+    on_ink: Callable[[_Node], bool],
 ) -> list[tuple[_Node, _Node]]:
-    """The feet of the first side paired with the feet of each later side that read the same nets in the same order."""
+    """The feet of the first side paired with those of each later side that read the same nets in the same order, both on the arrow's ink."""
     (page, feet), *rest = sides
     pairs: list[tuple[_Node, _Node]] = []
     for there, others in rest:
         ours, theirs = _order(page, feet, nets, through), _order(there, others, nets, through)
         common = [net for net in ours if net in theirs]
         if common == [net for net in theirs if net in ours]:
-            pairs.extend(((page, ours[net]), (there, theirs[net])) for net in common)
+            pairs.extend(((page, ours[net]), (there, theirs[net])) for net in common if on_ink((page, ours[net])) and on_ink((there, theirs[net])))
     return pairs
 
 
@@ -136,6 +150,13 @@ class _Reader:
     held: Mapping[Id[Page], Mapping[object, set[str]]]
     union: Union
     pitch: int
+
+    def on_ink(self, node: _Node) -> bool:
+        """True when the foot lies on the ink of a reference marker's flat edge (R3541, R3568)."""
+        return any(
+            MARKER_SLOT in dict(s.slots) and s.outline is not None and on_flag_edge(s.outline, (s.x, s.y), node[1])
+            for s in self.pages[node[0]].drawing.symbols
+        )
 
     def feet(self, page: Id[Page], at: XY) -> list[tuple[XY, set[str]]]:
         """The feet of the arrow at `at` with the ports of their pieces."""
@@ -181,7 +202,7 @@ def join_lanes(union: Union, pages: Mapping[Id[Page], PagePart], refs: Reference
     reader = _Reader(pages, {page: _held(page, part, union) for page, part in pages.items()}, union, pitch)
     read = [[(page, reader.feet(page, at)) for page, at in nodes] for nodes in refs.groups.values()]
     passing = reader.passing(refs, nets)
-    pairs = [pair for sides in read if len(sides) > 1 for pair in _pairs(sides, nets, passing)]
+    pairs = [pair for sides in read if len(sides) > 1 for pair in _pairs(sides, nets, passing, reader.on_ink)]
     listed = {(page, end) for (page, at), ports in refs.stubs.items() for end, held in reader.feet(page, at) if held & ports}
     alone = [[(page, reader.feet(page, at))] for page, at in refs.stubs]
     bare = {(page, end) for side in (*read, *alone) for page, found in side for end, ports in found if not ports} - passing.keys()

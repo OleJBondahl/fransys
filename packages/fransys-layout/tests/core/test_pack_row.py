@@ -17,14 +17,12 @@ lazy from fransys_layout.core.sym_values import Sym
 
 from .pack_fixtures import boxpin_end, card, card_block, column, elem, free_block, lane, placed, with_pitches
 
-NONE: frozenset[str] = frozenset[str]()
-
 
 def free_row(names: tuple[str, ...], syms: dict[str, Sym], options: Options) -> RowSpec:
     """One free column per name, each holding one cell of the same symbol name."""
     pcs = {f"c{i}": placed(f"c{i}", n) for i, n in enumerate(names)}
     block = free_block("f", tuple(pcs))
-    return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, {}, {}))
+    return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, options, {}, {}))
 
 
 def _packed(spec: RowSpec) -> dict[str, int]:
@@ -38,7 +36,7 @@ def test_two_free_columns_sit_at_the_separation() -> None:
     options = core_options()
     spec = free_row(("a", "b"), syms, options)
     x = _packed(spec)
-    assert x[col_node("c1")] - x[col_node("c0")] == separation(spec.pcs["c0"], spec.pcs["c1"], syms, NONE, options)
+    assert x[col_node("c1")] - x[col_node("c0")] == separation(spec.pcs["c0"], spec.pcs["c1"], syms, options)
     assert x[col_node("c0")] == options.margin.w + 24
 
 
@@ -51,7 +49,7 @@ def test_row_width_of_one_column_equals_its_extent() -> None:
         core_options(),
     )
     lanes = (Lane(spec.pcs["c0"].lanes[0], 0),)
-    lo, hi = column_extent(syms, lanes, NONE)
+    lo, hi = column_extent(syms, lanes)
     assert row_width(spec) == hi - lo == 48
 
 
@@ -61,7 +59,7 @@ def test_row_width_counts_the_gap_between_columns() -> None:
     pcs = {"c0": placed("c0", "a")}
     blocks = (free_block("f", ("c0",)), card_block("box", (), ()))
     options = core_options()
-    spec = with_pitches(RowSpec(("c0",), blocks, pcs, syms, NONE, options, {}, {}))
+    spec = with_pitches(RowSpec(("c0",), blocks, pcs, syms, options, {}, {}))
     assert row_width(spec) == 16 + options.column_gap_min + syms["box"].body.w
 
 
@@ -95,12 +93,12 @@ def test_a_cards_attached_columns_stand_under_their_spread_pins() -> None:
     attach = attachments(cols, {block.id: block})
     pcs = {c.id: PlacedColumn(c.id, (c.lanes[0].cells,), (0,), 0, flipped=False) for c in cols}
     options = core_options()
-    spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, attach, {}))
+    spec = with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, options, attach, {}))
     x = _packed(spec)
     pins = [x[pin_node("box", f"p{i}")] for i in (1, 2, 3)]
     assert [b - a for a, b in pairwise(pins)] == [40, 40]
     assert [x[col_node(f"c{i}")] for i in (1, 2, 3)] == pins
-    assert all(x[col_node(b)] - x[col_node(a)] >= separation(pcs[a], pcs[b], syms, NONE, options) for a, b in pairwise(pcs))
+    assert all(x[col_node(b)] - x[col_node(a)] >= separation(pcs[a], pcs[b], syms, options) for a, b in pairwise(pcs))
 
 
 def test_a_row_wider_than_the_page_comes_back_left_packed() -> None:
@@ -145,7 +143,7 @@ def _two_edge_card(heads: dict[str, str] | None = None, **extra) -> tuple[RowSpe
     options = core_options(
         **extra,
     )
-    return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, NONE, options, attach, {})), syms
+    return with_pitches(RowSpec(tuple(pcs), (block,), pcs, syms, options, attach, {})), syms
 
 
 def _pin_xs(spec: RowSpec) -> list[int]:
@@ -216,7 +214,7 @@ def _card_row(n: int, **extra) -> RowSpec:
         attach.update(attachments((col,), {block.id: block}))
         pcs[col.id] = PlacedColumn(col.id, (col.lanes[0].cells,), (0,), 0, flipped=False)
     options = core_options(flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W"), **extra)
-    return with_pitches(RowSpec(tuple(pcs), tuple(blocks), pcs, syms, NONE, options, attach, {}))
+    return with_pitches(RowSpec(tuple(pcs), tuple(blocks), pcs, syms, options, attach, {}))
 
 
 @pytest.mark.rule("ROW-SPREAD")

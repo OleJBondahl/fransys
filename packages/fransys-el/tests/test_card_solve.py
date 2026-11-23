@@ -2,9 +2,8 @@
 
 import fransys as fr
 from _card_case import card_case_drafts
-from conventions_fixtures import house
+from conventions_fixtures import drawn_options, house
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import solve
@@ -13,8 +12,9 @@ from fransys_layout.core import solve
 def _score(channels: int):
     model = fr.build(*card_case_drafts(channels)).model
     conventions = house()
-    problem, _ = build(model, symbol_kit(model, LIBRARY), conventions, LIBRARY)
-    return solve(problem, options(conventions, LIBRARY)).score
+    kit = symbol_kit(model, LIBRARY)
+    problem, _ = build(model, kit, conventions, LIBRARY)
+    return solve(problem, drawn_options(model, kit, problem, conventions)).score
 
 
 def test_the_sixteen_channel_card_has_every_coil_at_its_pin_on_one_page() -> None:

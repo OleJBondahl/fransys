@@ -52,7 +52,8 @@ def test_a_spot_with_only_a_near_wire_places_the_label_and_one_under_a_wire_refu
     near = Wire("n1", 1, ((100, 64), (100, 80)), "straight")  # 4 from the TL box, inside the gap of 8
     through = Wire("n1", 1, ((90, 64), (90, 80)), "straight")
     side = Wire("n2", 1, ((76, 72), (76, 112)), "straight")  # walls the turned rungs left of the body (R1849), so only the upright spot is left
-    soft, found = _corner(on_page((("S1", 88, 96),), wires=(near, side)), corner_order=("TL",))
+    right = Wire("n3", 1, ((108, 64), (108, 176)), "straight")  # walls the upright spot beside the body (R2665), so only TL is left
+    soft, found = _corner(on_page((("S1", 88, 96),), wires=(near, side, right)), corner_order=("TL",))
     assert (soft.spot, soft.box, found) == ("TL", Box(80, 72, 16, 8), ())
-    _, found = _corner(on_page((("S1", 88, 96),), wires=(through, side)), corner_order=("TL",))
+    _, found = _corner(on_page((("S1", 88, 96),), wires=(through, side, right)), corner_order=("TL",))
     assert {f.code for f in found} == {"LABEL_NO_ROOM"}

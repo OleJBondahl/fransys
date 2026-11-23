@@ -44,12 +44,12 @@ def test_every_conductor_between_the_two_documents_has_a_marker_at_both_ends(sha
     assert (found["CONNECTION_NOT_DRAWN"], found["DANGLING_WIRE_END"]) == (0, 0)
 
 
-# mixed: K1 fan (poles 2, 6) + lone K2:4 on CAB, M1 fan (U, W) + lone V on FLD; parallel: one 3-lane fan a page (2), the 6 on CAB stay KI-563.
+# mixed: K1 fan (poles 2, 6) + lone K2:4 on CAB, M1 fan (U, W) + lone V on FLD; parallel: the M1 box, the K1 fan and one marker per K2 pole (5).
 @pytest.mark.parametrize(
     ("shape", "want"),
     [
         ("mixed-contactors-to-one-motor", 4),
-        ("two-contactors-in-parallel-to-one-motor", 2),
+        ("two-contactors-in-parallel-to-one-motor", 5),
         ("each-contactor-to-its-motor", 4),
     ],
 )

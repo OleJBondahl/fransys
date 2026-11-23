@@ -9,7 +9,8 @@ import tomllib
 from typing import TYPE_CHECKING
 
 import pytest
-from test_boundaries import ALLOWED, FIRST_PARTY, _imported, _source_packages
+from import_walk import top_level_imports
+from test_boundaries import ALLOWED, FIRST_PARTY, _source_packages
 from test_pins import _REQUIREMENT as _DEPENDENCY
 from test_pins import _normalize
 
@@ -42,7 +43,7 @@ def _first_party_imports(package_dir: Path) -> set[str]:
     """First-party names `package_dir`'s source imports, own name excluded."""
     found: set[str] = set()
     for path in package_dir.rglob("*.py"):
-        found |= _imported(path.read_text(encoding="utf-8"))
+        found |= top_level_imports(path.read_text(encoding="utf-8"))
     return (found & FIRST_PARTY) - {package_dir.name}
 
 
@@ -60,7 +61,7 @@ def test_every_source_package_was_scanned():
 
 
 def test_at_least_one_first_party_import_was_found():
-    # Guards against a broken scan (e.g. `_imported` returning nothing) passing vacuously.
+    # Guards against a broken scan (e.g. `top_level_imports` returning nothing) passing vacuously.
     total = sum(len(_first_party_imports(p)) for p in _source_packages())
     assert total > 0
 

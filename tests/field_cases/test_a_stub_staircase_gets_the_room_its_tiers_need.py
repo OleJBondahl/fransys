@@ -52,3 +52,6 @@ def test_every_stub_box_stands_in_the_content_box(stubs: list[tuple[Any, Box]]) 
         )
     ]
     assert out == []
+
+
+# OVERLAP: a looks finding of this file's builds, on KI-1379 (R3557).

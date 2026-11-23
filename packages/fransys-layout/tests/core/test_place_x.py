@@ -15,7 +15,7 @@ from fransys_layout.core.pack_row import RowSpec, row_width, solve_row
 from fransys_layout.core.place_env import PageEnv, page_envs
 from fransys_layout.core.place_x import place_x, row_specs
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA
 from .pipeline_fixtures import cut_of
 from .place_fixtures import card_with_coils, two_edge_card, wide_row
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 def env_of(prob: PlacementProblem, options: Options | None = None) -> PageEnv:
     """The env of the first page of a problem."""
     opts = options or core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     return page_envs(cut_of(prob, opts), prob, opts)[0]
 
@@ -78,7 +78,7 @@ def _reach(spec: RowSpec, x: dict[str, int]) -> int:
     best = 0
     for col, pc in spec.pcs.items():
         lanes = tuple(Lane(cells, off) for cells, off in zip(pc.lanes, pc.offsets, strict=True))
-        best = max(best, x[col_node(col)] + column_extent(spec.syms, lanes, spec.in_row)[1])
+        best = max(best, x[col_node(col)] + column_extent(spec.syms, lanes)[1])
     return best
 
 
@@ -100,8 +100,8 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
         "choose paper A2",
     ):
         assert word in finding.text
-    left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),), spec.in_row)[0]
-    options = core_options(marker=MARKER)
+    left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),))[0]
+    options = core_options(marker_boxes=MARKERS)
     assert 0 <= x[col_node("c:e")] + left - options.margin.w < options.wiring_grid  # on the grid: its reach rounds up
     assert place_x(env_of(card_with_coils()))[1] == ()
 
@@ -116,7 +116,7 @@ def test_stage_5_never_raises_for_width() -> None:
 def test_fixed_box_pins_chain_at_the_pitch() -> None:
     """Fixed pins stand exactly a pitch apart and leave the wide coils off their pins."""
     fixed = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
         box_pins="fixed",
     )
     env = env_of(card_with_coils(4, 84), fixed)

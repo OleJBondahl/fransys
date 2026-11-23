@@ -7,20 +7,15 @@ records, not a frozen model, so a test can reorder them before they reach a `Dra
 from typing import TYPE_CHECKING
 
 import pytest
-from library_records import freeze, shuffled_draft
+from plant import Plant as BasePlant
 
-from fransys_model.kernel import Draft, Model, Origin, make_id
+from fransys_model.kernel import Model, Origin, make_id
 from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode, Placement
-from fransys_model.vocab.connectivity import Conductor, Mate
 from fransys_model.vocab.core import Function, Item, Port
 from fransys_model.vocab.enums import (
-    ConductorKind,
-    FunctionKind,
     PartCategory,
-    PortBoundary,
 )
-from fransys_model.vocab.templates import Part
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Record
@@ -30,30 +25,20 @@ _ORIGIN = Origin(file="packages/fransys-overview/tests/conftest.py", line=1, not
 
 
 class Plant:
-    """Records of an invented plant, added one item, wire and mate at a time."""
+    """The invented plant: items with one auto `main` function, ports and wires by `(item, port name)`."""
 
     def __init__(self) -> None:
-        self.records: list[Record] = []
-        self._functions: dict[Id[Item], Id[Function]] = {}
-        self._ports: dict[tuple[Id[Item], str], Id[Port]] = {}
-        self._parts: dict[str, Id[Part]] = {}
+        self._plant = BasePlant()
         self._keys: dict[Id[Item], tuple[str, ...]] = {}
 
-    def part(self, mpn: str, category: PartCategory = PartCategory.GENERIC) -> Id[Part]:
-        """A part with this `mpn`, added once."""
-        if mpn not in self._parts:
-            part = Part(
-                id=make_id(Part, (mpn,)),
-                key=(mpn,),
-                mpn=mpn,
-                manufacturer="Example Co",
-                description=f"Invented {mpn}",
-                category=category,
-                class_code="X",
-            )
-            self.records.append(part)
-            self._parts[mpn] = part.id
-        return self._parts[mpn]
+    @property
+    def records(self) -> list[Record]:
+        """The records so far, which a test may replace before it freezes."""
+        return self._plant.records
+
+    @records.setter
+    def records(self, records: list[Record]) -> None:
+        self._plant.records = records
 
     def item(  # noqa: PLR0913 -- one keyword per thing a test varies
         self,
@@ -67,81 +52,32 @@ class Plant:
         category: PartCategory = PartCategory.GENERIC,
     ) -> Id[Item]:
         """One item, with a part when it has an `mpn`."""
-        item = Item(
-            id=make_id(Item, (key,)),
-            key=(key,),
-            part=None if mpn is None else self.part(mpn, category),
-            parent=parent,
-            position=None,
-            tag=designation,
-            description=description,
-            installed=installed,
-        )
-        self.records.append(item)
-        self._keys[item.id] = item.key
-        return item.id
+        part = None if mpn is None else self._plant.part("X", key=mpn, mpn=mpn, description=f"Invented {mpn}", category=category)
+        item = self._plant.item(key, designation=designation, part=part, parent=parent, installed=installed, description=description)
+        self._keys[item] = (key,)
+        return item
 
     def function(self, item: Id[Item]) -> Id[Function]:
         """The one function `main` of `item`, added on first use."""
-        if item not in self._functions:
-            function = Function(
-                id=make_id(Function, (*self._keys[item], "main")),
-                key=(*self._keys[item], "main"),
-                item=item,
-                template=None,
-                name="main",
-                kind=FunctionKind.GENERIC,
-            )
-            self.records.append(function)
-            self._functions[item] = function.id
-        return self._functions[item]
+        function = make_id(Function, (*self._keys[item], "main"))
+        return function if self._plant.has(function) else self._plant.function(item, "main")
 
     def port(self, item: Id[Item], name: str) -> Id[Port]:
         """The port `name` of `item`'s function `main`, added on first use."""
-        if (item, name) not in self._ports:
-            function = self.function(item)
-            port = Port(
-                id=make_id(Port, (*self._keys[item], "main", name)),
-                key=(*self._keys[item], "main", name),
-                function=function,
-                template=None,
-                name=name,
-                boundary=PortBoundary.GENERIC,
-            )
-            self.records.append(port)
-            self._ports[item, name] = port.id
-        return self._ports[item, name]
+        port = make_id(Port, (*self._keys[item], "main", name))
+        return port if self._plant.has(port) else self._plant.port(self.function(item), name)
 
     def wire(self, a: tuple[Id[Item], str], b: tuple[Id[Item], str], key: str) -> None:
         """A wire between two ports, each given as `(item, port name)`."""
-        self._conductor(a, b, key, ConductorKind.WIRE, None)
+        self._plant.wire(self.port(*a), self.port(*b), key=key)
 
     def core(self, cable: Id[Item], a: tuple[Id[Item], str], b: tuple[Id[Item], str], key: str) -> None:
         """One core of `cable` between two ports."""
-        self._conductor(a, b, key, ConductorKind.CORE, cable)
-
-    def _conductor(
-        self,
-        a: tuple[Id[Item], str],
-        b: tuple[Id[Item], str],
-        key: str,
-        kind: ConductorKind,
-        carrier: Id[Item] | None,
-    ) -> None:
-        self.records.append(
-            Conductor(
-                id=make_id(Conductor, (key,)),
-                key=(key,),
-                a=self.port(*a),
-                b=self.port(*b),
-                kind=kind,
-                carrier=carrier,
-            )
-        )
+        self._plant.core(self.port(*a), self.port(*b), key=key, carrier=cable)
 
     def mate(self, a: Id[Item], b: Id[Item], key: str) -> None:
         """Plug the `main` functions of two items together."""
-        self.records.append(Mate(id=make_id(Mate, (key,)), key=(key,), a=self.function(a), b=self.function(b)))
+        self._plant.mate(self.function(a), self.function(b), key=key)
 
     def place(self, item: Id[Item], label: str) -> None:
         """Place `item` at the location node `label`, made on first use."""
@@ -163,13 +99,9 @@ class Plant:
             self.records.append(node)
         self.records.append(placement)
 
-    def draft(self, seed: int | None = None) -> Draft:
-        """The records in a `Draft`, shuffled by `seed` when there is one."""
-        return shuffled_draft(self.records, _ORIGIN, seed)
-
     def freeze(self, seed: int | None = None) -> Model:
-        """The frozen model of every record so far."""
-        return freeze(self.draft(seed))
+        """The frozen model of every record so far, in the order of `seed` when there is one."""
+        return self._plant.model(shuffled=seed)
 
 
 def build_demo() -> Plant:

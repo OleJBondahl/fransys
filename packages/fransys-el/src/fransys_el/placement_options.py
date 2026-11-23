@@ -10,7 +10,6 @@ from fransys_model.layout import Side
 
 from .placement_forms import TRUNK_FORMS
 from .placement_syms import PLAIN
-from .placement_views import marker_boxes
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -67,11 +66,9 @@ class Conventions:
 def options(conventions: Conventions, library: Library) -> Options:
     """The core options of `conventions`: the lane step is `library.grid.wire_pitch` (Ruling 62).
 
-    The marker and the unit frame's room are read from `library` (layout-0316, R900).
+    The unit frame's room is read from `library` (layout-0316, R900).
     """
     chosen = replace(conventions.options, wiring_grid=library.grid.wire_pitch)
-    if chosen.marker is None:
-        chosen = replace(chosen, marker=marker_boxes(library))
     return replace(chosen, outline=chosen.outline or outline_room(library))
 
 

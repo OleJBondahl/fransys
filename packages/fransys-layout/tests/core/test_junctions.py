@@ -8,10 +8,10 @@ from fransys_layout.core.junctions import page_junctions
 from fransys_layout.core.outputs import Junction, PinXY, Placed, Wire
 from fransys_layout.core.route_env import RouteEnv
 
-from .conftest import MARKER
+from .conftest import MARKERS
 
 _OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 
 

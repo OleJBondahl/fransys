@@ -69,7 +69,7 @@ def block(
 
 
 def box_column(col: str, pin: str) -> Column:
-    return Column(col, (), (End("boxpin", pin=PinRef("=U1", pin)),), (), 0, 0)
+    return Column(col, (), (End("boxpin", pin=PinRef("=U1", pin), lane=0),), (), 0, 0)
 
 
 def ordered(blk: Block, fl: FlowGraph, options: Options = OPTIONS) -> list[str]:

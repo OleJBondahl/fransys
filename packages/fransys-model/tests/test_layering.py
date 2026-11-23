@@ -4,8 +4,9 @@ Replaces `import-linter`, which does not run on this Python (root decision 0010;
 `tests/test_boundaries.py` does the same for the workspace). Enforces the layer rule: the
 """
 
-import ast
 from pathlib import Path
+
+from import_walk import imported_modules, module_name_of
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "fransys_model"
 KERNEL_SRC = Path(__file__).resolve().parents[2] / "fransys-kernel" / "src" / "fransys_kernel"
@@ -45,49 +46,14 @@ FORBIDDEN: dict[str, tuple[str, ...]] = {
 }
 
 
-def _package_of(module_name: str, *, is_init: bool) -> str:
-    """The dotted package a module belongs to, for resolving its relative imports."""
-    return module_name if is_init else module_name.rsplit(".", 1)[0]
-
-
-def _resolve_import(module_name: str, *, is_init: bool, node: ast.ImportFrom) -> list[str]:
-    """Every absolute dotted name `node` could refer to: its module and each name as a submodule."""
-    if node.level == 0:
-        base = node.module or ""
-    else:
-        package = _package_of(module_name, is_init=is_init)
-        parts = package.split(".")
-        up = node.level - 1
-        if up:
-            parts = parts[:-up] if up < len(parts) else []
-        base = ".".join(parts)
-        if node.module:
-            base = f"{base}.{node.module}" if base else node.module
-    if not base:
-        return [alias.name for alias in node.names]
-    return [base, *(f"{base}.{alias.name}" for alias in node.names)]
+def _module_name(path: Path) -> tuple[str, bool]:
+    """`path`'s dotted module name (relative to `src/`) and whether it is a package `__init__`."""
+    return module_name_of(path, SRC_ROOT)
 
 
 def _imported_modules(module_name: str, source: str, *, is_init: bool) -> set[str]:
-    """Every module dotted name `source` imports, absolute or resolved-relative."""
-    tree = ast.parse(source)
-    names: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            names.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            names.update(_resolve_import(module_name, is_init=is_init, node=node))
-    return names
-
-
-def _module_name(path: Path) -> tuple[str, bool]:
-    """`path`'s dotted module name (relative to `src/`) and whether it is a package `__init__`."""
-    rel = path.relative_to(SRC_ROOT.parent)
-    parts = list(rel.with_suffix("").parts)
-    is_init = parts[-1] == "__init__"
-    if is_init:
-        parts = parts[:-1]
-    return ".".join(parts), is_init
+    """Every module dotted name `source` imports, each name also as a submodule."""
+    return imported_modules(module_name, source, is_init=is_init, submodules=True)
 
 
 def _violates(imported: set[str], forbidden: tuple[str, ...]) -> set[str]:

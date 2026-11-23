@@ -8,7 +8,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
-from conventions_fixtures import house, unwired
+from conventions_fixtures import drawn_options, house, unwired
 from cross_link_cases import (
     channels_model,
     drawn_supply_model,
@@ -19,7 +19,6 @@ from cross_link_cases import (
     two_units_model,
 )
 from fransys_el import build, symbol_kit
-from fransys_el.placement_options import options
 from ring_cases import score_of
 
 from electrical_symbols import LIBRARY
@@ -73,7 +72,7 @@ def test_loads_in_two_units_end_in_stubs_only_where_no_wire_is_drawn() -> None:
     model = two_units_model()
     problem, _ = build(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
     bare = unwired(problem)
-    layout = solve(bare, options(house(), LIBRARY))
+    layout = solve(bare, drawn_options(model, symbol_kit(model, LIBRARY), bare, house()))
     classes = dict(score_of(layout).R)
     assert classes.get("stub", 0) > 0, counts(layout)
     assert set(classes) == {"stub"}, counts(layout)
@@ -90,7 +89,7 @@ def test_without_crosses_unit_the_stubs_are_gone() -> None:
     model = two_units_model()
     problem, _ = build(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
     plain = replace(problem, nets=tuple(replace(n, crosses_unit=False) for n in problem.nets))
-    assert "stub" not in dict(score_of(solve(plain, options(house(), LIBRARY))).R)
+    assert "stub" not in dict(score_of(solve(plain, drawn_options(model, symbol_kit(model, LIBRARY), plain, house()))).R)
 
 
 def test_a_drawn_supply_closing_the_circuit_has_no_crossing() -> None:

@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 from _drawn_pages import drawn_pages
+from sheet_formats import a3
 
-from fransys_model.layout import default_sheet_format
 lazy from fransys_layout.drawing import DrawnText
 
 # `--import-mode=importlib` (root pyproject.toml) never puts a test directory on `sys.path`, and
@@ -47,7 +47,7 @@ def test_the_row_one_terminals_strip_tag_and_point_text_do_not_overlap(model) ->
 def test_every_cross_reference_stays_inside_the_content_box(model) -> None:
     """(e): no contact's position text crosses the frame, `p1:3A` of the first contact included."""
     # UNDO: stages/space.py `Space.holds` returns True: `p1:3A` stands at x -5 again
-    sheet = default_sheet_format()
+    sheet = a3()
     width = round(sheet.content_width_mm * 8 / Decimal(sheet.module_mm))
     height = round(sheet.content_height_mm * 8 / Decimal(sheet.module_mm))
     references = [text for drawing in drawn_pages(model).values() for text in drawing.texts if text.kind == "CROSS_REFERENCE"]

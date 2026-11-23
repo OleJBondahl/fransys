@@ -9,7 +9,7 @@ from dataclasses import replace
 from typing import Any
 
 from options_fixtures import core_options
-from turn_fixtures import marker_views, refit
+from turn_fixtures import marker_views, plain_boxes, refit
 
 from fransys_layout.core import Box, Bundle, Facts, PinRef, Placement, PlacementProblem
 from fransys_layout.core.place_lanes import Stand
@@ -17,7 +17,7 @@ lazy from fransys_layout.core.clearance import Keep
 lazy from fransys_layout.core.outputs import PagePlacement
 
 from .cut_fixtures import AREA, box_sym, elem, free
-from .flow_builders import net, poles
+from .flow_builders import conductors, hub_pins, net, poles
 
 
 def _coil_card(coils: list[str], coil_width: int, north: int = 0) -> PlacementProblem:
@@ -41,8 +41,9 @@ def row_group_three(group: str | None) -> PlacementProblem:
     """Three hubs in row group `group` (or none); footprints rise 16, 32 and 48 G above origin."""
     hubs = [refit(free(f"h{k}"), row_group=group, footprint=Box(-8, -16 * (k + 1), 16, 16 * (k + 2))) for k in range(3)]
     syms = [*hubs, *(elem(f"e{k}") for k in range(3))]
-    nets = [net(f"a{k}", f"h{k}.s", f"e{k}.n") for k in range(3)]
-    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=()))
+    nets = [net(f"a{k}", *hub_pins(f"h{k}"), f"e{k}.n") for k in range(3)]
+    ends = conductors([net(f"a{k}", f"h{k}.s", f"e{k}.n") for k in range(3)])  # the through hub has a conductor on s only
+    return PlacementProblem(AREA, tuple(syms), tuple(nets), facts=Facts(far_ends=ends))
 
 
 def bundle_fan() -> PlacementProblem:
@@ -81,7 +82,9 @@ def card_with_label(grow: int, n: int = 4, coil_width: int = 40) -> PlacementPro
     return replace(prob, symbols=(card, *prob.symbols[1:]))
 
 
-WALK_OPTIONS = core_options(marker=marker_views(Box(0, -4, 8, 8)))  # the 8 x 8 arrow box the lane-walk tests use, centred on its lane
+WALK_OPTIONS = core_options(
+    marker_boxes=plain_boxes(marker_views(Box(0, -4, 8, 8)))
+)  # the 8 x 8 arrow box the lane-walk tests use, centred on its lane
 WALK_KEY = (PinRef("S", "arrow"), "arrow")
 WALK_KEYS = ({0: WALK_KEY}, {0: WALK_KEY})  # the (pin, kind) of the arrow at each end of lane 0
 

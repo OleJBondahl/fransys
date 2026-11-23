@@ -31,6 +31,3 @@ def test_every_anchored_outline_lies_inside_its_rows_solved_spans(layouts) -> No
             if a.outline.y < lo or a.outline.y + a.outline.h > hi:
                 out.append((a.page, a.sym, a.pin, a.outline, (lo, hi)))
     assert out == []
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

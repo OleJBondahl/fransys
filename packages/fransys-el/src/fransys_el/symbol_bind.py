@@ -7,6 +7,7 @@ own name, and the pole pair it sits on. Nothing here reads the model.
 from typing import TYPE_CHECKING, NamedTuple
 
 from fransys_model.derive.drawing_text import pole_prefix
+from fransys_model.vocab import THROW_ROLES
 
 from .placement_kit import refuse
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 __all__ = ["Part", "Shape", "Target", "member_of", "port_of", "through_ports"]
 
-_THROWS = {"common": "com", "break": "nc", "make": "no"}
+_THROWS = dict(zip(THROW_ROLES, ("com", "nc", "no"), strict=True))
 
 
 class Target(NamedTuple):

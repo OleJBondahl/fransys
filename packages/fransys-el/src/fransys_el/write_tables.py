@@ -15,7 +15,7 @@ from fransys_model.derive.order import in_place_order
 from fransys_model.layout import Page, layout_of, sheet_format_of
 
 from .drawn_ids import core_symbol_id, symbol_id
-from .drawn_where import where_link, where_text
+from .drawn_where import where_link, where_targets, where_text
 from .kit_keys import function_of
 from .placement_ids import symbol_key
 from .placement_tables import is_table_spot
@@ -86,18 +86,20 @@ def line_box(box: Box, width: int, height: int, *, turned: bool, offset: int = 0
     return Box(box.x + offset, box.y, height, width) if turned else Box(box.x, box.y + offset, width, height)
 
 
-def _lines(model: Model, on: tuple[Library, int], text: DrawnText, rows: Sequence[tuple[Id[Page], FrameCell]], page: Id[Page]) -> list[DrawnText]:
-    """The where lines under the tag `text`: one per placement of its terminal off `page`, each one line pitch after the last.
+def _lines(
+    model: Model, on: tuple[Library, int, Id[Page]], text: DrawnText, rows: Sequence[tuple[Id[Page], FrameCell]], function: Id[Function]
+) -> list[DrawnText]:
+    """The where lines under the tag `text`: one per placement of its terminal off its page and one per stand it names, a line pitch apart.
 
     A turned tag reads bottom-up, so its lines stack to the right, each its own thickness wide, from the tag's start.
     """
-    library, height = on
+    library, height, page = on
     here = next((r for r in rows if r[0] == page), None)
     if here is None:
         return []
     step, lines = (
         line_pitch(library, height),
-        [(where_text(model, here, there), where_link(model, here, there)) for there in rows if there[0] != page],
+        [(where_text(model, here, there), where_link(model, here, there)) for there in where_targets(model, function, rows, page)],
     )
     found = []
     for i, (line, link) in enumerate(lines):
@@ -124,7 +126,7 @@ def _where(model: Model, kit: SymbolKit, library: Library, drawings: Mapping[Id[
             line
             for t, f in tagged
             if f is not None and function_role(model, f).terminal
-            for line in _lines(model, (library, height), t, rows.get(f, ()), page)
+            for line in _lines(model, (library, height, page), t, rows.get(f, ()), f)
         )
     return found
 

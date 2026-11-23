@@ -111,13 +111,22 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="PIN_MARKING_WRONG",
+        code="POWER_SYMBOL_WRONG_KIND",
+        severity=Severity.ERROR,
+        stage="render",
+        who="Fransys",
+        cause=("A power symbol is drawn for a pin as another kind than the potential of its net (supply, ground or protective earth)."),
+        fix=_REPORT,
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="PRINTED_TEXT_WRONG",
         severity=Severity.ERROR,
         stage="render",
         who="Fransys",
         cause=(
-            "A symbol prints at a pin a marking other than the one the model gives that port, "
-            "or prints none where the port is marked, or one where it is not."
+            "A drawn text is not the one the model gives it: a pin marking, a tag, a contact table, "
+            "a where-text or a frame title that differs from its derived text."
         ),
         fix=_REPORT,
         page="findings-render",

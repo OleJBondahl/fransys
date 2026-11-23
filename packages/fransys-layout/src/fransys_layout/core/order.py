@@ -197,5 +197,4 @@ def _pin_order(block: Block, flow: FlowGraph) -> list[str]:
 
 
 def _pin_rank(column: Column, rank: Mapping[str, int]) -> int:
-    end = next(e for e in (*column.heads, *column.feet) if e.kind == "boxpin")
-    return rank.get(end.pin.pin if end.pin else "", len(rank))
+    return rank.get(column.box_pins[0].pin.pin, len(rank))

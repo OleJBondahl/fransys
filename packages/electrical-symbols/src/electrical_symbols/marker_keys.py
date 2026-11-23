@@ -11,8 +11,8 @@ __all__ = ["MARKER_FACING", "MARKER_SLOT", "MARKER_TURNED", "MARKER_TURN_FACING"
 #: The slot of the marker symbol that holds the reference text.
 MARKER_SLOT = "ref"
 
-#: The marker symbol points east at R0; this turn points its box along the side it faces.
-MARKER_FACING = frozendict({"E": "R0", "S": "R90", "W": "R180", "N": "R270"})
+#: The marker symbol points east at R0; this view points its box along the side it faces. Its +y, the stretch, grows toward the lanes below (R3569).
+MARKER_FACING = frozendict({"E": "R0", "S": "R90", "W": "MR0", "N": "R270"})
 
 #: The symbol of a marker on a north or south pin: its text reads along the wire (S20 M1-M6).
 MARKER_TURNED = "marker-arrow-turned"

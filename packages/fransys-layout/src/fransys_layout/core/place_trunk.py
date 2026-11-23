@@ -11,7 +11,7 @@ from .cut_costs import ref_name
 from .cut_end_rooms import arrow_room, stub_room
 from .geometry import pin_of, pin_xy
 from .hangings import hanging_keep
-from .node_names import LOW, box_node, box_y_node, pin_node
+from .node_names import LOW, TRUNK, box_node, box_y_node, pin_node
 from .pack import cell_node
 
 if TYPE_CHECKING:
@@ -24,8 +24,6 @@ if TYPE_CHECKING:
     from .place_env import PageEnv
     from .place_levels import Span
     from .sym_values import Sym
-
-TRUNK = "trunk:"
 
 
 def trunk_node(fan: str, row: int) -> str:

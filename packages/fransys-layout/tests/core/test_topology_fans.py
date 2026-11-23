@@ -8,7 +8,7 @@ import pytest
 
 from fransys_layout.core.errors import CoreError
 from fransys_layout.core.flow_values import Cell
-from fransys_layout.core.topology_elements import Elem
+from fransys_layout.core.topology_elements import Elem, NetEnd
 from fransys_layout.core.topology_fans import (
     Att,
     FanDraft,
@@ -32,6 +32,11 @@ def _lane(column: str, *syms: str) -> LaneDraft:
 
 def _hub(name: str) -> Elem:
     return Elem(f"{name}#0", name, "free", "n", "s")
+
+
+def _thr(key: str, *far: str) -> NetEnd:
+    """A through end of element `key` with conductors to the "sym.pin" strings in `far`."""
+    return NetEnd("t", key, PinRef(key[0], "n"), "through", frozenset(PinRef(*p.split(".")) for p in far))
 
 
 def test_a_two_end_net_of_a_box_pin_and_a_lane_end_is_an_attachment() -> None:
@@ -74,7 +79,7 @@ def test_an_end_off_a_lane_end_is_a_cross_link_and_a_hub_is_a_through() -> None:
 def test_hub_with_no_driver_heads_the_first_leg_and_others_stay() -> None:
     l1, l2 = _lane("L1", "x"), _lane("L2", "y")
     fan = FanDraft("f", ["t"], [], [Att(l1, "head"), Att(l2, "head")])
-    new = deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    new = deal(fan, [_thr("h#0", "x.n", "y.n")], {"h#0": _hub("h")}, "c:")
     assert [c.sym for c in l1.cells] == ["h", "x"]
     assert [c.sym for c in l2.cells] == ["y"]
     assert (fan.hub, new) == ("h", ())
@@ -85,29 +90,40 @@ def test_hub_with_no_driver_heads_the_first_leg_and_others_stay() -> None:
 def test_hub_with_no_leg_foots_the_first_driver() -> None:
     d = _lane("D", "x")
     fan = FanDraft("f", ["t"], [Att(d, "foot")], [])
-    deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    deal(fan, [_thr("h#0")], {"h#0": _hub("h")}, "c:")
     assert [c.sym for c in d.cells] == ["x", "h"]
     assert fan.hub == "h"
     assert fan.drivers == [Att(d, "before-hub")]
     assert fan.legs == [Att(d, "hub-foot")]
 
 
-def test_the_rest_are_dealt_one_per_leg_in_the_order_given_then_to_new_lanes() -> None:
+def test_a_through_stands_over_a_leg_it_has_conductors_to_and_the_rest_take_lanes_of_their_own() -> None:
     d, l1, l2 = _lane("D", "x"), _lane("L1", "y"), _lane("L2", "z")
     fan = FanDraft("f", ["t"], [Att(d, "foot")], [Att(l1, "head"), Att(l2, "head")])
     elems = {f"{n}#0": _hub(n) for n in ("h10", "h2", "h3")}
-    new = deal(fan, list(elems), elems, "c:")
+    new = deal(fan, [_thr("h10#0", "y.n", "x.s"), _thr("h2#0", "x.s"), _thr("h3#0", "x.s")], elems, "c:")
     assert [c.sym for c in l1.cells] == ["h10", "y"]
-    assert [c.sym for c in l2.cells] == ["h2", "z"]
-    assert [lane.column for lane in new] == ["c:h3"]
-    assert fan.legs[-1] == Att(new[0], "head")
+    assert [c.sym for c in l2.cells] == ["z"]  # h2 has no conductor to z.n
+    assert [lane.column for lane in new] == ["c:h2", "c:h3"]
+    assert fan.legs[-1] == Att(new[-1], "head")
     assert fan.hub is None
+
+
+def test_a_through_with_one_conductor_to_a_leg_head_stands_over_the_trunk_of_a_hanging_fan_only() -> None:
+    l1, l2 = _lane("L1", "y"), _lane("L2", "z")
+    fan = FanDraft("f", ["t"], [], [Att(l1, "head"), Att(l2, "head")])
+    new = deal(fan, [_thr("g#0", "z.n"), _thr("h#0", "y.n")], {"g#0": _hub("g"), "h#0": _hub("h")}, "c:")
+    assert [c.sym for c in l1.cells] == ["h", "y"]
+    assert not new
+    assert Att(l1, "hub-head") in fan.drivers  # the fan hangs from it, as from a hub at a head
+    driven = FanDraft("f", ["t"], [Att(_lane("D", "x"), "foot")], [Att(_lane("L3", "y"), "head"), Att(_lane("L4", "z"), "head")])
+    assert [c.sym for lane in deal(driven, [_thr("h#0", "y.n")], {"h#0": _hub("h")}, "c:") for c in lane.cells] == ["h"]  # a driven fan: a leaf (w08)
 
 
 def test_resolve_gives_final_indexes_and_pins_after_a_hub_is_dealt() -> None:
     l1 = _lane("L1", "x")
     fan = FanDraft("f", ["t"], [], [Att(l1, "head")])
-    deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    deal(fan, [_thr("h#0", "x.n")], {"h#0": _hub("h")}, "c:")
     fan.drivers = [replace(a, net="t") for a in fan.drivers]
     fan.legs = [replace(a, net="t") for a in fan.legs]
     assert resolve(fan.drivers[0]).cell == 0
@@ -130,7 +146,7 @@ def test_resolve_refuses_an_attachment_on_a_cell_with_no_pin_on_that_side() -> N
 def test_a_hub_at_a_lanes_foot_turns_to_stand_with_its_net_pin_toward_the_lane() -> None:
     d = _lane("D", "x")
     fan = FanDraft("f", ["t"], [Att(d, "foot")], [])
-    deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    deal(fan, [_thr("h#0")], {"h#0": _hub("h")}, "c:")
     turn_foot_hub(fan, {"h": "s"})
     hub = d.cells[1]
     assert (hub.sym, hub.orient, hub.top_pin) == ("h", "R180", "s")
@@ -140,7 +156,7 @@ def test_a_leg_head_turns_to_have_its_facing_pin_on_top() -> None:
     """R924: the cell dealt to a leg head has the facing pin on top."""
     leg = _lane("L", "x")
     fan = FanDraft("f", ["t"], [Att(_lane("D", "y"), "foot")], [Att(leg, "head")])
-    deal(fan, ["h#0"], {"h#0": _hub("h")}, "c:")
+    deal(fan, [_thr("h#0", "x.n", "y.s")], {"h#0": _hub("h")}, "c:")
     turn_foot_hub(fan, {"h": "s"})
     assert (leg.cells[0].orient, leg.cells[0].top_pin) == ("R180", "s")
 

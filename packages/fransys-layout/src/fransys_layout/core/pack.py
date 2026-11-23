@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from .flow_values import Cell
 from .geometry import pin_of
+from .node_names import CELL
 from .values import PinRef
 
 if TYPE_CHECKING:
@@ -36,7 +37,7 @@ class PlacedColumn:
 
 def cell_node(col: str, lane: int, index: int) -> str:
     """The graph node of one cell."""
-    return f"cell:{col}:{lane}:{index}"
+    return f"{CELL}{col}:{lane}:{index}"
 
 
 def _flipped_lane(back: tuple[Cell, ...]) -> tuple[Cell, ...]:
@@ -71,9 +72,9 @@ def attachments(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> Attach
 
 def _boxpin_ends(c: Column, holder: Mapping[str, str | None]) -> Iterator[tuple[str, str, int]]:
     """(box, pin, lane offset) of each box-pin end of a column on its holding card."""
-    for lane, end in enumerate((*c.heads, *c.feet)):
-        if end.kind == "boxpin" and end.pin is not None and holder.get(c.id) == end.pin.sym:
-            yield end.pin.sym, end.pin.pin, c.lanes[lane % len(c.lanes)].offset
+    for b in c.box_pins:
+        if holder.get(c.id) == b.pin.sym:
+            yield b.pin.sym, b.pin.pin, c.lanes[b.lane].offset
 
 
 def lane_pins(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> LanePins:

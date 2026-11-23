@@ -20,7 +20,7 @@ def test_a_forced_drop_of_a_symbols_only_net_gives_connection_not_drawn(tmp_path
 
     def drop(net: Any, symbols: Any, *rest: Any) -> Any:
         made = real(net, symbols, *rest)
-        return None if made is not None and made.cut and any(s.startswith("H1") for s in symbols) else made
+        return () if any(n.cut for n in made) and any(s.startswith("H1") for s in symbols) else made
 
     monkeypatch.setattr(restrict, "_net", drop)
     expect_codes(build_room(tmp_path, beyond=True), "CONNECTION_NOT_DRAWN")

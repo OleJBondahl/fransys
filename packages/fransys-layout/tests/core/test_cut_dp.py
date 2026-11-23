@@ -14,7 +14,7 @@ from turn_fixtures import refit
 from fransys_layout.core import Box, Hints, Sym
 lazy from fransys_layout.core.flow_values import CutResult
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import box_sym, cut_of, elem, net, side
 from .pack_fixtures import card
 
@@ -71,7 +71,7 @@ def test_the_same_page_cut_wins_when_the_pair_violation_costs_nothing() -> None:
         PAIR_NETS,
         hints=PAIR_ORDER,
         options=core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
             w_violation=0.0,
         ),
     )
@@ -115,7 +115,7 @@ def test_a_page_under_the_minimum_fill_is_refused_unless_it_is_the_last() -> Non
         FILL_NETS,
         hints=a_first,
         options=core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
             min_fill=0.0,
         ),
     )
@@ -165,7 +165,7 @@ def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_cou
             syms,
             nets,
             options=core_options(
-                marker=MARKER,
+                marker_boxes=MARKERS,
                 tag_stagger=on,
             ),
         ).spec.pages
@@ -194,7 +194,7 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
         syms,
         nets,
         options=core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
             min_fill=0.0,
         ),
     )
@@ -203,7 +203,7 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
         syms,
         nets,
         options=core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
             min_fill=0.0,
             short_height=0.5,
         ),

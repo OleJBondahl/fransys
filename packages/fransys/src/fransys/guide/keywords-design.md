@@ -43,7 +43,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | [`interface`](authoring.md#strips-and-terminals) | `False` | Marks terminals as the unit's boundary: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, interface=(1, 2))` |
 | [`unused`](authoring.md#strips-and-terminals) | `False` | Marks terminals as unused: `True` all, a tuple those. | `d.terminal_strip("X1", P.TB, 4, unused=(3, 4))` |
 | [`bridged`](authoring.md#bridges) | `False` | Bridges plain terminals: `True` bridges all, `(first, last)` a range, a tuple of ranges several. | `d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))` |
-| [`rail`](authoring.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
+| [`rail`](authoring.md#power-rails) | `False` | Declares the strip's one bridged group a power rail; several ranges raise; several runs of one potential may each be flagged when wiring inside the unit joins them. | `d.terminal_strip("X1", P.TB, 4, bridged=True, rail=True)` |
 | [`external`](authoring.md#name-a-place-and-a-function-block) | `False` | `True` flags the strip and its terminals as by others. | `d.terminal_strip("X9", P.TB, 4, external=True)` |
 | [`drawn_with`](documents.md#which-document-prints-a-set) | `None` | Prints this by-others item, and every item under a by-others root, on that unit's document; needs `external=True`. The unit is what `d.add` returned. | `d.terminal_strip("X9", P.TB, 4, external=True, drawn_with=skid)` |
 

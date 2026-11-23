@@ -7,7 +7,7 @@ from options_fixtures import core_options
 from fransys_layout.core import Facts, PlacementProblem
 from fransys_layout.core.values import RefKind
 
-from .conftest import MARKER
+from .conftest import MARKERS, NO_MARKERS
 from .cut_fixtures import AREA, net, side
 from .text_fixtures import marked_of, plan_of
 
@@ -26,14 +26,14 @@ def _net_across_three_pages() -> PlacementProblem:
 def test_a_net_cut_twice_links_the_pages_on_either_side_of_the_one_without_a_pin() -> None:
     plan = plan_of(
         _net_across_three_pages(),
-        core_options(),
+        core_options(marker_boxes=NO_MARKERS),
     )
     (tag,) = (r for r in plan.spec.reference_plan if r.net == "k" and r.kind is RefKind.TAG)
     assert [e.page for e in tag.ends] == [1, 3]
     markers = marked_of(
         _net_across_three_pages(),
         core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
     )
     assert [m.page for m in markers if m.net == "k"] == [1, 3]

@@ -9,12 +9,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import legs_over_room
 from .blocks_members import make_env
 from .cut_costs import boundaries, column_items, positions
 from .cut_dp import Cut, cut_unit, page_findings
 from .cut_ends import ref_pins
 from .cut_guard import unplaced
-from .cut_ledger import account, copies
+from .cut_ledger import account, copies, unlegged
 from .cut_measured import Measured, measured_blocks, row_key, with_legs
 from .cut_pack import left_pack
 from .cut_refs import across, copyable_fans, head_off_legs, on_pages, references, row_tags, spilled, tag_links
@@ -68,7 +69,7 @@ def cut_pages(
     flow = tag_links(flow, tagged)
     planned = [*(on_pages(r, where) for r in folds), *done.refs, *spilled(blocks, flow, where, problem), *tagged, *copies(flow, where, copyable)]
     ledger = account(problem, flow, where, planned, done.pages)
-    refs = [*planned, *ledger.refs]
+    refs = [*planned, *unlegged(ledger.refs, legs_over_room([*planned, *ledger.refs], done.pages, blocks, (flow, problem, options)))]
     findings = (
         *done.findings,
         *head_off_legs(flow, where),

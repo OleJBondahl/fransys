@@ -45,12 +45,14 @@ lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
+    from fransys_model.derive.rows_baseline import Change
     from fransys_model.vocab.facets.terminal import TerminalFacet
 
 
 __all__ = [
     "NaturalKey",
     "bom_sort_key",
+    "change_key",
     "cores_in_lane_order",
     "designation_key",
     "drawn_on_page",
@@ -89,6 +91,11 @@ class _Placed(Protocol):
 
     @property
     def y(self) -> int: ...
+
+
+def change_key(change: Change) -> tuple[NaturalKey, str]:
+    """A baseline diff row's place: its subject in natural order, then its field."""
+    return natural_key(change.subject), change.field
 
 
 def designation_key(model: Model, item: Id[Item]) -> NaturalKey:
@@ -245,12 +252,7 @@ def plc_module_ranks(model: Model) -> frozendict[Id[Item], int]:
     return frozendict(zip(modules, range(len(modules)), strict=True))
 
 
-def plc_rack_key(rack: Item) -> ModuleKey:
-    """Sort key of a PLC rack: `position=`, else its own tag in natural order (model-0259).
-
-    Like `plc_module_key`, it holds no block prefix, so renaming a block never reorders racks.
-    """
-    return position_rank(rack), natural_key(rack.tag or ""), rack.key
+plc_rack_key = plc_module_key  # a rack sorts like a module: `position=`, else its own tag, no block prefix (model-0259)
 
 
 def plc_channel_tie(number: int, function: Function) -> ChannelTie:

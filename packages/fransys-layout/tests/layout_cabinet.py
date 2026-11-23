@@ -6,9 +6,10 @@ product or project. This repo keeps its own fixture until fransys-model's use-ca
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, override
 
 from fransys_author.instantiate import instantiate
+from kit import Builder
 
 from fransys_model.elecdef import LinkKind
 from fransys_model.kernel import Draft, Origin, make_id
@@ -20,9 +21,7 @@ from fransys_model.refdef import Aspect
 from fransys_model.vocab import (
     AspectNode,
     CableProductFacet,
-    Conductor,
     ConductorKind,
-    CoreFacet,
     Function,
     FunctionKind,
     FunctionTemplate,
@@ -164,7 +163,7 @@ def _specs() -> tuple[_PartSpec, ...]:
     )
 
 
-class _Builder:
+class _Builder(Builder):
     """The records of the cabinet, in construction order, and the vocabulary to write them in."""
 
     def __init__(self, *, second_location: bool) -> None:
@@ -187,13 +186,10 @@ class _Builder:
             self._node("c2", Aspect.LOCATION, "C2")
             self.location["p2"] = "c2"
 
+    @override
     def add(self, *records: Record) -> None:
         """Add ready-made records."""
         self.records.extend(records)
-
-    def facet(self, cls: Any, key: Key, **fields: Any) -> None:
-        """Add a facet of type `cls`, whose id is derived from `key`."""
-        self.add(cls(id=make_id(cls, key), key=key, **fields))
 
     def _node(self, key: str, aspect: Aspect, label: str) -> None:
         """A root aspect node with the one-element key `(key,)`."""
@@ -339,31 +335,6 @@ class _Builder:
             length_mm=None,
             label=f"W{1000 + self.wires}" if label else None,
         )
-
-    def core(self, cable: _Ref, index: int, ends: tuple[Id[Port], Id[Port]]) -> None:
-        """Core `index` of `cable` between `ends`; its colour is the cable product's."""
-        key = (*cable.key, "core", str(index))
-        conductor = self._conductor(key, ends, ConductorKind.CORE, cable.item)
-        self.facet(CoreFacet, (*key, "facet"), subject=conductor, index=index)
-
-    def _conductor(
-        self,
-        key: Key,
-        ends: tuple[Id[Port], Id[Port]],
-        kind: ConductorKind,
-        carrier: Id[Item] | None,
-    ) -> Id[Conductor]:
-        """A conductor of `kind` between two ports."""
-        conductor = Conductor(
-            id=make_id(Conductor, key),
-            key=key,
-            a=ends[0],
-            b=ends[1],
-            kind=kind,
-            carrier=carrier,
-        )
-        self.add(conductor)
-        return conductor.id
 
     def rail(self, key: Key, potential: str, port: Id[Port]) -> None:
         """A declared `Net` naming one port, giving it `potential` (model decision 0011).

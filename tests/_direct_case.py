@@ -11,14 +11,14 @@ import fransys as fr
 import pytest
 from fransys import _layout_need as layout_need
 from fransys_el import build, house_conventions, lay_out_drawn, symbol_kit
+from sheet_formats import a3
 
 import fransys_layout
 from electrical_symbols import LIBRARY
-from fransys_model.layout import default_sheet_format
 
 LAYOUT = tomllib.loads((Path(fransys_layout.__file__).parent / "layout.toml").read_text(encoding="utf-8"))["layout"]
 
-SHEET = default_sheet_format()  # the A3 sheet
+SHEET = a3()  # the A3 sheet
 
 
 def built_with_unlaid(build_it):

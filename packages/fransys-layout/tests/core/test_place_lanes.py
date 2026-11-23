@@ -8,7 +8,7 @@ import pytest
 from options_fixtures import core_options
 from turn_fixtures import marker_views, views_of
 
-from fransys_layout.core import Box, Facts, Options, Pin, PinRef, PlacementProblem, Size, Sym
+from fransys_layout.core import Box, Facts, MarkerBoxes, Options, Pin, PinRef, PlacementProblem, Size, Sym
 from fransys_layout.core.clearance import Keep
 from fransys_layout.core.node_names import col_node, pin_node
 from fransys_layout.core.pack import lane_pins
@@ -18,6 +18,7 @@ from fransys_layout.core.place_lanes import Stand, _free, _standing, _walked, st
 from fransys_layout.core.place_x import place_x, row_specs
 from fransys_layout.core.stand_fit import Limits, fit, may_cross
 
+from .conftest import NO_MARKERS
 from .cut_fixtures import AREA, LABEL, box_sym, elem, net
 from .pipeline_fixtures import cut_of
 from .place_fixtures import WALK_KEY, WALK_OPTIONS, walk_stand
@@ -60,7 +61,7 @@ def _stands(spec: RowSpec, x: dict[str, int]) -> list[bool]:
 
 def test_a_two_lane_column_stands_on_both_its_card_pins() -> None:
     """Lane 0 stands on its pin and lane 1 on the second, 16 G on."""
-    options = core_options()
+    options = core_options(marker_boxes=NO_MARKERS)
     env = _env(options)
     spec = row_specs(env)[0]
     assert spec.pcs["c:dual"].offsets == (0, 16)
@@ -124,7 +125,7 @@ def test_a_lane_end_walks_past_another_fans_trunk_line_its_marker_would_touch() 
     from fransys_layout.core.flow_values import Attach
 
     att = Attach(None, 0, 0, PinRef("a", "p"), net="n")
-    env = _env(core_options(flip_turn="R180", driver_first=True, arrow_sides=("E", "W")))
+    env = _env(core_options(marker_boxes=NO_MARKERS, flip_turn="R180", driver_first=True, arrow_sides=("E", "W")))
     stand = stand_of(env, (100, None), (), {}, [("g", 102, ((att, 150, None), (att, 250, None)))])
     assert any(k.box == Box(150, 102, 100, 0) and k.kind == "wire" for k in stand.keeps)
     assert _free(148, 1, WALK_KEY, walk_stand(8, 100, tuple(k for k in stand.keeps)), ("mine",)) == 256
@@ -155,6 +156,6 @@ def test_an_end_whose_walk_out_leaves_the_content_box_stands_back_toward_the_pag
 def test_a_keyed_arrow_is_walked_to_where_its_drawn_box_fits_not_its_generic_one() -> None:
     """layout-0524: the walk tests the arrow's drawn box (the key's offsets), the box the marker stage stands it in."""
     foot = Keep("", Box(4, 102, 8, 8), "footprint", "other")  # below the lane: meets the generic box (y 96..104), not the offset one (y 80..88)
-    drawn = replace(WALK_OPTIONS, marker_fit={WALK_KEY: marker_views(Box(0, -20, 8, 8))})
+    drawn = replace(WALK_OPTIONS, marker_boxes={**WALK_OPTIONS.marker_boxes, WALK_KEY: MarkerBoxes(*[marker_views(Box(0, -20, 8, 8))] * 2)})
     assert _free(0, 1, WALK_KEY, walk_stand(8, 100, (foot,)), ("mine",)) == 16
     assert _free(0, 1, WALK_KEY, walk_stand(8, 100, (foot,), options=drawn), ("mine",)) == 0

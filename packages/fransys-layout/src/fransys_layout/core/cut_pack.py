@@ -88,7 +88,7 @@ def _run(spec: RowSpec, here: Sequence[str], edge: Edge | None) -> tuple[dict[st
     prev: str | None = None
     for col in here:
         if prev is not None:
-            x += separation(spec.pcs[prev], spec.pcs[col], spec.syms, spec.in_row, spec.options) + reserve_extra(spec, prev, col)
+            x += separation(spec.pcs[prev], spec.pcs[col], spec.syms, spec.options) + reserve_extra(spec, prev, col)
         lo, hi = extent(spec, col)
         packs[col] = Pack(x, -lo, hi)
         prev = col

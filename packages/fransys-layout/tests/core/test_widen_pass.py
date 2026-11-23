@@ -23,7 +23,7 @@ from fransys_layout.core.text_markers import placed_marks
 from fransys_layout.core.values import PinRef, RefKind, RowTerm
 from fransys_layout.core.widen import Round, _culprit, measured_of, overflows, widen
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of, placed_from, routed_from, widened_of
 from .route_fixtures import two_links_one_gap
 from .solve_fixtures import ring_beside_a_tall_chain
@@ -34,7 +34,7 @@ from .widen_fixtures import overflowing_row
 # the name `widen` in core is the function, so the module comes by name
 widen_module = importlib.import_module("fransys_layout.core.widen")
 loop_module = importlib.import_module("fransys_layout.core.route_loop")
-OPTS = replace(PLAIN, marker=MARKER)
+OPTS = replace(PLAIN, marker_boxes=MARKERS)
 GRID = OPTS.wiring_grid
 
 

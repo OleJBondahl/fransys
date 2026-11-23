@@ -27,6 +27,3 @@ def test_a_draw_error_is_one_error_per_set_and_build_never_raises(monkeypatch: p
     assert "drawing set 1" in found.message
     assert "marker 'm' faces 'Q'" in found.message
     assert found.fix
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

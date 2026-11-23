@@ -92,7 +92,7 @@ def _read_stubs(
 ) -> References:
     """The stubs read back: a stub is read where its whole text is drawn at its port.
 
-    One text naming two far sets at one port, or a text drawn nowhere there, is a fault.
+    One text naming two far sets at one port, a text drawn nowhere there, or one on no wire of its net, is a fault.
     """
     faults: list[_Fault] = []
     read: dict[str, _Node | None] = {}
@@ -102,14 +102,12 @@ def _read_stubs(
         first = records[0]
         if len({tuple(x.far for x in one.pairs) for one in records}) > 1:
             faults.append((page, first.id, f"stub text {text!r} names different far ports at one port"))
-        elif not (at := drawn.get((page, port, text))):
-            faults.append((page, first.id, f"stub prints {text!r}: not drawn at its port"))
+        elif not (at := drawn.get((page, port, text))) or not (held := [(page, one) for one in at if one in pages[page].nodes]):
+            faults.append((page, first.id, f"stub prints {text!r}: " + ("on no wire of its net" if at else "not drawn at its port")))
         else:
-            held = [(page, one) for one in at if one in pages[page].nodes]
-            read.update(dict.fromkeys((one.id.value for one in records), held[0] if held else None))
-            groups[frozenset((port, first.pairs[0].far.value))].extend(held[:1])
-            for node in held[:1]:
-                listed[node].update(x.port.value for one in records for x in one.pairs)
+            read.update(dict.fromkeys((one.id.value for one in records), held[0]))
+            groups[frozenset((port, first.pairs[0].far.value))].append(held[0])
+            listed[held[0]].update(x.port.value for one in records for x in one.pairs)
     return References(tuple(faults), read, groups, listed)
 
 

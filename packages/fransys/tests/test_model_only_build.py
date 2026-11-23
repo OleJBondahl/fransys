@@ -123,6 +123,3 @@ def test_no_document_build_does_not_raise_but_a_document_build_does(tmp_path, mo
     pipeline._svgs_cache.cache_clear()
     with pytest.raises(AssertionError, match="ran on a build that should have skipped it"):
         _document_build(parts, tmp_path)
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

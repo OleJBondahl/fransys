@@ -10,7 +10,7 @@ from options_fixtures import core_options
 from fransys_layout.core import Facts
 
 from . import align_fixtures as fx
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import placed_of
 from .place_fixtures import all_pins
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from fransys_layout.core import Placement
 
 GRID = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 ).wiring_grid
 
 

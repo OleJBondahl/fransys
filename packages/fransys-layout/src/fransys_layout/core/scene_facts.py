@@ -13,7 +13,7 @@ from .fan_head import fan_head
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from .flow_values import End, FlowGraph
+    from .flow_values import Column, FlowGraph
     from .outputs import CoreLayout
     from .sym_values import Sym
     from .values import Orientation, PlacementProblem, Side
@@ -50,17 +50,17 @@ def _pin_facts(sym: Sym, nets: frozendict[tuple[str, str], str]) -> dict[tuple[s
     }
 
 
-def _lanes(ends: tuple[End, ...]) -> set[int]:
-    """The lane indices the boxpin ends name."""
-    return {e.lane for e in ends if e.kind == "boxpin" and e.lane is not None}
+def _lanes(col: Column, *, foot: bool) -> set[int]:
+    """The lane indices the column's boxpin heads (or feet) name."""
+    return {b.lane for b in col.box_pins if b.foot == foot}
 
 
 def _attached(flow: FlowGraph) -> frozenset[str]:
     """A column hung on a box pin: its lanes' first cells at a boxpin head, last cells at a foot."""
     found: set[str] = set()
     for col in flow.columns:
-        found |= {col.lanes[i].cells[0].sym for i in _lanes(col.heads)}
-        found |= {col.lanes[i].cells[-1].sym for i in _lanes(col.feet)}
+        found |= {col.lanes[i].cells[0].sym for i in _lanes(col, foot=False)}
+        found |= {col.lanes[i].cells[-1].sym for i in _lanes(col, foot=True)}
     return frozenset(found)
 
 

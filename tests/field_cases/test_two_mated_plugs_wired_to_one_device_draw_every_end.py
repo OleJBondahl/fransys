@@ -1,6 +1,6 @@
 """Field case: two plugs mated to a nested unit's connectors, pins 1-3 of both wired to the same pins of one device (KI-1069).
-The bug: CONNECTION_NOT_DRAWN on the plugs' pins and the device pin, though each mated pin owes an OFF stub.
-Fixed at the root (R2578): `cut_ledger.whole` and `restood`, called from `widen._stand` after the losses; up to three sibling plugs (R2580)."""
+The bug: CONNECTION_NOT_DRAWN on the plugs' pins and the device pin, though each mated pin owes an OFF stub. Anchors KI-1090: INK_WITHOUT_CONDUCTOR.
+Fixed at the root (R2578): `cut_loss.whole` and `restood`, called from `widen._stand` after the losses; up to three sibling plugs (R2580)."""
 
 from functools import cache
 from typing import NamedTuple, TypedDict
@@ -9,6 +9,12 @@ import fransys as fr
 import pytest
 from _model_build_cover import unit_document
 from fransys.colours import BU
+from fransys_el import symbol_kit
+from fransys_el.drawn_graph import Union
+from fransys_el.drawn_netlist import drawn_netlist
+
+from electrical_symbols import LIBRARY
+from fransys_model.derive import port_designation
 
 
 class _Release(TypedDict):
@@ -87,3 +93,16 @@ def test_mated_plugs_wired_to_the_same_pins_of_one_device_draw_every_end(plugs: 
     """KI-1069 (R2578, R2580): the ends of every sibling plug are drawn, and no stub names a far end that has no conductor."""
     codes = {f.code for f in _built(plugs=plugs, pins=pins).findings}
     assert codes.isdisjoint({"CONNECTION_NOT_DRAWN", "PLACEMENT_PROBLEM"})
+
+
+def test_the_child_page_joins_only_the_pins_its_own_conductors_join() -> None:
+    """KI-1090 (R2578): on the child's page X1:1-X2:1 and X4:1-X5:1 are two wires; the plugs and U9 join them on the parent's page only."""
+    result = _built(plugs=2, pins=3)
+    net = drawn_netlist(result.model, symbol_kit(result.model, LIBRARY), result.drawings, (), LIBRARY)
+    at = {port_designation(result.model, net.ids[key]): dict(placed) for key, placed in net.placed.items()}
+    page = next(iter(at["-U1-U2-X2:1"]))
+    ink = Union()
+    for edge in net.pages[page].graph.edges:
+        ink.join(*edge)
+    root = {name: ink.find(at[f"-U1-U2-{name}:1"][page]) for name in ("X1", "X2", "X4", "X5")}
+    assert root["X1"] == root["X2"] != root["X4"] == root["X5"]

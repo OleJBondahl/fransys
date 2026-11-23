@@ -14,7 +14,7 @@ from fransys_layout.core.hang_build import stack_extra
 from fransys_layout.core.hang_levels import FLAGS
 from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.rowspec import one_row
-from fransys_layout.core.values import Box, Hints, Options, PinRef
+from fransys_layout.core.values import Box, Hints, MarkerBoxes, Options, Orientation, PinRef
 
 from .blocks_fixtures import (
     AREA,
@@ -143,8 +143,8 @@ def test_estimates_short_and_keep_whole() -> None:
 
 def _fitted(pins: set[str]) -> Options:
     """The options of the DI16 case: every flag kind fitted at each of `pins` of the card, a box deeper than the plain marker."""
-    fit = {(PinRef("A1", p), k): {o: Box(-8, 4, 16, 40) for o in ("R0", "R90", "R180", "R270")} for p in pins for k in sorted(FLAGS)}
-    return replace(core_options(), marker_fit=fit)
+    views: dict[Orientation, Box] = {o: Box(-8, 4, 16, 40) for o in ("R0", "R90", "R180", "R270")}
+    return replace(core_options(), marker_boxes={(PinRef("A1", p), k): MarkerBoxes(views, views) for p in pins for k in sorted(FLAGS)})
 
 
 @pytest.mark.parametrize("n", [4, 11, 32])

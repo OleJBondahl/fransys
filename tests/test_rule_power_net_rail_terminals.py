@@ -19,7 +19,7 @@ from hypothesis import strategies as st
 from plant import Plant
 
 from fransys_model.derive import ConductorEnd, FunctionSymbol, conductor_ends, is_rail_terminal, required_drawn, stands, terminal_items
-from fransys_model.derive.facts.conductor_facts import is_bridge
+from fransys_model.derive.facts.conductor_facts import drawn_conductors, is_bridge, is_rail_bond
 from fransys_model.derive.lookups import item_of_port
 from fransys_model.vocab.tables import conductors, ports
 
@@ -128,3 +128,17 @@ def test_a_group_is_a_rail_only_when_it_is_flagged() -> None:
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+
+@pytest.mark.rule("POWER-NET")
+@pytest.mark.private_input
+def test_a_conductor_between_two_flagged_rails_of_one_potential_is_a_bond_and_draws_no_wire() -> None:
+    """R3310: remote_io with its 0V runs flagged builds with no ERROR and no dangling end; its core between two 0V rails is a bond."""
+    run = importlib.import_module("placement_corpus.run")  # internal/ is not exported
+    (_, module, _, values) = next(c for c in run.circuits("standard") if c[0] == "remote_io")
+    result = run.build("remote_io_0v_rails", ("remote_io_0v_rails", module, {"rail_0v": True}, values))
+    model = result.model
+    bonds = {c for c in conductors(model) if is_rail_bond(model, c)}
+    assert bonds
+    assert not bonds & drawn_conductors(model)
+    assert not [f.code for f in result.findings if f.severity.name == "ERROR" or f.code == "DANGLING_WIRE_END"]

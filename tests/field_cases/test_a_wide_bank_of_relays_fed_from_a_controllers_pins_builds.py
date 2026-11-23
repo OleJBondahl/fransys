@@ -88,8 +88,6 @@ def test_no_reference_marker_overlaps_another_on_the_bank_of_forty() -> None:
     assert [m for d in drawings for m in page_overlaps(d) if m == "reference-marker / reference-marker"] == []
 
 
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
-
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).
 
 

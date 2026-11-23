@@ -17,7 +17,7 @@ lazy from fransys_layout.core.place_env import PageEnv
 lazy from fransys_layout.core.values import PlacementProblem
 
 from . import align_fixtures as fx
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of
 from .test_place_plants import lamp_ring, ring_fan
 from .test_place_x import env_of
@@ -127,7 +127,7 @@ def test_a_page_the_stacks_and_trunks_contradict_alone_still_raises_ycycleerror(
             replace(cut, flow=ring),
             prob,
             core_options(
-                marker=MARKER,
+                marker_boxes=MARKERS,
             ),
         )
 

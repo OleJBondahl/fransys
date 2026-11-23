@@ -23,14 +23,16 @@ from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 
 from .drawn_graph import Union
 from .drawn_identity import inked
-from .drawn_identity_marks import declared_marks
 from .drawn_ids import core_symbol_id, symbol_id
 from .drawn_lanes import Lanes, join_lanes
 from .drawn_power import POWER_KEYS, join_power, port_nets
+from .drawn_printed import declared_marks
 from .drawn_references import join_references
+from .kit_keys import function_of
 from .placement_ids import pin_names, symbol_ids
 from .placement_joins import node_joins
 from .placement_views import MARKER_KEYS
+from .write_texts import symbol_keys
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -40,9 +42,9 @@ if TYPE_CHECKING:
     from fransys_layout.drawing import Drawing, DrawnSymbol
     from fransys_model.kernel import Id, Model
     from fransys_model.layout import LinkMarker
-    from fransys_model.vocab import Port
+    from fransys_model.vocab import Function, Port
 
-    from .placement_kit import SymbolKit
+    from .placement_kit import PickKey, SymbolKit
 
 __all__ = ["Netlist", "PagePart", "drawn_netlist", "pin_owner", "with_lines"]
 
@@ -82,10 +84,15 @@ class Netlist:
     home: dict[str, frozenset[Id[Page]]] = field(default_factory=dict)
     owners: dict[str, str] = field(default_factory=dict)
     texted: set[str] = field(default_factory=set)
+    named: set[tuple[str, str]] = field(default_factory=set)  # (port, far stand pin): the replica prints where the far power symbol stands
     skipped: set[str] = field(default_factory=set)  # ports of a set whose layout failed: no drawing, not expected drawn (KI-779)
     lanes: Lanes = field(default_factory=Lanes)
     nets: dict[str, str] = field(default_factory=dict)
     marks: dict[str, str] = field(default_factory=dict)
+    keys: dict[str, PickKey] = field(default_factory=dict)  # drawn symbol id -> its kit key, for the tag reader
+    heads: dict[str, Id[Function]] = field(default_factory=dict)  # contact-table head id -> its coil
+    alone: set[tuple[Id[Page], str]] = field(default_factory=set)  # (page, drawn symbol) alone in its run: it prints its full tag
+    titles: dict[str, str] = field(default_factory=dict)  # frame id -> its title
     unreadable: tuple[tuple[Id[Page], Id[LinkMarker], str], ...] = ()
 
     def reached(self, port: str) -> bool:
@@ -200,6 +207,7 @@ def drawn_netlist(
 ) -> Netlist:
     """The `Netlist` of `drawings`; `links` are the marker records the drawings stand for."""
     by = pin_owner(model, kit)
+    keyed = symbol_keys(model, kit)
     ids = {p.value: p for pins in by.values() for p in pins.values()}
     pages = {page: _part(inked(drawing, library), by, library) for page, drawing in drawings.items()}
     union = _join(pages)
@@ -220,6 +228,8 @@ def drawn_netlist(
         lanes=lanes,
         nets=nets,
         marks=declared_marks(drawings, by, library),
+        keys={core_symbol_id(sym): key for sym, key in keyed.items()},
+        heads={symbol_id("layout", "core", "drawn_table", sym): function_of(model, key) for sym, key in keyed.items()},
         unreadable=read.faults,
         joins=(*node_joins(kit, library), *_bridges(model)),
     )

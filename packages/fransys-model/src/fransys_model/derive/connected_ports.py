@@ -6,7 +6,7 @@ undrawn far end strands it, or it is a rail end (model-0325, amended). It is not
 
 from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.facts.item_predicates import terminal_items
-from fransys_model.derive.facts.roles import conductor_role, function_role
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.units import (
     boundary,
     crosses_unit,
@@ -54,17 +54,10 @@ def _rail_ends(model: Model, conductor: Conductor, sets: tuple[frozenset[Id[Func
     return frozenset(p for f, p in zip(function, ends, strict=True) if f in keep)
 
 
-def _rail_link(model: Model, conductor: Conductor) -> bool:
-    """A busbar or rail link with an end on a rail terminal: a join, not a drawn connection."""
-    role = conductor_role(model, conductor.id)
-    link = role.joins_net and not (role.mount or role.lead)
-    return link and any(is_rail_terminal(model, _item(model, p)) for p in (conductor.a, conductor.b))
-
-
 def _wires(model: Model) -> tuple[Conductor, ...]:
-    """The conductors a drawing connects: no jumper, no busbar or rail link to a rail terminal."""
+    """The conductors a drawing connects: no jumper and no rail bond (`drawn_conductors`)."""
     drawn = drawn_conductors(model)
-    return tuple(c for c in conductors(model).values() if c.id in drawn and not _rail_link(model, c))
+    return tuple(c for c in conductors(model).values() if c.id in drawn)
 
 
 def _stand_ends(model: Model, specs: frozenset[Id[Function]]) -> frozenset[Id[Port]]:

@@ -54,11 +54,7 @@ def _style() -> drawing.Style:
     )
 
 
-def _sheet() -> drawing.Sheet:
-    return drawing.Sheet(420.0, 297.0, frame_key="frame", slots=(("title", "T"),))
-
-
-@pytest.mark.parametrize("value", [_drawing(), _style(), _sheet()], ids=lambda v: type(v).__name__)
+@pytest.mark.parametrize("value", [_drawing(), _style()], ids=lambda v: type(v).__name__)
 def test_every_drawn_value_round_trips(value):
     plain = to_plain(value)
     assert from_plain(type(value), json.loads(json.dumps(plain))) == value
@@ -66,5 +62,5 @@ def test_every_drawn_value_round_trips(value):
 
 def test_a_populated_value_has_no_field_the_json_form_drops():
     """Every field of every type is in the plain form of a populated value."""
-    for value in (_drawing(), _style(), _sheet(), *_drawing().symbols, *_drawing().wires):
+    for value in (_drawing(), _style(), *_drawing().symbols, *_drawing().wires):
         assert set(to_plain(value)) == set(type(value).__dataclass_fields__)

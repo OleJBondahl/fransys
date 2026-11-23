@@ -67,6 +67,11 @@ class Sym:
     """`labels` again for the full-form tag a terminal prints when it stands alone in its run (STRIP-TAG-ONCE); empty for any other symbol."""
 
     @property
+    def in_row(self) -> bool:
+        """The one place that asks whether the symbol stands in a row group (an empty group counts as none)."""
+        return bool(self.row_group)
+
+    @property
     def r0(self) -> Turned:
         """The view at R0, which every symbol has (layout-0316: the flat reads come from it)."""
         view = self.views.get("R0")

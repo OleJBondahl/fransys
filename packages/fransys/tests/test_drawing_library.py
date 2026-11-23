@@ -6,12 +6,13 @@ import fransys as fr
 import pytest
 from fransys._drawing_library import with_drawing_library
 from fransys._house import with_house
+from sheet_formats import a3
 
 from electrical_symbols import LIBRARY
 from fransys_model.derive import mm_per_division
 from fransys_model.derive.library_grid import divisions
 from fransys_model.kernel import Draft, Origin, SchemaError, freeze, make_id
-from fransys_model.layout import DrawingLibrary, default_sheet_format, layout_of
+from fransys_model.layout import DrawingLibrary, layout_of
 
 pytestmark = pytest.mark.wp("facade")
 
@@ -56,7 +57,7 @@ def test_a_built_model_holds_the_library_record_once() -> None:
 
 
 def test_the_record_gives_the_millimetres_of_one_grid_unit() -> None:
-    sheet = default_sheet_format()
+    sheet = a3()
     assert mm_per_division(_built(), sheet) == sheet.module_mm / 8
 
 

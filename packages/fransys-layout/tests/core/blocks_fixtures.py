@@ -43,7 +43,7 @@ def box_sym(sid: str, group: str | None, pins: int, unit: str = "", north: int =
 def column(cid: str, *cells: str, pin: tuple[str, str] | None = None) -> Column:
     """One lane, head to foot; pin is a box pin at the head."""
     lane = Lane(tuple(Cell(s, "R0", None, None) for s in cells), 0)
-    head = End("boxpin", pin=PinRef(*pin)) if pin else End("open")
+    head = End("boxpin", pin=PinRef(*pin), lane=0) if pin else End("open")
     return Column(cid, (lane,), (head,), (End("open"),), 32 * len(cells), 16)
 
 

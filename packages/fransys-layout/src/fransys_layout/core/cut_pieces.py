@@ -19,10 +19,15 @@ if TYPE_CHECKING:
     from .flow_values import Attach, Cell, Fan, FlowGraph
     from .values import Ref
 
-__all__ = ("components", "hole_pin", "join", "joined", "key", "pairs", "split", "through", "trunked")
+__all__ = ("components", "fan_pins", "hole_pin", "join", "joined", "key", "pairs", "split", "through", "trunked")
 
 type Pair = tuple[PinRef, PinRef]
 _PAIR = 2
+
+
+def fan_pins(fans: Iterable[Fan]) -> dict[PinRef, set[PinRef]]:
+    """The pins of the fan each fan pin stands on."""
+    return {a.pin: {b.pin for b in (*f.drivers, *f.legs)} for f in fans for a in (*f.drivers, *f.legs)}
 
 
 def key(pin: PinRef) -> str:

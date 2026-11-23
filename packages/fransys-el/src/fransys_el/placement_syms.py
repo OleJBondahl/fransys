@@ -9,13 +9,15 @@ from fransys_model.derive import (
     coil_cells,
     function_item,
     item_unit,
+    printed_strip_tag,
+    printed_tag,
     strip_of,
     tag_text,
 )
 from fransys_model.derive.contact_rows import table_geometry
 
 from .footprints import footprints
-from .kit_keys import PickKey, function_of, strip_tag_of, tag_of
+from .kit_keys import PickKey, function_of
 from .placement_groups import group_of
 from .placement_pins import box_of, narrows, nodes_of, pins_of, shape_of, symbol_of
 from .placement_where import where_room
@@ -90,7 +92,7 @@ def _labels(env: Env, symbol: LibrarySymbol, ask: Ask, whole: Size, texts: Mappi
 def _wider(env: Env, symbol: LibrarySymbol, ask: Ask, lead: PickKey, homes: Collection[Id[Unit] | None]) -> tuple[dict[str, Size], ...]:
     """The label sizes again for a where-text page number of 2, 3, ... digits (R1883); none without a where-room."""
     one = replace(ask, orientations=("R0",), table=None)
-    texts = {"": tag_of(env.model, lead)} | {u.value: tag_of(env.model, lead, unit=u) for u in homes if u}
+    texts = {"": printed_tag(env.model, lead)} | {u.value: printed_tag(env.model, lead, unit=u) for u in homes if u}
     rooms = [where_room(env, function_of(env.model, lead), digits) for digits in range(2, 2 + env.conventions.options.where_digit_rounds)]
     return tuple({k: symbol_views(symbol, env.library, replace(one, text=t + room)).label for k, t in texts.items()} for room in rooms if room)
 
@@ -101,7 +103,7 @@ def _full(env: Env, symbol: LibrarySymbol, ask: Ask, lead: PickKey, homes: Colle
         return {}
     one = replace(ask, orientations=("R0",), table=None)
     room = where_room(env, function_of(env.model, lead))
-    texts = {"": tag_of(env.model, lead, alone=True)} | {u.value: tag_of(env.model, lead, unit=u, alone=True) for u in homes if u}
+    texts = {"": printed_tag(env.model, lead, alone=True)} | {u.value: printed_tag(env.model, lead, unit=u, alone=True) for u in homes if u}
     return {k: symbol_views(symbol, env.library, replace(one, text=t + room)).label for k, t in texts.items()}
 
 
@@ -112,7 +114,7 @@ def _ask(env: Env, lead: PickKey, pick: Pick, pins: tuple[Pin, ...], box: BoxSpe
         BOX if box else PLAIN,
         [p.id for p in pins],
         "tag",
-        tag_of(env.model, lead) + where_room(env, function),
+        printed_tag(env.model, lead) + where_room(env, function),
         env.conventions.text_height,
         None,
         strip_of(env.model, function_item(env.model, function)) is not None,
@@ -133,7 +135,7 @@ def strip_tags(env: Env) -> dict[str, dict[str, Size]]:
         shape = shape_of(env, lead, pick, symbol)
         pins = pins_of(env, pick, shape)
         one = replace(_ask(env, lead, pick, pins, box_of(env, pick, pins)), orientations=("R0",))
-        texts = {"": strip_tag_of(env.model, lead)} | {u.value: strip_tag_of(env.model, lead, unit=u) for u in homes}
+        texts = {"": printed_strip_tag(env.model, lead)} | {u.value: printed_strip_tag(env.model, lead, unit=u) for u in homes}
         found[strip.value] = {k: symbol_views(symbol, env.library, replace(one, text=t)).label for k, t in texts.items()}
     return found
 
@@ -166,7 +168,7 @@ def _drawn(env: Env, lead: PickKey, pick: Pick, homes: Collection[Id[Unit] | Non
         id=env.ids[lead],
         group=group_of(env.model, function),
         unit="" if (unit := item_unit(env.model, item)) is None else unit.value,  # empty for the integrating script's own wiring
-        labels=_labels(env, symbol, ask, drawn.label, {u.value: tag_of(env.model, lead, unit=u) + room for u in homes if u}),
+        labels=_labels(env, symbol, ask, drawn.label, {u.value: printed_tag(env.model, lead, unit=u) + room for u in homes if u}),
         pins=pins,
         nodes=nodes_of(shape),
         views=drawn.views,

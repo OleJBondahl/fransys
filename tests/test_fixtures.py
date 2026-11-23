@@ -9,6 +9,3 @@ def test_demo_fixture_builds_a_laid_out_model(fixture, request):
     assert built.digests["core"]
     assert built.digests["facet"]
     assert built.digests["layout"]
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

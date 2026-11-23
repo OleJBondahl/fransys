@@ -8,7 +8,7 @@ from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from .geometry import stub_views
+from .geometry import marker_box_at, sized
 from .ref_kind import kind_of
 from .row_extent import grid_up
 from .values import PinRef, RefKind
@@ -37,13 +37,8 @@ def _reach(env: PageEnv, ends: Sequence[tuple[PinRef, str, RefEnd]], sym: str, p
     face = env.options.marker_below if below else env.options.marker_above
     reach = 0
     for p, kind, end in ends:
-        boxes = (
-            stub_views(env.options.stub_lines, env.options.stub_table, p, end.also, end.far)
-            or env.options.marker_fit.get((p, kind))
-            or env.options.marker
-        )
-        if pin is not None and (p.sym, p.pin) == (sym, pin) and boxes and face is not None and face in boxes:
-            box = boxes[face]
+        if pin is not None and (p.sym, p.pin) == (sym, pin) and face is not None:
+            box = marker_box_at(0, 0, sized(env.options, (p, kind), end.also, end.far), face, (p, kind))
             reach = max(reach, box.y + box.h if below else -box.y)
     return reach
 

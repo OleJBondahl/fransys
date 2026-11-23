@@ -120,6 +120,3 @@ def test_every_coordinate_lies_in_the_content_box(tmp_path):
         for x, y in coords:
             assert content_x0 <= x <= content_x1, (key, x, y, "x outside content box")
             assert content_y0 <= y <= content_y1, (key, x, y, "y outside content box")
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -105,8 +105,6 @@ def _shape(model: Model, function: Function, found: tuple[Pole, ...]) -> Shape:
 
 def _throws(model: Model, function: Function, found: tuple[Pole, ...]) -> dict[str, tuple[str, int]]:
     """Each changeover port name to its throw and the pole of its common."""
-    if function.kind is not FunctionKind.CONTACT_CO:
-        return {}
     names = {pid: p.name for pid, p in ports(model).items()}
     first: dict[str, int] = {}
     for index, pole in enumerate(found):

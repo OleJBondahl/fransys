@@ -12,7 +12,7 @@ from fransys_layout.core import build_flow
 from fransys_layout.core.values import Bundle
 
 from .chain_fixtures import facing_chain
-from .conftest import MARKER
+from .conftest import MARKERS
 from .flow_builders import elem, net, poles, problem
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ def _run_flow(prob: PlacementProblem) -> object:
     return build_flow(
         prob,
         core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
     )
 

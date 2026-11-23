@@ -19,8 +19,6 @@ lazy from fransys_layout.core.sym_values import Sym
 from .blocks_fixtures import AREA
 from .pack_fixtures import boxpin_end, card, card_block, column, elem, free_block, lane, placed, with_pitches
 
-NONE: frozenset[str] = frozenset[str]()
-
 
 def world(syms: list[Sym], cols: list[Any]) -> tuple[FlowGraph, PlacementProblem]:
     flow = FlowGraph(tuple(cols), (), (), (), ())
@@ -38,7 +36,7 @@ def test_a_lone_column_measures_its_extent() -> None:
         prob,
         core_options(),
     )
-    lo, hi = column_extent(spec.syms, (Lane(spec.pcs["c1"].lanes[0], 0),), NONE)
+    lo, hi = column_extent(spec.syms, (Lane(spec.pcs["c1"].lanes[0], 0),))
     assert row_width(spec) == hi - lo == 48
 
 
@@ -48,7 +46,7 @@ def test_two_free_columns_are_the_first_reach_plus_separation_plus_the_second_re
     flow, prob = world(syms, cols)
     options = core_options()
     spec = one_row(("c1", "c2"), (free_block("f", ("c1", "c2")),), flow, prob, options)
-    sep = separation(spec.pcs["c1"], spec.pcs["c2"], spec.syms, NONE, options)
+    sep = separation(spec.pcs["c1"], spec.pcs["c2"], spec.syms, options)
     assert row_width(spec) == 24 + sep + 32
 
 
@@ -62,7 +60,7 @@ def test_a_card_block_measures_as_the_hand_built_row_spec() -> None:
     got = one_row(names, (block,), flow, prob, options)
     pcs = {c: placed(c, "a") for c in names}
     attach = attachments(tuple(cols), {block.id: block})
-    want = with_pitches(RowSpec(names, (block,), pcs, {s.id: s for s in syms}, NONE, options, attach, {}))
+    want = with_pitches(RowSpec(names, (block,), pcs, {s.id: s for s in syms}, options, attach, {}))
     assert row_width(got) == row_width(want)
     assert got.attach == attach
 

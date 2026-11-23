@@ -1,17 +1,17 @@
-"""`link_fit`: the arrow's box is sized for the widest line the pages can print (R350)."""
+"""The arrow's box (`marker_boxes_value`) is sized for the widest line the pages can print (R350)."""
 
 import tempfile
 from pathlib import Path
 from typing import NamedTuple, cast
+lazy from collections.abc import Mapping
 
 import fransys as fr
 import pytest
 from conventions_fixtures import house
 from fransys_el import build, lay_out_drawn, symbol_kit
 from fransys_el.placement_ids import symbol_ids
-from fransys_el.placement_markers import LONE
+from fransys_el.placement_markers import LONE, marker_boxes_value
 from fransys_el.placement_views import marker_boxes
-from fransys_el.placement_widest import link_fit
 from fransys_el.read_markers import drawn_marker
 from fransys_el.scopes import drawing_scopes
 from kit_instances import INSTANCES
@@ -22,12 +22,17 @@ from fransys_layout.symbols import library_symbol, marker_rule
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.layout import LinkMarker, layout_of
 from fransys_model.vocab.tables import documents
-lazy from fransys_layout.core import Orientation
+lazy from fransys_layout.core import Box, Orientation
+
+
+def _arrow(model, kit, unit) -> Mapping[Orientation, Box]:
+    """The arrow's box at each orientation, as the core is passed it."""
+    return marker_boxes_value(model, kit, (unit, LIBRARY), [])[0][None, "arrow"].drawn
 
 
 def _width(count: int) -> int:
     model = channels_model(count)
-    return link_fit(model, box_kit(model), LIBRARY, None)["R0"].w
+    return _arrow(model, box_kit(model), None)["R0"].w
 
 
 def test_a_two_digit_page_number_widens_the_box_over_a_one_digit_one() -> None:
@@ -76,11 +81,11 @@ def _unit_fit(parent_lamps: int):
     model = _star_model(parent_lamps=parent_lamps)
     kit = box_kit(model)
     (unit,) = {s.of_unit for s in drawing_scopes(model, kit) if s.of_unit is not None}
-    return link_fit(model, kit, LIBRARY, unit), link_fit(model, kit, LIBRARY, None)
+    return _arrow(model, kit, unit), _arrow(model, kit, None)
 
 
-def test_a_unit_built_alone_has_the_link_fit_it_has_inside_its_parent() -> None:
-    """The unit reads its own symbols and sheets only; the parent's lamps widen the parent's fit."""
+def test_a_unit_built_alone_has_the_arrow_box_it_has_inside_its_parent() -> None:
+    """The unit reads its own symbols and sheets only; the parent's lamps widen the parent's box."""
     alone, _ = _unit_fit(0)
     inside, parent = _unit_fit(12)
     assert alone == inside
@@ -93,7 +98,7 @@ def test_a_tag_box_of_a_multi_document_build_is_the_single_document_one() -> Non
     many, one = _star_model(parent_lamps=1), _star_model(parent_lamps=1, own_document=False)
     assert len(documents(many)) == 2
     assert len(documents(one)) == 1
-    assert link_fit(many, box_kit(many), LIBRARY, None) == link_fit(one, box_kit(one), LIBRARY, None)
+    assert _arrow(many, box_kit(many), None) == _arrow(one, box_kit(one), None)
 
 
 def _laid_markers(model, kit):
@@ -114,7 +119,7 @@ def _body(rec, size):
 
 @pytest.mark.rule("REF-BOX-OWN-LENGTH")
 def test_a_drawn_tag_is_the_box_of_its_own_text_inside_the_reserve_and_a_stub_keeps_its_record() -> None:
-    """R2175: tags of different texts draw different lengths, each the measured box of its text and inside the `link_fit` reserve."""
+    """R2175: tags of different texts draw different lengths, each the measured box of its text and inside the arrow's reserve."""
     model = channels_model(23)
     laid, records = _laid_markers(model, box_kit(model))
     tags = [r for r in records if r.key[3] not in LONE]

@@ -15,7 +15,7 @@ from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.flow_values import Cell, Column, End, FlowGraph, Lane
 
 from .blocks_fixtures import AREA
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import cut_of, elem, net
 
 
@@ -31,16 +31,16 @@ def test_a_two_lane_column_taller_than_the_page_is_cut_into_columns() -> None:
         assign_blocks(
             flow,
             prob,
-            core_options(marker=MARKER),
+            core_options(marker_boxes=MARKERS),
         ),
         flow,
-        core_options(marker=MARKER),
+        core_options(marker_boxes=MARKERS),
     )
     result = cut_pages(
         lists,
         flow,
         prob,
-        core_options(marker=MARKER),
+        core_options(marker_boxes=MARKERS),
     )
     assert [c.id for c in result.flow.columns] == ["c#a", "c#b"]
     assert all(c.height <= 822 for c in result.flow.columns)

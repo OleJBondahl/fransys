@@ -11,6 +11,7 @@ from fransys.colours import BU, GNYE
 
 from fransys_model.checks.rails import check_rails
 from fransys_model.derive import (
+    boundary_rail_wires,
     conductor_ends,
     connected_ports,
     drawn_stands,
@@ -153,12 +154,61 @@ def test_a_declared_group_is_a_rail_terminal_and_an_unflagged_bridged_group_is_n
     assert not all(by_terminal.values())
 
 
-def test_two_groups_of_one_potential_in_one_unit_are_an_error_naming_both() -> None:
-    """Can-fail: dropping the unit-and-potential keying removes the finding."""
-    result = fr.build(_rail_design(flag_second=True))
+def test_two_groups_of_one_potential_in_one_unit_on_one_net_are_two_rails() -> None:
+    """R3278 can-fail: the old one-group-per-potential guard raises RAIL_DUPLICATE_POTENTIAL for the bonded second rail."""
+    model = fr.build(_rail_design(flag_second=True)).model
+    assert [f.code for f in check_rails(model)] == []
+
+
+class _Out(NamedTuple):
+    out: fr.Terminal
+
+
+class _Flagged(NamedTuple):
+    first: fr.Run
+    second: fr.Run
+
+
+@fr.unit("demo-g3-src", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _g3_source(u: fr.Design) -> _Out:
+    psu = u.device("T1", "DEMO-PSU-24")
+    strip = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", interface=True).run("GND", 1)
+    dc = u.dc_supply("24V", plus=psu.output["+"], minus=psu.output["-"], voltage=24, names=("24V", "GND"))
+    u.series(dc.minus.pin, strip[1].inner, wire=_WIRE)
+    return _Out(strip[1])
+
+
+@fr.unit("demo-g3-recv", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _g3_receiver(u: fr.Design) -> _Flagged:
+    strip = u.terminal_strip("XR", "DEMO-TB-2.5", interface=True)
+    return _Flagged(strip.run("G1", 1, rail=True), strip.run("G2", 1, rail=True))
+
+
+def _cross_boundary(*, bonded: bool) -> fr.BuildResult:
+    """A receiving unit flags two strips fed by two source units: joined only by wiring outside it when `bonded`, else on two nets."""
+
+    @fr.unit("demo-g3-top", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+    def top(u: fr.Design) -> _Nothing:
+        one, two, recv = u.add(_g3_source, "J1"), u.add(_g3_source, "J2"), u.add(_g3_receiver, "R1")
+        u.series(one.out.outer, recv.first[1].outer, wire=_WIRE)
+        u.series(two.out.outer, recv.second[1].outer, wire=_WIRE)
+        if bonded:
+            u.series(one.out.outer, two.out.outer, wire=_WIRE)
+        return _Nothing()
+
+    d = fr.design("demo_parts", place="C1")
+    d.location("C1", "Cabinet")
+    d.add(top, "U1")
+    return fr.build(d)
+
+
+@pytest.mark.parametrize("bonded", [False, True])
+def test_two_flagged_strips_joined_only_across_a_unit_boundary_are_refused(*, bonded: bool) -> None:
+    """R3336 can-fail: a guard that reads the whole net (or none) lets the bonded or unbonded pair through; the fix text names UTW-G1."""
+    result = _cross_boundary(bonded=bonded)
     expect_codes(result, "RAIL_DUPLICATE_POTENTIAL")
     (found,) = [f for f in check_rails(result.model) if f.code == "RAIL_DUPLICATE_POTENTIAL"]
-    assert found.message.count("rail group") == 2
+    assert "UTW-G1" in found.message
 
 
 def test_the_same_potential_in_two_units_is_two_rails() -> None:
@@ -219,6 +269,45 @@ def test_a_rail_terminal_port_maps_to_the_stands_of_its_net_and_no_stand_maps_to
     assert drawn_by
     assert all(pins and set(pins) <= stands(model).keys() for pins in drawn_by.values())
     assert not drawn_by.keys() & stands(model).keys()
+
+
+class _Rail(NamedTuple):
+    rail: fr.Terminal
+    ground: fr.Terminal
+
+
+@fr.unit("demo-rail-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _rail_box(u: fr.Design) -> _Rail:
+    u.location("C1", "Cabinet")
+    psu, lamp = u.device("T1", "DEMO-PSU-24"), u.device("P1", "DEMO-LAMP-24")
+    x1 = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", interface=True)
+    plus, minus = x1.run("24V", 2, bridged=True, rail=True), x1.run("GND", 2, bridged=True, rail=True)
+    dc = u.dc_supply("24V", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
+    u.series(dc.plus.pin, plus[1].inner, wire=("RD", 0.75))
+    u.series(dc.minus.pin, minus[1].inner, wire=("BK", 0.75))
+    u.series(plus[1].inner, lamp.lamp["1"], wire=("RD", 0.75))
+    u.series(minus[1].inner, lamp.lamp["2"], wire=("BK", 0.75))
+    u.unused(plus[1])
+    u.unused(minus[1])
+    return _Rail(plus[2], minus[2])
+
+
+def test_a_port_that_ends_a_boundary_rail_wire_maps_to_the_inside_pins_that_stand_its_symbol(tmp_path: Path) -> None:
+    """Can-fail (R2963): a `rail_drawn_by` that drops the boundary-wired terminal port loses the inner pin the wire's other end reaches."""
+    d = fr.design("demo_parts", place="C1")
+    cabinet = d.location("C1", "Cabinet")
+    box = d.add(_rail_box, "U1")
+    terminal = box.rail
+    h1 = d.device("H1", "DEMO-LAMP-24")
+    d.series(terminal.outer, h1.lamp["1"], wire=("RD", 0.75))
+    d.series(h1.lamp["2"], box.ground.outer, wire=("BK", 0.75))
+    (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
+    preset = fr.DocumentPreset.CABINET_SCHEMATIC
+    model = fr.build(d, fr.document(preset, "demo-rail-box", cover=tmp_path / "c.md"), fr.document(preset, cabinet, cover=tmp_path / "c.md")).model
+    wired = {p for w in boundary_rail_wires(model) for p in conductor_ends(model, w)}
+    drawn_by = rail_drawn_by(model)
+    assert {p for p in drawn_by if p in wired}
+    assert all(pins and set(pins) <= stands(model).keys() for pins in drawn_by.values())
 
 
 @pytest.mark.parametrize("lamps", [1, 2])

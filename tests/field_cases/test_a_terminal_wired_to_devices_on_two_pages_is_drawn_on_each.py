@@ -98,6 +98,3 @@ def test_a_row_whose_legs_pass_the_page_when_placed_is_cut_again() -> None:
     d = fr.design("demo_parts")
     d.add(_bank(chained=False), "U1")
     assert [f.code for f in fr.build(d, unit_document("demo-two-pages")).findings if f.code == "WIDER_THAN_PAGE"] == []
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

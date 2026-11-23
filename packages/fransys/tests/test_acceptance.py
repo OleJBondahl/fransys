@@ -789,6 +789,3 @@ def test_write_includes_cables_csv_for_the_system_and_for_a_unit(tmp_path):
     scoped = fr.write(result, tmp_path / "scoped", unit=unit_id)
     assert any(p.name.endswith("cables.csv") for p in scoped)
     assert not any(p.name.endswith("overview.html") for p in scoped)  # the system-view rule
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

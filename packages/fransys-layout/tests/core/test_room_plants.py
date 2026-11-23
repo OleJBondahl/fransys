@@ -17,7 +17,7 @@ from fransys_layout.core.place_x import place_x
 from fransys_layout.core.place_y import _spans
 from fransys_layout.core.route import route_pages
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, box_sym, elem
 from .flow_builders import net, poles
 from .pipeline_fixtures import cut_of, placed_from
@@ -25,7 +25,7 @@ from .place_fixtures import all_pins
 from .route_fixtures import overlaps
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 G = OPTIONS.wiring_grid
 

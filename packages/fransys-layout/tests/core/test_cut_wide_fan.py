@@ -17,7 +17,7 @@ from fransys_layout.core.cut_measured import with_legs
 from fransys_layout.core.flow_values import Block, BlockList, CutResult
 from fransys_layout.core.values import RefKind
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import cut_of, elem, net
 
 if TYPE_CHECKING:
@@ -87,7 +87,7 @@ def _cut_of_kind(kind: BlockKind) -> Cut:
         1280,
         800,
         core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
     )
 

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from .clearance import Keep, clear, fan_own, footprint_keeps
 from .geometry import box_reach, cell_anchor
-from .node_names import HIGH, LOW, box_node, box_y_node, col_node
+from .node_names import CELL, HIGH, LOW, box_node, box_y_node, col_node
 from .pack import cell_node
 from .pack_sep import hard_soft
 from .place_accept import accept
@@ -71,9 +71,7 @@ def cell_keeps(env: PageEnv, x: Mapping[str, int], rows: Iterable[int], own: Abs
 def _hard_box(env: PageEnv, origin: int, cell: Cell) -> Box:
     """The cell footprint at its column lane `origin`, hangings included: a foreign trunk keeps clear of a marker."""
     sym = env.syms[cell.sym]
-    _, hard_and_soft = hard_soft(
-        sym, cell, in_row=cell.sym in env.in_row, tag_stagger=env.options.tag_stagger
-    )  # the soft box holds the hangings (stub markers)
+    _, hard_and_soft = hard_soft(sym, cell, tag_stagger=env.options.tag_stagger)  # the soft box holds the hangings (stub markers)
     return Box(origin - cell_anchor(sym, cell)[0] + hard_and_soft.x, hard_and_soft.y, hard_and_soft.w, hard_and_soft.h)
 
 
@@ -139,7 +137,7 @@ def _pushes(env: PageEnv, x: Mapping[str, int], y: Mapping[str, int], span: Span
 
 
 def _cells(pairs: AbstractSet[tuple[str, str]]) -> frozenset[str]:
-    return frozenset(n for pair in pairs for n in pair if n.startswith("cell:"))
+    return frozenset(n for pair in pairs for n in pair if n.startswith(CELL))
 
 
 def clear_foreign(g: Graph, env: PageEnv, x: Mapping[str, int], spans: Sequence[Span]) -> frozenset[str]:

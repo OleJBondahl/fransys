@@ -41,7 +41,7 @@ def _planted() -> Sym:
 
 def test_the_placed_cell_is_the_r90_view_moved_and_nothing_else() -> None:
     sym = _planted()
-    env: Any = SimpleNamespace(syms={"U": sym}, in_row=frozenset(), plan=SimpleNamespace(page=1))
+    env: Any = SimpleNamespace(syms={"U": sym}, plan=SimpleNamespace(page=1))
     placed = _placed_cell(env, CELL, 100, 200)
     assert placed.body == Box(103, 205, 40, 10)
     assert placed.footprint == Box(98, 203, 60, 14)
@@ -50,11 +50,11 @@ def test_the_placed_cell_is_the_r90_view_moved_and_nothing_else() -> None:
 
 def test_the_readers_pick_the_r90_view_not_a_turn_of_r0() -> None:
     sym = _planted()
-    assert cell_footprint(sym, CELL, in_row=False) == R90.footprint
-    assert cell_footprint(sym, CELL, in_row=True) == R90.row_footprint
+    assert cell_footprint(sym, CELL) == R90.footprint
+    assert cell_footprint(replace(sym, row_group="g"), CELL) == R90.row_footprint
     assert pin_xy(sym, CELL, "b") == (-4, 9)
     assert cell_anchor(sym, CELL) == (33, 7)
-    assert hard_soft(sym, CELL, in_row=False, tag_stagger=True)[0] == Box(1, 4, 50, 12)
+    assert hard_soft(sym, CELL, tag_stagger=True)[0] == Box(1, 4, 50, 12)
 
 
 def test_a_missing_view_is_refused_naming_the_symbol() -> None:

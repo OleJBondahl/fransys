@@ -20,7 +20,7 @@ from fransys_layout.core.solve import solve
 from fransys_layout.core.topology import _tagged
 from fransys_layout.core.values import RefKind
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .pipeline_fixtures import cut_of, placed_from
 from .solve_fixtures import ring_beside_a_tall_chain
 
@@ -41,7 +41,9 @@ def _refusing(monkeypatch, ends):
     monkeypatch.setattr(loop_stage, "route_pages", refuse)
 
 
-OPTIONS = core_options(marker=MARKER, flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W"))
+OPTIONS = core_options(
+    marker_boxes=MARKERS, flip_turn="R180", tag_stagger=True, label_gap=8, parallel_pitch=48, driver_first=True, arrow_sides=("E", "W")
+)
 
 
 def _solved():

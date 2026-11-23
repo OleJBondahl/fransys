@@ -229,6 +229,3 @@ def test_every_bom_line_a_location_document_drops_is_in_another_bom(models, mode
         kept = {line.part: line.count for line in bom_lines(model, node, without=scope.bom_without)}
         dropped |= {part for part, count in full.items() if part and kept.get(part, 0) < count}
     assert dropped <= elsewhere
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

@@ -18,7 +18,7 @@ from fransys_layout.core.solve import solve
 from fransys_layout.core.values import Facts, Finding, Hints, RefKind, Size
 
 from . import solve_checks
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import elem, net
 from .flow_builders import conductors
 from .pipeline_fixtures import solved_of
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from fransys_layout.core.outputs import CoreLayout
 
 OPTIONS = core_options(
-    marker=MARKER,
+    marker_boxes=MARKERS,
 )
 ALL = {**PLANTS, "two_unit_crossing_nets": two_unit_crossing_nets}
 

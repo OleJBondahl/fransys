@@ -1,7 +1,7 @@
 """layout-0406, el-0073: a marker's drawn box has one home on all builds (R554, R555 B4, R557).
 
-Layout's `marker_drawn_box` (from `Options.link_fit`) holds the outline el draws by
-`marker_rule` (equal for a stub, a tag's own-text box inside it); `link_fit` equals the rule at its own size; the PDF link area is that outline
+Layout's drawn box (from `Options.marker_boxes`) holds the outline el draws by
+`marker_rule` (equal for a stub, a tag's own-text box inside it); the drawn box equals the rule at its own size; the PDF link area is that outline
 """
 
 import importlib.util
@@ -21,7 +21,7 @@ def test_layouts_drawn_box_is_the_outline_el_draws(facts) -> None:
     assert all(f.matched for f in facts)
 
 
-def test_link_fit_is_the_marker_rules_box(facts) -> None:
+def test_the_drawn_box_is_the_marker_rules_box(facts) -> None:
     assert all(f.fit_ok for f in facts if f.fit_ok is not None)
 
 
@@ -35,6 +35,3 @@ def test_the_model_derive_has_no_marker_box() -> None:
 
     assert not hasattr(derive, "marker_box")
     assert importlib.util.find_spec("fransys_model.derive.marker_box") is None
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

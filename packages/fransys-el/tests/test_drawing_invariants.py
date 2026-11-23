@@ -209,6 +209,8 @@ def test_a_wire_that_runs_through_its_own_markers_box_before_its_port_raises_wir
 def test_an_entry_segment_along_the_marker_box_edge_is_exempt_but_one_through_the_interior_is_not():
     assert _marker_codes(((10, 10), (10, 12))) == []  # R2101: ends at the port, runs along the west edge
     assert _marker_codes(((12, 8), (12, 12), (10, 12))) == ["WIRE_OVER_MARKER"]
+    assert _marker_codes(((6, 11), (10, 11))) == []  # R3571: a lane ends on the flat edge from outside the box
+    assert _marker_codes(((14, 11), (10, 11))) == ["WIRE_OVER_MARKER"]  # from inside it, it is over the marker
 
 
 def test_a_wire_through_a_body_that_is_no_marker_is_still_overlap():

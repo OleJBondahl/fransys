@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from .annex import text_keeps
 from .clearance import Keep, clear
-from .geometry import marker_drawn_box, overlaps, shift, union
+from .geometry import marker_box, overlaps, shift, union
 from .hang_levels import raised
 from .hangings import hung_keeps
 from .outline import outline_keeps
@@ -59,7 +59,7 @@ def _index(sym: Sym, pin: str) -> int:
 
 def _marker_keeps(page: int, markers: Sequence[Marker], options: Options) -> tuple[Keep, ...]:
     """The page's marker boxes as keeps (TRUNK-CLEAR item 3a)."""
-    return tuple(Keep("", marker_drawn_box(m, options), "marker", m.end.sym, m.net, (m.x, m.y)) for m in markers if m.page == page)
+    return tuple(Keep("", marker_box(m, options, drawn=True), "marker", m.end.sym, m.net, (m.x, m.y)) for m in markers if m.page == page)
 
 
 def _anchor_keeps(page: int, anchored: Sequence[Anchored], net_of: Mapping[PinRef, str]) -> tuple[Keep, ...]:

@@ -3,11 +3,12 @@
 from typing import TYPE_CHECKING, NamedTuple, cast
 
 import fransys as fr
+from conventions_fixtures import drawn_options
 from fransys.colours import BU
 from fransys_el import build
 from fransys_el.placement_ids import symbol_key
 from fransys_el.placement_kit import Pick, SymbolKit
-from fransys_el.placement_options import Conventions, options
+lazy from fransys_el.placement_options import Conventions
 
 from electrical_symbols import LIBRARY
 from fransys_layout.core import Placement, build_flow, order_blocks
@@ -156,7 +157,7 @@ def sid(model: Model, text: str) -> str:
 def placed(model: Model, kit: SymbolKit, conventions: Conventions) -> Placement:
     """Problem, then the five stages in the order of the layout tests' `placed_of`."""
     prob, _ = build(model, kit, conventions, LIBRARY)
-    opts = options(conventions, LIBRARY)
+    opts = drawn_options(model, kit, prob, conventions)
     flow = build_flow(prob, opts)
     lists = order_blocks(assign_blocks(flow, prob, opts), flow, opts)
     return place_pages(cut_pages(lists, flow, prob, opts), prob, opts)

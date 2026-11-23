@@ -12,6 +12,7 @@ import fransys_parts
 import pytest
 from _dd_core_c import beside, in_own_set, markers_of, stands
 from _model_build_cover import layout_trigger_document, unit_document
+from fransys.colours import BU
 from fransys_author.design import Design
 
 from fransys_model.kernel import Severity
@@ -168,9 +169,24 @@ def test_a_coil_wired_to_itself_keeps_a_wire_to_both_pins(monkeypatch: pytest.Mo
 
     star = _codes(monkeypatch, _build, _APART, fill=3)
     crash = _codes(monkeypatch, crash_build, (("K1", "A1"), ("K1", "A2")))
+    assert "INK_WITHOUT_CONDUCTOR" not in star  # a self-wired leg is a join, not a trunk drop (KI-974)
     for codes in (star, crash):
         assert "CONNECTION_NOT_DRAWN" not in codes
         assert "DRAWING_SHORTS_NETS" not in codes
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
+
+
+def test_a_contact_chain_wired_to_itself_draws_every_conductor() -> None:
+    """KI-974: a changeover's pins wired 11-12 and 12-14 are self-wired ends, 14 also runs to a coil: no conductor is dropped."""
+    # UNDO: core/topology_fans.py own_wired: join only the mates that are not own-only: FAILED on OVERLAP, not CND
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    with d.function("PLC", "Controller"):
+        k1, k2 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K1", "K2"))
+        co, coil = k1.co_1, k1.coil
+        for a, b in ((co["11"], co["12"]), (co["12"], co["14"]), (co["14"], k2.coil["A1"]), (coil["A1"], coil["A2"]), (k2.coil["A2"], coil["A2"])):
+            d.series(a, b, wire=(BU, 0.5))
+    codes = [f.code for f in fr.build(d, unit_document(cab)).findings]
+    assert {"CONNECTION_NOT_DRAWN", "INK_WITHOUT_CONDUCTOR", "OVERLAP"}.isdisjoint(codes)

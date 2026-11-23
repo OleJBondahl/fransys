@@ -4,11 +4,12 @@ Every id comes from `make_id` over a key the test chooses, so nothing depends on
 hex string. Nothing here names a real project.
 """
 
+from random import Random
 from typing import Any
 
-from derive_helpers import with_library
+from library_records import freeze
 
-from fransys_model.kernel import Draft, Id, Model, Origin, freeze, make_id
+from fransys_model.kernel import Draft, Id, Model, Origin, make_id
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
@@ -45,6 +46,7 @@ class Plant:
         part: Id[Part] | None = None,
         designation: str | None = None,
         unit: Id[Unit] | None = None,
+        description: str = "Invented",
     ) -> Id[Item]:
         """Add an item keyed `(key,)`."""
         item = Item(
@@ -54,7 +56,7 @@ class Plant:
             parent=parent,
             position=None,
             tag=designation,
-            description="Invented",
+            description=description,
             installed=installed,
             unit=unit,
         )
@@ -116,18 +118,27 @@ class Plant:
         self.add(entry)
         return entry.id
 
-    def part(self, class_code: str) -> Id[Part]:
-        """Add (once) a part of `class_code`, keyed by it."""
-        part_id = make_id(Part, (f"part-{class_code}",))
+    def part(
+        self,
+        class_code: str,
+        *,
+        key: str | None = None,
+        mpn: str | None = None,
+        description: str = "Invented",
+        category: PartCategory = PartCategory.GENERIC,
+    ) -> Id[Part]:
+        """Add (once) a part of `class_code`; `key` and `mpn` default from it."""
+        key = key or f"part-{class_code}"
+        part_id = make_id(Part, (key,))
         if not self.has(part_id):
             self.add(
                 Part(
                     id=part_id,
-                    key=(f"part-{class_code}",),
-                    mpn=f"EXAMPLE-{class_code}",
+                    key=(key,),
+                    mpn=mpn or f"EXAMPLE-{class_code}",
                     manufacturer="Example Co",
-                    description="Invented",
-                    category=PartCategory.GENERIC,
+                    description=description,
+                    category=category,
                     class_code=class_code,
                 )
             )
@@ -160,11 +171,10 @@ class Plant:
         name: str,
         *,
         template: Id[PortTemplate] | None = None,
-        again: str = "",
         marking: str | None = None,
     ) -> Id[Port]:
-        """Add a port called `name`; `again` tells the key of a second port of that name apart."""
-        key = (*self._key_of(function), name + again)
+        """Add a generic port called `name`."""
+        key = (*self._key_of(function), name)
         port = Port(
             id=make_id(Port, key),
             key=key,
@@ -324,11 +334,18 @@ class Plant:
         self.add(part, facet)
         return part.id
 
-    def model(self) -> Model:
+    def insertion_order(self, shuffled: int | None = None) -> list[Any]:
+        """The records as `model` inserts them; `shuffled` is a seed for another order."""
+        records = list(self.records)
+        if shuffled is not None:
+            Random(shuffled).shuffle(records)  # noqa: S311  (test data order, not a secret)
+        return records
+
+    def model(self, *, shuffled: int | None = None) -> Model:
         """Freeze everything added, with the drawing library record the facade writes."""
         draft = Draft()
-        draft.extend(self.records, origin=_ORIGIN)
-        return with_library(freeze(draft))
+        draft.extend(self.insertion_order(shuffled), origin=_ORIGIN)
+        return freeze(draft)
 
     def _key_of(self, record_id: Id[Any]) -> tuple[str, ...]:
         return tuple(str(part) for part in next(record.key for record in self.records if record.id == record_id))

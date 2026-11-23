@@ -8,7 +8,7 @@ from turn_fixtures import refit
 
 from fransys_layout.core.values import Bundle
 
-from .flow_builders import elem, flow_of, free, net, poles
+from .flow_builders import elem, flow_of, free, hub_pins, net, poles
 
 if TYPE_CHECKING:
     from fransys_layout.core.flow_values import FlowGraph
@@ -35,7 +35,7 @@ def test_seal_in_pair_folds_into_two_lanes_of_one_column() -> None:
 
 def test_free_sided_symbol_is_the_hub_of_a_fan() -> None:
     syms = [free("h"), elem("l1"), elem("l2"), elem("l3")]
-    (fan,) = flow_of(syms, [net("bus", "h.s", "l1.n", "l2.n", "l3.n")]).fans
+    (fan,) = flow_of(syms, [net("bus", *hub_pins("h"), "l1.n", "l2.n", "l3.n")]).fans
     assert fan.hub == "h"
     assert (len(fan.drivers), len(fan.legs)) == (1, 3)
 

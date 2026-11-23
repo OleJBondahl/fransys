@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from .anchors import MARKED, Stood, anchor_pages, page_keeps
 from .clearance import clear, own_end, through_keeps
 from .errors import CoreError
-from .geometry import inset, inside, marker_box, marker_drawn_box
+from .geometry import inset, inside, marker_box
 from .hang_levels import staggered
 from .keys import natural_key
 from .net_keys import net_of_key
@@ -71,7 +71,7 @@ def stand_ref(env: MarkEnv, ref: Ref) -> list[tuple[Marker, Stand]]:
     for i, (end, st) in enumerate(zip(ends, stands, strict=True)):
         far = _far(env, ref, stands, end, i)
         cell = cell_of(*_inside(far, env.area), env.area, env.options.cells)
-        mk = Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end, st.orient, ref.cut, end.also, end.far, end.stand)
+        mk = Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end, st.orient, ref.cut, end.also, end.far, end.stand, st.span)
         out.append((mk, st))
     return out
 
@@ -108,7 +108,7 @@ def _room(m: Marker, st: Stand, options: Options) -> Demand:
 
     The room is a vertical reach: a marker beside its end (E, W) asks above, as every room did before R1961.
     """
-    box = marker_drawn_box(m, options)
+    box = marker_box(m, options, drawn=True)
     return Demand("", 0, max(st.y - box.y, box.y + box.h - st.y, 0) + options.label_gap, m.end.sym, side=st.side if st.side in "NS" else "N")
 
 
@@ -135,14 +135,14 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     if not st.stood:  # the lane end found no stand at placement: no room (layout-0507)
         return _room(m, st, options)
     while (
-        hit := fit(marker_box(m, options), here if moved else stand, owner, bounds._replace(drawn=marker_drawn_box(m, options)), (m.x, m.y))
+        hit := fit(marker_box(m, options), here if moved else stand, owner, bounds._replace(drawn=marker_box(m, options, drawn=True)), (m.x, m.y))
     ) is not None:
         if not (hit or _lead_hit(m, st, here)) and not (
             m.kind == "stub" and clear(inset(marker_box(m, options)), [k for k in (here if moved else stand) if k.kind == "wire"], {}, own=mine)
         ):
             return m
         if fed:
-            return m if inside(marker_drawn_box(m, options), area) else _room(first, st, options)  # a fed end always stands (R2210)
+            return m if inside(marker_box(m, options, drawn=True), area) else _room(first, st, options)  # a fed end always stands (R2210)
         m, moved = _moved(m, st, 1, step), True
     return _room(first, st, options)
 
@@ -161,7 +161,7 @@ def stagger(
     """
     ctx = (options, area, keeps, own)
     got = staggered(
-        [marker_drawn_box(m, options) for m, _ in pairs],
+        [marker_box(m, options, drawn=True) for m, _ in pairs],
         [(m.page, st.side) for m, st in pairs],
         [m.x if _along_x(st) else m.y for m, st in pairs],
         [_along_x(st) for _, st in pairs],

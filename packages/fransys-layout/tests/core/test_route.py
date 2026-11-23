@@ -16,7 +16,7 @@ from fransys_layout.core.route import _links_here, route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
 from fransys_layout.core.route_fixed import Laid
 
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import elem
 from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import cut_of, placed_of, routed_of, with_annexes
@@ -38,7 +38,7 @@ PLANTED = {
     "ring": link_across_box,
     "two-rings": two_links_one_gap,
     "bundles": reversing_pair,
-    "row-group": lambda: with_annexes(row_group_three("g"), core_options(marker=MARKER)),
+    "row-group": lambda: with_annexes(row_group_three("g"), core_options(marker_boxes=MARKERS)),
 }
 
 
@@ -51,9 +51,9 @@ def all_wires(routes: Routes) -> list[Wire]:
     return [w for page in routes.pages for w in page.wires]
 
 
-def test_every_pin_of_every_net_is_the_end_of_a_wire_of_its_net(planted: PlacementProblem) -> None:
+def test_every_conductor_end_is_the_end_of_a_wire_of_its_net(planted: PlacementProblem) -> None:
     reached = pin_reached(by_bundle(routed_of(planted), planted), placed_of(planted), planted)
-    assert reached == {(r.sym, r.pin) for n in planted.nets for r in n.pins}
+    assert {(r.sym, r.pin) for pair in planted.facts.far_ends for r in pair} <= reached
 
 
 def test_nothing_is_refused_on_the_planted_pages(planted: PlacementProblem) -> None:
@@ -75,7 +75,7 @@ def test_a_page_routed_again_with_equal_inputs_is_reused_and_expands_nothing(mon
     expanded = []
     real = route_astar._expand
     monkeypatch.setattr(route_astar, "_expand", lambda *a: (expanded.append(1), real(*a))[1])
-    prob, opts, memo = link_across_box(), core_options(marker=MARKER), {}
+    prob, opts, memo = link_across_box(), core_options(marker_boxes=MARKERS), {}
     cut, placement = cut_of(prob, opts), placed_of(prob, opts)
     first = route_pages(placement, cut, prob, opts, Laid(memo=memo))
     cold = len(expanded)
@@ -179,7 +179,7 @@ def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> No
         cut,
         prob,
         core_options(
-            marker=MARKER,
+            marker_boxes=MARKERS,
         ),
     )
     assert routes == routed_of(prob)
@@ -188,7 +188,7 @@ def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> No
 def test_the_route_grid_spans_the_content_box_not_the_drawn_extent() -> None:
     """A wire may pass below everything drawn: the grid is the box the caller passes (R424)."""
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
         spare_cells=0,
     )
     env = link_env({"a": (40, 40, "S"), "b": (200, 40, "S")}, {"x": ("a", "b")}, opts)

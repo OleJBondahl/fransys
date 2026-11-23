@@ -67,6 +67,3 @@ def test_the_pass_through_carries_a_marker(built: fr.BuildResult) -> None:
     """The fixture builds the shape the docstring describes, whichever place the marker takes."""
     markers = layout_of(built.model, LinkMarker).values()
     assert [m for m in markers if "a2" in m.key and "A2" in m.key]
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

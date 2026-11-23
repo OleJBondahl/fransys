@@ -23,10 +23,10 @@ from _build import (
     terminal,
 )
 from fransys_pdf import check
+from sheet_formats import a3
 
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import Severity, render_id
-from fransys_model.layout import default_sheet_format
 from fransys_model.vocab import DocumentPreset, SignalType
 
 _PRESET = DocumentPreset.CABINET_SCHEMATIC
@@ -146,8 +146,8 @@ def test_no_mixed_sheet_formats_finding_when_every_page_agrees():
 
 def test_mixed_sheet_formats_names_the_house_default_when_a_page_names_no_format():
     """A page with no explicit `sheet_format` groups under the house default
-    (`default_sheet_format`), not a page-formats key error (`_geometry.mixed_sheet_formats`'s
-    `default_sheet_format() if key is None else formats[key]`): the mixed-formats message
+    (`a3()`), not a page-formats key error (`_geometry.mixed_sheet_formats`'s
+    `a3() if key is None else formats[key]`): the mixed-formats message
     still names it alongside the other, explicit format."""
     a4 = sheet_format("a4", width_mm=210, height_mm=297)
     m, doc = _cabinet_with_pages(formats=(None, a4))
@@ -156,7 +156,7 @@ def test_mixed_sheet_formats_names_the_house_default_when_a_page_names_no_format
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (doc.id,)
     assert "a4" in finding.message
-    assert default_sheet_format().name in finding.message
+    assert a3().name in finding.message
 
 
 def test_no_top_level_cables_for_a_system_document_over_a_model_with_no_cable():

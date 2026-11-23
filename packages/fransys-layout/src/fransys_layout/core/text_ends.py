@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from .arrow_reserve import arrow_rows, leg_feet, leg_fit, leg_lines, leg_rows
 from .band import abut as band_abut
-from .band import lane_line
+from .band import lane_line, lane_span
 from .clearance import Keep, footprint_keeps
 from .cut_drawn import cut_stands
 from .cut_end_rooms import laned_stub, pole_of
@@ -71,6 +71,7 @@ class Stand:
     orient: Orientation
     side: Side  # the side the marker's box lies on: the turn `Options.marker_facing` gives it
     band: tuple[int, int] | None = None  # the row band a pin's marker box stays in (R1333)
+    span: int = 0  # the G from the arrow's lane to the last lane below it at its end: the flag stretches over it (BUNDLE-ARROW)
     stood: bool = True  # False: the lane end found no stand at placement (Trunk.stood); the marker is MARKER_UNPLACED (layout-0507)
 
 
@@ -208,8 +209,10 @@ def _lane_stand(env: MarkEnv, t: Trunk, key: tuple[PinRef, str], index: int) -> 
     """The stand at the end of the lane of the pin's pole: an arrow's, or a bundle's cross-document stub (R1338)."""
     side = env.options.arrow_sides[int(index != 0)]
     fan = env.fans.get(t.fan)
-    x0, x1, y, stood = lane_line(t, pole_of(fan, key[0]) if fan is not None else 0, fan.lanes if fan is not None else 1, env.options.wiring_grid)
-    return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), stood=stood[side == "E"])
+    pole, lanes = (pole_of(fan, key[0]), fan.lanes) if fan is not None else (0, 1)
+    x0, x1, y, stood = lane_line(t, pole, lanes, env.options.wiring_grid)
+    span = lane_span(t, pole, lanes, env.options.wiring_grid, right=side == "E")
+    return replace(abut(env.options, side, x1 if side == "E" else x0, y, key), stood=stood[side == "E"], span=max(span, 0))
 
 
 def _own_lane_stand(env: MarkEnv, ref: Ref, end: RefEnd, trunk: Trunk, key: tuple[PinRef, str]) -> Stand:

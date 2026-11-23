@@ -50,7 +50,7 @@ def _fold_misses(env, page) -> list[tuple[Any, ...]]:
         if p.sym not in hung:
             continue
         view, (top, bottom) = view_of(env.syms[p.sym], p.orient), page.bands[rows[p.sym]]
-        foot = view.row_footprint if p.sym in env.in_row and view.row_footprint else view.footprint
+        foot = view.row_footprint if env.syms[p.sym].in_row and view.row_footprint else view.footprint
         if not top <= p.y + foot.y <= p.y + foot.y + foot.h <= bottom:
             out.append((page.page, p.sym))
     return out
@@ -80,7 +80,7 @@ _LOOKS = {
     "machine_panel": 2,  # R1800 (KI-705, looks): new p5 row 0 band 232 with -B15..-B20/-MB13..-MB17 (PE-EARTH-JOIN); was 1
     "panel_di16p": 6,
     "remote_io": 4,  # R2000 (G09-PAGE): the cut reads the placed rows; a fourth page (looks): p4 row 0 band 112
-    "mcc": 1,  # R1673/R1675: accepted move (3 -> 4); distinct count 1 (R1899)
+    "mcc": 2,  # KI-1130 (R2646, looks): CHAIN-FROM-HEAD leaf lanes add one miss, was 1; R1673/R1675: accepted move (3 -> 4); distinct count 1 (R1899)
 }  # SUPPLY-SLOT (R1605) + ID-TEXT-ORDER (R1628): mcc has 3 rows 8 G short of their spans (power symbol keepout; order-text ids); looks
 
 
@@ -88,6 +88,3 @@ _LOOKS = {
 def test_every_row_band_is_the_extent_of_its_spans(request: pytest.FixtureRequest, misses: list[tuple[Any, ...]]) -> None:
     distinct = sorted(set(misses))
     assert len(distinct) <= _LOOKS.get(request.node.callspec.id, 0), distinct[:8]
-
-
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

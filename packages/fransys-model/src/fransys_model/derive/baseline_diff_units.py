@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from fransys_model.kernel import JsonValue, value_data, write_json
 
+from .baseline_diff_rows import presence_changes, sort_changes
 from .order import natural_key
 from .revision_text import revision_text
 from .rows_baseline import BaselineBoundary, BaselineItem, BaselineNestedUnit, BaselineUnit, Change
@@ -31,42 +32,15 @@ def _release_field_changes(
     if a_interface != b_interface:
         rows.append(
             Change(
-                section=section,
-                change="changed",
-                subject=subject,
-                field="interface",
-                before=a_interface,
-                after=b_interface,
-                parts=parts,
-                detail="",
+                section=section, change="changed", subject=subject, parts=parts, field="interface", before=a_interface, after=b_interface, detail=""
             )
         )
     if a_revision != b_revision:
-        rows.append(
-            Change(
-                section=section,
-                change="changed",
-                subject=subject,
-                field="revision",
-                before=revision_text(a_version, a_revision),
-                after=revision_text(b_version, b_revision),
-                parts=parts,
-                detail="",
-            )
-        )
+        before, after = revision_text(a_version, a_revision), revision_text(b_version, b_revision)
+        rows.append(Change(section=section, change="changed", subject=subject, parts=parts, field="revision", before=before, after=after, detail=""))
     if a_version != b_version:
-        rows.append(
-            Change(
-                section=section,
-                change="changed",
-                subject=subject,
-                field="version",
-                before=revision_text(a_version, a_revision),
-                after=revision_text(b_version, b_revision),
-                parts=parts,
-                detail="",
-            )
-        )
+        before, after = revision_text(a_version, a_revision), revision_text(b_version, b_revision)
+        rows.append(Change(section=section, change="changed", subject=subject, parts=parts, field="version", before=before, after=after, detail=""))
     return rows
 
 
@@ -103,57 +77,33 @@ def _item_detail(row: BaselineItem) -> str:
     return ", ".join(text for text in (row.mpn, row.manufacturer) if text)
 
 
+def _item_ident(designation: str, row: BaselineItem) -> tuple[str, tuple[str, ...], str]:
+    return designation, (designation,), _item_detail(row)
+
+
 def _item_changes(a_rows: tuple[BaselineItem, ...], b_rows: tuple[BaselineItem, ...], unit_subject: str) -> list[Change]:
     a_index = _by_subject(a_rows, unit_subject)
     b_index = _by_subject(b_rows, unit_subject)
-    changes: list[Change] = []
-    for designation in set(a_index) - set(b_index):
-        r = a_index[designation]
-        changes.append(
-            Change(
-                section="items",
-                change="removed",
-                subject=designation,
-                field="",
-                before="",
-                after="",
-                parts=(designation,),
-                detail=_item_detail(r),
-            )
-        )
-    for designation in set(b_index) - set(a_index):
-        r = b_index[designation]
-        changes.append(
-            Change(
-                section="items",
-                change="added",
-                subject=designation,
-                field="",
-                before="",
-                after="",
-                parts=(designation,),
-                detail=_item_detail(r),
-            )
-        )
+    changes = presence_changes("items", a_index, b_index, _item_ident)
     for designation in set(a_index) & set(b_index):
         a_row, b_row = a_index[designation], b_index[designation]
         for field in ("external", "installed", "manufacturer", "mpn", "position"):
             a_val, b_val = getattr(a_row, field), getattr(b_row, field)
             if a_val != b_val:
+                before, after = _item_field_text(field, a_val), _item_field_text(field, b_val)
                 changes.append(
                     Change(
                         section="items",
                         change="changed",
                         subject=designation,
-                        field=field,
-                        before=_item_field_text(field, a_val),
-                        after=_item_field_text(field, b_val),
                         parts=(designation,),
+                        field=field,
+                        before=before,
+                        after=after,
                         detail="",
                     )
                 )
-    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
-    return changes
+    return sort_changes(changes)
 
 
 def _nested_unit_index(
@@ -166,38 +116,15 @@ def _nested_unit_index(
     return index
 
 
+def _nested_ident(key: tuple[str, str], _row: BaselineNestedUnit) -> tuple[str, tuple[str, ...], str]:
+    name, instance = key
+    return f"{name} {instance}", (instance, name), ""
+
+
 def _nested_unit_changes(a_rows: tuple[BaselineNestedUnit, ...], b_rows: tuple[BaselineNestedUnit, ...]) -> list[Change]:
     a_index = _nested_unit_index(a_rows)
     b_index = _nested_unit_index(b_rows)
-    changes: list[Change] = []
-    for key in set(a_index) - set(b_index):
-        name, instance = key
-        changes.append(
-            Change(
-                section="units",
-                change="removed",
-                subject=f"{name} {instance}",
-                field="",
-                before="",
-                after="",
-                parts=(instance, name),
-                detail="",
-            )
-        )
-    for key in set(b_index) - set(a_index):
-        name, instance = key
-        changes.append(
-            Change(
-                section="units",
-                change="added",
-                subject=f"{name} {instance}",
-                field="",
-                before="",
-                after="",
-                parts=(instance, name),
-                detail="",
-            )
-        )
+    changes = presence_changes("units", a_index, b_index, _nested_ident)
     for key in set(a_index) & set(b_index):
         name, instance = key
         a_row, b_row = a_index[key], b_index[key]
@@ -210,76 +137,32 @@ def _nested_unit_changes(a_rows: tuple[BaselineNestedUnit, ...], b_rows: tuple[B
                 (b_row.interface, b_row.version, b_row.revision),
             )
         )
-    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
-    return changes
+    return sort_changes(changes)
+
+
+def _boundary_ident(designation: str, row: BaselineBoundary) -> tuple[str, tuple[str, ...], str]:
+    return designation, (designation,), "ports " + ", ".join(sorted(row.ports, key=natural_key))
 
 
 def _boundary_changes(a_rows: tuple[BaselineBoundary, ...], b_rows: tuple[BaselineBoundary, ...], unit_subject: str) -> list[Change]:
     a_index = _by_subject(a_rows, unit_subject)
     b_index = _by_subject(b_rows, unit_subject)
-    changes: list[Change] = []
-    for designation in set(a_index) - set(b_index):
-        r = a_index[designation]
-        changes.append(
-            Change(
-                section="boundary",
-                change="removed",
-                subject=designation,
-                field="",
-                before="",
-                after="",
-                parts=(designation,),
-                detail="ports " + ", ".join(sorted(r.ports, key=natural_key)),
-            )
-        )
-    for designation in set(b_index) - set(a_index):
-        r = b_index[designation]
-        changes.append(
-            Change(
-                section="boundary",
-                change="added",
-                subject=designation,
-                field="",
-                before="",
-                after="",
-                parts=(designation,),
-                detail="ports " + ", ".join(sorted(r.ports, key=natural_key)),
-            )
-        )
+    changes = presence_changes("boundary", a_index, b_index, _boundary_ident)
     for designation in set(a_index) & set(b_index):
         a_row, b_row = a_index[designation], b_index[designation]
         if a_row.ports != b_row.ports:
             a_ports, b_ports = set(a_row.ports), set(b_row.ports)
             changes.extend(
-                Change(
-                    section="boundary",
-                    change="added",
-                    subject=designation,
-                    field="ports",
-                    before="",
-                    after=port,
-                    parts=(designation,),
-                    detail="",
-                )
-                for port in sorted(b_ports - a_ports, key=natural_key)
+                Change(section="boundary", change="added", subject=designation, parts=(designation,), field="ports", before="", after=p, detail="")
+                for p in sorted(b_ports - a_ports, key=natural_key)
             )
             changes.extend(
-                Change(
-                    section="boundary",
-                    change="removed",
-                    subject=designation,
-                    field="ports",
-                    before=port,
-                    after="",
-                    parts=(designation,),
-                    detail="",
-                )
-                for port in sorted(a_ports - b_ports, key=natural_key)
+                Change(section="boundary", change="removed", subject=designation, parts=(designation,), field="ports", before=p, after="", detail="")
+                for p in sorted(a_ports - b_ports, key=natural_key)
             )
         changes.extend(_rating_changes(designation, "rating", a_row.rating, b_row.rating))
         changes.extend(_rating_changes(designation, "operating", a_row.operating, b_row.operating))
-    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
-    return changes
+    return sort_changes(changes)
 
 
 def _field_texts(value: Rating | Operating | None) -> dict[str, str]:
@@ -298,10 +181,10 @@ def _rating_changes(designation: str, prefix: str, a: Rating | Operating | None,
             section="boundary",
             change="changed",
             subject=designation,
+            parts=(designation,),
             field=f"{prefix}.{key}",
             before=a_dict.get(key, ""),
             after=b_dict.get(key, ""),
-            parts=(designation,),
             detail="",
         )
         for key in sorted(set(a_dict) | set(b_dict))

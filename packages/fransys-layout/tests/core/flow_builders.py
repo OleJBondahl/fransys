@@ -24,9 +24,11 @@ from fransys_layout.core.values import (
 )
 lazy from fransys_layout.core.flow_values import FlowGraph
 
+from .conftest import NO_MARKERS
+
 AREA = Size(1312, 854)
 LABEL = {"": Size(16, 8)}
-OPTIONS = core_options()
+OPTIONS = core_options(marker_boxes=NO_MARKERS)
 _POLE_PINS: tuple[tuple[str, Side, int], ...] = (("n", "N", -16), ("s", "S", 16))
 
 
@@ -83,6 +85,11 @@ def free(sym_id: str, **kw: Any) -> Sym:
     return refit(sym, **kw)
 
 
+def hub_pins(hub: str) -> tuple[str, str]:
+    """The legal ends of a free-sided hub on its net: both pins n and s, one through end (NET-END-THROUGH)."""
+    return f"{hub}.n", f"{hub}.s"
+
+
 def poles(sym_id: str, count: int = 3) -> Sym:
     """A multi-pole device: pole k has pin n<k> above and s<k> below, 24 G apart."""
     box = Box(-8, -16, 24 * count, 32)
@@ -112,6 +119,11 @@ def conductors(nets: Sequence[Net]) -> tuple[tuple[PinRef, PinRef], ...]:
 def problem(syms: list[Sym], nets: list[Net], hints: Hints | None = None, area: Size = AREA) -> PlacementProblem:
     """A placement problem over the given symbols and nets, default hints and the test area."""
     return PlacementProblem(area, tuple(syms), tuple(nets), Facts(far_ends=conductors(nets)), hints or Hints())
+
+
+def joined(prob: PlacementProblem) -> dict[PinRef, frozenset[PinRef]]:
+    """Pin to the pins its conductors reach, as stage 1 reads them."""
+    return {a: frozenset(b for x, b in prob.facts.far_ends if x == a) for a, _ in prob.facts.far_ends}
 
 
 def flow_of(syms: list[Sym], nets: list[Net]) -> FlowGraph:

@@ -10,11 +10,12 @@ from collections import Counter
 from dataclasses import dataclass, replace
 lazy from collections.abc import Mapping, Sequence
 
+from fransys_layout.engines.overview.lanes.frame_values import edge_x
 from fransys_layout.engines.overview.lanes.labels import label_at
 from fransys_layout.engines.overview.sizes import tab_reach
 from fransys_layout.engines.overview.wrap_route import clear, fold_points
 from fransys_layout.geometry import WIRING_GRID as G
-from fransys_layout.geometry import Facing, Point
+from fransys_layout.geometry import Point
 lazy from fransys_layout.engines.overview.sheet_values import (
     DiagramBox,
     DiagramLine,
@@ -30,8 +31,7 @@ type Bounds = tuple[int, int, int, int]  # left, top, right, bottom
 
 
 def _tab_x(box: DiagramBox, tab: DiagramTab) -> int:
-    reach = tab_reach(tab.text_width)
-    return box.x + box.width + reach if tab.side is Facing.E else box.x - reach
+    return edge_x(box.x, box.width, tab.side, tab_reach(tab.text_width))
 
 
 def _span(box: DiagramBox) -> tuple[int, int]:

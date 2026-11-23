@@ -11,7 +11,7 @@ from fransys_layout.core import Facts, Options, PinRef, PlacementProblem, Unit
 from fransys_layout.core.values import PageSpec, Ref, RefEnd, RefKind
 
 from . import pipeline_fixtures
-from .conftest import MARKER
+from .conftest import MARKERS
 from .cut_fixtures import AREA, chain, elem, net, side
 from .cycle_fixtures import ring_problem
 
@@ -38,7 +38,7 @@ def tag_on_the_wire() -> tuple[PlacementProblem, CutResult, Placement, Options]:
     """
     prob = ring_beside_a_tall_chain()
     opts = core_options(
-        marker=MARKER,
+        marker_boxes=MARKERS,
     )
     cut = pipeline_fixtures.cut_of(prob, opts)
     ends = (RefEnd(1, None, PinRef("k00", "n")), RefEnd(1, None, PinRef("k02", "s")))

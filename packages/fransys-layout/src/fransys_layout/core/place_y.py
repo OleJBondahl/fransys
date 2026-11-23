@@ -50,7 +50,7 @@ class YCycleError(CoreError):
 
 
 def _footprint(env: PageEnv, cell: Cell) -> Box:
-    return cell_footprint(env.syms[cell.sym], cell, in_row=cell.sym in env.in_row)
+    return cell_footprint(env.syms[cell.sym], cell)
 
 
 def _pin_y(env: PageEnv, cell: Cell, pin: str | None) -> int:
@@ -298,8 +298,8 @@ def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[F
     pushed = clear_foreign(base, env, x, spans)
     result = accept(base, page_aligns(env))
     slack = {c for c in env.attach if any(n.startswith(f"cell:{c}:") for n in pushed)}
-    if result is None and slack:
-        base, _, _ = _y_graph(env, spans, (tangled, slack), rooms)
+    if result is None:  # a push the classes refuse: its trunk hangs its legs loose, a pushed attached column hangs at least wire_min
+        base, _, _ = _y_graph(env, spans, (tangled | tangled_trunks(base), slack), rooms)
         clear_foreign(base, env, x, spans)
         result = accept(base, page_aligns(env))
     if result is None:

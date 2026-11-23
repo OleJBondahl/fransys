@@ -29,9 +29,9 @@ class PlacedCell(NamedTuple):
     soft: Box
 
 
-def hard_soft(sym: Sym, cell: Cell, *, in_row: bool, tag_stagger: bool) -> tuple[Box, Box]:
+def hard_soft(sym: Sym, cell: Cell, *, tag_stagger: bool) -> tuple[Box, Box]:
     """The hard and soft boxes of a cell at its orientation, relative to its origin."""
-    fp = cell_footprint(sym, cell, in_row=in_row)
+    fp = cell_footprint(sym, cell)
     if not tag_stagger:
         return fp, fp
     view = view_of(sym, cell.orient)
@@ -39,15 +39,14 @@ def hard_soft(sym: Sym, cell: Cell, *, in_row: bool, tag_stagger: bool) -> tuple
     return hard, union(fp, hard)
 
 
-def placed_cells(pc: PlacedColumn, syms: Mapping[str, Sym], in_row: frozenset[str], options: Options) -> list[PlacedCell]:
+def placed_cells(pc: PlacedColumn, syms: Mapping[str, Sym], options: Options) -> list[PlacedCell]:
     """Every cell of the column with its boxes against lane 0's wire x and its stacked y."""
     out: list[PlacedCell] = []
     for cells, offset in zip(pc.lanes, pc.offsets, strict=True):
-        ys, _ = stack_lane(syms, cells, options, in_row)
+        ys, _ = stack_lane(syms, cells, options)
         for cell, y in zip(cells, ys, strict=True):
             sym = syms[cell.sym]
-            row = cell.sym in in_row
-            hard, soft = hard_soft(sym, cell, in_row=row, tag_stagger=options.tag_stagger)
+            hard, soft = hard_soft(sym, cell, tag_stagger=options.tag_stagger)
             dx = offset - cell_anchor(sym, cell)[0]
             out.append(PlacedCell(y + soft.y, y + soft.y + soft.h, shift(hard, dx, y), shift(soft, dx, y)))
     return out
@@ -66,15 +65,14 @@ def separation(
     a: PlacedColumn,
     b: PlacedColumn,
     syms: Mapping[str, Sym],
-    in_row: frozenset[str],
     options: Options,
 ) -> int:
     """Wire-x distance of b from a, on the grid, over the cell pairs whose y spans overlap."""
     gap = options.column_gap_min
     slack = options.row_gap
     sep = gap
-    cells_b = placed_cells(b, syms, in_row, options)
-    for ca in placed_cells(a, syms, in_row, options):
+    cells_b = placed_cells(b, syms, options)
+    for ca in placed_cells(a, syms, options):
         for cb in cells_b:
             if ca.top - slack < cb.bottom and cb.top - slack < ca.bottom:
                 sep = max(sep, _reach(ca, cb) + gap)

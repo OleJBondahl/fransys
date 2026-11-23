@@ -51,6 +51,15 @@ ALL_FILES = {
     "EX-1-v1.6.pdf",
     "data/EX-1-v1.6-wago-PLC-U1-U1.xml",
     "data/EX-1-v1.6-wires.csv",
+    "units/pump-cabinet/pump-cabinet-v1.11.pdf",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-bom.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-cables.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-cores.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-designations.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-plc.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-terminals.csv",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-wago-U1.xml",
+    "units/pump-cabinet/data/pump-cabinet-v1.11-wires.csv",
 }
 EXPECTED_FILES = {"cabinet": CABINET_FILES, "all": ALL_FILES}
 

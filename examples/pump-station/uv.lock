@@ -25,8 +25,8 @@ wheels = [
 
 [[package]]
 name = "electrical-symbols"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Felectrical-symbols&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Felectrical-symbols&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "symdef" },
 ]
@@ -65,8 +65,8 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-author" },
@@ -85,16 +85,16 @@ dependencies = [
 
 [[package]]
 name = "fransys-author"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-author&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-author&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-el"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-el&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-el&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-layout" },
@@ -120,7 +120,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "example-parts", editable = "parts" },
-    { name = "fransys", git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.23.38" },
+    { name = "fransys", git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.23.41" },
 ]
 
 [package.metadata.requires-dev]
@@ -132,8 +132,8 @@ dev = [
 
 [[package]]
 name = "fransys-kernel"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kernel&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kernel&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "elecdef" },
     { name = "refdef" },
@@ -141,16 +141,16 @@ dependencies = [
 
 [[package]]
 name = "fransys-kicad"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kicad&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kicad&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-layout"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-layout&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-layout&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-model" },
@@ -159,8 +159,8 @@ dependencies = [
 
 [[package]]
 name = "fransys-model"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-model&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-model&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "elecdef" },
     { name = "fransys-kernel" },
@@ -169,8 +169,8 @@ dependencies = [
 
 [[package]]
 name = "fransys-overview"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-overview&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-overview&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-layout" },
     { name = "fransys-model" },
@@ -178,24 +178,24 @@ dependencies = [
 
 [[package]]
 name = "fransys-parts"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-parts&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-parts&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-pdf"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-pdf&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-pdf&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-render"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-render&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-render&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-layout" },
@@ -205,8 +205,8 @@ dependencies = [
 
 [[package]]
 name = "fransys-reports"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-reports&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-reports&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
     { name = "xlsxwriter" },
@@ -214,8 +214,8 @@ dependencies = [
 
 [[package]]
 name = "fransys-wago"
-version = "0.23.38"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-wago&rev=v0.23.38#3c8cd8e2987f320308bae81b43ad0ec841eb8776" }
+version = "0.23.41"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-wago&rev=v0.23.41#7c89765005bf0a98228e2265151b32d962b6cee2" }
 dependencies = [
     { name = "fransys-model" },
 ]
@@ -308,14 +308,14 @@ wheels = [
 
 [[package]]
 name = "symdef"
-version = "0.36.0"
+version = "0.38.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fonttools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/d0/2820c7e162a13d65e1d24c3faab863dc38f5cdcc681861adcbf8541a9475/symdef-0.36.0.tar.gz", hash = "sha256:02d7b8e163c5d829d38c61d9e19250176bf5677ed76b2e960c11d8af79408dbc", size = 1167702, upload-time = "2026-11-10T16:58:33.474Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/9f/4da35b351cfe59f482a0b4c10524aa5519ff0050d1e6dc5590b6c2a6f221/symdef-0.38.0.tar.gz", hash = "sha256:3517a80ee7385cfc9dfa9d86d602555f6816fc5c8da16b38d8f5a112f95266a4", size = 1172287, upload-time = "2026-11-23T14:53:43.622Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/a4/d72af9d43aa0a8ddc69b07f5fa4120427dc94833ec8820d5e2503a5b3573/symdef-0.36.0-py3-none-any.whl", hash = "sha256:3bde092aa6fb01c5e547b28e5e4ade410051c7410e8557981d6f04bd4bfc5eec", size = 169676, upload-time = "2026-11-10T16:58:32.128Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/08/5e0a5e8abd8fbaa3cdf8613c4a1efd3f1248defd1fb0fcb341226e897cd3/symdef-0.38.0-py3-none-any.whl", hash = "sha256:48bafc4b16177048ee03e10d5288339cb06fd19195ec24b76faa1baee1060399", size = 170882, upload-time = "2026-11-23T14:53:42.004Z" },
 ]
 
 [[package]]

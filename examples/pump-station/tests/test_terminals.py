@@ -2,7 +2,7 @@
 
 Expected rows are hardcoded from E3's terminal plan and checked against the committed row
 shape of the `terminals.csv` file: `designation,group,index,side_a,side_b,jumper_group`.
-`side_a` is the terminal's internal port role and lists every conductor on it, jumpers included
+`side_a` is the terminal's internal port role and lists every conductor on it; a bridge shows only as the shared `jumper_group`
 (the far end of a `cab.bridge` jumper is the neighbouring terminal); `side_b` is the external
 role. Every cell is a full designation (`-X3:PE:1`, `+EXT-M1:PE`). `jumper_group` numbers each
 bridged group from 1 in row order (empty when not bridged).

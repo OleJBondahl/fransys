@@ -170,7 +170,11 @@ LAYOUT_WARNINGS = {
     "POWER_SYMBOL_UNPLACED": 0,
     "SYMBOL_OVERLAP": 0,
     "JOIN_UNALIGNED": 0,
-    "OVERLAP": 0,  # v0.23.13: 12 -> 0 (BY-OTHERS-UNTITLED, el-0127: the by-others frame carries no text); KI-903
+    # v0.23.13: 12 -> 0 (BY-OTHERS-UNTITLED, el-0127: the by-others frame carries no text); KI-903; 1 at 0.23.36
+    # KI-1382: created at fransys a27c631072 (STACK-RETURN); PUMP-ALIGN removes it (R3578)
+    "OVERLAP": 1,
+    # KI-1383: created at fransys a27c631072 (STACK-RETURN); PUMP-ALIGN removes it (R3578)
+    "ALIGN_DROPPED": 1,
 }
 EXPECTED_WARNINGS = LAYOUT_WARNINGS
 

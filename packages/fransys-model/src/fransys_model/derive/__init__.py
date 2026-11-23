@@ -199,7 +199,7 @@ from .facts.strips import strip_of
 from .facts.subjects import is_unit_owned_kind, record_key_text, subject_kind, subject_kind_text
 from .facts.system_document import is_system_document
 from .facts.unit_index import item_unit, unit_index
-from .facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, units_named
+from .facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, unit_placed_once, units_named
 from .facts.unit_reach import nested_boundary_functions, unused_functions, wired_inside_outside
 from .facts.units import crosses_unit, drawn_with
 from .far_pins import far_pins
@@ -1176,6 +1176,7 @@ __all__ = [
     "unit_own_drawing",
     "unit_owned_ids",
     "unit_parent",
+    "unit_placed_once",
     "unit_racks",
     "unit_release",
     "unit_releases",

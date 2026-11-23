@@ -4,6 +4,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.41
+
+- `write(unit=...)` of a unit placed once writes its placed documents again, `reference` included; a unit placed several times writes the unit alone. Skip 0.23.39 and 0.23.40.
+
 ## New in 0.23.40
 
 - Placed unit documents print the `reference` column again; only the unit's own set under `units/<name>/` leaves it out.

@@ -29,6 +29,15 @@ def units_named(model: Model, name: str) -> tuple[Id[Unit], ...]:
     return tuple(unit_id for unit_id, unit in units(model).items() if unit.release in named_releases)
 
 
+def unit_placed_once(model: Model, unit: Id[Unit]) -> bool:
+    """True when `unit`'s release name has exactly one instance: its placed document is the unit's own.
+
+    Several instances have no placement that holds for all, so a write by name drops the placement
+    column and the per-document rows (KI-1452, R3698).
+    """
+    return len(units_named(model, unit_releases(model)[units(model)[unit].release].name)) == 1
+
+
 def unit_design_of(model: Model, name: str) -> Id[Unit]:
     """The one unit instance that stands for the unit design `name`: its first instance in id order.
 

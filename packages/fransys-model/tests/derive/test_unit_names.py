@@ -3,7 +3,7 @@
 import pytest
 from plant import Plant
 
-from fransys_model.derive.facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, units_named
+from fransys_model.derive.facts.unit_names import unit_design_of, unit_list_names, unit_name_unresolved, unit_placed_once, units_named
 from fransys_model.kernel import ModelError
 from fransys_model.vocab.finding_ref import ref
 
@@ -79,3 +79,12 @@ def test_the_design_of_an_unknown_name_raises_the_unresolved_sentence() -> None:
     model = Plant().model()
     with pytest.raises(ModelError, match="no unit release is named 'x'"):
         unit_design_of(model, "x")
+
+
+def test_a_unit_is_placed_once_only_when_its_name_has_one_instance() -> None:
+    plant = Plant()
+    plant.unit("a", name="board")
+    plant.unit("b", name="board")
+    plant.unit("c", name="cabinet")
+    model = plant.model()
+    assert [unit_placed_once(model, unit) for unit in (*units_named(model, "board"), *units_named(model, "cabinet"))] == [False, False, True]

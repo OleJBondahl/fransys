@@ -44,6 +44,7 @@ from fransys_model.derive import (
     stale_patterns,
     unit_design_of,
     unit_list_names,
+    unit_placed_once,
 )
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.kernel import (
@@ -182,7 +183,7 @@ class _Export:
     findings: tuple[Finding, ...] = ()
     changes: ListingDiff | None = None
     timer: Timer | None = None
-    design: str | None = None
+    design: bool = False
 
 
 def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
@@ -192,7 +193,7 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
         "bom": lambda _s: partial(bom_csv, model, unit),
         "plc": lambda _s: partial(plc_csv, model, unit=unit),
         "wires": lambda _s: partial(wires_csv, model, unit=unit),
-        "designations": lambda _s: partial(designations_csv, model, unit=unit, design=job.design is not None),
+        "designations": lambda _s: partial(designations_csv, model, unit=unit, design=job.design),
         "cables": lambda _s: partial(cables_csv, model, unit=unit),
         "cores": lambda _s: partial(cores_csv, model, unit=unit),
         "overview": lambda _s: partial(
@@ -211,17 +212,16 @@ def _producers(job: _Export) -> dict[str, Callable[[Id[Any]], Callable[[], str |
     }
 
 
-def _design(unit: object) -> str | None:
-    """`unit=` when it is a release name, else `None`."""
-    unit = engine_subject(unit)
-    return unit if isinstance(unit, str) else None
+def _design(model: Model, unit: object, resolved: Id[ModelUnit] | None) -> bool:
+    """True when `unit=` is the release name of a unit placed several times: its set is the unit alone (`unit_placed_once`)."""
+    return isinstance(engine_subject(unit), str) and resolved is not None and not unit_placed_once(model, resolved)
 
 
 def _ledger(job: _Export, *, names_only: bool = False) -> _ExportLedger:
     model = job.drawn.model
     ledger = _ExportLedger(model, names_only=names_only, timer=job.timer)
     made = _producers(job)
-    for row in export_set(model, job.within, design=job.design is not None):
+    for row in export_set(model, job.within, design=job.design):
         ledger.add(
             row.export_kind,
             row.name,
@@ -250,7 +250,8 @@ def export_names(result: BuildResult, *, unit: object = None) -> dict[tuple[str,
     """
     model = result.model
     drawn = _Drawn(model, {}, DiagramLayout(diagrams=()), _library(result), {})
-    names = _ledger(_Export(drawn, result.settings, _resolve_unit(model, unit), design=_design(unit)), names_only=True).names
+    resolved = _resolve_unit(model, unit)
+    names = _ledger(_Export(drawn, result.settings, resolved, design=_design(model, unit, resolved)), names_only=True).names
     if unit is None:
         for name in unit_list_names(model):
             names |= {(f"units/{name}/{kind}", subject): f"units/{name}/{path}" for (kind, subject), path in export_names(result, unit=name).items()}
@@ -322,7 +323,7 @@ def write(
             raw,
             _changes_since(model, releases, resolved_unit),
             timer,
-            _design(unit),
+            _design(model, unit, resolved_unit),
         )
     )
     if intermediates is not None:

@@ -13,8 +13,9 @@ import fransys as fr
 import fransys_parts
 import pytest
 from _model_build_cover import system_document
+from _worked_wiring import wire_field_to_motor, wire_field_to_switch
 from fransys_author.design import Design
-from test_units_worked_example import _system_design
+from test_units_worked_example import _PROJECT, _system_design, pump_cabinet
 
 from fransys_model.derive import unit_name_unresolved, unit_release
 from fransys_model.kernel import Id, SchemaError
@@ -360,18 +361,36 @@ def test_the_default_write_of_two_instances_of_one_name_writes_one_set_under_uni
     assert "reference" in system.read_text(encoding="utf-8").splitlines()[0].lower()
 
 
-def test_a_unit_scoped_placed_document_keeps_reference_and_the_unit_design_set_drops_it(tmp_path):
-    """R3691: `write(unit=<placed unit>)` keeps the `reference` column; only `units/<name>/` leaves it out."""
-    d = Design(fr.parts())
-    d.project(title="t", number="n", customer="c", revision=1, author="a")
-    d.revision(1, date="2026-09-23", text="First issue", created="XX")
-    unit = d.scope("cab1").unit("one-name", revision=1, interface="1")
-    unit.revision(1, date="2026-01-01", text="First release", created="XX")
-    result = fr.build(fr.parts(), d.draft(), system_document())
-    (placed,) = (p for p in fr.write(result, tmp_path / "placed", unit=unit) if p.name.endswith("designations.csv"))
-    assert "reference" in placed.read_text(encoding="utf-8").splitlines()[0].lower()
-    (design,) = (p for p in fr.write(result, tmp_path / "design", unit="one-name") if p.name.endswith("designations.csv"))
-    assert design.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
+def test_write_by_name_of_a_unit_placed_once_keeps_reference_and_its_placed_pdf(tmp_path):
+    """R3698: `write(unit="name")` of a unit placed once is its placed document: `reference` column and PDF."""
+    parts = fransys_parts.load("demo_parts")
+    d = Design(parts)
+    d.project(**_PROJECT)
+    d.revision(1, date="2026-09-22", text="First issue", created="XX")
+    er = d.location("ER", "Engine room")
+    field, _ = pump_cabinet(d.scope("pump1", at=er), name="C1", tag="P1", spares=False)
+    fld = d.location("FLD", "Field")
+    grp = d.group("FLD", "Field wiring")
+    wire_field_to_motor(d, field, fld=fld, grp=grp, motor_tag="M1")
+    switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=grp)
+    wire_field_to_switch(d, field[1], switch.fn("x1")["1"], cable_tag="WM1S")
+    draft = d.draft()
+    cabinet = _unit_id(fr.build(parts, draft, system_document()).model, name="demo-pump-cabinet", prefix="pump1")
+    document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=_cover(tmp_path, "cover.md", "# Cabinet\n"))
+    result = fr.build(parts, draft, document, system_document())
+    for index, scope in enumerate((cabinet, "demo-pump-cabinet")):
+        written = fr.write(result, tmp_path / str(index), unit=scope)
+        (designations,) = (p for p in written if p.name.endswith("designations.csv"))
+        assert "reference" in designations.read_text(encoding="utf-8").splitlines()[0].lower()
+        assert [p for p in written if p.suffix == ".pdf"]
+
+
+def test_write_by_name_of_a_unit_placed_twice_has_no_reference_and_no_placed_pdf(built, tmp_path):
+    """R3698: several placements, no false one: the unit-alone set, no `reference`, no per-document PDF."""
+    written = fr.write(built[0], tmp_path, unit="demo-pump-cabinet")
+    (designations,) = (p for p in written if p.name.endswith("designations.csv"))
+    assert "reference" not in designations.read_text(encoding="utf-8").splitlines()[0].lower()
+    assert not [p for p in written if p.suffix == ".pdf"]
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1132 (R2647, TEXT-WIRE P0).

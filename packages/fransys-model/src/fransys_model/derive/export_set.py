@@ -6,7 +6,7 @@ stale-file sweep reads the patterns from the same kind table, so the two never d
 
 from typing import Any
 
-from fransys_model.vocab.tables import documents, unit_releases, units
+from fransys_model.vocab.tables import documents, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
 lazy from fransys_model.vocab.document import Document
@@ -15,7 +15,6 @@ from .document_pages import drawn_pages
 from .document_unit import document_unit
 from .export_names import document_export_name, export_name, export_ref, export_set_name
 from .facts.house_settings import export_form_of
-from .facts.unit_names import units_named
 from .report_scope import terminal_strips, unit_boards, unit_strips
 from .rows_export_set import ExportRow
 from .structure import boards
@@ -111,7 +110,7 @@ def _document_rows(model: Model, unit: Id[Unit] | None, *, design: bool) -> list
     The hint is set only when the name was already taken by a document of the SAME release
     (`Unit.release` id, never a name compare), so an ordinary clash gets none.
     """
-    if design and unit is not None and len(units_named(model, unit_releases(model)[units(model)[unit].release].name)) > 1:
+    if design and unit is not None:
         return []  # KI-1452 (R375, R3687): a unit design with several instances has no placement-free unit document yet
     entries = documents(model).items()
     if unit is not None:
@@ -138,8 +137,8 @@ def export_set(model: Model, unit: Id[Unit] | None, *, design: bool = False) -> 
     The reports (and the overview for the whole model), one terminal CSV and one connector CSV for
     all strips and boards, one WAGO XML per rack, then one PDF per document, each followed by its per-document kinds
     (`ring_out`, for a document with drawings and a preset not in `ring_out_skip`).
-    `design` is true when `unit` stands for its unit design (a write by release name): a design with several
-    instances has no per-document rows yet (KI-1452, R3687).
+    `design` is true when `unit` stands for a unit design written by release name and placed several times
+    (`unit_placed_once` false): it has no per-document rows yet (KI-1452, R3687).
     Names are unplaced: the caller puts CSV and XML into `data/`. Two rows may share a name; the caller refuses that.
     """
     return (*_report_rows(model, unit), *_list_rows(model, unit), *_item_rows(model, unit), *_document_rows(model, unit, design=design))

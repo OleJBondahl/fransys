@@ -4,6 +4,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.38
+
+- A bundle stub with one near symbol now draws, not a stub-table error.
+
 ## New in 0.23.37
 
 - A fan's hub is the conductor wired to a leg's head pin, so the legs of a fan align and no wire crosses text (KI-1382, KI-1383).

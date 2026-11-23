@@ -16,18 +16,16 @@ from .clearance import Keep, clear, through_keeps
 from .cut_costs import item_height
 from .cut_end_rooms import arrow_ends, arrow_room, cut_ends, stub_room
 from .geometry import inside, marker_box_at, sized, stub_views
-from .pack_row import row_width
 from .ref_kind import kind_of
-from .rowspec import one_row
 from .values import Box, MarkerBoxes, RefKind, StandClass
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
     from .annex_values import Annex
-    from .flow_values import Block, BlockList, CutResult, Fan, FlowGraph
+    from .flow_values import Block, CutResult, Fan
     from .outputs import Placed, Trunk
-    from .values import XY, Options, PagePlan, PinRef, PlacementProblem, Ref, Size
+    from .values import XY, Options, PagePlan, PinRef, Ref, Size
 
     ArrowEnds = Mapping[tuple[int, str, int], tuple[tuple[int, tuple[PinRef, str]], ...]]  # (page, fan, row) -> (pole, key) of each right cut end
 
@@ -359,31 +357,6 @@ def row_legs(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], r: int, o
     """The x the legs take beyond the right end of row r's trunks: the widest fan's `leg_room`, each leg at its ledger box (R903, R1600)."""
     rows, fit = leg_rows(refs, plan.page), leg_fit(options, refs, plan.page)
     return max((leg_room(leg_pins(f, rows, r), fit, arrowed=bool(arrow_ends(refs, plan, (f,), r)[1])) for f in fans), default=0)
-
-
-def legs_over_room(
-    refs: Sequence[Ref], plans: Iterable[PagePlan], blocks: Iterable[BlockList], env: tuple[FlowGraph, PlacementProblem, Options]
-) -> frozenset[tuple[int, PinRef]]:
-    """The (page, pin) of each leg a row that stands whole has no room for: the legs past the longest lane-order prefix the page holds (R3140).
-
-    The row body is the placed row's width without its tail (place_x.row_specs): its arrow reserve, not its legs. A body over the page keeps no leg.
-    """
-    flow, problem, options = env
-    page_w, by_id = problem.area.w - 2 * options.margin.w, {b.id: b for lst in blocks for b in lst.blocks}
-    gone: set[tuple[int, PinRef]] = set()
-    for plan in plans:
-        rows, fit = leg_rows(refs, plan.page), leg_fit(options, refs, plan.page)
-        for r, row in enumerate(plan.rows):
-            if r not in rows.values() or not (len(row.columns) == 1 or (len(row.blocks) == 1 and row.columns == by_id[row.blocks[0]].columns)):
-                continue
-            left, right = row_arrows(refs, plan, by_id, flow.fans, (r, options))
-            spec = replace(one_row(row.columns, [by_id[b] for b in row.blocks], flow, problem, options), lead_extra=lead_reserve(left, options))
-            body = row_width(spec) + lead_reserve(right, options)
-            for f in flow.fans:
-                legs, arrowed = leg_pins(f, rows, r), bool(arrow_ends(refs, plan, (f,), r)[1])
-                kept = next(k for k in range(len(legs), -1, -1) if body + leg_room(legs[:k], fit, arrowed=arrowed) <= page_w or not k)
-                gone |= {(plan.page, pin) for _, pin in legs[kept:]}
-    return frozenset(gone)
 
 
 def column_legs(refs: Iterable[Ref], plan: PagePlan, fans: Iterable[Fan], at: tuple[int, str], options: Options) -> RowReserve:

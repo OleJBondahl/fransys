@@ -7,8 +7,7 @@ x 1264). A synthetic arrow of f:n1 leaves the right end.
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass, replace
-from types import SimpleNamespace
+from dataclasses import replace
 
 import pytest
 from options_fixtures import core_options
@@ -31,9 +30,8 @@ from fransys_layout.core.arrow_reserve import (
 from fransys_layout.core.band import arrow_box, arrow_hang, trunk_room
 from fransys_layout.core.clearance import Keep
 from fransys_layout.core.cut_end_rooms import arrow_ends, arrow_poles, arrow_room, cut_ends
-from fransys_layout.core.cut_ledger import unlegged
 from fransys_layout.core.errors import CoreError
-from fransys_layout.core.flow_values import Attach, BlockList, Fan
+from fransys_layout.core.flow_values import Attach, Fan
 from fransys_layout.core.geometry import marker_box_at, overlaps
 from fransys_layout.core.outputs import Trunk
 from fransys_layout.core.place_env import page_envs
@@ -45,7 +43,6 @@ from fransys_layout.core.values import MarkerBoxes, PagePlan, Ref, RefEnd, RefKi
 from .conftest import MARKER_BOX, MARKERS
 from .cut_fixtures import AREA, box_sym
 from .flow_builders import net, poles
-from .pack_fixtures import free_block
 from .pipeline_fixtures import cut_of
 
 
@@ -621,47 +618,3 @@ def test_a_legs_run_along_a_body_outline_is_refused_and_a_corner_touch_is_free()
     assert ar._clear(60, Box(60, 60, 10, 10), start, room)  # stops short of the body
     assert ar._clear(100, Box(100, 60, 10, 10), start, room)  # run and drop touch the body's corner (100, 40) only
     assert not ar._clear(120, Box(120, 60, 10, 10), start, room)  # the run lies along the outline from x 100 to 120
-
-
-@dataclass(frozen=True)
-class _Spec:
-    lead_extra: int = 0
-
-
-def _room_plant(monkeypatch: pytest.MonkeyPatch, body: int):
-    """A one-column row of a three-leg arrowed fan, each leg 100 wide; `body` the row's width without its tail (R3140)."""
-    pins = [PinRef("a", f"p{i}") for i in range(3)]
-    fan = Fan("f", ("n0", "n1", "n2"), tuple(Attach("c", 0, 0, p, i, net=f"n{i}") for i, p in enumerate(pins)), (), "H", 3, "S")
-    refs = [Ref(f"n{i}", RefKind.STUB, (RefEnd(1, "c", p, 0, StandClass.LEG),)) for i, p in enumerate(pins)]
-    plan = PagePlan(1, "u", (RowPlan(("c",), ("b",)),), ())
-    lists = [BlockList("u", (free_block("b", ("c",)),))]
-    flow = SimpleNamespace(fans=[fan])
-    problem = PlacementProblem(AREA, (), (), facts=Facts(far_ends=()))
-    monkeypatch.setattr(ar, "one_row", lambda *_: _Spec())
-    monkeypatch.setattr(ar, "row_width", lambda _: body)
-    monkeypatch.setattr(ar, "row_arrows", lambda *_: (0, 0))
-    monkeypatch.setattr(ar, "arrow_ends", lambda *_: (0, 1))
-    monkeypatch.setattr(ar, "leg_unit", lambda legs, _: 100 * len(legs))
-    monkeypatch.setattr(ar, "leg_room", lambda legs, _, **__: 100 * len(legs) + OPTIONS.wiring_grid)
-    page_w = AREA.w - 2 * OPTIONS.margin.w
-    return pins, refs, plan, (flow, problem, OPTIONS), page_w, lists
-
-
-def test_a_whole_row_keeps_the_legs_its_page_holds_and_the_rest_stand_no_leg(monkeypatch: pytest.MonkeyPatch) -> None:
-    """ROOM-BOUNDED LEGS (R3140): the longest lane-order prefix that fits keeps its legs; a body over the page keeps none."""
-    pins, refs, plan, env, page_w, lists = _room_plant(monkeypatch, 0)
-    monkeypatch.setattr(ar, "row_width", lambda _: page_w - 200 - OPTIONS.wiring_grid)
-    assert ar.legs_over_room(refs, [plan], lists, env) == {(1, pins[2])}
-    monkeypatch.setattr(ar, "row_width", lambda _: page_w + 1)
-    assert ar.legs_over_room(refs, [plan], lists, env) == {(1, p) for p in pins}
-    monkeypatch.setattr(ar, "row_width", lambda _: 0)
-    assert ar.legs_over_room(refs, [plan], lists, env) == set()
-
-
-def test_a_leg_with_no_room_is_written_with_no_row_so_every_leg_reader_loses_it() -> None:
-    """The ledger writes it as a refused leg stands: a LEG end with no row, which `leg_rows` and `leg_fit` skip."""
-    pins = [PinRef("a", "p0"), PinRef("a", "p1")]
-    refs = [Ref(f"n{i}", RefKind.STUB, (RefEnd(1, "c", p, 0, StandClass.LEG),)) for i, p in enumerate(pins)]
-    out = unlegged(refs, {(1, pins[1])})
-    assert [e.row for r in out for e in r.ends] == [0, None]
-    assert leg_rows(out, 1) == {pins[0]: 0}

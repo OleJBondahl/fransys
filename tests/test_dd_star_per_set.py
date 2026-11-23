@@ -175,9 +175,6 @@ def test_a_coil_wired_to_itself_keeps_a_wire_to_both_pins(monkeypatch: pytest.Mo
         assert "DRAWING_SHORTS_NETS" not in codes
 
 
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
-
-
 def test_a_contact_chain_wired_to_itself_draws_every_conductor() -> None:
     """KI-974: a changeover's pins wired 11-12 and 12-14 are self-wired ends, 14 also runs to a coil: no conductor is dropped."""
     # UNDO: core/topology_fans.py own_wired: join only the mates that are not own-only: FAILED on OVERLAP, not CND

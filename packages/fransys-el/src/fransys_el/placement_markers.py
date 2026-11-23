@@ -86,12 +86,15 @@ def _sharing(texts: Mapping[tuple[PinRef, PinRef], list[str]]) -> list[set[PinRe
 def _sized(
     library: Library, texts: Mapping[tuple[PinRef, PinRef], list[str]], stands: Iterable[Sequence[PinRef]]
 ) -> tuple[dict[str, Mapping[Orientation, Box]], StubLines, StubTable]:
-    """Each line text's box, each conductor's line width, and the box by (widest width, line count) a sharing group's stub can reach."""
+    """Each line text's box, each conductor's line width, and the box by (widest width, line count) a group's or a symbol's bundle stub can reach."""
     fits = {text: marker_boxes(library, text) for lines in texts.values() for text in lines}
     widths = {text: box["R90"].h for text, box in fits.items()}
     lines = frozendict({k: tuple(widths[t] for t in v) for k, v in texts.items() if v})
     sample = {w: t for t, w in widths.items()}
     groups = [[t for (n, _), v in texts.items() if n in g for t in v] for g in (*_sharing(texts), *stands)]
+    groups += [
+        [t for (n, _), v in texts.items() if n.sym == sym for t in v] for sym in {n.sym for n, _ in texts}
+    ]  # a bundle stands for one symbol's pins
     sized = {(w, n): marker_boxes(library, "\n".join([sample[w]] * n)) for g in groups for w in {widths[t] for t in g} for n in range(1, len(g) + 1)}
     table = frozendict(sized)
     return fits, lines, table

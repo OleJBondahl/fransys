@@ -4,8 +4,6 @@ The shape: a PLC output card sits under a rack board next to a relay; one channe
 no unit is its own unit (R2481) and is not refused (R2496).
 """
 
-# PLACEMENT_PROBLEM: an old finding of this file's builds, on KI-1376 (R3538).
-# DRAWN_CHECKS_NOT_RUN: an old finding of this file's builds, on KI-1376 (R3538).
 import tempfile
 from pathlib import Path
 from typing import NamedTuple
@@ -47,7 +45,9 @@ def test_a_board_beside_another_device_in_a_unit_is_refused_and_names_the_fix() 
 def test_a_board_with_no_unit_is_its_own_unit_and_is_not_refused() -> None:
     d = fr.design("demo_parts", place="C1")
     cab = d.location("C1", "Cabinet")
-    _rack_and_relay(d)
+    rack = d.device("R1", "DEMO-PCB-IO")
+    j1 = d.device("J1", "DEMO-CONN-2P", parent=rack)  # a board is a black box (R2627): a connector of it is what is wired
+    d.series(j1["1"], d.device("K1", "DEMO-RLY-2CO-24").coil["A1"], wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))

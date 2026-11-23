@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
 
 from options_fixtures import core_options
 
 from fransys_layout.core import Facts, Hints, PlacementProblem, order_blocks
-from fransys_layout.core import cut as cut_mod
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.flow_values import Block, BlockList, FlowGraph
 
@@ -17,9 +15,6 @@ from .conftest import MARKERS
 from .cut_fixtures import chain, cut_of, elem, net
 from .pack_fixtures import free_block
 from .pipeline_fixtures import blocks_of, flow_of
-
-if TYPE_CHECKING:
-    import pytest
 
 
 def _block(block_id: str, col: str, group: str | None) -> Block:
@@ -80,12 +75,3 @@ def test_the_cut_is_deterministic() -> None:
     nets = [net("bus", "src.s", *(f"{leg}.n" for leg in legs))]
     hints = Hints(group_order=("G0", "G1"))
     assert cut_of(syms, nets, hints=hints) == cut_of(syms, nets, hints=hints)
-
-
-def test_cut_pages_writes_the_legs_without_room_through_the_ledger(monkeypatch: pytest.MonkeyPatch) -> None:
-    """ROOM-BOUNDED LEGS (R3140): the pins `legs_over_room` names reach `unlegged` over the planned and ledger references, once."""
-    seen = []
-    monkeypatch.setattr(cut_mod, "legs_over_room", lambda *_: frozenset({(7, "gone")}))
-    monkeypatch.setattr(cut_mod, "unlegged", lambda refs, gone: seen.append(gone) or tuple(refs))
-    cut_of([elem(i, 40, 96) for i in ["a", "b"]], chain(["a", "b"]))
-    assert seen == [frozenset({(7, "gone")})]

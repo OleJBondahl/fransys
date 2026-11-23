@@ -4,7 +4,6 @@ Built through the public API on invented parts; the model is read with `fransys_
 One build per module: three blocks on one page, and a page with no block.
 """
 
-# INK_WITHOUT_CONDUCTOR: an old finding of this file's builds, on KI-1377 (R3538).
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
@@ -140,6 +139,7 @@ def test_one_label_under_two_unit_prefixes_stands_in_one_place_on_every_sheet(tm
     d.series(cab.X2[2].outer, h3.lamp["1"], wire=(BU, 0.5))
     cover = tmp_path / "cover.md"
     cover.write_text("# Plant\n", encoding="utf-8")
-    model = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover)).model
-    titles = [page_title(model, page) for page in layout_of(model, Page).values()]
+    built = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
+    titles = [page_title(built.model, page) for page in layout_of(built.model, Page).values()]
     assert "Alpha, Bravo, Charlie" in titles, titles
+    assert "INK_WITHOUT_CONDUCTOR" not in {f.code for f in fr.check(built)}  # KI-1377 guard

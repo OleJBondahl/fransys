@@ -279,9 +279,6 @@ def test_a_where_line_two_pitches_off_its_stack_raises_where_text_far():
     assert _codes(_drawing(texts=(tag, far))) == ["WHERE_TEXT_FAR"]
 
 
-# INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).
-
-
 def test_a_wire_from_its_own_pin_across_its_own_body_raises_overlap_and_one_leaving_the_pin_outward_is_clear():
     """KI-1283 (R3120): a wire that ends at the body's pin but runs back across the body is a body hit, as layout's route check says."""
     body = DrawnSymbol("t", "k-a", 20, 20, "R0", outline=Box(20, 20, 20, 10), ports=("P",))

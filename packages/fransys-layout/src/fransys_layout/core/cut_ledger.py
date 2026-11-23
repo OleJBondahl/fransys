@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, replace
 from itertools import permutations
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from .cut_bundle import bundled
 from .cut_drawn import stand_pins
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from .unionfind import UnionFind
     from .values import PagePlan, PlacementProblem
 
-__all__ = ("Account", "account", "copies", "standing", "unlegged")
+__all__ = ("Account", "account", "copies", "standing")
 
 type Pair = tuple[PinRef, PinRef]
 _PAIR = 2
@@ -236,6 +236,28 @@ def _apart(parts: Sequence[list[PinRef]], ended: AbstractSet[PinRef], touched: A
     return None if first is None else (first, [q for p in parts if p is not first for q in p])
 
 
+def _at(held: _Held, pin: PinRef) -> tuple[int, int]:
+    """The (page, row) of the piece `pin` stands in: its place along a lane."""
+    page, row = cast("tuple[int, int | None]", held.piece[pin.sym])
+    return page, row or 0
+
+
+def _chained(joined: tuple[str, Pair], held: _Held, wired: UnionFind, earlier: Sequence[tuple[str, Pair]]) -> tuple[str, Pair]:
+    """`joined` with its pair ended at a pin of the piece just before its far pin's along the lane (page, row), not at a pin an earlier pair ends.
+
+    A lane cut twice is then two pairs in piece order, each cut ending its piece once, never a star on one pin (R3577).
+    """
+    net, (near, far) = joined
+    before = [
+        p
+        for p, n in held.net_of.items()
+        if n == held.net_of[near] and p.sym in held.piece and wired.same(key(p), key(near)) and _at(held, p) < _at(held, far)
+    ]
+    last = [p for p in before if _at(held, p) == max(_at(held, q) for q in before)]
+    taken = {p for _, ends in earlier for p in ends}
+    return (net, (next((p for p in last if p not in taken), near), far)) if last else joined
+
+
 def _mend(group: Sequence[PinRef], held: _Held, refs: tuple[Sequence[Ref], list[Ref]], wired: UnionFind) -> list[tuple[str, Pair]]:
     """The stubs and join pairs of one required group: a piece no reference touches is ended by a stub, a piece one touches is joined by a pair.
 
@@ -253,7 +275,7 @@ def _mend(group: Sequence[PinRef], held: _Held, refs: tuple[Sequence[Ref], list[
             made.append(Ref(held.net_of[pin], RefKind.STUB, (RefEnd(held.where[pin.sym], None, pin),)))
             ended.add(pin)
         else:
-            unjoined.append(join(part, rest, far_ends, held.net_of))
+            unjoined.append(_chained(join(part, rest, far_ends, held.net_of), held, wired, unjoined))
             wired.union(key(unjoined[-1][1][0]), key(unjoined[-1][1][1]))
     return unjoined
 
@@ -412,10 +434,3 @@ def standing(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int
     """The pins a placed marker, an anchor, a fan lane or a join stands at or for: `_covered` over the markers the core placed."""
     ends = tuple(RefEnd(m.page, None, p) for m in markers for p in (m.end, *m.also))
     return _covered(problem, [Ref("", RefKind.STUB, ends)], (_fan_refs(problem, flow, where)[1], _joins(flow)))
-
-
-def unlegged(refs: Iterable[Ref], gone: AbstractSet[tuple[int, PinRef]]) -> tuple[Ref, ...]:
-    """`refs` with the LEG end at each (page, pin) of `gone` written with no row: a leg the page has no room for stands as one R1816 refuses."""
-    return tuple(
-        replace(r, ends=tuple(replace(e, row=None) if e.stand is StandClass.LEG and (e.page, e.pin) in gone else e for e in r.ends)) for r in refs
-    )

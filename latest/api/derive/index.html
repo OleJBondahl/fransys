@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.36/api/derive/">
       
       
       
@@ -3061,6 +3061,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_pieces" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_pieces
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#drawn_stands" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5485,6 +5496,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         printed_drawing_sets
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printed_strip_tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printed_strip_tag
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printed_tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printed_tag
       </span>
     </span>
   </a>
@@ -10220,6 +10253,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawn_pieces" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        drawn_pieces
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#drawn_stands" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -12644,6 +12688,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         printed_drawing_sets
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printed_strip_tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printed_strip_tag
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printed_tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        printed_tag
       </span>
     </span>
   </a>
@@ -16910,6 +16976,13 @@ is this net, not the electrical net <code>net_of</code> returns.</p>
 <p>The nets a drawing draws wires for: <code>drawn_groups</code> less the conductive links, so a bridge joins nothing.</p>
 <p>A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
 A terminal function's link stays, a strip terminal or a panel receptacle: its ports draw as one node.</p>
+<h3 id="drawn_pieces">drawn_pieces</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_pieces</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">ports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]],</span> <span class="n">joins</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">]]]</span><span class="o">=</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+<p><code>ports</code> split into the pieces they join among themselves: what one drawing set may join with a wire.</p>
+<p>Each group <code>drawn_physical_nets</code> joins counts by its ends among <code>ports</code>; one end there joins nothing.
+A mate is left out: it joins its two halves and draws no wire. <code>joins</code> are the groups the caller's drawing
+holds at one point (a symbol's node, a bridge). A port nothing reaches is a piece alone.</p>
 <h3 id="drawn_stands">drawn_stands</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn_stands</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">PowerKind</span><span class="p">]</span>
 </code></pre></div>
@@ -18319,6 +18392,15 @@ Otherwise <code>GROUND</code>, <code>PE</code> and <code>NONE</code> print none.
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printed_drawing_sets</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DrawingSet</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>The sets some document of <code>model</code> prints, by <code>number</code>; none that no document prints.</p>
+<h3 id="printed_strip_tag">printed_strip_tag</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printed_strip_tag</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">]</span> <span class="o">|</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>The strip tag a run of the terminal <code>key</code> prints once above it (<code>-X1</code>, STRIP-TAG-ONCE).</p>
+<h3 id="printed_tag">printed_tag</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printed_tag</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">]</span> <span class="o">|</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alone</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>The tag a symbol of <code>key</code> (a function, or a connector pin's port) prints in the drawing set of <code>unit</code> (<code>None</code>: whole model).</p>
+<p>A pin prints its designation (<code>-X5:2</code>); a strip terminal its own point (<code>L2:1</code>), or, <code>alone</code> in its run, its full tag.</p>
 <h3 id="printing_document">printing_document</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printing_document</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">AspectNode</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -18357,7 +18439,7 @@ outputs first, then inputs, <code>nr</code> restarting at 0 in each direction; a
 </code></pre></div>
 <p>Each rail terminal port, mapped to the pins of its rail net that stand its power symbol (<code>stands</code>, whole).</p>
 <p>A flagged terminal draws as the power symbol at each device pin wired to it, so a pin in <code>drawn_stands</code> draws it.
-A port that ends a boundary rail wire is absent: its wire is drawn to the terminal's replica.</p>
+A port that ends a boundary rail wire is kept: its wire is drawn to the terminal's replica, and the inside pins stand its symbol.</p>
 <h3 id="rail_pairs">rail_pairs</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_pairs</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Function</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
 </code></pre></div>
@@ -18384,9 +18466,9 @@ calls this before it builds the record. A <code>phase</code> of the wrong type g
 </code></pre></div>
 <p>The row of a supply rail: <code>L-</code> is 0 V without a mid, a supply rail with one.</p>
 <h3 id="rail_scope">rail_scope</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_scope</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozendict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Id</span><span class="p">[</span><span class="n">RailGroup</span><span class="p">]]</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_scope</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
 </code></pre></div>
-<p>The flagged rail group of each (unit, potential), the first in <code>rail_groups</code> order; a group with no potential is skipped.</p>
+<p>The (unit, potential) pairs that flag a rail group; a group with no potential is skipped.</p>
 <p>New because <code>rails_by_potential</code> is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.</p>
 <h3 id="rail_source_unit">rail_source_unit</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rail_source_unit</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
@@ -20238,7 +20320,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.35 documentation
+      Fransys 0.23.36 documentation
     </div>
   
   

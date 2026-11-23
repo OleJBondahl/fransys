@@ -1298,6 +1298,18 @@ The nets a drawing draws wires for: `drawn_groups` less the conductive links, so
 A link's ports stand on two nets: a pole in series sits between them, as its conductors run (R2071, option A).
 A terminal function's link stays, a strip terminal or a panel receptacle: its ports draw as one node.
 
+### drawn_pieces
+
+```python
+def drawn_pieces(model: Model, ports: Iterable[Id[Port]], joins: Iterable[Sequence[Id[Port]]]=()) -> tuple[tuple[Id[Port], ...], ...]
+```
+
+`ports` split into the pieces they join among themselves: what one drawing set may join with a wire.
+
+Each group `drawn_physical_nets` joins counts by its ends among `ports`; one end there joins nothing.
+A mate is left out: it joins its two halves and draws no wire. `joins` are the groups the caller's drawing
+holds at one point (a symbol's node, a bridge). A port nothing reaches is a piece alone.
+
 ### drawn_stands
 
 ```python
@@ -3795,6 +3807,24 @@ def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]
 
 The sets some document of `model` prints, by `number`; none that no document prints.
 
+### printed_strip_tag
+
+```python
+def printed_strip_tag(model: Model, key: Id[Function] | Id[Port], *, unit: Id[Unit] | None=None) -> str
+```
+
+The strip tag a run of the terminal `key` prints once above it (`-X1`, STRIP-TAG-ONCE).
+
+### printed_tag
+
+```python
+def printed_tag(model: Model, key: Id[Function] | Id[Port], *, unit: Id[Unit] | None=None, alone: bool=False) -> str
+```
+
+The tag a symbol of `key` (a function, or a connector pin's port) prints in the drawing set of `unit` (`None`: whole model).
+
+A pin prints its designation (`-X5:2`); a strip terminal its own point (`L2:1`), or, `alone` in its run, its full tag.
+
 ### printing_document
 
 ```python
@@ -3861,7 +3891,7 @@ def rail_drawn_by(model: Model) -> frozendict[Id[Port], tuple[Id[Port], ...]]
 Each rail terminal port, mapped to the pins of its rail net that stand its power symbol (`stands`, whole).
 
 A flagged terminal draws as the power symbol at each device pin wired to it, so a pin in `drawn_stands` draws it.
-A port that ends a boundary rail wire is absent: its wire is drawn to the terminal's replica.
+A port that ends a boundary rail wire is kept: its wire is drawn to the terminal's replica, and the inside pins stand its symbol.
 
 ### rail_pairs
 
@@ -3907,10 +3937,10 @@ The row of a supply rail: `L-` is 0 V without a mid, a supply rail with one.
 ### rail_scope
 
 ```python
-def rail_scope(model: Model) -> frozendict[tuple[Id[Unit] | None, str], Id[RailGroup]]
+def rail_scope(model: Model) -> frozenset[tuple[Id[Unit] | None, str]]
 ```
 
-The flagged rail group of each (unit, potential), the first in `rail_groups` order; a group with no potential is skipped.
+The (unit, potential) pairs that flag a rail group; a group with no potential is skipped.
 
 New because `rails_by_potential` is a supply-rail map keyed by potential, read by 6 rating/fault readers that cannot take a unit key.
 

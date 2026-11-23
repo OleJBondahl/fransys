@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.36/guide/findings-render/">
       
       
       
@@ -2264,14 +2264,6 @@
 <td>Split <block> into smaller function blocks, or use a taller sheet. Write: [paper] default = "A2" in the settings file, passed as fr.build(settings=fr.settings(path))</td>
 </tr>
 <tr>
-<td><a id="pin_marking_wrong"></a>PIN_MARKING_WRONG</td>
-<td>ERROR</td>
-<td>render</td>
-<td>Fransys</td>
-<td>A symbol prints at a pin a marking other than the one the model gives that port, or prints none where the port is marked, or one where it is not.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
-</tr>
-<tr>
 <td><a id="placement_problem"></a>PLACEMENT_PROBLEM</td>
 <td>ERROR</td>
 <td>render</td>
@@ -2285,6 +2277,22 @@
 <td>render</td>
 <td>Fransys</td>
 <td>A power symbol is drawn for a pin with no wire to it and not on the pin, so the page does not show the pin on its rail.</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="power_symbol_wrong_kind"></a>POWER_SYMBOL_WRONG_KIND</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A power symbol is drawn for a pin as another kind than the potential of its net (supply, ground or protective earth).</td>
+<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+</tr>
+<tr>
+<td><a id="printed_text_wrong"></a>PRINTED_TEXT_WRONG</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A drawn text is not the one the model gives it: a pin marking, a tag, a contact table, a where-text or a frame title that differs from its derived text.</td>
 <td>No call clears this: send the smallest model that shows it. The message names the page.</td>
 </tr>
 <tr>
@@ -2500,7 +2508,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.35 documentation
+      Fransys 0.23.36 documentation
     </div>
   
   

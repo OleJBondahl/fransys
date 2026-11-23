@@ -175,7 +175,7 @@ for tag in ("H1", "H2", "H3"):
 A power rail is declared, never guessed. `rail=True` on a bridged run (`x1.run("24V", 4, bridged=True, rail=True)`) or on
 `d.terminal_strip(..., bridged=True, rail=True)` flags that one group. A flagged terminal draws as the rail's power symbol.
 An unflagged terminal draws as a terminal, even on a power net, and its bridges show in the terminal table only.
-A group of several terminals must be bridged; give a run its count. One group per potential in a unit.
+A group of several terminals must be bridged; give a run its count. Several groups of one potential may be flagged in a unit when wiring inside the unit joins them; a pair joined only across a unit boundary is refused.
 
 ```python
 # two flagged rails feeding one supply

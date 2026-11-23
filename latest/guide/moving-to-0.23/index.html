@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.36/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02336" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.36
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02335" class="md-nav__link">
@@ -2371,6 +2382,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02336" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.36
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02335" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2822,6 +2844,14 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02336">New in 0.23.36</h2>
+<ul>
+<li>A cut rail end now draws one reference that points to where the wire continues.</li>
+<li>The bundle arrow spans every lane it carries.</li>
+<li>West arrows are mirrored, so they point the way the wire leaves.</li>
+<li>The far-pin leg tables are gone.</li>
+<li>These are drawing moves under the rules BUNDLE-ARROW and MARKER-FREE-SIDE.</li>
+</ul>
 <h2 id="new-in-02335">New in 0.23.35</h2>
 <p>0.23.34 was not published; this release carries its changes too.</p>
 <p>BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or <code>None</code>. A device handle, a harness and an item id are no longer accepted and raise <code>TypeError</code>; <code>DocumentRow</code> and <code>DocumentScope</code> lose <code>item</code>, <code>bom_item</code> and <code>boards</code>, and <code>has_schematic_subject</code> is gone.</p>
@@ -2838,6 +2868,8 @@
 <li>New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.</li>
 <li>An unnamed rack channel is named by its drawn pin label, for example <code>DO3</code>.</li>
 <li>Page titles now state what the page draws.</li>
+<li><code>cores.csv</code> prints the far end in full form, for example <code>+EXT-M1:U1</code>.</li>
+<li>A terminal row's <code>side_a</code> no longer names the bridge partner; the bridge is the shared <code>jumper_group</code>.</li>
 </ul>
 <h2 id="new-in-02333">New in 0.23.33</h2>
 <ul>
@@ -3109,7 +3141,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.35 documentation
+      Fransys 0.23.36 documentation
     </div>
   
   

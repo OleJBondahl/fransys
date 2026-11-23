@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.35/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.36/guide/findings-validators/">
       
       
       
@@ -2275,8 +2275,8 @@
 <td>ERROR</td>
 <td>validators</td>
 <td>consumer</td>
-<td>Two rail groups of one unit carry the same potential.</td>
-<td>Flag one bridged group per potential in a unit. Write: x.run("24V", 4, bridged=True, rail=True)</td>
+<td>Two rail groups of one potential in one unit are joined by no wiring inside the unit.</td>
+<td>Bond them inside the unit, or flag one group per potential across a unit boundary. Write: x.run("24V", 4, bridged=True, rail=True)</td>
 </tr>
 <tr>
 <td><a id="rail_on_fused"></a>RAIL_ON_FUSED</td>
@@ -2515,7 +2515,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.35 documentation
+      Fransys 0.23.36 documentation
     </div>
   
   

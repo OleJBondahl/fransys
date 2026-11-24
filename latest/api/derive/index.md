@@ -3643,7 +3643,7 @@ def port_power_kind(model: Model, port: Id[Port]) -> PowerKind
 The `PowerKind` of the wire piece of `port`; `NONE` when `port` is not in `model`.
 
 A load pin wired to a 24 V terminal gets the kind of that net though no `Net` lists it; a pin
-only a bridge joins to the rail gets the rail's kind. Cost: O(1) once per model digest, like `port_rails`.
+only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like `port_rails`.
 
 ### port_power_text
 

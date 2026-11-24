@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/api/derive/">
       
       
       
@@ -18477,7 +18477,7 @@ separate question that keeps the physical net.</p>
 </code></pre></div>
 <p>The <code>PowerKind</code> of the wire piece of <code>port</code>; <code>NONE</code> when <code>port</code> is not in <code>model</code>.</p>
 <p>A load pin wired to a 24 V terminal gets the kind of that net though no <code>Net</code> lists it; a pin
-only a bridge joins to the rail gets the rail's kind. Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
+only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
 <h3 id="port_power_text">port_power_text</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_power_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -20550,7 +20550,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.46 documentation
+      Fransys 0.23.47 documentation
     </div>
   
   

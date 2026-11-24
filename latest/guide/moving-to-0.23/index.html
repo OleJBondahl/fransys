@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/moving-to-0.23/">
       
       
       
@@ -897,6 +897,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-02347" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.47
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#new-in-02346" class="md-nav__link">
@@ -2365,6 +2376,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02347" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.47
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02346" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2783,6 +2805,10 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02347">New in 0.23.47</h2>
+<ul>
+<li>A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol (KI-1518; the 0.23.46 note claimed it, but a later landing had undone it).</li>
+</ul>
 <h2 id="new-in-02346">New in 0.23.46</h2>
 <p>BREAKING (typing only): <code>fr.Device</code> and <code>fr.Fn</code> are generic, so the generated parts module's classes type-check with no <code>ty: ignore</code> inside Fransys. A part's device and function still annotate as the bare <code>fr.Device</code> and <code>fr.Fn</code>. The device of <code>d.device(tag, None, external=True, pins=...)</code> is no longer a bare <code>fr.Device</code>: annotate it <code>fr.Device[Any, fr.Pin]</code>.</p>
 <ul>
@@ -3041,7 +3067,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.46 documentation
+      Fransys 0.23.47 documentation
     </div>
   
   

@@ -150,9 +150,6 @@ _.BLOCK  # TESTS fransys-model/tests/layout/test_membership.py:44
 _.REFERENCE  # TESTS fransys-model/tests/layout/test_membership.py:157
 
 
-# --- EF-B first half: wired by EF-B's second half (P4 resolve, P6 pole order) ---------------------
-# `pole_order` (model-0128) is read through `vocab` by layout and author; tests call it too.
-
 # --- fransys_author surface: coverage (EA-COVERAGE) ---------------------------------------
 # Surface calls off `fransys_author.__all__` until EA-SWAP (KI-048); their tests call them.
 _.layout  # TESTS fransys-author/tests/surface/test_coverage_layout.py:46

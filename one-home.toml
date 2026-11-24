@@ -627,8 +627,8 @@
 "fransys_model.vocab.instantiate::_by_id" = 1
 "fransys_model.vocab.instantiate::_refuse_repeated_names" = 1
 "fransys_author.instantiate::instantiate" = 1
-"fransys_model.vocab.markings::pole_between" = 1
-"fransys_model.vocab.markings::pole_order" = 1
+"fransys_model.derive.facts.part_pins::ordered" = 1
+"fransys_model.derive.facts.part_pins::pair_of" = 1
 "fransys_model.vocab.supply_system::__post_init__" = 1
 "fransys_model.vocab.tables::supply_of_potential" = 1
 "fransys_overview._data_findings::_flat" = 2
@@ -745,8 +745,6 @@
 "fransys_layout.core.blocks_members::_member" = 4
 "fransys_layout.core.blocks_members::block_group" = 1
 "fransys_layout.core.blocks_members::members" = 1
-"fransys_layout.core.cut_ledger::_page_pin" = 2
-"fransys_layout.core.cut_refs::_column_pin" = 2
 "fransys_layout.core.order::_pin_order" = 1
 "fransys_layout.core.order::_search" = 1
 "fransys_layout.core.order_bare::_host" = 1
@@ -888,13 +886,13 @@
 "packages/fransys-author/src/fransys_author/surface/_unit_tags.py" = 10
 "packages/fransys-model/src/fransys_model/derive/contacts.py" = 41
 "packages/fransys-model/src/fransys_model/derive/facts/function_ratings.py" = 72
-"packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 105
+"packages/fransys-model/src/fransys_model/derive/facts/part_poles.py" = 102
 "packages/fransys-model/src/fransys_model/derive/facts/part_throws.py" = 25
 "packages/fransys-model/src/fransys_model/derive/texts/designation_render.py" = 34
 "packages/fransys-model/src/fransys_model/derive/texts/designation_segments.py" = 88
 "packages/fransys-model/src/fransys_model/vocab/colours.py" = 63
 "packages/fransys-model/src/fransys_model/vocab/designation_scheme.py" = 44
 "packages/fransys-model/src/fransys_model/vocab/facets/rating.py" = 54
-"packages/fransys-model/src/fransys_model/vocab/markings.py" = 38
+"packages/fransys-model/src/fransys_model/vocab/markings.py" = 15
 "packages/fransys-model/src/fransys_model/vocab/signal_types.py" = 28
 "packages/fransys-parts/src/fransys_parts/_protection.py" = 62

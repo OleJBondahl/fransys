@@ -39,7 +39,6 @@ lazy from .rows import HarnessCable
 lazy from .rows_sheet import DiagramSheet
 
 __all__ = [
-    "DIAGRAM_CABLE_FANOUT",
     "DIAGRAM_CABLE_ONE_BOX",
     "DIAGRAM_LOOSE_WIRE",
     "BoxEnd",
@@ -57,12 +56,9 @@ __all__ = [
 ]
 
 DIAGRAM_CABLE_ONE_BOX = "DIAGRAM_CABLE_ONE_BOX"
-DIAGRAM_CABLE_FANOUT = "DIAGRAM_CABLE_FANOUT"
 DIAGRAM_LOOSE_WIRE = "DIAGRAM_LOOSE_WIRE"
 
 type BoxKey = Id[Unit] | Id[Item]
-
-_PAIR = 2
 
 
 @value
@@ -187,28 +183,40 @@ def _tab(model: Model, box: Id[Any], ends: list[BoxEnd], unit: Id[Unit] | None) 
     return printed_designation(model, landed.pop(), unit=reading)
 
 
+def _core_pairs(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> dict[tuple[Id[Any], Id[Any]], tuple[list[BoxEnd], list[BoxEnd]]]:
+    """The box pairs the cores of `cable` join, each with the core ends on its first and second box, text order within a pair."""
+    rank = {box: n for n, box in enumerate(_cable_ends(model, cable, unit))}
+    pairs: dict[tuple[Id[Any], Id[Any]], tuple[list[BoxEnd], list[BoxEnd]]] = {}
+    for core in cable.cores:
+        first, second = (end_box(model, port, unit) for port in (core.end_a, core.end_b))
+        if first is None or second is None or first.box == second.box:
+            continue
+        if rank[first.box] > rank[second.box]:
+            first, second = second, first
+        at_first, at_second = pairs.setdefault((first.box, second.box), ([], []))
+        at_first.append(first)
+        at_second.append(second)
+    return pairs
+
+
 def diagram_lines(model: Model, unit: Id[Unit] | None) -> tuple[DiagramLine, ...]:
     """The lines of `unit`'s diagram, sorted; none means the reading gets no page.
 
-    A cable reaching two boxes is one line. One box, or none: no line. Three or more: one line
-    from the first box in text order to each other box, each printing the cable's own designation
-    (`-W1`, layout-0259).
+    A cable draws one line for each pair of boxes its cores join, each printing the cable's own
+    designation (`-W1`, layout-0259). A pair no core joins gets no line (KI-1461).
     """
-    lines = []
-    for cable in _reading_cables(model, unit):
-        ends = _cable_ends(model, cable, unit)
-        boxes = tuple(ends)
-        lines.extend(
-            DiagramLine(
-                cable=cable.cable,
-                a=boxes[0],
-                b=other,
-                designation=cable.designation,
-                tab_a=_tab(model, boxes[0], ends[boxes[0]], unit),
-                tab_b=_tab(model, other, ends[other], unit),
-            )
-            for other in boxes[1:]
+    lines = [
+        DiagramLine(
+            cable=cable.cable,
+            a=a,
+            b=b,
+            designation=cable.designation,
+            tab_a=_tab(model, a, at_a, unit),
+            tab_b=_tab(model, b, at_b, unit),
         )
+        for cable in _reading_cables(model, unit)
+        for (a, b), (at_a, at_b) in _core_pairs(model, cable, unit).items()
+    ]
     return tuple(
         sorted(
             lines,
@@ -245,15 +253,10 @@ def box_dashed(model: Model, box: BoxKey) -> bool:
 
 
 def _cable_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...]:
-    """`DIAGRAM_CABLE_ONE_BOX` and `DIAGRAM_CABLE_FANOUT`, one per cable that earns one."""
-    facts = []
-    for cable in _reading_cables(model, unit):
-        count = len(_cable_ends(model, cable, unit))
-        if count < _PAIR:
-            facts.append(DiagramFact(code=DIAGRAM_CABLE_ONE_BOX, subject=cable.cable))
-        elif count > _PAIR:
-            facts.append(DiagramFact(code=DIAGRAM_CABLE_FANOUT, subject=cable.cable))
-    return tuple(facts)
+    """`DIAGRAM_CABLE_ONE_BOX`, one per cable whose cores join no pair of boxes (R3786)."""
+    return tuple(
+        DiagramFact(code=DIAGRAM_CABLE_ONE_BOX, subject=cable.cable) for cable in _reading_cables(model, unit) if not _core_pairs(model, cable, unit)
+    )
 
 
 def _loose_wires(model: Model) -> tuple[DiagramFact, ...]:
@@ -271,7 +274,7 @@ def _loose_wires(model: Model) -> tuple[DiagramFact, ...]:
 def diagram_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...]:
     """The findings of `unit`'s diagram as facts, sorted by code and subject.
 
-    `DIAGRAM_CABLE_ONE_BOX` and `DIAGRAM_CABLE_FANOUT` for a cable of the reading;
+    `DIAGRAM_CABLE_ONE_BOX` for a cable of the reading;
     `DIAGRAM_LOOSE_WIRE` in the system reading only: a unit's schematic draws every wire it has.
     """
     found = (*_cable_facts(model, unit), *(_loose_wires(model) if unit is None else ()))

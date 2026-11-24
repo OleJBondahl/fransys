@@ -81,6 +81,10 @@ with d.function("FEED", "Lamp feed"):
 d.series(x1[2].outer, h1[2], wire=(BU, 0.75))
 ```
 
+### A device's connection to PE
+
+Declare it with `d.earth(m1.motor["PE"])`. The pin draws its earth symbol with no designation; the mechanical drawing or the electrician decides where the wire lands. Author a PE terminal strip only when one is really built.
+
 ### One wire to a PE terminal
 
 A cable's green-yellow core is the core way (`series.md`, Earth pins). A single wire is a detail.

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from .flow_values import Block, BlockList, Column, FlowGraph
     from .order_search import Before, Span
-    from .values import Options
+    from .values import Options, PinRef, PlacementProblem
 
 SWEEP_PASSES = 24
 MIN_SPAN = 2  # a span of one column costs nothing
@@ -189,6 +189,17 @@ def _pole_pairs(cols: Sequence[str], flow: FlowGraph) -> list[tuple[str, str]]:
         if fan.lanes > 1 and len(set(legs)) == len(legs):
             pairs += list(pairwise(legs))
     return pairs
+
+
+def sym_ranks(problem: PlacementProblem) -> dict[str, int]:
+    """Each symbol's authored rank, the unranked after them in problem order: never its id text (RANK-INVARIANCE R3)."""
+    return {s.id: s.rank if s.rank is not None else len(problem.symbols) + i for i, s in enumerate(problem.symbols)}
+
+
+def pin_keys(problem: PlacementProblem) -> dict[PinRef, tuple[int, int]]:
+    """Each pin's tie key: its symbol's rank, then its place among the pins of the nets in the order given."""
+    ranks = sym_ranks(problem)
+    return {p: (ranks[p.sym], i) for i, p in enumerate(dict.fromkeys(p for n in problem.nets for p in n.pins))}
 
 
 def _pin_order(block: Block, flow: FlowGraph) -> list[str]:

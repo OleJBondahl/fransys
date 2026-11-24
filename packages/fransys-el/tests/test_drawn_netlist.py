@@ -58,6 +58,7 @@ from fransys_model.derive import (
     link_groups,
     net_of,
     port_power_kind,
+    rail_drawn_by,
     reference_targets,
     required_groups,
     terminal_items,
@@ -537,6 +538,23 @@ def test_a_pin_whose_power_symbol_is_removed_leaves_its_conductor_undrawn_while_
     wires = tuple(w for w in part.drawing.wires if w.id not in leads)
     planted = relay_loop.patched(page, symbols=kept, wires=wires)
     assert relay_loop.count("CONNECTION_NOT_DRAWN", planted) > relay_loop.count("CONNECTION_NOT_DRAWN")
+
+
+@pytest.mark.rule("READ-POWER-INK")
+def test_a_rail_fed_pin_whose_power_symbol_is_removed_raises_connection_not_drawn(monkeypatch: pytest.MonkeyPatch):
+    """NO-INVENTED-INK checker gap: a pin fed by a flagged rail terminal is exempt only while its symbol stands; without it the end is undrawn."""
+    d, cab = _hidden_pe_design()
+    model = fr.build(d, unit_document(cab)).model
+    built = _built_of(model, symbol_kit(model, LIBRARY), monkeypatch)
+    net = built.netlist()
+    fed = {pin.value for pins in rail_drawn_by(model).values() for pin in pins}
+    page, part = next((pg, pt) for pg, pt in net.pages.items() if fed & pt.powers.keys())
+    port = next(iter(fed & part.powers.keys()))
+    sym, pin = part.powers[port], part.ports[port]
+    leads = {w.id for w in part.drawing.wires if {w.points[0], w.points[-1]} == {pin, sym}}
+    kept = tuple(s for s in part.drawing.symbols if not (s.key in drawn_power.POWER_KEYS and s.ports[:1] == (port,)))
+    planted = built.patched(page, symbols=kept, wires=tuple(w for w in part.drawing.wires if w.id not in leads))
+    assert built.count("CONNECTION_NOT_DRAWN", planted) > built.count("CONNECTION_NOT_DRAWN")
 
 
 def _page(wires: tuple[DrawnWire, ...], ports: dict[str, tuple[int, int]], anchors: set[tuple[int, int]]) -> Any:
@@ -1307,3 +1325,38 @@ def test_a_marker_on_a_pins_mating_port_is_a_drawn_node_with_no_wire_to_it(monke
     part = drawn_netlist_module._part(cast("Any", drawing), {"c": {"in": pin}}, LIBRARY)
     assert part.mating == {"pin": (0, 16)}
     assert ((marker.x, marker.y) in part.nodes) is on_mating
+
+
+class _Pe(NamedTuple):
+    pe: fr.Terminal
+
+
+def _joined_cabinets(first: str):
+    """Two units, each with an earthed PE terminal and one earthed motor, their PE terminals joined by a GNYE core; `first` is added first."""
+    d = fr.design("demo_parts")
+    pes = {}
+    for tag in (first, "B" if first == "A" else "A"):
+
+        def body(u: fr.Design, tag: str = tag) -> _Pe:
+            u.earth(u.device(f"M{tag}", "DEMO-MOTOR-4KW").motor["PE"])
+            pe = u.terminal_strip(f"X{tag}", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True).run("PE", 1)[1]
+            u.earth(pe)
+            return _Pe(pe)
+
+        unit = fr.unit(f"cab-{tag}", revision=1, interface_version=1, date="2026-10-15", text="First issue", by="XX", title=tag, number=tag)
+        pes[tag] = d.add(unit(body), f"{tag}1").pe
+    d.cable("W1", "DEMO-CBL-4G1.5", length_m=3).core(GNYE, pes["A"], pes["B"])
+    return fr.build(d, unit_document("cab-A"), unit_document("cab-B")).model
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize("first", ["A", "B"])
+def test_a_pe_net_spanning_two_cabinets_is_one_bond_class_whatever_the_port_order(first: str):
+    """R3940: the earthed PE terminals and motors of two cabinets joined by a PE core are one class, in either order of the ports."""
+    model = _joined_cabinets(first)
+    ids = {p.value: p for p in ports(model)}
+    pe = [key for key, one in ids.items() if port_power_kind(model, one) is PowerKind.PE]
+    assert len(pe) >= 4
+    forward = drawn_power.port_nets(model, ids)
+    assert len({forward[k] for k in pe}) == 1
+    assert drawn_power.port_nets(model, dict(reversed(list(ids.items())))) == forward

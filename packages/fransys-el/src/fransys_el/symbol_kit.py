@@ -52,9 +52,9 @@ if TYPE_CHECKING:
 
     from electrical_symbols import Library
     from fransys_layout.symbols import LibrarySymbol
-    from fransys_model.derive import PoleGang
+    from fransys_model.derive import Pole, PoleGang
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Function, Pole, Port
+    from fransys_model.vocab import Function, Port
 
 __all__ = ["drawn_functions", "symbol_kit", "unknown_symbols"]
 

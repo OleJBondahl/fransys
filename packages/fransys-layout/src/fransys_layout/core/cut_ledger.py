@@ -12,13 +12,12 @@ from dataclasses import dataclass, replace
 from itertools import permutations
 from typing import TYPE_CHECKING, NamedTuple, cast
 
-from fransys_model.kernel import natural_key
-
 from .cut_bundle import bundled
 from .cut_drawn import mating_stands, stand_pins
 from .cut_end_rooms import cut_ends, pole_of
 from .cut_pieces import fan_pins, hole_pin, join, joined, key, pairs, split, trunked
 from .net_keys import is_lone_cut
+from .order import pin_keys
 from .values import PinRef, Ref, RefEnd, RefKind, StandClass
 
 if TYPE_CHECKING:
@@ -78,10 +77,11 @@ def _joins(flow: FlowGraph) -> list[frozenset[PinRef]]:
 def _covered(problem: PlacementProblem, refs: Sequence[Ref], held: tuple[AbstractSet[PinRef], Sequence[AbstractSet[PinRef]]]) -> set[PinRef]:
     """The pins a reference stands at or for: an end or an anchor, a fan lane's pins, and the pins a join wire ties to one of them.
 
-    A harness line covers none (R1157).
+    A harness line covers none (R1157). An anchor covers no pin whose stub stands at its mating port: the pin's own end still needs it.
     """
     laned, joins = held
-    covered = {e.pin for r in refs for e in r.ends if e.pin} | {a.pin for a in problem.anchors} | laned
+    mated = mating_stands(problem)
+    covered = {e.pin for r in refs for e in r.ends if e.pin} | {a.pin for a in problem.anchors if a.pin not in mated} | laned
     return covered.union(*(j for j in joins if not covered.isdisjoint(j)))
 
 
@@ -99,10 +99,10 @@ def copy_nets(fan: Fan, copyable: AbstractSet[str]) -> tuple[str, ...]:
     return fan.nets[:1] if fan.lanes > 1 else fan.nets
 
 
-def _page_pin(fan: Fan, page: int, where: Mapping[str, int], net: str | None = None) -> PinRef | None:
-    """The fan's first pin (of `net` when given), in the order of its ids, that stands on `page`."""
+def _page_pin(fan: Fan, page: int, where: Mapping[str, int], keys: Mapping[PinRef, tuple[int, int]], net: str | None = None) -> PinRef | None:
+    """The fan's first pin (of `net` when given), by `keys`, that stands on `page`."""
     on = [a.pin for a in (*fan.drivers, *fan.legs) if where.get(a.column or a.pin.sym) == page and net in (None, a.net)]
-    return min(on, key=lambda p: (natural_key(p.sym), natural_key(p.pin))) if on else None
+    return min(on, key=lambda p: keys[p]) if on else None
 
 
 def _copy_stand(fan: Fan, page: int, where: Mapping[str, int]) -> StandClass:
@@ -111,7 +111,7 @@ def _copy_stand(fan: Fan, page: int, where: Mapping[str, int]) -> StandClass:
     return StandClass.TRUNK_END if on == 1 else StandClass.PIN
 
 
-def copies(flow: FlowGraph, where: Mapping[str, int], copyable: AbstractSet[str]) -> list[Ref]:
+def copies(flow: FlowGraph, where: Mapping[str, int], copyable: AbstractSet[str], keys: Mapping[PinRef, tuple[int, int]]) -> list[Ref]:
     """The one function that plans copies: each net of a copyable fan on two or more pages, an end on each page beyond the hub's.
 
     A copy covers one conductor (R1133, R866): an end names the net's first pin on its page; the cost reads `copy_nets`.
@@ -124,7 +124,7 @@ def copies(flow: FlowGraph, where: Mapping[str, int], copyable: AbstractSet[str]
             hub = next(a.column for a in attached if a.pin.sym == fan.hub)
             for net in nets:
                 ends = tuple(
-                    RefEnd(p, hub, _page_pin(fan, p, where, net if fan.lanes == 1 else None), stand=_copy_stand(fan, p, where))
+                    RefEnd(p, hub, _page_pin(fan, p, where, keys, net if fan.lanes == 1 else None), stand=_copy_stand(fan, p, where))
                     for p in sorted(pages - {where[hub or ""]})
                 )
                 out.append(Ref(net, RefKind.COPY, ends))
@@ -141,6 +141,7 @@ def _fan_refs(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, in
     lone = {n.id for n in problem.nets if is_lone_cut(is_cut=bool(n.cut), pin_count=len(n.pins))}
     refs: list[Ref] = []
     laned: set[PinRef] = set()
+    keys = pin_keys(problem)
     for fan in (f for f in flow.fans if lone & set(f.nets)):
         attached = (*fan.drivers, *fan.legs)
         laned |= {a.pin for a in attached}
@@ -151,7 +152,7 @@ def _fan_refs(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, in
                 RefKind.STUB,
                 (
                     bundled(
-                        RefEnd(p, None, _page_pin(fan, p, where), stand=stand_class(pages[p])),
+                        RefEnd(p, None, _page_pin(fan, p, where, keys), stand=stand_class(pages[p])),
                         [a.pin for a in attached if where[a.column or a.pin.sym] == p],
                     ),
                 ),

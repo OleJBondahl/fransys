@@ -25,8 +25,11 @@ if TYPE_CHECKING:
     from fransys_author.surface.design import Design
 
 
-class Device:
+class Device[K: str | int = Any, R = Fn]:
     """One device: `Q1`. A function by name (`Q1.coil`), a pin by `[ ]` (`Q1[2]`, `Q1["A1"]`).
+
+    `K` is the names it accepts and `R` what a name gives: any and `Fn` by default; none on `TypedDevice`, whose stub names them;
+    a pin on `BoxDevice`, which is then a `Device[Any, Pin]`, not a bare `Device`.
 
     Does not guess: an unknown function or pin raises and lists the candidates.
     """
@@ -61,16 +64,16 @@ class Device:
         pins = {identifier(pin.name) for _, pin in self._pins()} if boxed else set()
         return sorted({*super().__dir__(), *pins})
 
-    def __getitem__(self, marking: str | int) -> Pin:
-        """The pin marked `marking` on any function; an integer needs no quotes.
+    def __getitem__(self, m: K) -> Pin:
+        """The pin marked `m` on any function; an integer needs no quotes.
 
         Does not guess: an unknown or doubled marking raises and names the candidates.
         """
-        return pick(self._label, str(marking), self._pins())
+        return pick(self._label, str(m), self._pins())
 
     if TYPE_CHECKING:  # a name is a function; an untyped part's pin is `Q1["A1"]`
 
-        def __getattr__(self, name: str) -> Fn:
+        def __getattr__(self, name: K) -> R:
             """The function `name` (`Q1.coil`).
 
             Does not guess: an unknown name raises an `AttributeError` that lists the functions.
@@ -97,27 +100,14 @@ class Device:
             raise AuthorAttributeError(msg)
 
 
-class TypedFn(Fn):
+class TypedFn(Fn[Never]):
     """The base a generated module subclasses for one function of one part.
 
     Does not add behaviour: its subclass only declares pins for the type checker.
     """
 
-    if TYPE_CHECKING:  # a typed part names its pins: Fn's catch-alls must not hide a typo
 
-        @override
-        def __getattr__(  # ty: ignore[invalid-method-override] -- narrowed to the names by the stub
-            self, name: Never
-        ) -> Never: ...
-
-        # A valid base for the stub's override: the subclass narrows `m` to its pin names.
-        @override
-        def __getitem__(  # ty: ignore[invalid-method-override] -- narrowed to the pins by the stub
-            self, m: Never
-        ) -> Pin: ...
-
-
-class TypedDevice[N: str = str, S = Any](Device):
+class TypedDevice[N: str = str, S = Any](Device[Never]):
     """The base a generated module subclasses for one part; `mpn` is its whole contract.
 
     `N` is the part's function names and `S` the subclass itself: `device` types `interface=` by
@@ -125,19 +115,6 @@ class TypedDevice[N: str = str, S = Any](Device):
 
     Does not add behaviour: its subclass only declares functions and pins.
     """
-
-    if TYPE_CHECKING:  # a typed part names its functions: Device's catch-alls must not hide a typo
-
-        @override
-        def __getattr__(  # ty: ignore[invalid-method-override] -- narrowed to the names by the stub
-            self, name: Never
-        ) -> Never: ...
-
-        # A valid base for the stub's override: the subclass narrows `m` to its pin names.
-        @override
-        def __getitem__(  # ty: ignore[invalid-method-override] -- narrowed to the pins by the stub
-            self, m: Never
-        ) -> Pin: ...
 
     def __accepts__(self, name: N) -> None:
         """Use `N` contravariantly, so the checker rejects a name outside the part's functions."""

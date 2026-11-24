@@ -1,6 +1,6 @@
 """Surface handles over the engine's: `Fn` and `Pin`, with every pin access checked at the line."""
 
-from typing import Literal, overload
+from typing import Any, Literal, overload
 lazy from collections.abc import Sequence
 lazy from decimal import Decimal
 
@@ -53,8 +53,10 @@ def fn_label(fn: Fn) -> str:
     return f"{fn._label}.{fn._fn.name}"
 
 
-class Fn:
+class Fn[P: str | int = Any]:
     """One function of a device: `K1.coil`; a pin by `[ ]` (`Q1.main[2]`) or by name (`K1.coil.A1`).
+
+    `P` is the pin names it accepts: any by default, none on `TypedFn`, so a generated part's stub names them.
 
     Does not accept a guessed name: an unknown pin raises and lists the pins it has.
     """
@@ -82,17 +84,17 @@ class Fn:
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(self._fn.name, pin) for pin in self._fn.ports]
 
-    def __getitem__(self, marking: str | int) -> Pin:
-        """The pin marked `marking`; an integer needs no quotes.
+    def __getitem__(self, m: P) -> Pin:
+        """The pin marked `m`; an integer needs no quotes.
 
         Does not guess: an unknown marking raises and lists the pins.
         """
-        return pick(f"{self._label}.{self._fn.name}", str(marking), self._pins())
+        return pick(f"{self._label}.{self._fn.name}", str(m), self._pins())
 
     @overload
     def __getattr__(self, name: Literal["no", "nc"]) -> _throws.Throw: ...
     @overload
-    def __getattr__(self, name: str) -> Pin: ...
+    def __getattr__(self, name: P) -> Pin: ...
     def __getattr__(self, name: str) -> Pin | _throws.Throw:
         """The pin named `name` (`K1.coil.A1`); a changeover's throw `no` or `nc`.
 

@@ -123,7 +123,6 @@ copied from the standard.
 | `transformer-box` | Transformer with two windings, boxed | symbol |
 | `unit-outline` | Unit outline | element |
 | `unit-outline-by-others` | Unit outline, by others | element |
-| `wire-label-frame` | Wire label frame | element |
 
 The `-pe` files are our own variants with a protective earth terminal. The two qualifiers are composed
 into `push-button` and `circuit-breaker`.

@@ -388,3 +388,34 @@ def test_the_stateful_plants_reach_a_subset_of_what_port_rails_does() -> None:
     ):
         for port, rails in closure._rail_states(model).at_port.items():
             assert set(rails) <= closure.port_rails(model, port)
+
+
+def _two_nc_in_series() -> tuple[Model, _Load]:
+    """A through K1's NC and then K2's NC to `p0`."""
+    plant = _plant()
+    first, second = _Relay(plant, "k1", (_NC,)), _Relay(plant, "k2", (_NC,))
+    load = _load(plant)
+    plant.net("A", (first.pins["nc.21"],), potential="A")
+    plant.wire(first.pins["nc.22"], second.pins["nc.21"], key="w-mid")
+    plant.wire(second.pins["nc.22"], load.p0, key="w-p0")
+    return plant.model(), load
+
+
+@pytest.mark.rule("WIRE-MARKING")
+def test_rest_rails_is_the_hand_table_for_a_fuse_no_nc_changeover_and_two_contacts() -> None:
+    """A rail stands at rest when some path to the port needs no operated item; `port_rails` says more."""
+    model, load = _protection()
+    assert closure.rest_rails(model, load.p0) == {"A"}  # a fuse needs no state
+    model, load = _no_nc(same_item=True)
+    assert closure.rest_rails(model, load.p0) == {"B"}  # A is behind the NO, B behind the NC
+    assert closure.port_rails(model, load.p0) == {"A", "B"}
+    model, relay, _ = _changeover(_PROPER_ROLES)
+    assert closure.rest_rails(model, relay.pins["co.11"]) == {"B"}  # the common rests on the break end
+    assert closure.rest_rails(model, relay.pins["co.14"]) == {"A"}  # a throw end carries its own rail
+    model, load = _one_item_both_ways(same_item=False)
+    assert closure.rest_rails(model, load.p0) == frozenset()  # NO then NC: K1 must operate
+    model, load = _two_nc_in_series()
+    assert closure.rest_rails(model, load.p0) == {"A"}
+    model, load = _plain()
+    assert closure.rest_rails(model, load.p0) == {"A"}
+    assert closure.rest_rails(model, load.p1) == {"B"}

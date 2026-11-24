@@ -5,7 +5,7 @@ from functools import cache
 from typing import Any
 
 import pytest
-from diagram_models import chain, fanout, loose, one_box, station
+from diagram_models import chain, loose, one_box, station
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_diagrams
@@ -156,7 +156,6 @@ def _cut_facts():
     ("model", "code"),
     [
         (one_box, "DIAGRAM_CABLE_ONE_BOX"),
-        (fanout, "DIAGRAM_CABLE_FANOUT"),
         (loose, "DIAGRAM_LOOSE_WIRE"),
     ],
 )

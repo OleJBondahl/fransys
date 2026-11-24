@@ -5,12 +5,12 @@ A function with no pole link falls back on its pins (`poles_of_template`, model-
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.facts.part_pins import poles_by_links
+from fransys_model.derive.facts.part_pins import ordered, pair_of, poles_by_links
 from fransys_model.derive.facts.part_poles import poles_of_template
-from fransys_model.vocab.markings import pole_order
 from fransys_model.vocab.tables import function_templates, internal_links, port_templates
+lazy from fransys_model.derive.rows_poles import Pole
 lazy from fransys_model.kernel import Model
-lazy from fransys_model.vocab import Function, Pole
+lazy from fransys_model.vocab import Function
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -34,4 +34,4 @@ def function_poles(model: Model, function: Function) -> tuple[Pole, ...]:
     """The poles of a function: its pole links by role, else every link of its template, in pole order."""
     own = {t.id: t for t in port_templates(model).values() if t.function == function.template}
     links = [k for k in internal_links(model).values() if k.a in own and k.b in own]
-    return poles_by_links(links, own) or pole_order(links, own)
+    return poles_by_links(links, own) or ordered(pair_of(own[k.a], own[k.b]) for k in links)

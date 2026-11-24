@@ -11,6 +11,7 @@ from _model_build_cover import _COVER, printed
 from fransys_author.design import Design
 from test_units_worked_example import _PROJECT, _build_cabinet_own, _build_system
 
+from fransys_model.derive import block_diagram
 from fransys_model.derive.block_diagram import (
     box_dashed,
     box_lines,
@@ -101,3 +102,57 @@ def test_a_located_unit_instance_prints_its_place_on_line_one():
     lines = diagram_lines(model, None)
     firsts = {box_lines(model, box, None)[0] for line in lines for box in (line.a, line.b) if box.kind == "unit"}
     assert firsts == {"+ER+C1", "+ER+C2"}
+
+
+def _pairs(model):
+    """The sorted pair of box texts each block-diagram line joins, one tuple per line."""
+    return sorted(tuple(sorted(box_lines(model, box, None)[0] for box in (line.a, line.b))) for line in diagram_lines(model, None))
+
+
+def test_a_chain_cable_draws_only_the_pairs_its_cores_join():
+    """KI-1461: cores J1-J2 and J2-J3 draw two lines and no line from J1 to J3."""
+    d = fr.design("demo_parts")
+    j = {tag: d.device(tag, "DEMO-CONN-4P") for tag in ("J1", "J2", "J3")}
+    cable = d.cable("W1", "DEMO-CBL-4G1.5")
+    cable.core(1, j["J1"][1], j["J2"][1])
+    cable.core(2, j["J2"][2], j["J3"][2])
+    assert _pairs(fr.build(d).model) == [("-J1", "-J2"), ("-J2", "-J3")]
+
+
+def test_a_star_cable_draws_one_line_per_core_from_the_hub():
+    """KI-1461: a star from J1 draws three lines, each joining J1 to one other box."""
+    d = fr.design("demo_parts")
+    j = {tag: d.device(tag, "DEMO-CONN-4P") for tag in ("J1", "J2", "J3", "J4")}
+    cable = d.cable("W1", "DEMO-CBL-4G1.5")
+    cable.core(1, j["J1"][1], j["J2"][1])
+    cable.core(2, j["J1"][2], j["J3"][1])
+    cable.core(3, j["J1"][3], j["J4"][1])
+    pairs = _pairs(fr.build(d).model)
+    assert len(pairs) == 3
+    assert all("-J1" in pair for pair in pairs)
+
+
+def test_a_two_box_cable_draws_exactly_one_line():
+    """KI-1461: two cores that join the same two boxes draw one line."""
+    d = fr.design("demo_parts")
+    j = {tag: d.device(tag, "DEMO-CONN-4P") for tag in ("J1", "J2")}
+    cable = d.cable("W1", "DEMO-CBL-4G1.5")
+    cable.core(1, j["J1"][1], j["J2"][1])
+    cable.core(2, j["J1"][2], j["J2"][2])
+    assert len(_pairs(fr.build(d).model)) == 1
+
+
+def test_a_cable_whose_cores_reach_two_boxes_but_join_none_files_the_one_box_finding(monkeypatch):
+    """R3786: cores J1-J3 and J2-J3 with J3 outside the reading reach J1 and J2, join no pair, draw no line and file DIAGRAM_CABLE_ONE_BOX."""
+    d = fr.design("demo_parts")
+    j = {tag: d.device(tag, "DEMO-CONN-4P") for tag in ("J1", "J2", "J3")}
+    cable = d.cable("W1", "DEMO-CBL-4G1.5")
+    cable.core(1, j["J1"][1], j["J3"][1])
+    cable.core(2, j["J2"][1], j["J3"][2])
+    model = fr.build(d).model
+    real = block_diagram.end_box
+    monkeypatch.setattr(
+        block_diagram, "end_box", lambda m, port, unit: e if (e := real(m, port, unit)) and box_lines(m, e.box, unit)[0] != "-J3" else None
+    )
+    assert diagram_lines(model, None) == ()
+    assert [fact.code for fact in block_diagram.diagram_facts(model, None)] == ["DIAGRAM_CABLE_ONE_BOX"]

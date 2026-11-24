@@ -20,6 +20,7 @@ from .cut_pack import left_pack
 from .cut_refs import across, copyable_fans, head_off_legs, on_pages, references, row_tags, spilled, tag_links, with_copies
 from .cut_tall import split_tall
 from .flow_values import CutResult
+from .order import pin_keys
 from .values import PagePlan, PageSpec, RowPlan
 
 if TYPE_CHECKING:
@@ -67,7 +68,8 @@ def cut_pages(
     tagged = across(flow, where, done.refs, problem.nets)
     flow = tag_links(flow, tagged)
     planned = with_copies(
-        [*(on_pages(r, where) for r in folds), *done.refs, *spilled(blocks, flow, where, problem), *tagged], copies(flow, where, copyable)
+        [*(on_pages(r, where) for r in folds), *done.refs, *spilled(blocks, flow, where, problem), *tagged],
+        copies(flow, where, copyable, pin_keys(problem)),
     )
     ledger = account(problem, flow, where, planned, done.pages)
     refs = [*planned, *ledger.refs]

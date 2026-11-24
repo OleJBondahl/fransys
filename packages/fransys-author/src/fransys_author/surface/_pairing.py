@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, NamedTuple, cast
 
 from fransys_author.errors import AuthorError
-from fransys_model.derive import poles_of_template
+from fransys_model.derive import Pole, poles_of_template
 from fransys_model.elecdef import PinRole
 from fransys_model.vocab import (
     ConductorMark,
@@ -12,7 +12,6 @@ from fransys_model.vocab import (
     InternalLink,
     PlcChannelFacet,
     PlcRequestFacet,
-    Pole,
     PortTemplate,
 )
 from fransys_model.vocab import Port as ModelPort

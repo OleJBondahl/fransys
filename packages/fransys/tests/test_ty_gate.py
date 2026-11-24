@@ -61,6 +61,23 @@ def wire(d: fr.Design, ac: fr.AcSupply, dc: fr.DcSupply) -> None:
     d.series(ac.L1, k.co_1.xx, dc.plus, wire=("BK", 2.5))
 """
 
+GENERIC = """
+from typing import Any
+
+import fransys as fr
+from demo_typed import DEMO_RLY_2CO_24
+
+
+def wire(d: fr.Design) -> None:
+    k = d.device("K1", DEMO_RLY_2CO_24)
+    dev: fr.Device = k
+    fn: fr.Fn = k.co_1
+    ext: fr.Device[Any, fr.Pin] = d.device("E1", None, external=True, pins=("U",))
+    pin: fr.Pin = d.device("E2", None, external=True, pins=("U",)).U
+    k.typo
+    k.co_1.typo
+"""
+
 
 def _guide_pages(folder: Path) -> None:
     for page in files("fransys").joinpath("guide").iterdir():
@@ -77,6 +94,7 @@ def findings(tmp_path_factory) -> list[str]:
     (folder / "demo_typed.py").write_text(parts_module("demo_parts"), encoding="utf-8")
     (folder / "spellings.py").write_text(SPELLINGS, encoding="utf-8")
     (folder / "throws.py").write_text(THROWS, encoding="utf-8")
+    (folder / "generic.py").write_text(GENERIC, encoding="utf-8")
     _guide_pages(folder)
     run = subprocess.run(  # noqa: S603 -- the workspace's pinned ty, fixed arguments
         [
@@ -105,6 +123,14 @@ def test_a_generated_changeover_types_its_throws(findings) -> None:
     lines = _of(findings, "throws.py")
     assert len(lines) == 1, lines
     assert "throws.py:10:" in lines[0], lines  # only the `.xx` line
+
+
+def test_a_typed_device_and_a_box_are_a_bare_device_and_a_typo_is_the_only_error(findings) -> None:
+    """R25: a generated part and its function fit `fr.Device` and `fr.Fn`, a box is `fr.Device[Any, fr.Pin]`; a typo fits nothing."""
+    lines = _of(findings, "generic.py")
+    assert len(lines) == 2, lines
+    assert "generic.py:14:" in lines[0], lines
+    assert "generic.py:15:" in lines[1], lines
 
 
 def test_every_guide_example_type_checks(findings) -> None:

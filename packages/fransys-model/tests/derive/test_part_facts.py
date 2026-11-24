@@ -30,7 +30,7 @@ from fransys_model.vocab import CONDUCTOR_MARKS, ProtectionType
 from fransys_model.vocab.enums import ConductorMark, FunctionKind, PortBoundary, SignalType
 from fransys_model.vocab.facets import PlcChannelFacet
 from fransys_model.vocab.templates import InternalLink, PortTemplate
-lazy from fransys_model.vocab.markings import Pole
+lazy from fransys_model.derive.rows_poles import Pole
 
 _COUNTER = itertools.count(1)
 _FUNCTION = Id(kind="function_template", value="1" * 32)

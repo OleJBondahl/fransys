@@ -347,7 +347,19 @@ def test_a_spilled_column_holding_no_pin_of_the_net_raises_naming_the_net_column
             r"a spilled tag is planned only for a column that holds a pin of the net"
         ),
     ):
-        _column_pin(column, net("m", "k3.n", "k4.n"))
+        _column_pin(column, net("m", "k3.n", "k4.n"), {})
+
+
+@pytest.mark.parametrize(("rank_k1", "rank_k2", "named"), [(0, 1, "k1"), (1, 0, "k2")])
+def test_a_spilled_columns_pin_is_the_one_of_the_lowest_symbol_rank_not_id_text(rank_k1: int, rank_k2: int, named: str) -> None:
+    """KI-572 (RANK-INVARIANCE R3): the same ids with swapped ranks name the other pin."""
+    from fransys_layout.core.order import pin_keys
+
+    result = cut_of([elem("k1"), elem("k2")], chain(["k1", "k2"]))
+    (column,) = result.flow.columns
+    m = net("m", "k2.n", "k1.n")
+    problem = SimpleNamespace(symbols=[SimpleNamespace(id="k1", rank=rank_k1), SimpleNamespace(id="k2", rank=rank_k2)], nets=[m])
+    assert _column_pin(column, m, pin_keys(problem)).sym == named  # ty: ignore[invalid-argument-type]  # SimpleNamespace stands for PlacementProblem
 
 
 # the ledger: one carrier per required conductor (CUT-LEDGER CL1)
@@ -827,9 +839,11 @@ def test_one_pole_has_one_end_at_a_cut_a_pole_an_arrow_end_stands_for_takes_no_s
     assert _pole_carried(fan, pins[pole], (plan, 0), [arrow]) == (pole != 0)  # the arrow's lead is pole 0: its end is the lane's own
 
 
-def test_a_far_groups_copy_and_stub_end_on_the_same_pin_of_its_page() -> None:
-    """KI-567: cut_ledger.copies and _fan_refs reach a page's pin through the one _page_pin: the first by natural order, not by listing."""
+@pytest.mark.parametrize(("rank_k10", "rank_k9", "named"), [(0, 1, "k10"), (1, 0, "k9")])
+def test_a_far_groups_copy_and_stub_end_on_the_same_pin_of_its_page_by_rank_not_id_text(rank_k10: int, rank_k9: int, named: str) -> None:
+    """KI-567, KI-572 (RANK-INVARIANCE R3): copies and _fan_refs name a page pin by symbol rank; swapped ranks swap it."""
     from fransys_layout.core.cut_ledger import _fan_refs, copies
+    from fransys_layout.core.order import pin_keys
 
     def leg(col: str, pin: str, cell: int) -> Attach:
         return Attach(col, 0, cell, PinRef(pin, "n"), net="n")
@@ -837,11 +851,14 @@ def test_a_far_groups_copy_and_stub_end_on_the_same_pin_of_its_page() -> None:
     fan = Fan("f", ("n",), (Attach("c0", 0, 0, PinRef("t0", "e"), net="n"),), (leg("c1", "k10", 0), leg("c1", "k9", 1)), "t0", 1, "s")
     flow = SimpleNamespace(fans=(fan,))
     where = {"c0": 1, "c1": 2}
-    (copy,) = copies(flow, where, {"f"})  # ty: ignore[invalid-argument-type]  # a SimpleNamespace stands for FlowGraph
-    problem = SimpleNamespace(nets=[SimpleNamespace(id="n", cut=True, pins=(PinRef("t0", "e"),))])
+    ranks = {"t0": 2, "k10": rank_k10, "k9": rank_k9}
+    syms = [SimpleNamespace(id=i, rank=r) for i, r in ranks.items()]
+    lone = SimpleNamespace(id="n", cut=True, pins=(PinRef("t0", "e"),))
+    problem = SimpleNamespace(symbols=syms, nets=[lone, SimpleNamespace(id="m", cut=False, pins=(PinRef("k10", "n"), PinRef("k9", "n")))])
+    (copy,) = copies(flow, where, {"f"}, pin_keys(problem))  # ty: ignore[invalid-argument-type]  # a SimpleNamespace stands for FlowGraph and PlacementProblem
     stubs, _ = _fan_refs(problem, flow, where)  # ty: ignore[invalid-argument-type]  # SimpleNamespace stands for PlacementProblem and FlowGraph
     stub_end = next(e for s in stubs for e in s.ends if e.page == 2)
-    assert copy.ends[0].pin == stub_end.pin == PinRef("k9", "n")
+    assert copy.ends[0].pin == stub_end.pin == PinRef(named, "n")
 
 
 # what a loss withdraws and the plan it makes (ACCOUNT-IN-PLAN, R3430)

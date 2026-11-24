@@ -24,21 +24,12 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-build",
     ),
     CodeInfo(
-        code="DIAGRAM_CABLE_FANOUT",
-        severity=Severity.INFO,
-        stage="render",
-        who="note",
-        cause=("A cable reaches three or more boxes, so the block diagram draws a line from its first box to each other."),
-        fix="Nothing is wrong; split the cable only if a line per pair is not wanted.",
-        page="findings-render",
-    ),
-    CodeInfo(
         code="DIAGRAM_CABLE_ONE_BOX",
         severity=Severity.INFO,
         stage="render",
         who="note",
-        cause="A cable's ends reach one box or none, so the block diagram draws no line for it.",
-        fix="Usually nothing to fix: the cable runs inside one box, or an end is an unmated plug.",
+        cause="A cable's cores join no two boxes, so the block diagram draws no line for it.",
+        fix="Usually nothing to fix: the cable runs inside one box, or its ends are unmated plugs.",
         page="findings-render",
     ),
     CodeInfo(

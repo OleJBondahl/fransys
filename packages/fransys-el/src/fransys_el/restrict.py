@@ -189,7 +189,7 @@ def _scoped(  # noqa: PLR0913, PLR0917 -- the scope cut takes the set's cut fact
     outward = _outward(problem.facts.mates, scope.symbols)
     own = scopes.index(scope) if scope in scopes else -1
     joined = {n.id for n in problem.nets if _joined(n, own, scopes)}
-    ended = {*bare, *(a.pin for a in problem.anchors)}  # an anchored pin ends its net: no conductor leaves it
+    ended = {*bare, *(a.pin for a in problem.anchors if a.pin not in outward)}  # an anchored pin ends its net, unless its mate stands outside
     far = problem.facts.far_ends
     cut = [(n, _net(n, scope.symbols, (boundary, ended, outward), far, pieces)) for n in problem.nets if n.id not in joined]
     nets = tuple(_lined(p, lines or {}) for _, ps in cut for p in ps) + tuple(_whole(n, scope, boundary, far) for n in problem.nets if n.id in joined)

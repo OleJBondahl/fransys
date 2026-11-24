@@ -419,6 +419,16 @@ def rail_pairs(model: Model, function: Id[Function]) -> frozenset[tuple[str, str
     return frozenset(found)
 
 
+def rest_rails(model: Model, port: Id[Port]) -> frozenset[str]:
+    """The rails `port` carries with every contact at rest: some minimal condition of the rail has no operated item.
+
+    Sibling of `port_rails`, which counts every contact closed. A rail that needs no state
+    (a conductor, a fuse) is in; one behind a normally open contact is out. Cached on `model.digest`.
+    """
+    states = _rail_states(model).at_port.get(port, {})
+    return frozenset(rail for rail, found in states.items() if any(all(state == "rest" for _, state in c) for c in found))
+
+
 def port_groups(groups: Iterable[Sequence[Id[Port]]]) -> tuple[PhysicalNet, ...]:
     """Union-find over caller-given `groups`: each group's own ports become one connected set.
 

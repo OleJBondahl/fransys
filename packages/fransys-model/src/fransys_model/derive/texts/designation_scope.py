@@ -8,7 +8,7 @@ from fransys_model.derive.designation_label import reference_leaves
 from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.derive.instance_tag import below
 from fransys_model.derive.texts.context import PrintContext, Scope
-from fransys_model.derive.unit_nodes import chain_up, common_node, own_nodes
+from fransys_model.derive.unit_nodes import authored_under, chain_up, common_node, own_nodes
 from fransys_model.kernel import SchemaError
 from fransys_model.refdef import Aspect
 from fransys_model.vocab.tables import aspect_nodes, units
@@ -35,9 +35,8 @@ def _authored_in(model: Model, chain: tuple[Id[AspectNode], ...], unit: Id[Unit]
 
     A function block the placement sits in is authored outside the unit (R2613), so it is not unit-local.
     """
-    scope = units(model)[unit].key[:-1]
     nodes = aspect_nodes(model)
-    return tuple(node for node in chain if nodes[node].key[: len(scope)] == scope)
+    return tuple(node for node in chain if authored_under(model, unit, nodes[node].key))
 
 
 def common_location(model: Model, ctx: PrintContext) -> Id[AspectNode] | None:

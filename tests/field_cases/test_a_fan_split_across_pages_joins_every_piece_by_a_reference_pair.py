@@ -42,8 +42,8 @@ def _built(copied: list[tuple[int, int]], patch: pytest.MonkeyPatch) -> Any:
     """Build the cabinet; `copied` gets (ends, pages beyond the hub's) for each copy reference planned."""
     plan = cut.copies
 
-    def spy(flow: Any, where: Any, copyable: Any) -> list[Any]:
-        refs = plan(flow, where, copyable)
+    def spy(flow: Any, where: Any, copyable: Any, keys: Any) -> list[Any]:
+        refs = plan(flow, where, copyable, keys)
         for ref in refs:
             fan = next(f for f in flow.fans if ref.net in f.nets)
             attached = (*fan.drivers, *fan.legs)

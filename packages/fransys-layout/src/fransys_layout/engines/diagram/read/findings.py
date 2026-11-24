@@ -4,7 +4,6 @@ from typing import Any
 
 from fransys_layout.fix_text import finding
 from fransys_model.derive.block_diagram import (
-    DIAGRAM_CABLE_FANOUT,
     DIAGRAM_CABLE_ONE_BOX,
     DIAGRAM_LOOSE_WIRE,
     diagram_facts,
@@ -17,13 +16,8 @@ def _make(code: str, message: str, subject: Id[Any]) -> Finding:
 
 
 def _one_box(subject: Id[Any]) -> Finding:
-    message = "The cable reaches one box or none, so the diagram draws no line for it."
+    message = "The cores of the cable join no two boxes, so the diagram draws no line for it."
     return _make(DIAGRAM_CABLE_ONE_BOX, message, subject)
-
-
-def _fanout(subject: Id[Any]) -> Finding:
-    message = "The cable reaches three or more boxes, drawn as one line from the first to each other."
-    return _make(DIAGRAM_CABLE_FANOUT, message, subject)
 
 
 def _loose_wire(subject: Id[Any]) -> Finding:
@@ -34,7 +28,6 @@ def _loose_wire(subject: Id[Any]) -> Finding:
 _BUILDERS = frozendict(
     {
         DIAGRAM_CABLE_ONE_BOX: _one_box,
-        DIAGRAM_CABLE_FANOUT: _fanout,
         DIAGRAM_LOOSE_WIRE: _loose_wire,
     }
 )

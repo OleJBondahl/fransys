@@ -21,6 +21,7 @@ from .cut_end_rooms import laned_stub, pole_of
 from .errors import CoreError
 from .geometry import sized
 from .leg_lines import leg_feet, leg_lines
+from .order import sym_ranks
 from .ref_kind import kind_of
 from .route_env import body_keeps, pin_sides
 from .sides import step_out
@@ -88,7 +89,7 @@ def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, op
                 pins[(p.sym, q.pin)] = (pg.page, q.x, q.y, p.orient)
         for t in sorted(pg.trunks, key=lambda t: t.row):
             trunks[(pg.page, t.fan)] = (*trunks.get((pg.page, t.fan), ()), t)
-    ranks = {s.id: s.rank if s.rank is not None else len(problem.symbols) + i for i, s in enumerate(problem.symbols)}
+    ranks = sym_ranks(problem)
     columns = {c.id: tuple(ranks[cell.sym] for lane in c.lanes for cell in lane.cells) for c in cut.flow.columns} | {
         k: (v,) for k, v in ranks.items()
     }

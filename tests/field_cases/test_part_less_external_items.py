@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 _NO_PART = "part must be an MPN string"
 
 
-def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device]:
+def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device[Any, fr.Pin]]:
     x8 = d.terminal_strip("X8", None, 4, external=True)
     q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
     d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])

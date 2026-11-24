@@ -1,16 +1,20 @@
 """Field case: a strip terminal drawn at a box end is wired on another page at its other connection point.
-The bug: the copy at the box end draws its far pin as a bare stub, with no reference text to the copy where that pin is wired (KI-511).
-Open: a strict xfail by its gap row, the owner's terminal rule is one symbol per connection point, each with reference text to the others."""
+KI-511: each placement names where its other copy is; a wired pin carries no marker (a drawn pin needs none).
+The where-text under each placement's tag is the owner's reference text (R1202); the witness checks it with `where_joined` (R3741)."""
 
-from collections import defaultdict
 from typing import NamedTuple
 
 import fransys as fr
 import pytest
-from _drawn_pages import drawn_pages, markers_in, ref_texts
 from _field_designs import fc_design
 from _model_build_cover import unit_document
 from fransys.colours import BU
+from fransys_el import symbol_kit
+from fransys_el.drawn_netlist import drawn_netlist
+from fransys_el.drawn_where import where_joined
+
+from electrical_symbols import LIBRARY
+from fransys_model.derive import function_placements, port_function
 
 
 class _Io(NamedTuple):
@@ -43,20 +47,14 @@ def built() -> fr.BuildResult:
 
 
 def test_a_terminal_pin_wired_on_another_copy_has_reference_text_on_this_one(built: fr.BuildResult) -> None:
-    """Each pin of a drawn terminal that another page's copy of it wires carries a marker with reference text."""
-    pages = drawn_pages(built.model)
-    seen: dict[str, set[object]] = defaultdict(set)
-    for page, drawing in pages.items():
-        for s in drawing.symbols:
-            if s.key == "terminal":
-                for port in s.ports:
-                    seen[port].add(page)
-    bare = [
-        (page, port)
-        for page, drawing in pages.items()
-        for s in drawing.symbols
-        if s.key == "terminal"
-        for port in s.ports
-        if seen[port] - {page} and not any(port in m.ports and ref_texts(m) for m in markers_in(drawing))
-    ]
-    assert not bare, f"{len(bare)} terminal pin(s) wired on another page's copy carry no reference text on this page: {bare}"
+    """Each placement of a terminal that has another placement prints, under its tag, the where-text naming it (R1397)."""
+    model = built.model
+    net = drawn_netlist(model, symbol_kit(model, LIBRARY), built.drawings, (), LIBRARY)
+    rows = function_placements(model)
+    owed = {
+        port
+        for port, found in net.ids.items()
+        if (function := port_function(model, found)) is not None and len({page for page, _ in rows.get(function, ())}) > 1
+    }
+    assert owed, "the build has no terminal with a second placement"
+    assert owed <= where_joined(model, net), f"{len(owed - where_joined(model, net))} pin(s) of a multi-placement terminal print no where-text"

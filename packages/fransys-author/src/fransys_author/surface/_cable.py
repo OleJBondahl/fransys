@@ -16,7 +16,6 @@ from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
 from fransys_author.surface.colours import GNYE
 from fransys_model.derive import core_on_pe_not_gnye, cores_past_product
-from fransys_model.refdef import lowest_free
 from fransys_model.vocab import RESERVED_CODES
 lazy from fransys_author._cable_handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
@@ -97,7 +96,7 @@ class Cable(SeriesBridge):
         """Take core `index` for a wire or a mark; a second claim is an error."""
         if index in self._used:
             by = f" by {self._by[index]}" if index in self._by else ""
-            free = [str(i) for i in range(1, len(self._colours) + 1) if i not in self._used]
+            free = [str(i) for i in self._conductor_cores() if i not in self._used]
             msg = (
                 f"{self._label} core {index} is already wired or marked spare{by}; "
                 f"free cores: {', '.join(free) or 'none'}, "
@@ -146,15 +145,17 @@ class Cable(SeriesBridge):
         if at is not None and len(cores) != 1:
             msg = f"{self._label} spare(at=) takes exactly one core, got {len(cores)}"
             raise AuthorError(msg)
-        indexes = [self._index(c) for c in cores] or [
-            i for i, colour in enumerate(self._colours, 1) if colour != RESERVED_CODES["shield"] and i not in self._used
-        ]
+        indexes = [self._index(c) for c in cores] or [i for i in self._conductor_cores() if i not in self._used]
         if at is not None and self._colours[indexes[0] - 1] == RESERVED_CODES["shield"]:
             msg = f"{self._label} core {indexes[0]} is SH: a screen connection is refused for now and returns later"
             raise AuthorError(msg)
         for index in indexes:
             self._claim(index)
             self._cable.open_core(index, None if at is None else _outer(at, self._design))
+
+    def _conductor_cores(self) -> list[int]:
+        """The core numbers that may carry a conductor: every core but the screens (refused for now)."""
+        return [i for i, colour in enumerate(self._colours, 1) if colour != RESERVED_CODES["shield"]]
 
     def _pe_end(self, design: Design, element: object, ends: Ends) -> Port | None:
         """The PE port `element` offers a protective core, `None` when it offers none."""
@@ -201,7 +202,7 @@ class Cable(SeriesBridge):
     def _refuse_without_pe(self, before: _Side, after: _Side, poles: int) -> None:
         """GNYE never carries a pole: no PE end and too few other cores refuses the series."""
         pe_core = self._colours.index(GNYE) + 1
-        free = len(self._colours) - len(self._used - {pe_core}) - 1
+        free = len([i for i in self._conductor_cores() if i != pe_core and i not in self._used])
         if free < poles and not self._offers_pe(before, after):
             msg = (
                 f"{self._label} has {free} non-earth cores for {poles} poles and no PE end "
@@ -212,13 +213,11 @@ class Cable(SeriesBridge):
 
     def _core_pairs(self, pairs: list[tuple[Port, Port]], taken: set[int]) -> None:
         """Wire each pair on the next free core outside `taken`, or refuse when too few remain."""
-        free = len(self._colours) - len(taken)
-        if free < len(pairs):
-            msg = f"{self._label} has {free} free cores for {len(pairs)} poles: use a cable with more cores"
+        free = [i for i in self._conductor_cores() if i not in taken]
+        if len(free) < len(pairs):
+            msg = f"{self._label} has {len(free)} free cores for {len(pairs)} poles: use a cable with more cores"
             raise AuthorError(msg)
-        for a, b in pairs:
-            index = lowest_free(taken)
-            taken.add(index)
+        for index, (a, b) in zip(free, pairs, strict=False):
             self.core(index, a, b)
 
     @override

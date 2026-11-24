@@ -122,6 +122,15 @@ def _unit_nodes(model: Model) -> UnitNodes:
     return UnitNodes(own=frozendict({unit: frozenset(found) for unit, found in grouped.items()}))
 
 
+def authored_under(model: Model, unit: Id[Unit] | None, key: tuple[str, ...]) -> bool:
+    """Whether a record authored at `key` sits under `unit`'s scope (its tag path); every key does for no unit.
+
+    The one scope rule of a unit's own authored records: a parent's placement or net on its ports is not its own (R2613).
+    """
+    scope = () if unit is None else units_table(model)[unit].key[:-1]
+    return key[: len(scope)] == scope
+
+
 def own_nodes_by_unit(model: Model) -> frozendict[Id[Unit], frozenset[Id[AspectNode]]]:
     """Every unit's own aspect nodes, built once per model (the rule is `own_nodes`').
 

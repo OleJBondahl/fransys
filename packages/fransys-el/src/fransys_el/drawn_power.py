@@ -22,7 +22,7 @@ from .drawn_finding import drawn_finding
 from .placement_ids import net_key
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Mapping
+    from collections.abc import Iterable, Iterator, Mapping
 
     from fransys_model.kernel import Finding, Id, Model
     from fransys_model.vocab import Port, Unit
@@ -39,9 +39,25 @@ PE_KEY = power_symbol_key("pe")
 RailClass = tuple["Id[Unit] | None", str, object]
 
 
+def _bonded_units(groups: Iterable[set[str]]) -> dict[str, str]:
+    """Each unit named by a group, with the least unit of the groups chained to it by a shared unit: the same whatever the order."""
+    merged: list[set[str]] = []
+    for group in groups:
+        joined = set(group)
+        for other in [m for m in merged if m & joined]:
+            merged.remove(other)
+            joined |= other
+        merged.append(joined)
+    return {unit: min(one) for one in merged for unit in one}
+
+
 def _pe_classes(model: Model, keys: dict[str, str], ids: Mapping[str, Id[Port]]) -> dict[str, str]:
-    """The class of each earth-declared PE net: one per cabinet, bonded through its DIN rail (owner 10-29, R1962)."""
-    return {keys[p]: f"PE:{item_unit(model, item_of_port(model, one))}" for p, one in ids.items() if port_power_kind(model, one) is PowerKind.PE}
+    """The class of each earth-declared PE net: one per cabinet, and one across the cabinets a PE net joins (owner 10-29, R1962, R3940)."""
+    pe = {p: one for p, one in ids.items() if port_power_kind(model, one) is PowerKind.PE}
+    units = {p: str(item_unit(model, item_of_port(model, one))) for p, one in pe.items()}
+    nets = {p: net_of(model, one) for p, one in pe.items()}
+    bonded = _bonded_units({str(item_unit(model, item_of_port(model, q))) for q in net.ports} | {units[p]} for p, net in nets.items() if net)
+    return {keys[p]: f"PE:{bonded.get(units[p], units[p])}" for p in pe}
 
 
 def port_nets(model: Model, ids: Mapping[str, Id[Port]]) -> dict[str, str]:

@@ -110,10 +110,12 @@ def _carried(net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node],
 def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node]) -> list[tuple[str, str]]:
     """Each `(near, far)` conductor end of a port drawn at its home that no wire, reference, stub or where-text draws.
 
-    A pin that stands the power symbol of the flagged rail terminal `far` draws that terminal (`rail_drawn_by`, owner 2026-10-25).
+    A pin that stands the power symbol of the flagged rail terminal `far` draws that terminal (`rail_drawn_by`, owner 2026-10-25),
+    when its symbol is on a page: a rail-fed pin with no symbol drawn is a conductor end no ink draws.
     """
     held = [net.ids[p] for p in net.placed if net.at_home(p)]
-    fed = {(pin.value, terminal.value) for terminal, pins in rail_drawn_by(model).items() for pin in pins}
+    symbols = {p for part in net.pages.values() for p in part.powers}
+    fed = {(pin.value, terminal.value) for terminal, pins in rail_drawn_by(model).items() for pin in pins if pin.value in symbols}
     ends = ((n.value, f.value) for n, f in far_pins(model, held))
     return [end for end in ends if end not in fed and not _carried(net, stubs, joined, end)]
 

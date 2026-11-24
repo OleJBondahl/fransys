@@ -7,15 +7,12 @@ so every fact takes templates and links; `part.py` has the `PartBundle` entry.
 
 lazy from collections.abc import Collection, Iterable
 
-from fransys_model.derive.facts.part_pins import poles_by_links
+from fransys_model.derive.facts.part_pins import pair_of, poles_by_links
+from fransys_model.derive.rows_poles import Pole
 from fransys_model.elecdef import PinRole, Side
 from fransys_model.vocab.conductor_marks import CONDUCTOR_MARKS
 from fransys_model.vocab.enums import ConductorMark, FunctionKind
-from fransys_model.vocab.markings import (
-    Pole,
-    pole_between,
-    port_order_key,
-)
+from fransys_model.vocab.markings import port_order_key
 from fransys_model.vocab.roles import LINK_ROLES
 lazy from fransys_model.elecdef import LinkKind
 lazy from fransys_model.kernel import Id
@@ -31,7 +28,7 @@ def unlinked_poles(templates: Iterable[PortTemplate]) -> tuple[Pole, ...]:
     An odd pin left over is a one-pin pole `(pin, pin)`, last: no pin goes missing.
     """
     ordered = sorted(templates, key=port_order_key)
-    poles = [pole_between(a, b) for a, b in zip(ordered[::2], ordered[1::2], strict=False)]
+    poles = [pair_of(a, b) for a, b in zip(ordered[::2], ordered[1::2], strict=False)]
     if len(ordered) % 2:
         poles.append(Pole(None, (ordered[-1], ordered[-1])))
     return tuple(poles)
@@ -54,7 +51,7 @@ def _fallback(pins: list[PortTemplate], *, sideless: bool) -> tuple[Pole, ...]:
     match pins:
         case [one]:
             return (_single(one),)
-        case [first, second] if (pair := pole_between(first, second)).line is not None:
+        case [first, second] if (pair := pair_of(first, second)).line is not None:
             return (pair,)
     if pins and all(conductor_of(pin) is not None for pin in pins):
         return tuple(_single(pin) for pin in pins)

@@ -43,13 +43,14 @@ def subject_label(model: Model, document: Id[Document]) -> str:
 
 
 def scope_path(model: Model, document: Id[Document]) -> str:
-    """The title block's Scope cell: a place's full `+R+S1` path, else the subject.
+    """The title block's Scope cell: a place's full `+R+S1` path, a unit's label, else empty.
 
-    The path stands alone; the page title and the heading carry the place's description.
+    The path stands alone; the page title and the heading carry the place's description. A system
+    document's scope is empty: the title cell already prints the Project's title.
 
     `document` is the document's id.
     """
     record = documents(model)[document]
     if record.location is None:
-        return subject_label(model, document)
+        return "" if document_unit(model, document) is None else subject_label(model, document)
     return location_node_designation(model, record.location)

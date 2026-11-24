@@ -75,9 +75,9 @@ def test_the_bundle_carries_the_wires_and_round_trips():
 
 @pytest.mark.parametrize(
     ("key", "slot"),
-    [("reference-marker", "ref"), ("cut-marker", "partner"), ("wire-label-frame", "label")],
+    [("reference-marker", "ref"), ("cut-marker", "partner")],
 )
-def test_marker_and_label_frame_have_one_slot(key, slot):
+def test_marker_has_one_slot(key, slot):
     assert [s.id for s in LIBRARY.get(key).slots] == [slot]
 
 

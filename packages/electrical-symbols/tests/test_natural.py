@@ -27,7 +27,6 @@ SS5 = [
     "diagram-box-by-others",
     "card",
     "reference-marker",
-    "wire-label-frame",
     "unit-outline",
     "unit-outline-by-others",
     "harness-frame",

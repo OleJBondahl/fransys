@@ -161,6 +161,7 @@ from .facts.closure import (
     port_rails,
     rail_pairs,
     required_groups,
+    rest_rails,
 )
 from .facts.conductor_facts import conductor_ends, is_bridge
 from .facts.cores import cores_past_product
@@ -496,6 +497,7 @@ from .rows_plc import (
     SignalKind,
 )
 from .rows_pole_gangs import PoleGang
+from .rows_poles import Pole
 from .rows_readability import (
     DrawnPageReading,
     DrawnReading,
@@ -682,6 +684,7 @@ __all__ = [
     "PlcRackChannel",
     "PlcRackModule",
     "PlcTable",
+    "Pole",
     "PoleGang",
     "Port",
     "PortBoundary",
@@ -1095,6 +1098,7 @@ __all__ = [
     "required_drawn",
     "required_groups",
     "resolve_wire_rows",
+    "rest_rails",
     "revision_findings",
     "revision_history",
     "revision_rows",

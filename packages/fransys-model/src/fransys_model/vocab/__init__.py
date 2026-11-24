@@ -58,10 +58,7 @@ from .facets import (
 )
 from .finding_ref import ref
 from .instantiate import PartBundle
-from .markings import (
-    Pole,
-    identifier,
-)
+from .markings import identifier
 from .operating import Operating
 from .project import Project
 from .rail_defaults import RAIL_DEFAULTS
@@ -156,7 +153,6 @@ __all__ = [
     "PlcBindingFacet",
     "PlcChannelFacet",
     "PlcRequestFacet",
-    "Pole",
     "Port",
     "PortBoundary",
     "PortTemplate",

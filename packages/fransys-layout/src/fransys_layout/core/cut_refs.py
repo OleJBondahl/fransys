@@ -9,8 +9,6 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_model.kernel import natural_key
-
 from .cut_costs import is_pair, ref_name
 from .cut_ends import (
     Lanes,
@@ -22,6 +20,7 @@ from .cut_ends import (
 )
 from .errors import CoreError
 from .fan_head import fan_head, head_short
+from .order import pin_keys
 from .topology_elements import is_free_sided
 from .values import Finding, PinRef, Ref, RefEnd, RefKind
 
@@ -90,8 +89,8 @@ def on_pages(ref: Ref, where: Mapping[str, int]) -> Ref:
     return replace(ref, ends=tuple(replace(e, page=where[e.column or ""]) for e in ref.ends))
 
 
-def _column_pin(column: Column, net: Net) -> PinRef:
-    """The first pin, in the order of its ids, that `net` has on a cell of `column`."""
+def _column_pin(column: Column, net: Net, keys: Mapping[PinRef, tuple[int, int]]) -> PinRef:
+    """The first pin, by `keys`, that `net` has on a cell of `column`."""
     cells = {x.sym for ln in column.lanes for x in ln.cells}
     on = [p for p in net.pins if p.sym in cells]
     if not on:
@@ -100,7 +99,7 @@ def _column_pin(column: Column, net: Net) -> PinRef:
             "a spilled tag is planned only for a column that holds a pin of the net"
         )
         raise CoreError(msg)
-    return min(on, key=lambda p: (natural_key(p.sym), natural_key(p.pin)))
+    return min(on, key=lambda p: keys[p])
 
 
 def spilled(
@@ -116,10 +115,11 @@ def spilled(
     columns = {c.id: c for c in flow.columns}
     nets = {n.id: n for n in problem.nets}
     out: list[Ref] = []
+    keys = pin_keys(problem)
     for unit in blocks:
         for col in (c for b in unit.blocks if b.kind == "column" for c in b.columns):
             for b in columns[col].box_pins:
-                pin = _column_pin(columns[col], nets[b.net])
+                pin = _column_pin(columns[col], nets[b.net], keys)
                 out.append(Ref(b.net, RefKind.TAG, (RefEnd(where[col], col, pin), RefEnd(where[b.pin.sym], None, b.pin))))
     return out
 

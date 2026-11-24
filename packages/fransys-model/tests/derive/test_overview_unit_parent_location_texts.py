@@ -4,9 +4,11 @@ from overview_builders import unit_plant
 from plant import Plant
 
 from fransys_model.derive import location_texts, unit_parent
+from fransys_model.derive.unit_nodes import authored_under
 from fransys_model.kernel import make_id
 from fransys_model.refdef import Aspect
 from fransys_model.vocab.aspects import AspectNode
+from fransys_model.vocab.core import Unit
 
 
 def test_unit_parent_of_nested_and_root() -> None:
@@ -37,3 +39,16 @@ def test_location_texts_prints_the_signed_path_per_label() -> None:
 def test_location_texts_is_empty_without_places() -> None:
     """A model with no location node gives no texts."""
     assert location_texts(Plant().model()) == {}
+
+
+def test_authored_under_cuts_a_parents_key_off_the_nested_unit() -> None:
+    """A key authored outside the nested unit's tag path is not its own; under it, or for no unit, it is."""
+    plant = Plant()
+    outer = plant.unit("u", name="cab")
+    release = plant.release("brd", 1, "1", 1)
+    nested = Unit(id=make_id(Unit, ("u", "n")), key=("u", "n"), release=release, parent=outer, tag="U2")
+    plant.add(nested)
+    model = plant.model()
+    assert authored_under(model, nested.id, ("u", "x1"))
+    assert not authored_under(model, nested.id, ("y", "x1"))
+    assert authored_under(model, None, ("y", "x1"))

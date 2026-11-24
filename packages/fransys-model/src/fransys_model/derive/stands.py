@@ -58,6 +58,12 @@ def _split(model: Model, kinds: Mapping[Id[Port], PowerKind]) -> Groups:
     return tuple(group for group in components((), pairs) if cut.intersection(group))
 
 
+def _wired_to_rail_terminal(model: Model) -> set[Id[Port]]:
+    """The pins whose conductor ends at a flagged rail terminal: only the stand draws that wire, so a split never takes the pin (R3871)."""
+    ends = [conductor_ends(model, c) for c in drawn_conductors(model)]
+    return {p for one, other in ends for p, far in ((one, other), (other, one)) if is_rail_terminal(model, item_of_port(model, far))}
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def _rails(model: Model) -> tuple[frozendict[Id[Port], PowerKind], frozendict[Id[Port], tuple[Id[Port], ...]], Groups]:
     """The stands, per rail terminal port the stand pins of its wire piece (a piece with none is left out), and the split groups: the one walk."""
@@ -73,7 +79,7 @@ def _rails(model: Model) -> tuple[frozendict[Id[Port], PowerKind], frozendict[Id
         kinds.update((p, port_power_kind(model, p)) for p in pins)
         drawn_by.update((p, tuple(pins)) for p in piece.ports if pins and is_rail_terminal(model, item_of_port(model, p)))
     split = _split(model, kinds)
-    gone = {p for group in split for p in group}
+    gone = {p for group in split for p in group} - _wired_to_rail_terminal(model)
     kept = {t: left for t, pins in drawn_by.items() if (left := tuple(p for p in pins if p not in gone))}
     return frozendict({p: k for p, k in kinds.items() if p not in gone}), frozendict(kept), split
 
@@ -103,6 +109,7 @@ def power_ends_split(model: Model) -> Groups:
     Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
     A mate pair is a connection like a conductor. Both are carried by symbols only when some set unit draws both ends under one `power_identity`.
     A mated pin whose partner stands in another set is a net: it draws the mate's OFF stub, never a bare power symbol.
+    A pin whose conductor ends at a flagged rail terminal stays a stand beside it: the stand draws that wire.
     """
     return _rails(model)[2]
 

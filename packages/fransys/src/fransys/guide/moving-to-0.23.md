@@ -4,6 +4,17 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.46
+
+BREAKING (typing only): `fr.Device` and `fr.Fn` are generic, so the generated parts module's classes type-check with no `ty: ignore` inside Fransys. A part's device and function still annotate as the bare `fr.Device` and `fr.Fn`. The device of `d.device(tag, None, external=True, pins=...)` is no longer a bare `fr.Device`: annotate it `fr.Device[Any, fr.Pin]`.
+
+- Two cabinets joined by a PE core no longer raise DRAWING_SHORTS_NETS or RAIL_IDENTITY_SHARED, in any port order.
+- A connected cable screen core is refused, and a pair's hint never names a screen core.
+- A bridged terminal never draws its net's power symbol; bridges live in the terminal table only.
+- A busbar joined to a mated pin by a series wire to a flagged rail terminal no longer raises CONNECTION_NOT_DRAWN.
+- A block-diagram line joins only two boxes that a cable core joins; DIAGRAM_CABLE_FANOUT is gone.
+- Declare a device's PE pin with `d.earth(m1.motor["PE"])`; author a PE terminal strip only when one is built.
+
 ## New in 0.23.45
 
 - A mated pin's OFF stub stands at the pin's mating face, off its wire (WIRE_OVER_MARKER over stub text is gone), and WIRE_OVER_MARKER names its point.

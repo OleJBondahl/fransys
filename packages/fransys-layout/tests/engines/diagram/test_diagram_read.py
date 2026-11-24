@@ -1,14 +1,13 @@
 """The diagram engine's reader: facts of each reading and the findings of the diagram."""
 
 import pytest
-from diagram_models import chain, fanout, loose, one_box, station
+from diagram_models import chain, loose, one_box, station
 
 from electrical_symbols import LIBRARY
 from fransys_layout.engines.diagram.read import read_diagrams, read_findings
 from fransys_layout.geometry import text_width_g
 from fransys_layout.symbols import frame_extent, text_room_on
 from fransys_model.derive.block_diagram import (
-    DIAGRAM_CABLE_FANOUT,
     DIAGRAM_CABLE_ONE_BOX,
     DIAGRAM_LOOSE_WIRE,
     box_dashed,
@@ -82,7 +81,6 @@ def test_a_reading_with_no_line_gives_no_facts(model):
     ("model", "code", "severity"),
     [
         (one_box(), DIAGRAM_CABLE_ONE_BOX, Severity.INFO),
-        (fanout(), DIAGRAM_CABLE_FANOUT, Severity.INFO),
         (loose(), DIAGRAM_LOOSE_WIRE, Severity.INFO),
     ],
 )
@@ -96,8 +94,3 @@ def test_each_diagram_fact_becomes_one_finding_of_its_severity(model, code, seve
 @pytest.mark.parametrize("model", [chain(3), station()])
 def test_clean_models_give_no_findings(model):
     assert read_findings(model) == ()
-
-
-def test_findings_are_sorted_by_code_and_subjects():
-    findings = read_findings(fanout())
-    assert list(findings) == sorted(findings, key=lambda f: (f.code, f.subjects))

@@ -51,14 +51,13 @@ stock = 15
 # C3 (spec CONSOLIDATE; root-0356): `# noqa` codes and `# ty: ignore` rules in packages/*/src. The total is
 # the sum of the per-code table. What is left is kept with a reason on its line (decisions 0111, 0414, 0444, KI-125; KI-044).
 [escape_hatches]
-total = 41  # 38 + the two PLR0913 above (R2369, R2420)
+total = 36  # 33 + the two PLR0913 above (R2369, R2420); the five ty overrides fell with R25
 
 [escape_hatches_codes]
 # 30 -> 32: Scope.strip and Scope.harness gain drawn_with, a sixth keyword of a public call (R2369, R2420); stock 32 stays: the scope methods' arguments carry no unit; option (C) does not exist (R2420, R2431)
 PLR0913 = 32
 PLR0917 = 1
 ANN401 = 1
-ty-invalid-method-override = 5
 UP037 = 2
 
 # DRAWN-NETLIST (el-0052, R388, R412) with DRAWING-INVARIANTS (el-0048, R360): what the finished-drawing

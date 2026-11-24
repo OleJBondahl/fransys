@@ -4,6 +4,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.47
+
+- A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol (KI-1518; the 0.23.46 note claimed it, but a later landing had undone it).
+
 ## New in 0.23.46
 
 BREAKING (typing only): `fr.Device` and `fr.Fn` are generic, so the generated parts module's classes type-check with no `ty: ignore` inside Fransys. A part's device and function still annotate as the bare `fr.Device` and `fr.Fn`. The device of `d.device(tag, None, external=True, pins=...)` is no longer a bare `fr.Device`: annotate it `fr.Device[Any, fr.Pin]`.

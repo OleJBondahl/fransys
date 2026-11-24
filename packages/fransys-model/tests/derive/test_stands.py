@@ -494,17 +494,14 @@ def _bridged_strip(title: str, strip: str, part: str, **run: Any) -> tuple[fr.De
 
 @pytest.mark.rule("G08-POWER")
 def test_a_bridged_pin_draws_no_power_symbol_and_only_its_real_wires() -> None:
-    """A bridged, unflagged fused strip fed by one wire, each terminal feeding one device: the bridge draws no symbol (R3641).
-
-    Only the pin whose side holds nothing but the bridge shows the net's potential (R3710).
-    """
+    """A bridged, unflagged fused strip fed by one wire, each terminal feeding one device: the bridge draws no power symbol (R3641)."""
     d, cab, run = _bridged_strip("Fused", "XF", "DEMO-TB-FUSE-2.5-TWIN")
     _lamps_fed(d, run[1].inner, run[1].outer, run[2].outer)
     model = _bridged_model(d, cab)
     assert any(i.tag == "XF" for i in items(model).values())
     assert drawn_pages(model)
     symbols = [port_designation(model, s.port) for s in layout_of(model, PowerSymbol).values()]
-    assert [p for p in symbols if p.startswith(("-XF", "-T1:+"))] == ["-XF:24V:2"]
+    assert [p for p in symbols if p.startswith(("-XF", "-T1:+"))] == []
     assert {"-T1:-"} <= set(symbols)
 
 
@@ -539,56 +536,3 @@ def test_a_pin_wired_to_a_bridged_terminal_prints_the_potential_of_the_whole_net
     model = _bridged_model(d, cab)
     texts = {port_designation(model, p): port_power_text(model, p) for p in stands(model)}
     assert [texts.get("-H1:1"), texts.get("-H2:1")] == ["24V", "24V"], texts
-
-
-def _fused_branch(strip_part: str, **strip: Any) -> fr.BuildResult:
-    """A PSU wired straight to terminal 1 of a bridged strip; a branch leaves the outer side of terminal 2."""
-    d = fc_design("Branch", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    xf = d.terminal_strip("XF", strip_part, 2, bridged=True, **strip)
-    xg = d.terminal_strip("XG", "DEMO-TB-2.5", 2)
-    with d.function("G", "Group"):
-        psu = d.device("T1", "DEMO-PSU-24")
-    d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
-    d.dc_supply("S", psu)
-    d.series(psu.output["+"], xf[1].inner, wire=_WIRE)
-    d.series(psu.output["-"], xg[1].inner, wire=_WIRE)
-    d.series(xf[2].outer, xg[2].inner, wire=_WIRE)
-    return fr.build(d, cabinet_document(cab))
-
-
-@pytest.mark.rule("G08-POWER")
-def test_a_bridge_only_pin_of_a_fed_strip_shows_the_net_potential_and_real_wires_stay_wires() -> None:
-    result = _fused_branch("DEMO-TB-FUSE-2.5-TWIN")
-    kinds = _stand_kinds(result.model)
-    assert {p: k for p, k in kinds.items() if p.startswith(("-XF", "-T1:+"))} == {"-XF:2": PowerKind.SUPPLY}, kinds
-    assert "CONNECTION_NOT_DRAWN" not in {f.code for f in result.findings}
-
-
-@pytest.mark.rule("G08-POWER")
-def test_a_bridge_only_pe_pin_shows_pe() -> None:
-    d = fc_design("PE", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    bar = d.terminal_strip("XP", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True)
-    motor = d.device("M1", "DEMO-MOTOR-4KW")
-    d.series(motor.motor["PE"], bar[1].inner, wire=(GNYE, 2.5))
-    d.earth(motor.motor["PE"], bar[1])
-    result = fr.build(d, cabinet_document(cab))
-    kinds = _stand_kinds(result.model)
-    assert kinds.get("-XP:PE:2") is PowerKind.PE, kinds
-    assert "CONNECTION_NOT_DRAWN" not in {f.code for f in result.findings}
-
-
-@pytest.mark.rule("G08-POWER")
-def test_a_bridge_only_signal_pin_shows_nothing() -> None:
-    d = fc_design("Signal", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    run = d.terminal_strip("XS", "DEMO-TB-2.5").run("SIG", 2, bridged=True)
-    with d.function("G", "Group"):
-        a, b = d.device("P1", "DEMO-LAMP-24"), d.device("P2", "DEMO-LAMP-24")
-    d.series(a.lamp[1], run[1].inner, wire=_WIRE)
-    d.series(run[2].outer, b.lamp[1], wire=_WIRE)
-    result = fr.build(d, cabinet_document(cab))
-    assert not [p for p in _stand_kinds(result.model) if p.startswith(("-XS", "-P"))]
-    expect_codes(result, "FUNCTION_HALF_CONNECTED")  # each lamp's second pin is left open: the shape tests only the bridge
-    assert "CONNECTION_NOT_DRAWN" not in {f.code for f in result.findings}

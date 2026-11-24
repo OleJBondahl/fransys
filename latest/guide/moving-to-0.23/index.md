@@ -2,6 +2,10 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.45
+
+- A mated pin's OFF stub stands at the pin's mating face, off its wire (WIRE_OVER_MARKER over stub text is gone), and WIRE_OVER_MARKER names its point.
+
 ## New in 0.23.44
 
 - A split power pin whose only conductor stays in its own unit no longer draws a lead with no stub (a DANGLING_WIRE_END in systems of units joined by cables).

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.45/api/fransys/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/api/fransys/">
       
       
       
@@ -3890,6 +3890,8 @@ Does not pair poles or take the next free terminal, as <code>d.series</code> doe
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Device</span>
 </code></pre></div>
 <p>One device: <code>Q1</code>. A function by name (<code>Q1.coil</code>), a pin by <code>[ ]</code> (<code>Q1[2]</code>, <code>Q1["A1"]</code>).</p>
+<p><code>K</code> is the names it accepts and <code>R</code> what a name gives: any and <code>Fn</code> by default; none on <code>TypedDevice</code>, whose stub names them;
+a pin on <code>BoxDevice</code>, which is then a <code>Device[Any, Pin]</code>, not a bare <code>Device</code>.</p>
 <p>Does not guess: an unknown function or pin raises and lists the candidates.</p>
 <h3 id="documentpreset">DocumentPreset</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocumentPreset</span>
@@ -3924,6 +3926,7 @@ that neither the order a validator happened to find them in nor a repeat matters
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Fn</span>
 </code></pre></div>
 <p>One function of a device: <code>K1.coil</code>; a pin by <code>[ ]</code> (<code>Q1.main[2]</code>) or by name (<code>K1.coil.A1</code>).</p>
+<p><code>P</code> is the pin names it accepts: any by default, none on <code>TypedFn</code>, so a generated part's stub names them.</p>
 <p>Does not accept a guessed name: an unknown pin raises and lists the pins it has.</p>
 <h3 id="fransyserror">FransysError</h3>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">FransysError</span>
@@ -4158,7 +4161,7 @@ one and returns the other.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.45 documentation
+      Fransys 0.23.46 documentation
     </div>
   
   

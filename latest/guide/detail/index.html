@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.45/guide/detail/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/guide/detail/">
       
       
       
@@ -570,6 +570,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Fixed terminals
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-devices-connection-to-pe" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A device's connection to PE
       </span>
     </span>
   </a>
@@ -2163,6 +2174,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#a-devices-connection-to-pe" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A device's connection to PE
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#one-wire-to-a-pe-terminal" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2346,6 +2368,8 @@ right side by itself: a bare <code>x[i]</code> lands on the side facing the unit
     <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">h1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 <span class="n">d</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">outer</span><span class="p">,</span> <span class="n">h1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
+<h3 id="a-devices-connection-to-pe">A device's connection to PE</h3>
+<p>Declare it with <code>d.earth(m1.motor["PE"])</code>. The pin draws its earth symbol with no designation; the mechanical drawing or the electrician decides where the wire lands. Author a PE terminal strip only when one is really built.</p>
 <h3 id="one-wire-to-a-pe-terminal">One wire to a PE terminal</h3>
 <p>A cable's green-yellow core is the core way (<code>series.md</code>, Earth pins). A single wire is a detail.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
@@ -2552,7 +2576,7 @@ A net from a pin on one half of a box to a column hung on the other half draws a
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.45 documentation
+      Fransys 0.23.46 documentation
     </div>
   
   

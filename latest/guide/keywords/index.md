@@ -34,8 +34,8 @@ rtd = fr.SignalType.RTD  # no short name; pass it as the `signal` of `plc`
 
 Handles are the objects a design returns and the reader holds. A consumer does not build them.
 
-- `Device`: one device, such as `Q1`. It reaches a function by name (`Q1.coil`) and a pin by brackets (`Q1[2]`). An unknown function or pin raises and lists the candidates. `Q1.tag` is the tag the call gave, or `None`.
-- `Fn`: one function of a device, such as `K1.coil`. It reaches a pin by brackets (`Q1.main[2]`) or by name (`K1.coil.A1`). An unknown pin raises and lists the pins it has. `Fn.plc` requests a PLC channel.
+- `Device`: one device, such as `Q1`. It reaches a function by name (`Q1.coil`) and a pin by brackets (`Q1[2]`). An unknown function or pin raises and lists the candidates. `Q1.tag` is the tag the call gave, or `None`. It is generic, `fr.Device[Names, Gives]`, and the bare `fr.Device` is every device but a box: the device of `d.device(tag, None, external=True, pins=...)` is a `fr.Device[Any, fr.Pin]` (its attributes are pins).
+- `Fn`: one function of a device, such as `K1.coil`. It reaches a pin by brackets (`Q1.main[2]`) or by name (`K1.coil.A1`). An unknown pin raises and lists the pins it has. It is generic in the pin names, `fr.Fn[Names]`; the bare `fr.Fn` accepts any. `Fn.plc` requests a PLC channel.
 - `Pin`: one port of one `Fn`. It has an `id`, an authoring `key`, a `name` that brackets match, and a `role`, such as `INTERNAL` or `EXTERNAL`.
 - `Run`: a run of terminals on a strip, from `x1.run(...)`. It reaches a terminal by brackets (`run[1]`).
 - `Cable`: one cable from `d.cable`. `w1.core(BN, a, b)` wires a core.
@@ -56,6 +56,7 @@ A script written in this guide's spellings type-checks with no `ty: ignore` and 
 
 - For full checking, generate a parts module (`fr.parts_module`, parts.md) and pass its classes to `d.device`. Each function and pin is a typed attribute, brackets take only the part's pin names, and a misspelt name is a type error.
 - A device made from an MPN string is checked only at run time: a call on it checks nothing. Annotate it `fr.Device` to check the calls on it.
+- A box device (`d.device(..., external=True, pins=...)`) is annotated `fr.Device[Any, fr.Pin]`.
 - On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
 - Every handle in "Handle types" has a name on `fr`, so `fr.Device`, `fr.AcSupply` or `fr.UnitDef[Io]` annotates a parameter or a return.
 - A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws (`fr.Throw`); a generated changeover function declares both.

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.45/guide/keywords/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/guide/keywords/">
       
       
       
@@ -2207,8 +2207,8 @@ two digital kinds. Use the full member, <code>fr.SignalType.&lt;NAME&gt;</code>,
 <h2 id="handle-types">Handle types</h2>
 <p>Handles are the objects a design returns and the reader holds. A consumer does not build them.</p>
 <ul>
-<li><code>Device</code>: one device, such as <code>Q1</code>. It reaches a function by name (<code>Q1.coil</code>) and a pin by brackets (<code>Q1[2]</code>). An unknown function or pin raises and lists the candidates. <code>Q1.tag</code> is the tag the call gave, or <code>None</code>.</li>
-<li><code>Fn</code>: one function of a device, such as <code>K1.coil</code>. It reaches a pin by brackets (<code>Q1.main[2]</code>) or by name (<code>K1.coil.A1</code>). An unknown pin raises and lists the pins it has. <code>Fn.plc</code> requests a PLC channel.</li>
+<li><code>Device</code>: one device, such as <code>Q1</code>. It reaches a function by name (<code>Q1.coil</code>) and a pin by brackets (<code>Q1[2]</code>). An unknown function or pin raises and lists the candidates. <code>Q1.tag</code> is the tag the call gave, or <code>None</code>. It is generic, <code>fr.Device[Names, Gives]</code>, and the bare <code>fr.Device</code> is every device but a box: the device of <code>d.device(tag, None, external=True, pins=...)</code> is a <code>fr.Device[Any, fr.Pin]</code> (its attributes are pins).</li>
+<li><code>Fn</code>: one function of a device, such as <code>K1.coil</code>. It reaches a pin by brackets (<code>Q1.main[2]</code>) or by name (<code>K1.coil.A1</code>). An unknown pin raises and lists the pins it has. It is generic in the pin names, <code>fr.Fn[Names]</code>; the bare <code>fr.Fn</code> accepts any. <code>Fn.plc</code> requests a PLC channel.</li>
 <li><code>Pin</code>: one port of one <code>Fn</code>. It has an <code>id</code>, an authoring <code>key</code>, a <code>name</code> that brackets match, and a <code>role</code>, such as <code>INTERNAL</code> or <code>EXTERNAL</code>.</li>
 <li><code>Run</code>: a run of terminals on a strip, from <code>x1.run(...)</code>. It reaches a terminal by brackets (<code>run[1]</code>).</li>
 <li><code>Cable</code>: one cable from <code>d.cable</code>. <code>w1.core(BN, a, b)</code> wires a core.</li>
@@ -2228,6 +2228,7 @@ two digital kinds. Use the full member, <code>fr.SignalType.&lt;NAME&gt;</code>,
 <ul>
 <li>For full checking, generate a parts module (<code>fr.parts_module</code>, parts.md) and pass its classes to <code>d.device</code>. Each function and pin is a typed attribute, brackets take only the part's pin names, and a misspelt name is a type error.</li>
 <li>A device made from an MPN string is checked only at run time: a call on it checks nothing. Annotate it <code>fr.Device</code> to check the calls on it.</li>
+<li>A box device (<code>d.device(..., external=True, pins=...)</code>) is annotated <code>fr.Device[Any, fr.Pin]</code>.</li>
 <li>On a <code>fr.Device</code>, a device-level pin by attribute (<code>q1.A1</code>) types as <code>fr.Fn</code> and is a ty error where a pin is needed. Write <code>q1["A1"]</code>; both run.</li>
 <li>Every handle in "Handle types" has a name on <code>fr</code>, so <code>fr.Device</code>, <code>fr.AcSupply</code> or <code>fr.UnitDef[Io]</code> annotates a parameter or a return.</li>
 <li>A function of a device is a <code>fr.Fn</code>: <code>k1.coil</code> and <code>q1.main</code> type as <code>fr.Fn</code>. A pin by brackets is a <code>fr.Pin</code>: <code>k1.coil["A2"]</code>, <code>q1["2"]</code> and <code>k1.coil.A1</code>. <code>k1.co.no</code> and <code>k1.co.nc</code> are changeover throws (<code>fr.Throw</code>); a generated changeover function declares both.</li>
@@ -2308,7 +2309,7 @@ rarely does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.45 documentation
+      Fransys 0.23.46 documentation
     </div>
   
   

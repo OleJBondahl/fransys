@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.45/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.46/guide/findings-render/">
       
       
       
@@ -1995,20 +1995,12 @@
 <td>No call clears this: send the smallest model that shows it.</td>
 </tr>
 <tr>
-<td><a id="diagram_cable_fanout"></a>DIAGRAM_CABLE_FANOUT</td>
-<td>INFO</td>
-<td>render</td>
-<td>note</td>
-<td>A cable reaches three or more boxes, so the block diagram draws a line from its first box to each other.</td>
-<td>Nothing is wrong; split the cable only if a line per pair is not wanted.</td>
-</tr>
-<tr>
 <td><a id="diagram_cable_one_box"></a>DIAGRAM_CABLE_ONE_BOX</td>
 <td>INFO</td>
 <td>render</td>
 <td>note</td>
-<td>A cable's ends reach one box or none, so the block diagram draws no line for it.</td>
-<td>Usually nothing to fix: the cable runs inside one box, or an end is an unmated plug.</td>
+<td>A cable's cores join no two boxes, so the block diagram draws no line for it.</td>
+<td>Usually nothing to fix: the cable runs inside one box, or its ends are unmated plugs.</td>
 </tr>
 <tr>
 <td><a id="diagram_label_struck"></a>DIAGRAM_LABEL_STRUCK</td>
@@ -2359,7 +2351,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.45 documentation
+      Fransys 0.23.46 documentation
     </div>
   
   

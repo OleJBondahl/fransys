@@ -3734,6 +3734,7 @@ The pins of each group of power conductors that no drawing set draws as one pote
 Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
 A mate pair is a connection like a conductor. Both are carried by symbols only when some set unit draws both ends under one `power_identity`.
 A mated pin whose partner stands in another set is a net: it draws the mate's OFF stub, never a bare power symbol.
+A pin whose conductor ends at a flagged rail terminal stays a stand beside it: the stand draws that wire.
 
 ### power_identity
 
@@ -4168,6 +4169,17 @@ Write the `WireFacet` of every hinted wire from its row; the rest are `ERROR` fi
 A wire that already has a facet is skipped, so a second run changes nothing and the model
 comes back as the same object when nothing is hinted.
 
+### rest_rails
+
+```python
+def rest_rails(model: Model, port: Id[Port]) -> frozenset[str]
+```
+
+The rails `port` carries with every contact at rest: some minimal condition of the rail has no operated item.
+
+Sibling of `port_rails`, which counts every contact closed. A rail that needs no state
+(a conductor, a fuse) is in; one behind a normally open contact is out. Cached on `model.digest`.
+
 ### revision_findings
 
 ```python
@@ -4325,9 +4337,10 @@ Empty when `pages` has no SCHEMATIC.
 def scope_path(model: Model, document: Id[Document]) -> str
 ```
 
-The title block's Scope cell: a place's full `+R+S1` path, else the subject.
+The title block's Scope cell: a place's full `+R+S1` path, a unit's label, else empty.
 
-The path stands alone; the page title and the heading carry the place's description.
+The path stands alone; the page title and the heading carry the place's description. A system
+document's scope is empty: the title cell already prints the Project's title.
 
 `document` is the document's id.
 
@@ -6593,6 +6606,16 @@ One table of the PLC list: the channels of one controller or module.
 
 `item` carries the channels, `designation` is its printed designation, the table's heading;
 `rows` are its `PlcChannelRow`s in list order, never empty.
+
+### Pole
+
+```python
+class Pole
+```
+
+One pole's ends: `line` is the end on `Side.A` (supply side) when the other is not, else `None`.
+
+`ends` is `(line, load)` when `line` is known, else the two ends in natural marking order.
 
 ### PoleGang
 

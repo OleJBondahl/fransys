@@ -396,6 +396,9 @@ class Device
 
 One device: `Q1`. A function by name (`Q1.coil`), a pin by `[ ]` (`Q1[2]`, `Q1["A1"]`).
 
+`K` is the names it accepts and `R` what a name gives: any and `Fn` by default; none on `TypedDevice`, whose stub names them;
+a pin on `BoxDevice`, which is then a `Device[Any, Pin]`, not a bare `Device`.
+
 Does not guess: an unknown function or pin raises and lists the candidates.
 
 ### DocumentPreset
@@ -450,6 +453,8 @@ class Fn
 ```
 
 One function of a device: `K1.coil`; a pin by `[ ]` (`Q1.main[2]`) or by name (`K1.coil.A1`).
+
+`P` is the pin names it accepts: any by default, none on `TypedFn`, so a generated part's stub names them.
 
 Does not accept a guessed name: an unknown pin raises and lists the pins it has.
 

@@ -15,7 +15,7 @@ from .placement_kit import Pick, refuse
 from .symbol_bind import Shape, Target, port_of
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
     from collections.abc import Set as AbstractSet
 
     from electrical_symbols import Library
@@ -23,11 +23,17 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Function, Port
 
-__all__ = ["Choice", "pin_picks", "undrawn_pins"]
+__all__ = ["Choice", "mating_face", "pin_picks", "undrawn_pins"]
 
 _ALONE = Shape(1, (), {})
 
 type Choice = tuple[str | None, frozendict[str, str]]
+
+
+def mating_face(ports: Iterable[str]) -> dict[str, str]:
+    """Each pin's mating port on the same symbol: `mate`, or `<k>.mate` beside the pin `<k>.<port>`."""
+    ports = set(ports)
+    return {p: m for p in ports if not is_mating_port(p) and (m := f"{p.rpartition('.')[0]}.mate".lstrip(".")) in ports}
 
 
 def _pick(library: Library, view: PinView, choice: Choice) -> Pick:

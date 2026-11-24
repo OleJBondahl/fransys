@@ -1292,3 +1292,18 @@ def test_an_off_stub_drawn_on_no_ink_is_reference_not_readable(monkeypatch: pyte
         read = drawn_references._read_stubs(cast("Any", None), {(P1, "p", "T"): [(1, 1)]}, pages, set())
         assert [m for _, _, m in read.faults] == (["stub prints 'T': on no wire of its net"] if faulty else [])
         assert ("k" in read.markers) is not faulty
+
+
+@pytest.mark.rule("MATE-REFERENCE")
+@pytest.mark.parametrize("on_mating", [True, False], ids=["at-the-mating-port", "one-grid-off"])
+def test_a_marker_on_a_pins_mating_port_is_a_drawn_node_with_no_wire_to_it(monkeypatch: pytest.MonkeyPatch, *, on_mating: bool):
+    """the reader keys each pin's mating point (`PagePart.mating`); a stub standing there is a node, one grid off it is none."""
+    pin = Id[Any](kind="port", value="pin")
+    connector = SimpleNamespace(id="c", key="connector-fixed", x=0, y=0, ports=(), net=None)
+    marker = SimpleNamespace(id="m", key="marker-arrow-turned", x=0, y=16 if on_mating else 24, ports=("p",), net="n")
+    drawing = SimpleNamespace(symbols=(connector, marker), wires=())
+    points = [((0, -8), "in"), ((0, 8), "out"), ((0, 16), "mate")]
+    monkeypatch.setattr(drawn_netlist_module, "port_points", lambda s, _lib: points if s is connector else [])
+    part = drawn_netlist_module._part(cast("Any", drawing), {"c": {"in": pin}}, LIBRARY)
+    assert part.mating == {"pin": (0, 16)}
+    assert ((marker.x, marker.y) in part.nodes) is on_mating

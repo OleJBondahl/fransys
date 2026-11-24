@@ -15,7 +15,13 @@ from fransys_model.derive import mate_pairs
 from fransys_model.layout import LinkMarker, StarKind, layout_of
 from fransys_model.vocab.tables import ports
 
-_CLEAN = ("CONNECTION_NOT_DRAWN", "DANGLING_WIRE_END", "MARKER_UNPAIRED", "MATES_DISABLED")
+_CLEAN = (
+    "CONNECTION_NOT_DRAWN",
+    "DANGLING_WIRE_END",
+    "MARKER_UNPAIRED",
+    "MATES_DISABLED",
+    "WIRE_OVER_MARKER",
+)  # the stub stands at the pin's mating port, never on its wire
 
 
 class _Io(NamedTuple):

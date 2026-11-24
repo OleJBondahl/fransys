@@ -213,3 +213,13 @@ def test_a_rise_whose_anchor_run_meets_a_label_is_lost_and_one_that_does_not_is_
     pin = env.placed[drawn.rises[0].pin.sym].footprint
     assert rise_wire(env, _grid(env, drawn.wires), drawn.rises[0]) is not None
     assert rise_wire(env, _label_on(env, (drawn.rises[0].start[0], pin.y + pin.h + STEP), drawn.wires), drawn.rises[0]) is None
+
+
+def test_an_end_that_already_stands_on_the_tree_is_no_wire() -> None:
+    """ROUTE-ONE-POINT: a tap on a held cell (its anchor run one repeated point) joins by the junction; every wire has two points."""
+    env = link_env({"a1": (24, 40, "E"), "a2": (200, 40, "W")}, {"A": ("a1", "a2")})
+    on_tree = ((96, 40), (96, 40))
+    wires = tree(env, _grid(env, ()), env.cross_links[0], [*end_anchors(env, env.cross_links[0]), on_tree])
+    assert wires is not None
+    assert len(wires) == 1
+    assert all(len(w.points) >= 2 for w in wires)

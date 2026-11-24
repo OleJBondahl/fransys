@@ -114,6 +114,7 @@ class Pin:
     """Fact 1: side is the way a wire leaves; node indexes Sym.nodes; end_bias < 0 heads, > 0 feet.
 
     end_rank orders the biased ends among themselves, a smaller rank first.
+    `mating` is the id of the pin of the same symbol at its mating face, where a mated pin's stub stands; None when it has none.
     """
 
     id: str
@@ -123,6 +124,7 @@ class Pin:
     node: int
     end_bias: int = 0
     end_rank: int = 0
+    mating: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

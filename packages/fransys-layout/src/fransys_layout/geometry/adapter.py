@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import symdef
 
-from electrical_symbols import LIBRARY, PORT_PITCH_G, drawn_symbol, is_mating_port
+from electrical_symbols import LIBRARY, PORT_PITCH_G, drawn_symbol
 from fransys_layout.symbols import fitted_marker
 from fransys_layout.symbols import text_width_g as _grid_text_width
 
@@ -49,4 +49,4 @@ def port_points(symbol: DrawnSymbol, library: symdef.Library) -> tuple[tuple[XY,
     port sits where the drawing puts its wire end.
     """
     found = symdef.measure(_turned(symbol, library), symdef.Orientation.R0, library)
-    return tuple(((symbol.x + p.x, symbol.y + p.y), p.id) for p in found.ports.values() if not is_mating_port(p.id))
+    return tuple(((symbol.x + p.x, symbol.y + p.y), p.id) for p in found.ports.values())

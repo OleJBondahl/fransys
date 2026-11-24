@@ -49,7 +49,7 @@ _CORE: tuple[CodeInfo, ...] = (
         who="Fransys",
         cause=(
             "A wire or a junction dot meets the box of a reference marker on one page, or a wire ends in it; "
-            "the message names the page and the first of them."
+            "the message names the marker and its point."
         ),
         fix="No call clears this: every fact is drawn and only the looks suffer. Report it with the smallest model that shows it.",
         page="findings-wires",

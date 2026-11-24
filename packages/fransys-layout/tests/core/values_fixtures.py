@@ -74,7 +74,7 @@ from fransys_layout.core.values import (
 )
 
 BOX = Box(0, 0, 16, 32)
-PIN = values.Pin("1", "N", 8, 0, 0, -1, 1)
+PIN = values.Pin("1", "N", 8, 0, 0, -1, 1, "m")
 
 
 def problem() -> PlacementProblem:

@@ -16,6 +16,7 @@ from fransys_model.kernel import natural_key
 
 from .placement_kit import refuse
 from .placement_sides import box_sides
+from .symbol_pins import mating_face
 lazy from .kit_keys import PickKey
 
 if TYPE_CHECKING:
@@ -91,7 +92,7 @@ def pins_of(env: Env, pick: Pick, shape: Shape) -> tuple[Pin, ...]:
     """One `Pin` per symbol port, in natural order; the end bias and rank from its port's rail."""
     node_of = {name: index for index, node in enumerate(nodes_of(shape)) for name in node}
     port_of = {name: port for port, name in pick.ports.items()}
-    power = drawn_stands(env.model)
+    power, face = drawn_stands(env.model), mating_face(shape.pins)
     return tuple(
         Pin(
             name,
@@ -100,6 +101,7 @@ def pins_of(env: Env, pick: Pick, shape: Shape) -> tuple[Pin, ...]:
             shape.pins[name].dy,
             node_of[name],
             *_bias(env, port_of.get(name), power),
+            face.get(name),
         )
         for name in sorted(shape.pins, key=natural_key)
     )

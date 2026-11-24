@@ -754,3 +754,37 @@ def test_a_marker_never_stands_on_a_pins_hanging_the_placement_holds() -> None:
     marks = placed_marks(cut, replace(pl, pages=(page, *pl.pages[1:])), prob, OPTIONS, {})[0]
     assert marks
     assert not any(overlaps(marker_box(m, OPTIONS), box) for m in marks if m.page == page.page and m.end.sym != "HOLDER")
+
+
+def _mating_env() -> MarkEnv:
+    """Pin `S.p` is mated to `T.p`; its mating port `S.m` is one grid below it."""
+    env = _env("S", "R0")
+    return replace(
+        env,
+        pins={**env.pins, ("S", "m"): (1, 100, 208, "R0")},
+        sides={**env.sides, ("S", "m", "R0"): "S"},
+        mating={PIN: PinRef("S", "m")},
+    )
+
+
+@pytest.mark.parametrize(
+    ("kind", "at"),
+    [(RefKind.STUB, (100, 208, True)), (RefKind.TAG, (100, 200, False))],
+    ids=["a stub at a mating pin", "a wire's tag"],
+)
+def test_only_a_stub_stands_at_the_mating_port(kind: RefKind, at: tuple[int, int, bool]) -> None:
+    """a stub at a pin of `env.mating` stands at its port; a wire's tag stays on the wire side."""
+    got = pin_stand(_mating_env(), PIN, 1, Ref("n", kind, (RefEnd(1, None, PIN),)))
+    assert (got.x, got.y, got.mating) == at
+
+
+def test_a_stub_at_a_mating_stand_does_not_slide_off_a_collision() -> None:
+    """a collision at the mating stand stays a looks finding; the same stub off it slides to a free slot."""
+    ref = Ref("n", RefKind.STUB, (RefEnd(1, None, PIN),))
+    [(m, st)] = stand_ref(_mating_env(), ref)
+    blocker = {1: [Keep("", marker_box(m, OPTIONS), "wire", "other", "other")]}
+    assert st.mating
+    assert stagger([(m, st)], OPTIONS, AREA, blocker, {}) == [m]
+    slid = stagger([(m, replace(st, mating=False))], OPTIONS, AREA, blocker, {})[0]
+    assert isinstance(slid, Marker)
+    assert slid != m

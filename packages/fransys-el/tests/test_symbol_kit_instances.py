@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 from fransys_el.placement_kit import ProblemError
-from fransys_el.symbol_pins import _pick
+from fransys_el.symbol_pins import _pick, mating_face
 from kit_instance_checks import built, check_channels, check_gangs, check_pins, laid_out
 from kit_instances import INSTANCES
 
@@ -66,3 +66,9 @@ def test_a_connector_pin_binds_to_the_pin_port_and_never_to_the_mating_port() ->
     assert _pick(LIBRARY, view, ("pin-cell", frozendict({"A": "pin"}))).ports == {"p": "pin"}
     with pytest.raises(ProblemError):
         _pick(LIBRARY, view, ("pin-cell", frozendict({"A": "mate"})))
+
+
+def test_each_pin_names_its_mating_port_when_the_symbol_has_one() -> None:
+    """`mate` serves each pin, `<k>.mate` the pins `<k>.*`; a symbol with no mating port names none."""
+    assert mating_face(["in", "out", "mate"]) == {"in": "mate", "out": "mate"}
+    assert mating_face(["1.in", "1.mate", "2.in"]) == {"1.in": "1.mate"}

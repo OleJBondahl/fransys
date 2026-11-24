@@ -116,6 +116,8 @@ def _slot(m: Marker, st: Stand, step: int, ctx: tuple[Options, Size, Mapping[int
     mine = frozenset({m.net, net_of_key(m.net), m.end.sym})  # a sibling fan's lane is exempt beside the box, never under it (R1063)
     fed, moved, first = _fed(m, st, keeps), False, m  # the wire that feeds a marker belongs to its stand; `first` sizes the Demand, not the last step
     bounds = Limits(area, st.band)
+    if st.mating:  # a stub at its pin's mating port does not slide; a collision there is a looks finding, a box off the page asks for room
+        return m if inside(marker_box(m, options, drawn=True), area) else _room(m, st, options)
     if not st.stood:  # the lane end found no stand at placement: no room (layout-0507)
         return _room(m, st, options)
     while (

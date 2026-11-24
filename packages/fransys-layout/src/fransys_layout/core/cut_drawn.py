@@ -18,10 +18,20 @@ if TYPE_CHECKING:
     from .sym_values import Sym
     from .values import Orientation, PlacementProblem
 
-__all__ = ("cut_stands", "stand_pins")
+__all__ = ("cut_stands", "mating_stands", "stand_pins")
 
 
 type Pair = tuple[PinRef, PinRef]
+
+
+def mating_stands(problem: PlacementProblem) -> dict[PinRef, PinRef]:
+    """Each mated pin whose symbol has a mating port and whose conductor to its mate partner is a stub: that port.
+
+    The one home of "a stub naming the mate partner stands at the mating port"; a wire's tag stays on the wire side.
+    """
+    port = {PinRef(s.id, q.id): PinRef(s.id, q.mating) for s in problem.symbols for q in s.pins if q.mating}
+    far = set(problem.facts.far_ends)
+    return {a: port[a] for x, y in problem.facts.mates for a, b in ((x, y), (y, x)) if a in port and (a, b) in far}
 
 
 def stand_pins(

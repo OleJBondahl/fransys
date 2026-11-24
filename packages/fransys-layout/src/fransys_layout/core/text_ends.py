@@ -16,7 +16,7 @@ from .arrow_reserve import arrow_rows, leg_fit, leg_rows
 from .band import abut as band_abut
 from .band import lane_line, lane_span
 from .clearance import Keep, footprint_keeps
-from .cut_drawn import cut_stands
+from .cut_drawn import cut_stands, mating_stands
 from .cut_end_rooms import laned_stub, pole_of
 from .errors import CoreError
 from .geometry import sized
@@ -63,6 +63,7 @@ class MarkEnv:
     bands: Mapping[int, tuple[tuple[int, int], ...]] = field(default_factory=dict)  # by page, the solved row bands
     ranks: Mapping[str, int] = field(default_factory=dict)  # a symbol -> its rank; no id text decides an order (SYMBOL-TIE)
     columns: Mapping[str, tuple[int, ...]] = field(default_factory=dict)  # a column or hub id -> the ranks of its symbols, in cell order
+    mating: Mapping[PinRef, PinRef] = field(default_factory=dict)  # a mated pin -> the mating port its stub stands at
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +75,7 @@ class Stand:
     side: Side  # the side the marker's box lies on: the turn `Options.marker_facing` gives it
     band: tuple[int, int] | None = None  # the row band a pin's marker box stays in (R1333)
     span: int = 0  # the G from the arrow's lane to the last lane below it at its end: the flag stretches over it (BUNDLE-ARROW)
+    mating: bool = False  # the stub stands at its pin's mating port: it stays there, off the wire side
     stood: bool = True  # False: the lane end found no stand at placement (Trunk.stood); the marker is MARKER_UNPLACED (layout-0507)
 
 
@@ -119,6 +121,7 @@ def mark_env(cut: CutResult, placement: Placement, problem: PlacementProblem, op
         bands={pg.page: pg.bands for pg in placement.pages},
         ranks=ranks,
         columns=columns,
+        mating=mating_stands(problem),
     )
 
 
@@ -161,13 +164,19 @@ def stood_at(env: MarkEnv, pin: PinRef) -> PinRef:
     return (env.stands[pin][placed[3]] if placed is not None and pin in env.stands else None) or pin
 
 
+def _stood_for(env: MarkEnv, pin: PinRef, ref: Ref) -> tuple[PinRef, bool]:
+    """The pin `ref`'s marker at `pin` stands at, and whether that is the mating port: a stub at a pin in `env.mating`."""
+    at_mate = pin in env.mating and kind_of(ref) is RefKind.STUB
+    return (env.mating[pin], True) if at_mate else (stood_at(env, pin), False)
+
+
 def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
     """One marker box out from the pin along its turned side, past its lead wire if it has one.
 
     A mixed pin on a free-sided symbol stands at the pin `env.stands` names for its orientation: the end stays `pin`.
     """
     # KI-1098: at mated plug pins the tag box and the stub box print over each other (TEXT-KEEPS)
-    xy = stood_at(env, pin)
+    xy, at_mate = _stood_for(env, pin, ref)
     if (xy.sym, xy.pin) not in env.pins:
         msg = f"marks: {who(ref)} has no placed pin {xy.sym}.{xy.pin}"
         raise CoreError(msg)
@@ -180,7 +189,7 @@ def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
     stand = abut(env.options, side, x, y, (pin, str(kind_of(ref))))
     feet = next((p.footprint for p in env.placed.get(page, ()) if p.sym == xy.sym), None)
     band = None if feet is None else next((b for b in env.bands.get(page, ()) if b[0] <= feet.y < b[1]), None)
-    return replace(stand, band=band)
+    return replace(stand, band=band, mating=at_mate)
 
 
 def _trunk_of(env: MarkEnv, fan: str, end: RefEnd, ref: Ref) -> tuple[Trunk, ...]:

@@ -7,6 +7,7 @@ reference = { standard = "IEC 60617", number = "connector-fixed" }
 ports = [
   { id = "in",  at = [0, -2], dir = "N", description = "wire side" },
   { id = "out", at = [0, 2],  dir = "S", description = "far edge of the box" },
+  { id = "mate", at = [0, 2], dir = "S", description = "mating side" },
 ]
 
 paths = [
@@ -18,7 +19,13 @@ elements = [
   { polyline = [[-2, 0], [2, 0], [2, 2], [-2, 2]], closed = true },
 ]
 
+lint_allow = [
+  { rule = "port-position-shared", reason = "the mating port stands on the far edge beside the wire port out: a mated pin's stub stands at mate, a wired out stays a wire end" },
+  { rule = "port-isolated", reason = "a mating port ends its circuit at the mating face; a mate makes equal pin names conductive (model Mate), not a path of this symbol" },
+]
+
 [slots]
 tag           = { at = [-2.25, 1],   side = "W", box = [6, 1] }
 "marking.in"  = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }
 "marking.out" = { at = [0.25, 2.75], side = "E", box = [1.5, 1] }
+"marking.mate" = { at = [-0.25, 2.75], side = "W", box = [1.5, 1] }

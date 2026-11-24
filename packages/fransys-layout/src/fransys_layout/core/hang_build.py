@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from .anchors import folded
 from .band import arrow_box
+from .cut_drawn import mating_stands
 from .geometry import shift, union
 from .hang_levels import extra
 from .hangings import Hanging
@@ -63,7 +64,7 @@ def page_hangings(
     """Per (symbol, pin, orientation), one Hanging per drawn thing at that pin.
 
     The plan's ends come first, in plan order, then the anchors of the page's symbols (`owners`, with the page number in `page_owners`).
-    A mixed pin's marker hangs at the pin `stands` names for the orientation: `Hanging.pin` is the pin it stands at.
+    A marker hangs at the pin `stands` names (a mixed pin), or at its mating port (a stub naming the mate partner): `Hanging.pin`.
     """
     page, owners = page_owners
     sides = pin_sides(problem)
@@ -71,9 +72,10 @@ def page_hangings(
     for (sym, pin, orient), side in sides.items():
         by_pin.setdefault((sym, pin), []).append((orient, side))
     out: dict[Key, list[Hanging]] = {}
+    mating = mating_stands(problem)
     for end, kind in _ends(refs, page):
         for orient, _ in by_pin.get((end.sym, end.pin), ()):
-            pin = (stands or {}).get(end, {}).get(orient) or end
+            pin = mating[end] if end in mating and kind == "stub" else (stands or {}).get(end, {}).get(orient) or end
             at = sides[pin.sym, pin.pin, orient]
             out.setdefault((pin.sym, pin.pin, orient), []).append(Hanging(pin, at, _marker_rel(options, at, end, kind), kind))
     for anchor in (a for a in problem.anchors if a.pin.sym in owners):

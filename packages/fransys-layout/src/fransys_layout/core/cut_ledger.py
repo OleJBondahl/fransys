@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple, cast
 from fransys_model.kernel import natural_key
 
 from .cut_bundle import bundled
-from .cut_drawn import stand_pins
+from .cut_drawn import mating_stands, stand_pins
 from .cut_end_rooms import cut_ends, pole_of
 from .cut_pieces import fan_pins, hole_pin, join, joined, key, pairs, split, trunked
 from .net_keys import is_lone_cut
@@ -202,8 +202,9 @@ def _leads(problem: PlacementProblem, flow: FlowGraph, where: Mapping[str, int])
     """
     wired = {a.pin for f in flow.fans for a in (*f.drivers, *f.legs)} | {e.pin for c in flow.columns for e in (*c.heads, *c.feet) if e.kind == "open"}
     out: dict[PinRef, None] = {}
+    mated = mating_stands(problem)  # a pin whose stub stands at its mating port has no lead
     for net in problem.nets:
-        for pin in (p for p in net.pins if p.sym in where and p not in wired):
+        for pin in (p for p in net.pins if p.sym in where and p not in wired and p not in mated):
             pages = {where.get(q.sym) for q in net.pins if q != pin}
             if where[pin.sym] not in pages and (net.cut or pages):
                 out[pin] = None

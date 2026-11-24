@@ -9,6 +9,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from electrical_symbols import is_mating_port
 from fransys_layout.core import PageGraph, page_graph
 from fransys_layout.drawing import port_points
 from fransys_model.derive import (
@@ -32,6 +33,7 @@ from .kit_keys import function_of
 from .placement_ids import pin_names, symbol_ids
 from .placement_joins import node_joins
 from .placement_views import MARKER_KEYS
+from .symbol_pins import mating_face
 from .write_texts import symbol_keys
 
 if TYPE_CHECKING:
@@ -54,7 +56,7 @@ _DOT = "junction-dot"
 
 @dataclass(frozen=True)
 class PagePart:
-    """One page: its drawing, port points (by port value), graph, node set, anchors (where symbols offer a wire end) and power symbols' points."""
+    """One page: its drawing, port points and mating points (by port value), graph, node set, anchors, power symbols points."""
 
     drawing: Drawing
     ports: dict[str, XY]
@@ -62,6 +64,7 @@ class PagePart:
     nodes: frozenset[XY]
     anchors: frozenset[XY]
     powers: dict[str, XY] = field(default_factory=dict)
+    mating: dict[str, XY] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -125,38 +128,46 @@ def pin_owner(model: Model, kit: SymbolKit) -> dict[str, dict[str, Id[Port]]]:
     return by
 
 
-def _port_map(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library) -> tuple[dict[str, XY], frozenset[XY], dict[str, XY]]:
-    """The model ports' points, every symbol's own port points (a power symbol's wires end on its own) and those of the power symbols by port."""
+def _port_map(
+    drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library
+) -> tuple[dict[str, XY], frozenset[XY], dict[str, XY], dict[str, XY]]:
+    """The model ports' points, each symbol's own port points, the power symbols' by port and the mating points by port."""
     found: dict[str, XY] = {}
     powers: dict[str, XY] = {}
+    mating: dict[str, XY] = {}
     anchors: set[XY] = set()
     for symbol in drawing.symbols:
         names = by.get(symbol.id, {})
-        for at, pin in () if is_marker(symbol) else port_points(symbol, library):
+        points = {} if is_marker(symbol) else {pin: at for at, pin in port_points(symbol, library)}
+        mating |= {names[pin].value: points[mate] for pin, mate in mating_face(points).items() if pin in names}
+        for at, pin in ((at, pin) for pin, at in points.items() if not is_mating_port(pin)):
             anchors.add(at)
             if symbol.key in POWER_KEYS and symbol.ports:
                 powers.setdefault(symbol.ports[0], at)
             if pin in names:
                 found[names[pin].value] = at
-    return found, frozenset(anchors), powers
+    return found, frozenset(anchors), powers, mating
 
 
 def _part(drawing: Drawing, by: Mapping[str, Mapping[str, Id[Port]]], library: Library) -> PagePart:
-    ports, anchors, powers = _port_map(drawing, by, library)
+    ports, anchors, powers, mating = _port_map(drawing, by, library)
     dots = {(s.x, s.y) for s in drawing.symbols if s.key == _DOT}
     graph = page_graph([w.points for w in drawing.wires], dots, list(ports.values()))
     marks = {(s.x, s.y) for s in drawing.symbols if is_marker(s)}
-    nodes = {p for edge in graph.edges for p in edge} | graph.joints | (marks & set(ports.values()))
-    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots, powers)
+    nodes = {p for edge in graph.edges for p in edge} | graph.joints | (marks & {*ports.values(), *mating.values()})
+    return PagePart(drawing, ports, graph, frozenset(nodes), anchors | dots, powers, mating)
 
 
 def _join(pages: Mapping[Id[Page], PagePart]) -> UnionFind[tuple[Id[Page], XY]]:
-    """One union of every page's wire edges."""
+    """One union of every page's wire edges, and of each pin's mating point with the pin: the face a stub stands at carries the pin."""
     union: UnionFind[tuple[Id[Page], XY]] = UnionFind()
     for page, part in pages.items():
         for edge in part.graph.edges:
             a, b = tuple(edge)
             union.union((page, a), (page, b))
+        for port, at in part.mating.items():
+            if port in part.ports:
+                union.union((page, at), (page, part.ports[port]))
     return union
 
 

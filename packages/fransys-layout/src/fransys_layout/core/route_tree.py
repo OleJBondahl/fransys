@@ -71,14 +71,15 @@ def _further(
     out: list[Wire] = []
     for end in ends:
         start = _cell(end[-1], step)
-        own = own_syms(env, link.net, link.net)
-        leg = Leg(link.key, start, min(held), frozenset((start,)), frozenset(held), own)
+        leg = Leg(link.key, start, min(held), frozenset((start,)), frozenset(held), own_syms(env, link.net, link.net))
         path = astar(grid, leg, env.options)
         if path is None:
             return None
         pts = simplify(path, step)
         grid.mark_wire(link.key, pts)
         wire = tidy([*end, *pts])
+        if len(wire) < MIN_ENDS:
+            continue  # the end already stands on the tree: the junction joins it, there is no wire to draw
         held.update(_held(path, wire, step))
         out.append(Wire(link.net, env.page, wire, "routed"))
     return tuple(out)

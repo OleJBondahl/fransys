@@ -51,6 +51,10 @@
   "lint_allow": [
     {
       "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
+      "rule": "through-missing"
+    },
+    {
+      "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
       "rule": "port-isolated"
     }
   ],
@@ -59,6 +63,11 @@
     {
       "ports": [
         "in"
+      ]
+    },
+    {
+      "ports": [
+        "mate"
       ]
     }
   ],
@@ -72,6 +81,15 @@
       "description": "wire side",
       "dir": "N",
       "id": "in"
+    },
+    {
+      "at": [
+        1,
+        2
+      ],
+      "description": "mating side",
+      "dir": "S",
+      "id": "mate"
     }
   ],
   "reference": {
@@ -84,6 +102,17 @@
       "at": [
         0.25,
         -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.mate": {
+      "at": [
+        1.5,
+        3
       ],
       "box": [
         1.5,

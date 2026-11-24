@@ -225,3 +225,17 @@ def test_a_fan_wired_pin_with_a_stub_is_mixed_on_every_symbol_free_sided_or_plai
     sibling_fan = Fan("g", ("n2",), (Attach(None, 0, 0, PinRef("H", "s"), net="n2"),), (), None, 1, "N")
     got = stand_pins([pair, (pair[0], far)], ([pair], (sibling_fan,), ()), (free("H"),))
     assert got[pair[0]]["R0"] == PinRef("H", "s")  # a paired mixed pin stands at the sibling the pairs leave free, a fan pin or not
+
+
+def test_a_stub_naming_the_mate_partner_hangs_at_the_pins_mating_port() -> None:
+    """`mating_stands` names the port only when the stub's conductor goes to the mate partner; the stub hangs there, any other at the pin."""
+    sym = free("H")
+    sym = replace(sym, pins=tuple(replace(p, mating="s") if p.id == "w" else p for p in sym.pins))
+    mate = PinRef("H", "w")
+
+    def hung(far: PinRef) -> set[str]:
+        prob = PlacementProblem(AREA, (sym,), (), facts=Facts(mates=((mate, PinRef("F", "w")),), far_ends=((mate, far),)))
+        refs = [Ref("n1", RefKind.STUB, (RefEnd(1, None, mate),))]
+        return {h.pin.pin for hs in page_hangings(refs, prob, OPTIONS, (1, frozenset({"H"}))).values() for h in hs}
+
+    assert (hung(PinRef("F", "w")), hung(PinRef("F", "e"))) == ({"s"}, {"w"})

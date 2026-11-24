@@ -103,7 +103,7 @@ def _meets_box(points: Sequence[XY], box: Box, ports: Sequence[XY]) -> bool:
 
 
 def over_markers(part: PagePart) -> list[str]:
-    """One member per (wire or dot, marker): `wire / <key>` or `dot / <key>`, in drawing order.
+    """One member per (wire or dot, marker): `wire / <key> at (x, y)` or `dot / <key> at (x, y)`, the marker's point, in drawing order.
 
     A wire with a point in the marker's box (its edge included) or crossing it counts. Only the end
     segment that enters the marker's own port is exempt, so a wire that runs on through the box counts (R2062).
@@ -120,6 +120,10 @@ def over_markers(part: PagePart) -> list[str]:
             if on_flag_edge(box, (marker.x, marker.y), end) and not _in(prev, box)
         ]  # a lane ends on the flat edge, approaching from outside the box
         ports = [(marker.x, marker.y), *(part.ports[p] for p in marker.ports if p in part.ports), *edge]
-        found += [f"wire / {marker.key}" for w in part.drawing.wires if _meets_box(w.points, box, ports)]
-        found += [f"dot / {marker.key}" for d in part.drawing.symbols if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)]
+        found += [f"wire / {marker.key} at ({marker.x}, {marker.y})" for w in part.drawing.wires if _meets_box(w.points, box, ports)]
+        found += [
+            f"dot / {marker.key} at ({marker.x}, {marker.y})"
+            for d in part.drawing.symbols
+            if dot_on_marker(d, marker) and not any(own_end(q, (d.x, d.y)) for q in ports)
+        ]
     return found

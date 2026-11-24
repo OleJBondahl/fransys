@@ -150,7 +150,7 @@ def _facts(facts: Facts, symbols: frozenset[str], bare: Collection[PinRef], gone
     region with a symbol outside is dropped: its neighbours share no net here.
     """
     units = tuple(replace(u, boundary=tuple(p for p in u.boundary if _inside(p, symbols) and p not in bare)) for u in facts.units)
-    mates = tuple((a, b) for a, b in facts.mates if _inside(a, symbols) and _inside(b, symbols))
+    mates = tuple((a, b) for a, b in facts.mates if _inside(a, symbols) or _inside(b, symbols))
     far = tuple((a, b) for a, b in facts.far_ends if _inside(a, symbols))
     series = tuple(s for s in facts.series if set(leaves_of(s)) <= symbols)
     kept = tuple(c for c in (frozenset(s & symbols) for s in facts.keep_whole) if len(c) >= _MIN_ENDS)

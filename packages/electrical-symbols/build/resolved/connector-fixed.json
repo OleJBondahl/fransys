@@ -61,6 +61,16 @@
     ]
   ],
   "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "the mating port stands on the far edge beside the wire port out: a mated pin's stub stands at mate, a wired out stays a wire end",
+      "rule": "port-position-shared"
+    },
+    {
+      "reason": "a mating port ends its circuit at the mating face; a mate makes equal pin names conductive (model Mate), not a path of this symbol",
+      "rule": "port-isolated"
+    }
+  ],
   "name": "Connector, fixed portion of an assembly",
   "nodes": [
     {
@@ -71,6 +81,11 @@
     {
       "ports": [
         "out"
+      ]
+    },
+    {
+      "ports": [
+        "mate"
       ]
     }
   ],
@@ -100,6 +115,15 @@
       "description": "far edge of the box",
       "dir": "S",
       "id": "out"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "mating side",
+      "dir": "S",
+      "id": "mate"
     }
   ],
   "reference": {
@@ -118,6 +142,17 @@
         1
       ],
       "side": "E"
+    },
+    "marking.mate": {
+      "at": [
+        -0.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "W"
     },
     "marking.out": {
       "at": [

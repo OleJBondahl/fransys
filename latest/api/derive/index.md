@@ -3640,10 +3640,10 @@ separate question that keeps the physical net.
 def port_power_kind(model: Model, port: Id[Port]) -> PowerKind
 ```
 
-The `PowerKind` of the physical net of `port`; `NONE` when `port` is not in `model`.
+The `PowerKind` of the wire piece of `port`; `NONE` when `port` is not in `model`.
 
-A load pin wired to a 24 V terminal gets the kind of that net though no `Net` lists it.
-Cost: O(1) once per model digest, like `port_rails`.
+A load pin wired to a 24 V terminal gets the kind of that net though no `Net` lists it; a pin
+only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like `port_rails`.
 
 ### port_power_text
 
@@ -3723,6 +3723,27 @@ The widest text `position_at` can print before the pages exist: `digits` page di
 `far` holds the documents that may print a placement in another PDF; empty is the same-PDF text.
 It builds through `partner_position_text` and `document_prefix`, as `position_at` does. Layout sizes a where-text with it.
 
+### power_ends_split
+
+```python
+def power_ends_split(model: Model) -> Groups
+```
+
+The pins of each group of power conductors that no drawing set draws as one potential: drawn as nets, never as symbols.
+
+Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
+A conductor is carried by symbols only when some set unit draws both its ends under one `power_identity`.
+
+### power_identity
+
+```python
+def power_identity(model: Model, port: Id[Port], kind: PowerKind, text: str | None) -> Identity
+```
+
+What a power symbol of `kind` prints as one potential: its text for a supply, the rails and source unit for a ground, `PE` for earth.
+
+The one reader: `_rails` joins the ends of a conductor by it before layout, and the drawn-netlist reader joins symbols by it after.
+
 ### power_kind
 
 ```python
@@ -3735,7 +3756,7 @@ A physical net holding a net of class `PE` is `PE`, supplied or not. Otherwise i
 looked up in the supplies: a DC rail above or below 0 V is `SUPPLY`, a DC rail at 0 V is
 `GROUND`. An AC rail, a potential in no supply, no potential, or two potentials on one
 physical net are `NONE`, as is a net whose ports fall in physical nets of different kinds.
-A physical net of exactly two ports, bridges and links counted, is `NONE` whatever its
+A wire piece of two ports, links counted and bridges never, is `NONE` whatever its
 potential: a wire, not a rail; it keeps the potential.
 A DC supply that declares no 0 V rail leaves its 0 V net `NONE`: declare it.
 
@@ -3864,8 +3885,8 @@ The prospective fault current at each protective position, per current kind.
 
 One entry per position whose function is a `protection` one and per kind its rails carry.
 A bolted fault at either terminal joins it to every other rail of its supplies; the loads are
-left out, every source counts. A
-position no source reaches reads `0`.
+left out, every source counts. A position no source reaches reads `0`. Each position is walked
+over every item state of its chain (`chain`).
 
 ### protection_symbols
 

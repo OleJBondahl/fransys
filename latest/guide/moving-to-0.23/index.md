@@ -2,106 +2,29 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.42
+
+- Power conductors between drawing sets are drawn as wires or reference pairs, never as two lone power symbols.
+- A bridged terminal's potential text reads the whole net.
+- Fault currents walk every switching item of the chain.
+
 ## New in 0.23.41
 
 - `write(unit=...)` of a unit placed once writes its placed documents again, `reference` included; a unit placed several times writes the unit alone. Skip 0.23.39 and 0.23.40.
 
 ## New in 0.23.40
 
-- Placed unit documents print the `reference` column again; only the unit's own set under `units/<name>/` leaves it out.
-- listing_version is 11.
-- Skip 0.23.39.
+- listing_version 11: a unit's placed documents print the `reference` column again; only the unit's own set under `units/<name>/` leaves it out. Skip 0.23.39.
 
-## New in 0.23.39
-
-- Each unit set is written under `units/<name>/<kind>`, from the unit design whatever its instance count.
-- An empty or clashing PLC channel name is an ERROR. A breaking point with only a minimum is refused.
-- A fused terminal draws as terminal, fuse, terminal. A tag on one row no longer widens every trunk of its fan.
-- symdef is pinned at 0.38.0.
-
-## New in 0.23.38
-
-- A bundle stub with one near symbol now draws, not a stub-table error.
-
-## New in 0.23.37
-
-- A fan's hub is the conductor wired to a leg's head pin, so the legs of a fan align and no wire crosses text (KI-1382, KI-1383).
-
-## New in 0.23.36
-
-- A cut rail end now draws one reference that points to where the wire continues.
-- The bundle arrow spans every lane it carries.
-- West arrows are mirrored, so they point the way the wire leaves.
-- These are drawing moves under the rules BUNDLE-ARROW and MARKER-FREE-SIDE.
-
-## New in 0.23.35
-
+## New in 0.23.34
 
 BREAKING: a document subject is a location, a unit (its release name, an instance, or its id) or `None`. A device handle, a harness and an item id are no longer accepted and raise `TypeError`; `DocumentRow` and `DocumentScope` lose `item`, `bom_item` and `boards`, and `has_schematic_subject` is gone.
 
-BREAKING: stored releases are rebuilt (schema 35); reading an old one gives `SchemaVersionError`.
-
-BREAKING: a board that shares its unit with another top-level device is refused with the ERROR `BOARD_SHARES_UNIT`, which replaces `BOARD_NETS_NOT_DRAWN`. Give the board a unit of its own.
-
-- A conductor whose ink is readable now counts as drawn, so a chain of tapped device pins no longer reports a false CONNECTION_NOT_DRAWN.
-- A link's wire joins only what the ledger's ink joins, so a cut net draws one wire per ink part.
-- A generic box is now as wide as symdef draws it, and the INK_WITHOUT_CONDUCTOR reader counts ink on more pages; some drawings move.
-- A board's traces are drawn from its pins, so board pages show the traces they should.
-- Every lane of a bundle now ends on the flat edge of its arrow.
-- New WARNING CONNECTION_NOT_ACCOUNTED: a conductor end that no wire or marker accounts for, or that two do.
-- CONNECTION_TO_UNDRAWN, MARKER_UNPLACED, NO_CELL, OUTLINE_NO_ROOM, OUT_OF_PAGE and WIRE_MEETS_NET are now ERRORs, so `fr.write` refuses a model that shows them.
-- New INFO DRAWING_SET_REFUSED: a layout ERROR refused a drawing set, so its drawing is not written.
-- An unnamed rack channel is named by its drawn pin label, for example `DO3`.
-- `cores.csv` prints the far end in full form, for example `+EXT-M1:U1`.
-- A terminal row's `side_a` no longer names the bridge partner; the bridge is the shared `jumper_group`.
-
-## New in 0.23.33
-
-- A released unit nested and placed by its parent now compares equal to its own release; no stored file moves, and fr.verify accepts existing releases as they are.
-- Texts and tags keep clear of the unit boxes, so some pages repack and the pump-station example drawings move.
-
-## New in 0.23.32
-
-- A wire and the reference markers of its round now come from one routing plan, so a pin whose route is lost never leaves a dangling wire end.
-- INK_WITHOUT_CONDUCTOR (WARNING) names ink drawn between pins that the model joins by no conductor. It names no fix: no call clears it, so send the smallest model that shows it.
-- A part whose cable gauge is unknown now reads None, reports one INFO (`GAUGE_UNKNOWN`) per part, and the cable rows print the text it gives.
-- The cable list's gauge column field is now `cross_section`, the gauge text; the part facet's `gauge_mm2` is `Decimal | None`.
-
-## New in 0.23.31
-
-- A fixed wire no longer runs through the rail text of a neighbouring pin's power symbol, so that text is never read as part of another designation.
-- Such a wire now falls back to a reference pair where no other path exists.
-
-## New in 0.23.30
-
-- A released unit placed under a function scope no longer fails `fr.release` with a false BASELINE_DIFFERS on boundary.
-- A unit's baseline compares only what the unit itself authored; the placement's function scope never enters it.
-
-## New in 0.23.29
-
-- A rail or ground from an unbonded supply in another unit now prints its source unit, and a declared minus-pole name: GND -U1-J1 (KI-1095).
-- Mated plugs wired to shared device pins now draw every end in larger cabinets too; 0.23.26 could miss a connection there (KI-1069).
-- Builds with many such plugs take longer, up to about 80% more CPU; a later release brings it down (KI-1096).
-
-## New in 0.23.26
-
-- Mated plugs wired to shared device pins now draw every end; the two shapes that missed a connection in 0.23.25 are fixed (KI-1069). No call changes.
-
-## New in 0.23.23
-
-- A busbar (`d.detail.busbar`) between a unit's boundary receptacle and a fuse draws its wire; before, the drawing set was refused with LANE_WIRE_DROPPED (KI-1067 closed).
-
-## New in 0.23.22
-
-- A position in another PDF leads with that document's short code: `-A2 p7:6C` for a unit document (the unit's designation), `SYS p7:6C` for the system document. The code of the system document is the `[words]` key `system_document_code` (default `SYS`). Another document keeps its scope path. No call gains a keyword.
-- With `hide_pe` set, two terminal annexes on a by-others system-document page are no longer left out (KI-1010 closed).
-- A shared pole turns once, so the second lane's wired pin no longer faces away from its symbol (KI-753 closed). A fan tap whose rise finds no path is refused alone: the trunk and the other taps stay drawn (KI-991 closed). A crossing lane is no longer dropped from both ends of an arrow at a row cut (KI-992 closed).
-- A card box clears the end cell of every lane of its attached column, so it no longer draws inside a longer lane.
-- A page holds more cards: the cut forecasts only the flags that stack, so columns that fit the page are no longer folded onto the next (KI-973 closed). A bank of 16 relays takes one page, not two.
-- A fallback reference pair stands with the room it asked for (KI-1004 closed).
-- A position switch's tag slot stands above its roller and adds no left reach.
+BREAKING: stored releases are rebuilt (schema 36); reading an old one gives `SchemaVersionError`.
 
 ## New in 0.23.21
+
+- BREAKING: a stored model of schema 35 or older is refused; the model gains the `[ratings]` house record (schema 36). Rebuild stored releases with `fr.release`.
 
 - BREAKING: a stored model of schema 34 or older is refused; the unused `layout.group_hint` record is gone (schema 35). Rebuild stored releases with `fr.release`.
 - BREAKING: a stored model of schema 32 or older is refused; the front-page record now holds the diagram sheet count (schema 33). Rebuild stored releases with `fr.release`.

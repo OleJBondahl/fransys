@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.41/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.42/api/derive/">
       
       
       
@@ -5446,6 +5446,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         position_room
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#power_ends_split" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        power_ends_split
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#power_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        power_identity
       </span>
     </span>
   </a>
@@ -12678,6 +12700,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#power_ends_split" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        power_ends_split
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#power_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        power_identity
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#power_kind" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -18387,9 +18431,9 @@ separate question that keeps the physical net.</p>
 <h3 id="port_power_kind">port_power_kind</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_power_kind</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PowerKind</span>
 </code></pre></div>
-<p>The <code>PowerKind</code> of the physical net of <code>port</code>; <code>NONE</code> when <code>port</code> is not in <code>model</code>.</p>
-<p>A load pin wired to a 24 V terminal gets the kind of that net though no <code>Net</code> lists it.
-Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
+<p>The <code>PowerKind</code> of the wire piece of <code>port</code>; <code>NONE</code> when <code>port</code> is not in <code>model</code>.</p>
+<p>A load pin wired to a 24 V terminal gets the kind of that net though no <code>Net</code> lists it; a pin
+only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
 <h3 id="port_power_text">port_power_text</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_power_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -18436,6 +18480,17 @@ never by parsing the printed text.</p>
 <p>The widest text <code>position_at</code> can print before the pages exist: <code>digits</code> page digits and the highest <code>frame</code> cell, every one <code>digit</code>.</p>
 <p><code>far</code> holds the documents that may print a placement in another PDF; empty is the same-PDF text.
 It builds through <code>partner_position_text</code> and <code>document_prefix</code>, as <code>position_at</code> does. Layout sizes a where-text with it.</p>
+<h3 id="power_ends_split">power_ends_split</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_ends_split</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Groups</span>
+</code></pre></div>
+<p>The pins of each group of power conductors that no drawing set draws as one potential: drawn as nets, never as symbols.</p>
+<p>Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
+A conductor is carried by symbols only when some set unit draws both its ends under one <code>power_identity</code>.</p>
+<h3 id="power_identity">power_identity</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_identity</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">kind</span><span class="p">:</span> <span class="n">PowerKind</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Identity</span>
+</code></pre></div>
+<p>What a power symbol of <code>kind</code> prints as one potential: its text for a supply, the rails and source unit for a ground, <code>PE</code> for earth.</p>
+<p>The one reader: <code>_rails</code> joins the ends of a conductor by it before layout, and the drawn-netlist reader joins symbols by it after.</p>
 <h3 id="power_kind">power_kind</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_kind</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">net</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Net</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PowerKind</span>
 </code></pre></div>
@@ -18444,7 +18499,7 @@ It builds through <code>partner_position_text</code> and <code>document_prefix</
 looked up in the supplies: a DC rail above or below 0 V is <code>SUPPLY</code>, a DC rail at 0 V is
 <code>GROUND</code>. An AC rail, a potential in no supply, no potential, or two potentials on one
 physical net are <code>NONE</code>, as is a net whose ports fall in physical nets of different kinds.
-A physical net of exactly two ports, bridges and links counted, is <code>NONE</code> whatever its
+A wire piece of two ports, links counted and bridges never, is <code>NONE</code> whatever its
 potential: a wire, not a rail; it keeps the potential.
 A DC supply that declares no 0 V rail leaves its 0 V net <code>NONE</code>: declare it.</p>
 <p>Raises:
@@ -18516,8 +18571,8 @@ unit or to the top's: a unit with no profile of its own draws with the house num
 <p>The prospective fault current at each protective position, per current kind.</p>
 <p>One entry per position whose function is a <code>protection</code> one and per kind its rails carry.
 A bolted fault at either terminal joins it to every other rail of its supplies; the loads are
-left out, every source counts. A
-position no source reaches reads <code>0</code>.</p>
+left out, every source counts. A position no source reaches reads <code>0</code>. Each position is walked
+over every item state of its chain (<code>chain</code>).</p>
 <h3 id="protection_symbols">protection_symbols</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">protection_symbols</span><span class="p">(</span><span class="n">protection_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
@@ -20436,7 +20491,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.41 documentation
+      Fransys 0.23.42 documentation
     </div>
   
   

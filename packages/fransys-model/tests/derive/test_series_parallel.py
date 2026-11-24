@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import fransys as fr
 import pytest
+from _expected_codes import expect_codes
 from fransys.colours import BU
 
 from fransys_model.derive.rows_series_parallel import ParallelRow, SeriesRow
@@ -61,12 +62,15 @@ def plants() -> dict[str, fr.Model]:
     """One model per plant: the I3 plant, a control circuit, a hub and a bridge."""
     found = {}
     authors = (("i3", _i3), ("control", _control), ("hub", _hub), ("bridge", _bridge))
-    for name, author in (*authors, ("pair", _pair), ("rails", _rails)):
+    for name, author in (*authors, ("pair", _pair), ("rails", _rails), ("two_rails", _two_rails), ("rail_open", _rail_open)):
         d = fr.design("demo_parts")
         d.location("L0", "Workshop")
         with d.function("G", "Group"):
             author(d)
-        found[name] = fr.build(d).model
+        result = fr.build(d)
+        if name == "rail_open":
+            expect_codes(result, "FUNCTION_HALF_CONNECTED")  # H2's first pin is the open end the plant tests
+        found[name] = result.model
     return found
 
 
@@ -116,6 +120,24 @@ def _rails(d: fr.Design) -> None:
     for a, b in ((psu.output["+"], h1["1"]), (h1["2"], psu.output["-"])):
         _wire(d, a, b)
     for a, b in ((psu.output["+"], s1["A"]), (s1["B"], h2["1"]), (h2["2"], psu.output["-"])):
+        _wire(d, a, b)
+
+
+def _two_rails(d: fr.Design) -> None:
+    """H1 from the 24 V rail and H2 from the 0 V rail, both ends meeting at one node; H3 across the rails makes both a rail."""
+    psu = d.device("T1", "DEMO-PSU-24")
+    d.dc_supply("S", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
+    h1, h2, h3 = (d.device(t, "DEMO-LAMP-24", place="L0").lamp for t in ("H1", "H2", "H3"))
+    for a, b in ((psu.output["+"], h1["1"]), (psu.output["-"], h2["1"]), (h1["2"], h2["2"]), (psu.output["+"], h3["1"]), (h3["2"], psu.output["-"])):
+        _wire(d, a, b)
+
+
+def _rail_open(d: fr.Design) -> None:
+    """H1 from the 24 V rail and H2 from an unwired pin, both ends meeting at one node; H3 across the rails makes the 24 V a rail."""
+    psu = d.device("T1", "DEMO-PSU-24")
+    d.dc_supply("S", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
+    h1, h2, h3 = (d.device(t, "DEMO-LAMP-24", place="L0").lamp for t in ("H1", "H2", "H3"))
+    for a, b in ((psu.output["+"], h1["1"]), (h1["2"], h2["2"]), (psu.output["+"], h3["1"]), (h3["2"], psu.output["-"])):
         _wire(d, a, b)
 
 
@@ -171,6 +193,24 @@ def test_a_rail_ends_a_region_and_joins_nothing(plants) -> None:
     found = series_parallel(model, _ends(model, {"T1", "S1", "H1", "H2"}))
     assert found.regions == (SeriesRow(parts=("S1", "H2")),)
     assert found.bridges == ()
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_parallel_never_holds_legs_that_end_on_two_rails(plants) -> None:
+    """Catches every rail end merged into one source: the 24 V lamp and the 0 V lamp would be a Parallel."""
+    model = plants["two_rails"]
+    found = series_parallel(model, _ends(model, {"T1", "H1", "H2", "H3"}))
+    assert found.regions == ()
+    assert found.bridges == (("H1", "H2"),)
+
+
+@pytest.mark.rule("SERIES-PARALLEL")
+def test_a_rail_leg_and_an_open_end_leg_are_a_bridge_for_the_open_end_is_no_second_member_at_the_rail_node(plants) -> None:
+    """Catches the open end read as the rail's node: H2 hangs on no node of H1's, so the pair is not joined at the same two nodes (R3711)."""
+    model = plants["rail_open"]
+    found = series_parallel(model, _ends(model, {"H1", "H2", "H3"}))
+    assert found.regions == ()
+    assert found.bridges == (("H1", "H2"),)
 
 
 @pytest.mark.rule("SERIES-PARALLEL")

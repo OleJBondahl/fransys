@@ -48,7 +48,7 @@ fmt:
     uv run ruff format .
     uv run ruff check --fix .
 
-# tests only: local, one process, when the named test files are estimated at 300 s or less and vmstat shows no swap IO, else in parallel on a fresh AWS spot instance (decision 0134, R3147); ARGS narrows them (paths, -k, ...).
+# tests only: local, one process, when the named test files are estimated at 300 s or less and vmstat shows no swap IO, else in parallel on a fresh cloud spot instance (decision 0134, R3147); ARGS narrows them (paths, -k, ...).
 # The line RUN-LOCAL says which; no silent fallback; PYTEST_WORKERS applies to the local `just ci` only
 [positional-arguments]
 test *ARGS:

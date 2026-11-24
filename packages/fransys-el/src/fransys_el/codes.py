@@ -224,7 +224,8 @@ _CORE: tuple[CodeInfo, ...] = (
         stage="render",
         who="note",
         cause="The named symbols are wired as a bridge, which no series or parallel holds.",
-        fix="Nothing is wrong; the symbols stay drawn, and CONNECTION_NOT_DRAWN names each wire of the bridge left undrawn.",
+        fix="Nothing is wrong: the symbols stay drawn, and their wires are routed or drawn as references."
+        " CONNECTION_NOT_DRAWN names a wire only if it is left undrawn.",
         page="findings-render",
     ),
     CodeInfo(

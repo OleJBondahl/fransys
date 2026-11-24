@@ -4,6 +4,12 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.43
+
+- A mated power pin whose partner is drawn in another drawing set draws the mate's OFF stub naming its partner, never a bare power symbol.
+- A bridged terminal pin whose only connection on a side is the bridge shows its net's potential symbol.
+- Series-parallel regions no longer join legs that end on two different rails.
+
 ## New in 0.23.42
 
 - Power conductors between drawing sets are drawn as wires or reference pairs, never as two lone power symbols.

@@ -7,6 +7,7 @@ from fransys_model.derive.facts.closure import port_rails
 from fransys_model.derive.facts.components import components
 from fransys_model.derive.facts.conductor_facts import conductor_ends
 from fransys_model.derive.facts.house_settings import export_form_of
+from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.rail_source import rail_source_unit
 from fransys_model.derive.far_pins import far_pins
 from fransys_model.derive.function_scopes import function_scopes
@@ -50,8 +51,8 @@ def _named(model: Model, kinds: Mapping[Id[Port], PowerKind], one: Id[Port], oth
 
 
 def _split(model: Model, kinds: Mapping[Id[Port], PowerKind]) -> Groups:
-    """The stand pins of each group of conductors, joined by a shared port, that holds a conductor no set draws as one potential."""
-    ends = (conductor_ends(model, c) for c in drawn_conductors(model))
+    """The stand pins of each group of conductors and mate pairs, joined by a shared port, that holds one no set draws as one potential."""
+    ends = [conductor_ends(model, c) for c in drawn_conductors(model)] + [(one, other) for _, one, other in mate_pairs(model)]
     pairs = [(one, other) for one, other in ends if one in kinds and other in kinds]
     cut = {p for one, other in pairs if not _named(model, kinds, one, other) for p in (one, other)}
     return tuple(group for group in components((), pairs) if cut.intersection(group))
@@ -100,7 +101,8 @@ def power_ends_split(model: Model) -> Groups:
     """The pins of each group of power conductors that no drawing set draws as one potential: drawn as nets, never as symbols.
 
     Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
-    A conductor is carried by symbols only when some set unit draws both its ends under one `power_identity`.
+    A mate pair is a connection like a conductor. Both are carried by symbols only when some set unit draws both ends under one `power_identity`.
+    A mated pin whose partner stands in another set is a net: it draws the mate's OFF stub, never a bare power symbol.
     """
     return _rails(model)[2]
 

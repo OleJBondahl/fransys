@@ -56,11 +56,11 @@ def _agreed(kinds: set[PowerKind]) -> PowerKind:
 def _piece_kind(model: Model, piece: PhysicalNet, whole: PhysicalNet) -> PowerKind:
     """The kind of wire `piece` of physical net `whole`: `NONE` for a wire, else `PE`, else the one potential's, read on the whole net.
 
-    A wire is a piece of two ports or a lone pin a bridge cut off `whole`; a PE terminal's two sides are a link, which stays.
+    A wire is a piece of two ports; a lone pin a bridge cut off `whole` has no wire on its side and shows the net's potential.
+    A PE terminal's two sides are a link, which stays.
     """
     link = whole.ports[0] in pe_firsts(model) and len({item_of_port(model, p) for p in piece.ports}) == 1
-    cut_off = len(piece.ports) < _WIRE_PORTS and len(piece.ports) < len(whole.ports)
-    if not link and (len(piece.ports) == _WIRE_PORTS or cut_off):
+    if not link and len(piece.ports) == _WIRE_PORTS:
         return PowerKind.NONE
     if whole.ports[0] in pe_firsts(model):
         return PowerKind.PE
@@ -79,7 +79,7 @@ def port_power_kind(model: Model, port: Id[Port]) -> PowerKind:
     """The `PowerKind` of the wire piece of `port`; `NONE` when `port` is not in `model`.
 
     A load pin wired to a 24 V terminal gets the kind of that net though no `Net` lists it; a pin
-    only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like `port_rails`.
+    only a bridge joins to the rail gets the rail's kind. Cost: O(1) once per model digest, like `port_rails`.
     """
     first = _piece_first(model).get(port)
     return PowerKind.NONE if first is None else _kinds(model).get(first, PowerKind.NONE)

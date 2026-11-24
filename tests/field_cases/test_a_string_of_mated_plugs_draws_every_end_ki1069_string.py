@@ -4,7 +4,6 @@ Fixed: KI1069-B (layout-0628, R2596); KI-1069 stays open until the real cabinet 
 
 import fransys as fr
 import pytest
-from _expected_codes import expect_codes
 from _model_build_cover import unit_document
 from ki1069_string_shape import build
 
@@ -15,8 +14,8 @@ def test_a_string_of_mated_plugs_draws_every_end() -> None:
     d.add(build, "U1")
     d.layout.profile(hide_unused_pins=True)
     result = fr.build(d, unit_document("dev-top"))
-    expect_codes(result, "CONNECTION_NOT_DRAWN")  # KI-1405 (ARM-SCOPE): 14 bare grounds on the connector pins of two drawing sets
-    assert sum(f.code == "CONNECTION_NOT_DRAWN" for f in result.findings) == 14
+    # KI-1405: a mated pair of grounds across two sets is a net, not two bare grounds
+    assert [f.code for f in result.findings if f.code in ("CONNECTION_NOT_DRAWN", "PLACEMENT_PROBLEM")] == []
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).

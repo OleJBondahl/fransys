@@ -8,12 +8,14 @@ lazy from collections.abc import Mapping, Sequence
 
 from fransys_model.derive.facts.drawn_closure import drawn_physical_nets
 from fransys_model.derive.order import series_part_key
+from fransys_model.derive.power import port_power_kind, port_power_text
 from fransys_model.derive.rows_series_parallel import SeriesParallel, SeriesRow
 from fransys_model.derive.series_parallel_cut import cut
 from fransys_model.derive.series_parallel_cut import root as _root
 from fransys_model.derive.series_parallel_reduce import SINK, SOURCE, reduce_region
-from fransys_model.derive.stands import stands
+from fransys_model.derive.stands import power_identity, stands
 from fransys_model.layout import Side
+from fransys_model.vocab import PowerKind
 from fransys_model.vocab.tables import ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Port
@@ -36,15 +38,17 @@ def series_parallel(model: Model, ends: Ends) -> SeriesParallel:
     S the output end, E and W neither. A net on a rail joins nothing. A symbol whose wired pins
     span more than two functions is a hub: it ends a region and is in none. An end on a rail, on
     no wire or on a hub, and a node no symbol enters or leaves, is the region's source or sink.
+    Rail ends of two potentials, or a rail end and one off a rail, are two nodes: such a region is a bridge, never a Parallel.
     """
     nets = _wiring(model, ends)
     hubs = _hubs(model, ends, nets)
     regions: list[SeriesRow] = []
     bridges: list[tuple[str, ...]] = []
     node, stops = _nodes(ends, nets, hubs)
+    rails = _rails_by_end(model, ends)
     for group in (part for found in _regions(_raw(node, stops), stops) for part in cut(found, stops) if len(part) > 1):
         legs = _legs(group, stops)
-        part = reduce_region([(u, v, leaf) for leaf, u, v in legs])
+        part = None if _two_rails(rails, legs) else reduce_region([(u, v, leaf) for leaf, u, v in legs])
         if part is None:
             bridges.append(tuple(leaf for leaf, _, _ in legs))
         else:
@@ -125,6 +129,24 @@ def _regions(raw: Sequence[Raw], stops: set[int]) -> list[list[Raw]]:
         key = leaf if end is None else _root(parent, end)
         groups.setdefault(key, []).append((leaf, u, v))
     return [g for g in groups.values() if len(g) > 1]
+
+
+def _rails_by_end(model: Model, ends: Ends) -> dict[End, frozenset[object]]:
+    """The potentials each symbol end's pins print; an end with no pin on a rail is absent, so a rail end differs from every end off a rail."""
+    found: dict[End, set[object]] = {}
+    for port, end in ends.items():
+        if (kind := port_power_kind(model, port)) is not PowerKind.NONE:
+            found.setdefault(end, set()).add(power_identity(model, port, kind, port_power_text(model, port)))
+    return {end: frozenset(rails) for end, rails in found.items()}
+
+
+def _two_rails(rails: Mapping[End, frozenset[object]], legs: Sequence[Leg]) -> bool:
+    """Whether the region's source or sink holds ends on two rails, or on a rail and off one: a Parallel joins members at the same two nodes (SP1)."""
+    empty = frozenset[object]()
+    for node, side in ((SOURCE, Side.N), (SINK, Side.S)):
+        if len({rails.get((leaf, side), empty) for leaf, u, v in legs if (u, v)[side is Side.S] == node}) > 1:
+            return True
+    return False
 
 
 def _legs(raw: Sequence[Raw], stops: set[int]) -> list[Leg]:

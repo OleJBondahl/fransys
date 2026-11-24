@@ -3643,7 +3643,7 @@ def port_power_kind(model: Model, port: Id[Port]) -> PowerKind
 The `PowerKind` of the wire piece of `port`; `NONE` when `port` is not in `model`.
 
 A load pin wired to a 24 V terminal gets the kind of that net though no `Net` lists it; a pin
-only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like `port_rails`.
+only a bridge joins to the rail gets the rail's kind. Cost: O(1) once per model digest, like `port_rails`.
 
 ### port_power_text
 
@@ -3732,7 +3732,8 @@ def power_ends_split(model: Model) -> Groups
 The pins of each group of power conductors that no drawing set draws as one potential: drawn as nets, never as symbols.
 
 Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
-A conductor is carried by symbols only when some set unit draws both its ends under one `power_identity`.
+A mate pair is a connection like a conductor. Both are carried by symbols only when some set unit draws both ends under one `power_identity`.
+A mated pin whose partner stands in another set is a net: it draws the mate's OFF stub, never a bare power symbol.
 
 ### power_identity
 
@@ -4361,6 +4362,7 @@ Each region's series in signal direction, and the symbols of each region that is
 S the output end, E and W neither. A net on a rail joins nothing. A symbol whose wired pins
 span more than two functions is a hub: it ends a region and is in none. An end on a rail, on
 no wire or on a hub, and a node no symbol enters or leaves, is the region's source or sink.
+Rail ends of two potentials, or a rail end and one off a rail, are two nodes: such a region is a bridge, never a Parallel.
 
 ### set_unit
 

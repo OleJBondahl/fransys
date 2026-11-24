@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.42/api/derive/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.43/api/derive/">
       
       
       
@@ -18433,7 +18433,7 @@ separate question that keeps the physical net.</p>
 </code></pre></div>
 <p>The <code>PowerKind</code> of the wire piece of <code>port</code>; <code>NONE</code> when <code>port</code> is not in <code>model</code>.</p>
 <p>A load pin wired to a 24 V terminal gets the kind of that net though no <code>Net</code> lists it; a pin
-only a bridge joins to the rail gets none. Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
+only a bridge joins to the rail gets the rail's kind. Cost: O(1) once per model digest, like <code>port_rails</code>.</p>
 <h3 id="port_power_text">port_power_text</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">port_power_text</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -18485,7 +18485,8 @@ It builds through <code>partner_position_text</code> and <code>document_prefix</
 </code></pre></div>
 <p>The pins of each group of power conductors that no drawing set draws as one potential: drawn as nets, never as symbols.</p>
 <p>Conductors that share a port are one group, so no pin keeps a symbol for one conductor and a wire for another.
-A conductor is carried by symbols only when some set unit draws both its ends under one <code>power_identity</code>.</p>
+A mate pair is a connection like a conductor. Both are carried by symbols only when some set unit draws both ends under one <code>power_identity</code>.
+A mated pin whose partner stands in another set is a net: it draws the mate's OFF stub, never a bare power symbol.</p>
 <h3 id="power_identity">power_identity</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">power_identity</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="n">Id</span><span class="p">[</span><span class="n">Port</span><span class="p">],</span> <span class="n">kind</span><span class="p">:</span> <span class="n">PowerKind</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Identity</span>
 </code></pre></div>
@@ -18837,7 +18838,8 @@ Reserved texts are every pin gone or moved, plus the source's own <code>retired<
 <p><code>ends</code> maps each drawn port to its symbol key and the side it leaves by: N is the input end,
 S the output end, E and W neither. A net on a rail joins nothing. A symbol whose wired pins
 span more than two functions is a hub: it ends a region and is in none. An end on a rail, on
-no wire or on a hub, and a node no symbol enters or leaves, is the region's source or sink.</p>
+no wire or on a hub, and a node no symbol enters or leaves, is the region's source or sink.
+Rail ends of two potentials, or a rail end and one off a rail, are two nodes: such a region is a bridge, never a Parallel.</p>
 <h3 id="set_unit">set_unit</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">set_unit</span><span class="p">(</span><span class="n">drawing_set</span><span class="p">:</span> <span class="n">DrawingSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Id</span><span class="p">[</span><span class="n">Unit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 </code></pre></div>
@@ -20491,7 +20493,7 @@ for any other box.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.42 documentation
+      Fransys 0.23.43 documentation
     </div>
   
   

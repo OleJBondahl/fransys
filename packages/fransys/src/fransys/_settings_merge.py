@@ -32,6 +32,7 @@ INTERNAL_TABLES = (
     "revision_table",
     "revision",
     "designation",
+    "ratings",
 )
 _REMOVED_TABLES = {
     "colours": "the [colours] table was removed in 0.22; delete it",

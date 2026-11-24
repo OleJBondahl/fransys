@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING, Final
 lazy from decimal import Decimal
 
 from fransys_model.derive.facts.current.bounds import CurrentBound, Tie
+from fransys_model.derive.facts.current.chains import evaluated
 from fransys_model.derive.facts.current.graph import Edge, Raw, raw_of
 from fransys_model.derive.facts.current.states import evaluate
 from fransys_model.derive.facts.energy_flow import takes_energy
 from fransys_model.derive.facts.fault.readers import conductive_ports, draw
+from fransys_model.derive.facts.house_settings import ratings_form_of
 from fransys_model.derive.facts.rail_reach import reached_kinds
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab.tables import functions
@@ -78,7 +80,7 @@ def _added(
         return []
     alone = _alone(raw, base, ports)
     new = _new_edges(function, ports, len(alone.edges))
-    bounds, _ = evaluate(dataclasses.replace(alone, edges=(*alone.edges, *new)))
+    bounds, *_ = evaluate(dataclasses.replace(alone, edges=(*alone.edges, *new)), ratings_form_of(model).max_solves)
     star = len(ports) > _EDGE_PORTS
     return [
         LoadLimit(function, port if star else None, kind, drawn, _pick(bounds, edge.at, kind))
@@ -110,7 +112,7 @@ def load_limits(model: Model) -> tuple[LoadLimit, ...]:
         if takes_energy(model, function) and (drawn := draw(model, function)) is not None
     ]
     held = {function for edge in raw.edges for function in edge.tie.functions}
-    bounds = evaluate(raw)[0] if any(load[0] in held for load in loads) else {}
+    bounds = evaluated(model)[0] if any(load[0] in held for load in loads) else {}
     base: UnionFind[Id[Port]] = UnionFind()
     for part in (*raw.wires, *raw.edges):
         base.union(part.first, part.second)

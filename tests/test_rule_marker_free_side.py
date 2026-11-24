@@ -16,7 +16,7 @@ import fransys as fr
 import pytest
 from _direct_case import SHEET
 from fransys_el import build, house_conventions, symbol_kit
-from fransys_el.drawn_power import inked_power
+from fransys_el.drawn_power import _inked, _symbols
 from fransys_el.placement_env import port_pins
 from test_drawn_symbols_placed_by_core import R825_STUBS
 
@@ -251,7 +251,7 @@ def test_a_port_drawn_as_an_inked_power_symbol_that_names_its_potential_is_a_car
     symbols = [SimpleNamespace(key=power_symbol_key(key), ports=("a",), slots=((marking_slot("1"), text),) if text else ())]
     part = SimpleNamespace(drawing=SimpleNamespace(symbols=symbols), ports={"a": (0, 0)}, powers={"a": (0, 0)})  # the symbol stands on its pin
     net: Any = SimpleNamespace(pages={"p": part}, ids={"a": "a-id"}, union=UnionFind())
-    assert (inked_power(net) == {"a"}) is (key != "supply" or text is not None)
+    assert ({port for page, part, port, _, _ in _symbols(net) if _inked(net, page, part, port)} == {"a"}) is (key != "supply" or text is not None)
 
 
 # INK_WITHOUT_CONDUCTOR: a falling stock of this file's builds on KI-974 (docs/KNOWN-ISSUES.toml, el-0130).

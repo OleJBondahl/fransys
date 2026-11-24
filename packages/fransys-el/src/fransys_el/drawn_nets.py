@@ -13,7 +13,6 @@ from fransys_model.layout import StarKind
 
 from .drawn_ends import ink_without_conductor
 from .drawn_finding import drawn_finding
-from .drawn_power import inked_power
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding, Id, Model
@@ -96,14 +95,14 @@ def _pairs(net: Netlist, stubs: dict[str, set[str]]) -> UnionFind[_Node]:
     return joined
 
 
-def _carried(net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node], powered: set[str], end: tuple[str, str]) -> bool:
-    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, marked, or both pins on inked power symbols (R1631).
+def _carried(net: Netlist, stubs: dict[str, set[str]], joined: UnionFind[_Node], end: tuple[str, str]) -> bool:
+    """True when the end at `near` is drawn (R1573, R1617): joined to `far` in one piece, or marked.
 
     A mark is a stub at `near` that names `far`, or the stubbed line of `near`. A where-text names a copy, never an end: ink carries it.
-    R4 (ink to the pin) replaces the model-net read; a far pin with no drawn point has no symbol to ask for.
+    A power symbol's end is one piece with its far symbol by `join_power`, so it needs no term here.
     """
     near, far = end
-    if (near in powered and (far in powered or not net.placed.get(far))) or _lined(net, near) or far in stubs.get(near, ()) or end in net.named:
+    if _lined(net, near) or far in stubs.get(near, ()) or end in net.named:
         return True
     return bool({joined.find(r) for r in _roots(net, near, stubs)} & {joined.find(r) for r in _roots(net, far, stubs)})
 
@@ -114,10 +113,9 @@ def _unmarked(model: Model, net: Netlist, stubs: dict[str, set[str]], joined: Un
     A pin that stands the power symbol of the flagged rail terminal `far` draws that terminal (`rail_drawn_by`, owner 2026-10-25).
     """
     held = [net.ids[p] for p in net.placed if net.at_home(p)]
-    powered = inked_power(net)
     fed = {(pin.value, terminal.value) for terminal, pins in rail_drawn_by(model).items() for pin in pins}
     ends = ((n.value, f.value) for n, f in far_pins(model, held))
-    return [end for end in ends if end not in fed and not _carried(net, stubs, joined, powered, end)]
+    return [end for end in ends if end not in fed and not _carried(net, stubs, joined, end)]
 
 
 def not_drawn_findings(model: Model, net: Netlist) -> tuple[Finding, ...]:

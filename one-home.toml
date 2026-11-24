@@ -509,11 +509,11 @@
 "fransys_model.derive.facts.current.graph::_split_joints" = 1
 "fransys_model.derive.facts.current.graph::raw_of" = 1
 "fransys_model.derive.facts.current.load_limits::load_limits" = 1
-"fransys_model.derive.facts.current.states::_by_component" = 1
+"fransys_model.derive.facts.current.states::evaluate" = 3
 "fransys_model.derive.facts.current.states::_named" = 1
-"fransys_model.derive.facts.current.states::_stateful_items" = 1
+"fransys_model.derive.facts.current.states::stateful_items" = 2
 "fransys_model.derive.facts.fault.breaking::chosen_point" = 1
-"fransys_model.derive.facts.fault.prospective::prospective_fault" = 2
+"fransys_model.derive.facts.fault.prospective::_readings" = 2
 "fransys_model.derive.facts.fault.solve::_block_share" = 1
 "fransys_model.derive.facts.fault.solve::highest" = 1
 "fransys_model.derive.facts.rating_index::_fitted_by_holder" = 1

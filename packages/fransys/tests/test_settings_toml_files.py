@@ -201,6 +201,10 @@ def test_designation_toml_holds_todays_values() -> None:
     assert _table("designation") == {"number_start": 1}
 
 
+def test_ratings_toml_holds_todays_values() -> None:
+    assert _table("ratings") == {"max_solves": 4096}
+
+
 def test_words_toml_holds_todays_values() -> None:
     expected = {
         "side_a": "Side A",

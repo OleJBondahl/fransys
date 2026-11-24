@@ -108,7 +108,7 @@ def tie_of(model: Model, stated: Sequence[Id[Function]], ports: tuple[Id[Port], 
     )
 
 
-def _holds_source(members: Collection[int], ties: Sequence[Tie | None]) -> bool:
+def holds_source(members: Collection[int], ties: Sequence[Tie | None]) -> bool:
     """Whether the block `members` (two edges or more) holds a source; `None` is the outside."""
     return len(members) >= _TWO_EDGES and any(tie is None or tie.source for tie in (ties[at] for at in members))
 
@@ -120,13 +120,13 @@ def block_bounds[V: Hashable](block: frozenset[int], ends: Sequence[tuple[V, V]]
     `D` has no source-holding cycle without `L`. Each gets the tightest limit per kind.
     """
     found: dict[int, list[CurrentBound]] = {at: [] for at in block if ties[at] is not None}
-    if _holds_source(block, ties):
+    if holds_source(block, ties):
         for limiter in sorted(block):
             tie = ties[limiter]
             if tie is None or not tie.limits:
                 continue
             rest = list(block - {limiter})
-            free = {rest[at]: _holds_source([rest[i] for i in part], ties) for part in blocks([ends[at] for at in rest]) for at in part}
+            free = {rest[at]: holds_source([rest[i] for i in part], ties) for part in blocks([ends[at] for at in rest]) for at in part}
             for device, limits in found.items():
                 if device == limiter or not free[device]:
                     limits.extend(tie.limits)

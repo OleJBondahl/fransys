@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 from _drawn_pages import drawn_pages, markers_in, ref_texts, tag_texts
+from _expected_codes import expect_codes
 
 from electrical_symbols import power_symbol_key
-from fransys_model.derive import boundary_rail_wires, conductor_ends, item_of_port, item_unit, rail_source_unit
+from fransys_model.derive import boundary_rail_wires, conductor_ends, item_of_port, item_unit, power_ends_split, rail_source_unit
 from fransys_model.derive import unit_system_designation as tag
 from fransys_model.derive.stands import stands
 from fransys_model.layout import DrawingSet, Page, PowerSymbol, layout_of
@@ -173,16 +174,25 @@ def _ground_texts(model: Any) -> set[str]:
     return {text for page in drawn_pages(model).values() for sym in page.symbols if sym.key == ground for _, text in sym.slots}
 
 
-def test_two_unbonded_ground_sources_print_their_unit_tags_and_raise_no_identity_finding(tmp_path: Path) -> None:
-    """R2589: each ground symbol of the receiving cabinet prints its source unit's tag, and no RAIL_IDENTITY_SHARED."""
+def _expect_unbonded_shape(result: fr.BuildResult) -> None:
+    """KI-1407, KI-1408: the receiving page holds both sources' bare grounds, which one scope joins; every conductor end is drawn (R3699)."""
+    expect_codes(result, "DRAWING_SHORTS_NETS", "RAIL_IDENTITY_SHARED")
+    assert [f for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []
+    assert len(power_ends_split(result.model)) == 2  # one set draws both ends of each source's wire, under two identities: wired
+
+
+def test_two_unbonded_ground_sources_print_their_unit_tags_and_the_receiving_page_shows_them_as_one_identity(tmp_path: Path) -> None:
+    """R2589: each ground symbol of the receiving cabinet prints its source unit's tag; the bare ones of the page are one identity (KI-1407)."""
     result = _build_receiver(tmp_path, bonded=False)
-    assert "RAIL_IDENTITY_SHARED" not in [f.code for f in fr.check(result)]
+    _expect_unbonded_shape(result)
     assert {"0V -U1-J1", "0V -U1-J2"} <= _ground_texts(result.model)
 
 
 def test_a_qualified_ground_prints_the_declared_minus_pole_name(tmp_path: Path) -> None:
     """R2592: with `names=("24V", "GND")` the receiving cabinet's grounds print `GND -U1-J1` and `GND -U1-J2`, the rail's declared name."""
-    model = _build_receiver(tmp_path, bonded=False, unit=_named_source).model
+    result = _build_receiver(tmp_path, bonded=False, unit=_named_source)
+    _expect_unbonded_shape(result)
+    model = result.model
     assert {"GND -U1-J1", "GND -U1-J2"} <= _ground_texts(model)
 
 
@@ -190,13 +200,17 @@ def test_two_bonded_ground_sources_print_no_ground_text_and_raise_no_identity_fi
     """V3: a bond wire between the two sources is one supply to the cabinet: nothing changes, ground prints no text."""
     result = _build_receiver(tmp_path, bonded=True)
     assert "RAIL_IDENTITY_SHARED" not in [f.code for f in fr.check(result)]
+    assert power_ends_split(result.model) == ()
     assert _ground_texts(result.model) == set()
 
 
 def test_rail_source_unit_names_the_declaring_unit_of_each_unbonded_source_and_nothing_else(tmp_path: Path) -> None:
     """R2589: in the receiving cabinet the fact is the unit of each source; in a source's own cabinet, and when bonded, it is None."""
     for bonded in (False, True):
-        model = _build_receiver(tmp_path, bonded=bonded).model
+        result = _build_receiver(tmp_path, bonded=bonded)
+        if not bonded:
+            _expect_unbonded_shape(result)
+        model = result.model
         found = set()
         for p in ports(model):
             source, cabinet = rail_source_unit(model, p), item_unit(model, item_of_port(model, p))
@@ -213,3 +227,75 @@ def test_a_fused_supply_in_a_qualified_cabinet_prints_the_device_then_the_source
     monkeypatch.setattr(power, "rail_source_unit", lambda _m, _port: "unit")
     monkeypatch.setattr(power, "unit_system_designation", lambda _m, _unit: "-U1")
     assert power._printed(None, "24V -F2", PowerKind.SUPPLY, "port") == "24V -F2 -U1"  # ty: ignore[invalid-argument-type] patched reads
+
+
+class _Cross(NamedTuple):
+    strip: fr.TerminalStrip
+
+
+@fr.unit("demo-cross-src", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _cross_src(u: fr.Design) -> _Cross:
+    psu, lamp = u.device("T1", "DEMO-PSU-24"), u.device("H1", "DEMO-LAMP-24")
+    x = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True).run("G", 2)
+    u.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
+    u.dc_supply("S", psu)
+    for pole, end in (("+", 1), ("-", 2)):
+        u.series(psu.output[pole], lamp.lamp[end], wire=("RD", 0.5))
+        u.series(psu.output[pole], x[end].inner, wire=("RD", 0.5))
+    return _Cross(x)
+
+
+@fr.unit("demo-cross-load", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _cross_load(u: fr.Design) -> _Cross:
+    lamps = u.device("H1", "DEMO-LAMP-24"), u.device("H2", "DEMO-LAMP-24")
+    x = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", interface=True).run("G", 2)
+    for lamp in lamps:
+        for end in (1, 2):
+            u.series(x[end].inner, lamp.lamp[end], wire=("RD", 0.5))
+    return _Cross(x)
+
+
+def _not_drawn(tmp_path: Path) -> fr.BuildResult:
+    """A ground net with a wire between two units' unflagged interface strips, each unit's end standing a bare ground on its own pages."""
+    d = fr.design("demo_parts", place="PLANT")
+    plant = d.location("PLANT", "Plant room")
+    one, two = d.add(_cross_src, "U1", place=None), d.add(_cross_load, "U2", place=None)
+    for end in (1, 2):
+        d.series(one.strip[end].outer, two.strip[end].outer, wire=("RD", 0.5))
+    preset = fr.DocumentPreset.CABINET_SCHEMATIC
+    for name in ("cross-src", "cross-load", "plant"):
+        (tmp_path / f"{name}.md").write_text("# Unit\n", encoding="utf-8")
+    docs = [fr.document(preset, f"demo-{n}", cover=tmp_path / f"{n}.md") for n in ("cross-src", "cross-load")]
+    return fr.build(d, *docs, fr.document(preset, plant, cover=tmp_path / "plant.md"))
+
+
+def test_a_wire_between_two_units_unflagged_strips_with_a_bare_ground_at_each_end_draws_every_end(tmp_path: Path) -> None:
+    """R3699: no drawing set holds both ends, so the wire is a net of its own ends and each is drawn: 0 CONNECTION_NOT_DRAWN."""
+    result = _not_drawn(tmp_path)
+    assert [f for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []
+    assert len(power_ends_split(result.model)) == 2  # one group per wire, none left standing
+    assert not {p for group in power_ends_split(result.model) for p in group} & stands(result.model).keys()
+
+
+@fr.unit("demo-bare-grounds", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def _bare_grounds(u: fr.Design) -> _Cross:
+    x10 = u.terminal_strip("X10", "DEMO-TB-2.5-TWIN", 2, bridged=True, rail=True)
+    psu, h1, h2 = u.device("T1", "DEMO-PSU-24"), u.device("H1", "DEMO-LAMP-24"), u.device("H2", "DEMO-LAMP-24")
+    u.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
+    u.dc_supply("S", psu)
+    u.series(psu.output["+"], x10[1].inner, wire=("BU", 0.5))
+    u.series(x10[1].inner, h1.lamp[1], wire=("BU", 0.5))
+    u.series(x10[2].inner, h2.lamp[1], wire=("BU", 0.5))
+    u.series(psu.output["-"], h1.lamp[2], wire=("BU", 0.5))
+    u.series(psu.output["-"], h2.lamp[2], wire=("BU", 0.5))
+    return _Cross(x10)
+
+
+def test_bare_grounds_of_one_unit_with_no_flagged_0v_rail_are_one_piece_and_no_connection_not_drawn(tmp_path: Path) -> None:
+    """ARM-SCOPE: the 0 V net is not flagged in unit U1, yet its bare grounds are one class by `join_power`, so no end is reported."""
+    d = fr.design("demo_parts", place="PLANT")
+    d.location("PLANT", "Plant room")
+    d.add(_bare_grounds, "U1", place=None)
+    (tmp_path / "u.md").write_text("# Unit\n", encoding="utf-8")
+    result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-bare-grounds", cover=tmp_path / "u.md"))
+    assert [f for f in result.findings if f.code == "CONNECTION_NOT_DRAWN"] == []

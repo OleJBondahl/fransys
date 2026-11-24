@@ -162,7 +162,7 @@ from .facts.closure import (
     rail_pairs,
     required_groups,
 )
-from .facts.conductor_facts import conductor_ends, is_bridge, is_pe_conductor
+from .facts.conductor_facts import conductor_ends, is_bridge
 from .facts.cores import cores_past_product
 from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets, drawn_pieces
 from .facts.fault.prospective import ProspectiveFault, prospective_fault
@@ -334,7 +334,7 @@ from .plc_tables import plc_tables
 from .plc_words import plc_list_rows, signal_word
 from .pole_gangs import pole_gangs
 from .potential import port_potential_current, port_potential_rank
-from .power import is_rail_terminal, port_power_kind, port_power_text, power_kind, power_text
+from .power import is_pe_conductor, is_rail_terminal, port_power_kind, port_power_text, power_kind, power_text
 from .printed_sets import document_drawing_sets, printed_drawing_sets
 from .printed_tag import printed_strip_tag, printed_tag
 from .queries import (
@@ -529,7 +529,7 @@ from .series_parallel import series_parallel
 from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets, sheets
 from .sideless_pins import SidelessPins, sideless_pins
-from .stands import drawn_stands, hidden_pins, rail_drawn_by, stands
+from .stands import drawn_stands, hidden_pins, power_ends_split, power_identity, rail_drawn_by, stands
 from .stub_far import stub_far
 from .stub_text import stub_text_at
 from .symbol_port_subject import symbol_port_subject
@@ -1056,6 +1056,8 @@ __all__ = [
     "ports",
     "position_at",
     "position_room",
+    "power_ends_split",
+    "power_identity",
     "power_kind",
     "power_text",
     "preset_headings",

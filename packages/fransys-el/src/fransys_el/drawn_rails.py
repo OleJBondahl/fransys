@@ -1,7 +1,7 @@
 """RAIL_IDENTITY_SHARED over the drawn power symbols (READ-RAILS, R3 second half, R1955).
 
 Two unbonded nets that print one rail identity in one cabinet are one drawn piece the model keeps apart. The identity is the
-cabinet's flagged rail, or with none flagged the cabinet plus the printed potential. A missing flag alone raises nothing.
+cabinet plus the printed potential, flagged rail or none.
 """
 
 from collections import defaultdict
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 __all__ = ["rail_findings"]
 
 _GROUND = power_symbol_key("ground")
+_ROOT = "the design root"
 _FUSE = "no unique protective device lies between them to name the second: put a fuse or breaker between them"
 _BOND = "bond the nets, or declare each supply in its own unit so each prints its declaring unit's tag"
 
@@ -37,7 +38,8 @@ def rail_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:
         drawn_finding(
             "RAIL_IDENTITY_SHARED",
             tuple(held.values()),
-            f"{unit_label(model, joined[0])} prints one rail identity for {len(held)} unbonded nets: {_BOND if joined[1] == _GROUND else _FUSE}",
+            f"{_ROOT if joined[0] is None else unit_label(model, joined[0])} prints one rail identity for {len(held)} unbonded nets: "
+            f"{_BOND if joined[1] == _GROUND else _FUSE}",
         )
         for joined, held in nets.items()
         if len(held) > 1

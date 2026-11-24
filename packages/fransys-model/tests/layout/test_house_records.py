@@ -16,6 +16,7 @@ from fransys_model.derive.facts.house_settings import (
     front_count_of,
     harness_text_of,
     lists_of,
+    ratings_form_of,
     reference_text_of,
     revision_form_of,
     revision_table_form_of,
@@ -51,6 +52,7 @@ ACCESSORS = (
     revision_table_form_of,
     revision_form_of,
     lists_of,
+    ratings_form_of,
     designation_form_of,
     export_form_of,
 )
@@ -62,8 +64,8 @@ def _model(records: tuple[Any, ...] = ()):
     return freeze(draft)
 
 
-def test_fourteen_kinds_are_facade_written_library_kinds() -> None:
-    assert len(HOUSE_TEXT_KINDS) == 14
+def test_fifteen_kinds_are_facade_written_library_kinds() -> None:
+    assert len(HOUSE_TEXT_KINDS) == 15
     assert set(HOUSE_TEXT_KINDS) <= set(LIBRARY_KINDS)
 
 
@@ -85,6 +87,7 @@ def test_each_builder_keys_its_record_by_its_table() -> None:
             "lists",
             "export",
             "designation",
+            "ratings",
         )
     }
     assert {type(r) for r in records} == set(HOUSE_TEXT_KINDS) - {FrontPages}
@@ -119,6 +122,7 @@ def test_the_accessors_read_what_the_builders_wrote() -> None:
     assert lists_of(model).pdf_columns["terminal"][-1] == "external_ends"
     assert "bom" not in lists_of(model).pdf_columns
     assert designation_form_of(model).number_start == 1
+    assert ratings_form_of(model).max_solves > 0
     form = export_form_of(model)
     assert form.reports == ("bom", "plc", "wires", "designations", "cables", "cores")
     assert (form.name_join, form.version_sign, form.ref_sign) == ("-", "-v", "-")

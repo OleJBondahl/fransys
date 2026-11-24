@@ -7,13 +7,12 @@ lazy from collections.abc import Iterable, Sequence
 
 from fransys_model.derive.facts.closure import PhysicalNet, _physical, board_nets, joined_nets, link_groups, required_groups
 from fransys_model.derive.facts.components import components
-from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import item_of_port
 from fransys_model.derive.order import port_groups_in_order
-from fransys_model.derive.power import is_rail_terminal
+from fransys_model.derive.power import drawn_conductors, is_rail_terminal
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.tables import conductors
 lazy from fransys_model.vocab.core import Port

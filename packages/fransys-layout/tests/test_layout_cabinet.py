@@ -74,6 +74,7 @@ def test_no_layout_kind_but_symbol_choices() -> None:
         "layout.house_profile",
         "layout.lists",
         "layout.paper",
+        "layout.ratings",
         "layout.reference_text",
         "layout.revision_form",
         "layout.revision_table_form",

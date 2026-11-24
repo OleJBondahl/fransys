@@ -33,6 +33,7 @@ def _file(tmp_path: Path, text: str) -> Path:
         "revision_table",
         "revision",
         "designation",
+        "ratings",
     ],
 )
 def test_an_internal_table_in_a_consumer_file_is_refused(tmp_path: Path, table: str) -> None:

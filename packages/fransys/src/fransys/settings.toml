@@ -87,6 +87,9 @@ format = "{version}.{revision}"
 [designation]
 number_start = 1  # the first number an automatic designation takes, -K1
 
+[ratings]
+max_solves = 4096  # the most solves the current law spends on one block of switching items; above it RATING_STATES_OVER_BUDGET
+
 [export]
 reports = ["bom", "plc", "wires", "designations", "cables", "cores"]  # the whole-model reports written, in this order
 name_join = "-"  # between the prefix, the kind and the fragment of a file name

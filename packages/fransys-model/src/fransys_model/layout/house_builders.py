@@ -12,6 +12,7 @@ lazy from fransys_model.vocab.document import Document
 
 from .house_export import DesignationForm, ExportForm
 from .house_lists import Lists
+from .house_ratings import RatingsForm
 from .house_text import (
     FrameForm,
     FrontPages,
@@ -40,7 +41,7 @@ _FORMS = {
     "revision_table": RevisionTableForm,
     "revision": RevisionForm,
 }
-_LAST = {"export": ExportForm, "designation": DesignationForm}
+_LAST = {"export": ExportForm, "designation": DesignationForm, "ratings": RatingsForm}
 HOUSE_TABLES = (*_FORMS, "words", "lists", *_LAST)
 
 

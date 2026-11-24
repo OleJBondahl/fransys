@@ -13,6 +13,7 @@ from fransys_model.derive import (
     item_of_port,
     port_function,
     port_power_kind,
+    power_ends_split,
 )
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, natural_key
 
@@ -65,15 +66,15 @@ def _net(env: Env, ports: Sequence[Id[Port]], unit_of: Mapping[str, Id[Unit] | N
     return Net(name, tuple(pins), _bundle(env, ports), crosses)
 
 
-def _rail_wires(model: Model) -> list[tuple[Id[Port], ...]]:
-    """The ends of the boundary rail terminals' wires, the wires of one terminal as one group."""
+def _wired_ends(model: Model) -> list[tuple[Id[Port], ...]]:
+    """The ends of the boundary rail terminals' wires, the wires of one terminal as one group, then each split power group (R3699)."""
     groups: dict[Id[Function] | Id[Conductor], set[Id[Port]]] = {}
     for wire in boundary_rail_wires(model):
         ends = conductor_ends(model, wire)
         terminal = next((p for p in ends if is_rail_terminal(model, item_of_port(model, p))), None)  # else the wire is its own group
         home = None if terminal is None else port_function(model, terminal)
         groups.setdefault(wire if home is None else home, set()).update(ends)
-    return [tuple(g) for g in groups.values()]
+    return [*(tuple(g) for g in groups.values()), *power_ends_split(model)]
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -83,7 +84,7 @@ def net_ports(model: Model) -> frozendict[str, Id[Port]]:
     A net's id names its lead port; a piece of a net that a set cuts apart names its own (`piece_names`), so every port of a drawn net is read.
     """
     found = {symbol_key(model, port): port for ph in drawn_physical_nets(model) for port in ph.ports}
-    for ports in _rail_wires(model):
+    for ports in _wired_ends(model):
         lead = net_lead(model, ports)
         found[symbol_key(model, lead)] = lead
     return frozendict(found)
@@ -93,9 +94,9 @@ def nets_of(env: Env, syms: Sequence[Sym]) -> tuple[tuple[Net, ...], tuple[Skipp
     """Every net with two drawn ends, in the order of its first pin, and the nets left out."""
     lead_of = {sym: lead for lead, sym in env.ids.items()}
     unit_of = {s.id: home_unit(env.model, lead_of[s.id]) for s in syms}
-    # a power net is drawn by anchors (G08-POWER); a boundary rail terminal's wires are nets of their own ends
+    # a power net is drawn by anchors (G08-POWER); a boundary rail terminal's wires and a split power group are nets of their own ends
     found = [_net(env, ph.ports, unit_of) for ph in drawn_physical_nets(env.model) if port_power_kind(env.model, ph.ports[0]).name == "NONE"]
-    found += [_net(env, ends, unit_of) for ends in _rail_wires(env.model)]
+    found += [_net(env, ends, unit_of) for ends in _wired_ends(env.model)]
     nets = sorted((n for n in found if isinstance(n, Net)), key=lambda n: _pin_key(n.pins[0]))
     # a lone port gives None: neither a Net nor a Skipped
     return tuple(nets), in_order({n for n in found if isinstance(n, Skipped)})

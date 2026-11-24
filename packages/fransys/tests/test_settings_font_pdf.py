@@ -34,7 +34,7 @@ def _faces(pdf: bytes) -> set[str]:
 def test_the_fixture_font_is_the_pdf_font_and_the_house_font_is_not(tmp_path: Path) -> None:
     toml = tmp_path / "fransys.toml"
     toml.write_text(
-        f'[font]\nfiles = ["{FONTS / "DejaVuSans.ttf"}", "{FONTS / "DejaVuSans-Bold.ttf"}"]\n',
+        f'[font]\nfiles = ["{(FONTS / "DejaVuSans.ttf").as_posix()}", "{(FONTS / "DejaVuSans-Bold.ttf").as_posix()}"]\n',
         encoding="utf-8",
     )
     ours = {name for name in _faces(_pdf(tmp_path, fr.settings())) if name.startswith("DejaVu")}

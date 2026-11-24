@@ -18,9 +18,9 @@ from hypothesis import given
 from hypothesis import strategies as st
 from plant import Plant
 
-from fransys_model.derive import ConductorEnd, FunctionSymbol, conductor_ends, is_rail_terminal, required_drawn, stands, terminal_items
-from fransys_model.derive.facts.conductor_facts import drawn_conductors, is_bridge, is_rail_bond
+from fransys_model.derive import ConductorEnd, FunctionSymbol, conductor_ends, is_bridge, is_rail_terminal, required_drawn, stands, terminal_items
 from fransys_model.derive.lookups import item_of_port
+from fransys_model.derive.power import drawn_conductors, is_rail_bond
 from fransys_model.vocab.tables import conductors, ports
 
 _ROOT = Path(__file__).parent.parent

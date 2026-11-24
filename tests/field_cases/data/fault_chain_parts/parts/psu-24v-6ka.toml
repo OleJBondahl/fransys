@@ -1,0 +1,35 @@
+schema = 2
+
+[part]
+mpn = "FC-PSU-24-6KA"
+manufacturer = "Invented"
+description = "Power supply, 24 V DC out, AC in, states a 6000 A DC fault current"
+category = "generic"
+class_code = "T"
+
+[rating]
+power_loss = { nom = "12 W" }
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L", role = "generic", side = "line" },
+    { name = "N", role = "generic", side = "load" },
+]
+
+[function.rating]
+voltage = [{ nom = "264 V", at = ["AC"] }]
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+voltage = [{ nom = "24 V" }]
+fault_current = [{ max = "6000 A", at = ["DC"] }]
+fault_time_constant = "2 ms"

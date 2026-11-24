@@ -10,7 +10,6 @@ from itertools import chain as _chain
 from itertools import product
 from typing import TYPE_CHECKING
 
-import pytest
 from current_plant import device, hub, wire
 from current_plant import fuse as plant_fuse
 from hypothesis import event, example, given, seed, settings
@@ -19,8 +18,6 @@ from plant import Plant
 from rating_plant import rated
 
 from fransys_model.derive import current_chains
-from fransys_model.derive.facts.current import chains as chains_module
-from fransys_model.derive.facts.current import states as current_states
 from fransys_model.derive.facts.current.bounds import LimitRole, _limits_of
 from fransys_model.elecdef import Current, LinkKind, PinRole
 from fransys_model.kernel import make_id
@@ -739,7 +736,7 @@ _STATE_FIXED = {
     "wire_closing_when_operated": Drawing((source(0, 1, 186), gate(1, 2, 0, _OPERATED), plain(2, 3)), frozenset({0, 3})),
 }
 
-# Held items where the code MISSES what the law over both states gives (spec-permitted).
+# Items held closed in the all-closed graph where the law over both states gives more than it.
 _HELD_FIXED = {
     # A wire that closes at rest (held closed) shorts the device D1 (index 1): the code drops the
     # shorted position. The law over both states counts D1 when the wire is open: 186 A.
@@ -748,18 +745,17 @@ _HELD_FIXED = {
     # operated, the contact adds a loop that avoids the fuse, so the source has no bound. At rest
     # (contact open) the loop is fuse and source alone, and the law gives the source 50 A.
     "no_contact_parallel_to_source_and_fuse": Drawing((fuse(0, 1, 50), source(0, 1), contact(0, 1, 0, _OPERATED))),
+    # The same, with a wire that shorts all three at rest. Only a search over the contact's item too finds the
+    # source's 50 A (wire open, contact open): a search over the wire's item alone leaves the contact closed.
+    "wire_shorting_the_source_beside_a_no_contact": Drawing((fuse(0, 1, 50), source(0, 1), contact(0, 1, 0, _OPERATED), gate(0, 1, 1, _REST))),
 }
 
-# What the law gives (highest over both states) and what the code gives, by hand, for each.
+# What the law gives (highest over both states), by hand: the code gives exactly it.
 _HELD_LAW = {
     "wire_shorting_a_device_at_rest": {0: 186, 1: 186, 3: 186},
     "no_contact_parallel_to_source_and_fuse": {0: 50, 1: 50, 2: None},
+    "wire_shorting_the_source_beside_a_no_contact": {0: 50, 1: 50, 2: None},
 }
-_HELD_CODE = {
-    "wire_shorting_a_device_at_rest": {0: 186, 1: None, 3: 186},
-    "no_contact_parallel_to_source_and_fuse": {0: 50, 1: None, 2: None},
-}
-
 _STATE_HAND = {
     # D and the fuse: 100 A operated (main), 120 A at rest (emergency); highest 120. The pole's
     # throws are one device: the highest of its two throws (100 and 120). Main: 100 (operated
@@ -777,93 +773,42 @@ def _hand(name: str, table: Mapping[str, Mapping[int, int | None]] = _STATE_HAND
     return {i: None if v is None else Decimal(v) for i, v in table[name].items()}
 
 
-def _two_sided(drawing: Drawing) -> bool:
-    """Whether every item has links closing in both states (a held item has only one)."""
-    items = {p.item for p in drawing.positions if p.item is not None}
-    return all({p.state for p in drawing.positions if p.item == item} == {_REST, _OPERATED} for item in items)
-
-
-def _has_gate(drawing: Drawing) -> bool:
-    return any(p.kind == _GATE for p in drawing.positions)
-
-
 def _explain(drawing: Drawing, got: dict[int, Decimal | None], law: dict[int, Decimal | None]) -> str:
     return f"got {got}, law {law}: {drawing}"
 
 
 @example(_STATE_FIXED["changeover_3i"])
 @example(_STATE_FIXED["no_and_nc_of_one_item"])
-@settings(max_examples=60, deadline=None, database=None, derandomize=True)
-@given(stateful_drawings().filter(lambda d: _two_sided(d) and not _has_gate(d)))
-def test_exactly_the_laws_bound_when_every_item_has_both_states(drawing: Drawing) -> None:
-    """No held item (each has links closing in both states) and no wire: exactly the law's."""
-    law = law_bounds(drawing)
-    event("states matter" if law != all_closed_bounds(drawing) else "no difference")
-    got = chain_bounds(drawing)
-    assert got == law, _explain(drawing, got, law)
-
-
 @example(_STATE_FIXED["held_nc_item"])
 @example(_STATE_FIXED["wire_closing_when_operated"])
 @example(_HELD_FIXED["wire_shorting_a_device_at_rest"])
 @example(_HELD_FIXED["no_contact_parallel_to_source_and_fuse"])
+@example(_HELD_FIXED["wire_shorting_the_source_beside_a_no_contact"])
 @settings(max_examples=60, deadline=None, database=None, derandomize=True)
 @given(stateful_drawings())
-def test_a_held_item_never_invents_a_bound(drawing: Drawing) -> None:
-    """On ALL drawings, held items and one-state wires included, for every device the code gives
-    none, or a bound the law itself gives in at least one state where the device exists (so at
-    most the law's highest). Where no state gives a bound, the code gives none."""
+def test_the_chains_give_exactly_the_laws_bound_on_every_stateful_drawing(drawing: Drawing) -> None:
+    """On ALL drawings, held items and one-state wires included, the code gives exactly the law's
+    bound for every device: no held item misses a finding and none invents one."""
     law = law_bounds(drawing)
     got = chain_bounds(drawing, strict=False)
-    given_by_states = state_values(drawing)
-    for at, value in got.items():
-        assert value is None or value in given_by_states[at], _explain(drawing, got, law)
-        ceiling = law[at]
-        assert value is None or (ceiling is not None and value <= ceiling)
+    assert got == law, _explain(drawing, got, law)
 
 
-def _three_items(drawing: Drawing) -> bool:
-    return len({p.item for p in drawing.positions if p.item is not None}) == 3
+def test_nine_changeovers_give_the_laws_bound() -> None:
+    """Nine changeovers on one source: each device is 200 A by the law (its operated throw), never the 50 A of the rest throws.
 
-
-def _capped_bounds(drawing: Drawing, cap: int) -> dict[int, Decimal | None]:
-    """`chain_bounds` with the enumeration cap lowered to `cap` (the cache is emptied around it)."""
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(current_states, "MAX_ENUMERATED_ITEMS", cap)
-        chains_module.chain_blocks.cache_clear()
-        try:
-            return chain_bounds(drawing, strict=False)
-        finally:
-            chains_module.chain_blocks.cache_clear()
-
-
-@example(  # the shrunk example of the probe "a capped item opens both its links"
-    Drawing(
-        (
-            source(0, 1, 50),
-            contact(0, 1, 0, _OPERATED),
-            contact(0, 1, 0, _REST),
-            *gate_changeover(0, 1, 1, 1, "k0"),
-            contact(0, 1, 2, _OPERATED),
-        )
-    ),
-    1,
-)
-@settings(max_examples=60, deadline=None, database=None, derandomize=True)
-@given(stateful_drawings().filter(_three_items), st.sampled_from((1, 2)))
-def test_items_above_the_cap_are_held_at_rest_and_never_invent_a_bound(drawing: Drawing, cap: int) -> None:
-    """The "Switch states" rule: the items above `MAX_ENUMERATED_ITEMS` are HELD AT REST (their
-    rest links closed, their operated links open), the others enumerated, and every evaluated
-    state is consistent. So with three stateful items and a cap of 1 or 2 no bound is above the
-    law's highest over ALL consistent assignments, and a bound the code gives is the law's bound
+    The value is by hand: the oracle needs 2^9 states, too slow for a tier-1 test.
     """
-    law = law_bounds(drawing)
-    got = _capped_bounds(drawing, cap)
-    for at, value in got.items():
-        ceiling = law[at]
-        assert value is None or (value in state_values(drawing)[at] and ceiling is not None and value <= ceiling), (
-            f"cap {cap}: {_explain(drawing, got, law)}"
-        )
+    positions = [source(0, 1, 500)]
+    devices = []
+    for i in range(9):
+        brk, make, joint = 11 + 4 * i, 12 + 4 * i, 13 + 4 * i
+        positions += [*changeover(1, brk, make, i, f"k{i}"), fuse(brk, joint, 50), fuse(make, joint, 200)]
+        devices.append(len(positions))
+        positions.append(plain(joint, 0))
+    drawing = Drawing(tuple(positions))
+    bounds = {fn: b.value for chain in current_chains(build(drawing)) for p in chain.positions for b in p.bounds for fn in p.functions}
+    assert [bounds[Plant.function_id(f"e{at}", "f")] for at in devices] == [200] * 9
 
 
 # A second, independent changeover (different sources, fuse and node numbers than
@@ -965,20 +910,12 @@ def test_the_stateful_fixed_drawings_get_the_hand_made_bounds() -> None:
         assert chain_bounds(drawing) == _hand(name), name
 
 
-def test_the_held_item_misses_are_spec_permitted_and_pinned() -> None:
-    """The law over both states gives more than the code, where a held item hides a state.
-
-    Pinned as the code's SOUND value (the spec: the other state "can only miss a finding, never
-    invent one"), so a change of the held rule shows here. The code's value is at most the law's
-    """
+def test_the_held_item_cases_get_the_laws_bound() -> None:
+    """The law over both states gives more than the all-closed graph; the code gives exactly the law's."""
     for name, drawing in _HELD_FIXED.items():
         law = law_bounds(drawing)
         assert law == _hand(name, _HELD_LAW), name
-        got = chain_bounds(drawing, strict=False)
-        assert got == _hand(name, _HELD_CODE), name
-        assert got != law, name
-        for at, value in got.items():
-            assert value is None or value in state_values(drawing)[at], name
+        assert chain_bounds(drawing, strict=False) == law, name
 
 
 # --- `_limits_of` directly: source envelopes, protection ratings, partial-range --

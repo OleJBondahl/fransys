@@ -377,7 +377,7 @@ P1, P2 = (Id[Page](kind="page", value=v) for v in ("p1", "p2"))
 def _drawn(net: Netlist, near: str, far: str, stubs: dict[str, set[str]] | None = None) -> bool:
     """True when the end of `near` at `far` is carried: ink, a stub naming `far`, its line or its where-text (R1573)."""
     held = stubs or {}
-    return _carried(net, held, _pairs(net, held), set(), (near, far))
+    return _carried(net, held, _pairs(net, held), (near, far))
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
@@ -509,14 +509,11 @@ def test_a_copy_pair_joins_through_its_where_text_and_not_without_it():
 
 
 @pytest.mark.rule("DRAWN-NETLIST")
-def test_a_where_text_alone_draws_no_end_and_a_power_symbol_draws_an_end_only_where_its_far_pin_is_powered_or_absent():
-    """A1: a where-text names a copy, so two texted pins with no ink between them are not drawn. A3: a power symbol at one pin only is no end."""
+def test_a_where_text_alone_draws_no_end():
+    """A1: a where-text names a copy, so two texted pins with no ink between them are not drawn."""
     net = _homed({"s": ((P1, (1, 1)),), "t": ((P1, (2, 2)),)})
     net.texted.update({"s", "t"})
     assert not _drawn(net, "s", "t")
-    held: dict[str, set[str]] = {}
-    carried = [_carried(net, held, _pairs(net, held), powered, ("s", far)) for powered, far in (({"s"}, "t"), ({"s", "t"}, "t"), ({"s"}, "gone"))]
-    assert carried == [False, True, True]
 
 
 @pytest.fixture(scope="module")
@@ -530,7 +527,7 @@ def relay_loop():
 def test_a_pin_whose_power_symbol_is_removed_leaves_its_conductor_undrawn_while_its_partner_keeps_a_symbol(relay_loop):
     """A3: a conductor between two powered pins is drawn only while both stand on their symbols; the bare pin's end is CONNECTION_NOT_DRAWN."""
     net = relay_loop.netlist()
-    powered = drawn_power.inked_power(net)
+    powered = {port for part in net.pages.values() for port in part.powers}
     ends = [(n.value, f.value) for n, f in far_pins(relay_loop.model, [net.ids[p] for p in net.placed if net.at_home(p)])]
     bare = next(f for n, f in ends if n in powered and f in powered and all(m in powered for m, g in ends if g == f))
     page, part = next((pg, pt) for pg, pt in net.pages.items() if bare in pt.powers)
@@ -670,11 +667,10 @@ def _powered(
             cast("Any", SimpleNamespace(symbols=(device, bar), wires=wires)), {device.id: {"p": ids[port]}}, LIBRARY
         )
     monkeypatch.setattr(drawn_power, "item_unit", lambda _m, port: stands[port][2])
-    monkeypatch.setattr(drawn_power, "_identity", lambda _m, _port, _key, text: text)
-    monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: True)
+    monkeypatch.setattr(drawn_power, "page_unit", lambda _m, page: next(v[2] for v in stands.values() if v[3] == page.value))
+    monkeypatch.setattr(drawn_power, "power_identity", lambda _m, _port, _kind, text: text)
     monkeypatch.setattr(drawn_power, "port_power_kind", lambda _m, port: PowerKind(stands[port.value][0]))
     monkeypatch.setattr(drawn_power, "item_of_port", lambda _m, port: port.value)
-    monkeypatch.setattr(drawn_power, "is_rail_terminal", lambda _m, _item: False)
     monkeypatch.setattr(drawn_rails, "unit_label", lambda _m, unit: str(unit))
     parts = {Id[Page](kind="page", value=v[3]): pages[Id[Page](kind="page", value=v[3])] for v in stands.values()}
     return Netlist(parts, drawn_netlist_module._join(parts), drawn_netlist_module._placed(parts), ids, {}, {}, nets=nets or {})
@@ -735,34 +731,38 @@ def test_with_no_flagged_rail_two_unbonded_nets_of_one_cabinet_share_an_identity
 ):
     """R1955: a missing flag alone raises nothing; two nets under the cabinet plus potential raise, naming both remedies."""
     net = _powered(monkeypatch, {"a": (kind, None, "A", "p1"), "b": (kind, None, "A", "p2")}, nets=nets)
-    monkeypatch.setattr(drawn_power, "rail_flagged", lambda _m, _joined: False)
     found = rail_findings(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
     if shared:
         expect_codes(SimpleNamespace(findings=found), "RAIL_IDENTITY_SHARED")
         assert ("bond the nets" in found[0].message) is (kind == "ground")
     else:
         assert found == ()
-    join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
-    assert not _same_piece(net, "a", "b")
 
 
 @pytest.mark.rule("READ-RAILS")
-def test_a_ground_identity_carries_its_source_and_a_flag_joins_only_the_flagged_strips_class(monkeypatch: pytest.MonkeyPatch):
-    """R2590: two unbonded sources in a flagged cabinet are two ground classes; only the class the flagged strip stands in joins by ink."""
+def test_a_ground_identity_carries_its_source_and_two_sources_are_two_classes(monkeypatch: pytest.MonkeyPatch):
+    """R2590: two unbonded sources in one cabinet are two ground classes; each joins its own symbols by ink and never the other's."""
     rails = frozenset({"0V"})
     ident = {"a": (rails, "U1"), "b": (rails, "U1"), "c": (rails, "U2"), "d": (rails, "U2")}
     net = _powered(monkeypatch, {p: ("ground", None, "A", f"p{p}") for p in ident})
-    monkeypatch.setattr(drawn_power, "_identity", lambda _m, port, _key, _text: ident[port.value])
-    monkeypatch.setattr(drawn_power, "is_rail_terminal", lambda _m, item: item == "a")  # the flagged strip stands at port a: source U1
+    monkeypatch.setattr(drawn_power, "power_identity", lambda _m, port, _kind, _text: ident[port.value])
     join_power(net, None)  # ty: ignore[invalid-argument-type] the monkeypatched reads take no model
     assert _same_piece(net, "a", "b")
-    assert not _same_piece(net, "c", "d")
-    monkeypatch.undo()
-    monkeypatch.setattr(drawn_power, "port_rails", lambda _m, _port: rails)
-    monkeypatch.setattr(drawn_power, "rail_source_unit", lambda _m, port: port)
-    ground = power_symbol_key("ground")
-    assert drawn_power._identity(None, "U1", ground, None) == (rails, "U1")  # ty: ignore[invalid-argument-type] patched reads
-    assert drawn_power._identity(None, "U1", power_symbol_key("pe"), None) == "PE"
+    assert _same_piece(net, "c", "d")
+    assert not _same_piece(net, "a", "c")
+
+
+@pytest.mark.rule("READ-RAILS")
+@pytest.mark.parametrize(("scope", "drawn"), [("A", True), ("B", False)], ids=["one-scope", "two-scopes"])
+def test_a_conductor_between_two_inked_power_symbols_is_drawn_only_when_one_scope_holds_both(
+    monkeypatch: pytest.MonkeyPatch, scope: str, *, drawn: bool
+):
+    """R3699 (W3): symbols of two drawing sets are two pieces, so their conductor is undrawn unless a wire or stub carries it."""
+    net = _powered(monkeypatch, {"a": ("ground", None, "A", "p1"), "b": ("ground", None, scope, "p2")})
+    join_power(net, NONE)
+    net.home.update({port: frozenset(page for page, _ in at) for port, at in net.placed.items()})
+    net.live.update(net.union.find((page, node)) for page, part in net.pages.items() for node in part.nodes)
+    assert _carried(net, {}, _pairs(net, {}), ("a", "b")) is drawn
 
 
 @pytest.mark.rule("READ-POWER-INK")

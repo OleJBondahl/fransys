@@ -16,12 +16,10 @@ from fransys_model.derive import (
     port_marking,
     port_power_text,
     printed_tag,
-    set_unit,
 )
-from fransys_model.layout import DrawingSet, Page, layout_of
 
 from .drawn_finding import drawn_finding
-from .drawn_power import POWER_KEYS
+from .drawn_power import POWER_KEYS, page_unit
 from .drawn_where import stand_places, where_text
 from .kit_keys import function_of
 from .write_tables import HEAD
@@ -33,7 +31,8 @@ if TYPE_CHECKING:
     from electrical_symbols import Library
     from fransys_layout.drawing import Drawing
     from fransys_model.kernel import Finding, Id, Model
-    from fransys_model.vocab import Port, Unit
+    from fransys_model.layout import Page
+    from fransys_model.vocab import Port
 
     from .drawn_netlist import Netlist
 
@@ -66,15 +65,10 @@ def _markings(model: Model, net: Netlist) -> Iterator[_Row]:
             yield (net.ids[port],), f"symbol {net.owners[port]} prints {got!r} in slot {slot} where the port is marked {want!r}"
 
 
-def _unit_of(model: Model, page: Id[Page]) -> Id[Unit] | None:
-    """The unit of the drawing set of `page`: the one its tags are printed relative to."""
-    return set_unit(layout_of(model, DrawingSet)[layout_of(model, Page)[page].drawing_set])
-
-
 def _tags(model: Model, net: Netlist) -> Iterator[_Row]:
     """A TAG text of a drawn symbol that is not `printed_tag` (a strip tag has no owner yet, N3)."""
     for page, part in net.pages.items():
-        unit = _unit_of(model, page)
+        unit = page_unit(model, page)
         for text in part.drawing.texts:
             key = net.keys.get(text.owner or "")
             if getattr(text, "kind", "") != "TAG" or key is None:  # DrawnText.kind, read as in drawing_invariants

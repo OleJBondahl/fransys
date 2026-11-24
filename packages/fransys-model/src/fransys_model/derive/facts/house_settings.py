@@ -20,6 +20,7 @@ from fransys_model.layout import (
     layout_of,
 )
 from fransys_model.vocab.tables import kind_of
+lazy from fransys_model.layout.house_ratings import RatingsForm
 lazy from fransys_model.layout.house_text import FrontPages
 lazy from fransys_model.vocab.document import Document
 
@@ -31,6 +32,7 @@ __all__ = [
     "front_count_of",
     "harness_text_of",
     "lists_of",
+    "ratings_form_of",
     "reference_text_of",
     "revision_form_of",
     "revision_table_form_of",
@@ -136,3 +138,8 @@ def diagram_count_of(model: Model, document: Id[Document]) -> int:
 def front_count_of(model: Model, document: Id[Document]) -> int:
     """The `layout.front_pages` count of `document`, its Typst front pages."""
     return _front_record(model, document).count
+
+
+def ratings_form_of(model: Model) -> RatingsForm:
+    """The `[ratings]` record of `model`: the budget of the rating reader's state search."""
+    return _one(model, RatingsForm)

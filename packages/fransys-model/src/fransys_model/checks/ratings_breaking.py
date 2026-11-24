@@ -78,7 +78,7 @@ def check_breaking(model: Model) -> tuple[Finding, ...]:
     """Check each protective device's breaking point against the prospective fault current.
 
     `BELOW_FAULT` (`ERROR`): the chosen point is below it. `NO_DATA` (`WARNING`): none fits.
-    An unknown current, no source counted (0 A), no points or no voltage is silent.
+    Unknown data is silent. A chain too large to walk is `RATING_STATES_OVER_BUDGET` (`ratings_current`).
     """
     found: dict[tuple[Id[Function], Current, str], Finding] = {}
     for fault in prospective_fault(model):

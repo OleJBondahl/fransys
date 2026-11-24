@@ -4,6 +4,7 @@ Every device is an item `key` with one function `f` (builders in `current_plant`
 its rails are put on the string's first port, so `port_rails` reaches the whole line. The expected
 """
 
+import dataclasses
 from typing import TYPE_CHECKING
 
 from current_plant import (
@@ -13,23 +14,28 @@ from current_plant import (
     device,
     external,
     fuse,
+    hub,
     open_string,
     run,
     wire,
 )
+from fault_plant import module
 from plant import Plant
 from rating_plant import rail, supply
 
 from fransys_model.checks.ratings_current import (
     check_ratings_current,
 )
+from fransys_model.derive.facts.fault.prospective import oversized_chains
 from fransys_model.elecdef import Current
-from fransys_model.kernel import make_id
+from fransys_model.kernel import Origin, evolve, make_id
+from fransys_model.layout import layout_of
+from fransys_model.layout.house_ratings import RatingsForm
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.finding_ref import ref
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Finding, Id
+    from fransys_model.kernel import Finding, Id, Model
     from fransys_model.vocab.core import Function
 
 
@@ -97,7 +103,7 @@ def test_a_full_range_fuse_bounds_the_branch_at_its_own_rating() -> None:
 # -- a link from a port to another function; switched links ------------------------------------
 
 
-def _changeover_plant(d_amps: str, *, rated: bool = True, unrelated: bool = False) -> Plant:
+def _changeover_plant(d_amps: str, *, rated: bool = True, unrelated: bool = False, extra: int = 0) -> Plant:
     """`M` (100 A) on a changeover's make throw, `E` (120 A) on its break throw,
     the common through a 400 A full-range fuse `F` to `D`, all ends at external items.
 
@@ -114,6 +120,8 @@ def _changeover_plant(d_amps: str, *, rated: bool = True, unrelated: bool = Fals
     run(plant, common, line, end)
     if unrelated:
         wire(plant, changeover(plant, "U", None)[0], end)
+    for index in range(extra):
+        wire(plant, changeover(plant, f"U{index}")[0], end)
     return plant
 
 
@@ -128,3 +136,47 @@ _D_110 = (
 def test_the_message_names_only_the_item_that_matters() -> None:
     """`U` is in `D`'s component and is enumerated, but `D`'s 120 A holds whatever it does."""
     assert _the_finding(_changeover_plant("110", unrelated=True)).message == _D_110
+
+
+# -- every item is enumerated ------------------------------------------------------
+
+
+def test_nine_items_are_all_enumerated() -> None:
+    """`CO` and nine more share one component: no cap, so `D`'s bound is still the one finding."""
+    assert [f.code for f in check_ratings_current(_changeover_plant("110", extra=9).model())] == ["RATING_CURRENT_BELOW_BRANCH"]
+
+
+# -- the state budget ----------------------------------------------------------------
+
+
+def _with_budget(plant: Plant, max_solves: int) -> Model:
+    """The plant's model with the `[ratings] max_solves` record set to `max_solves`."""
+    model = plant.model()
+    (old,) = layout_of(model, RatingsForm).values()
+    return evolve(model, remove=[old.id], put=[dataclasses.replace(old, max_solves=max_solves)], origin=Origin(file="test", line=0, note="budget"))
+
+
+def test_a_block_over_the_budget_is_an_error_naming_its_items() -> None:
+    """One both-throw item (`CO`) is 2 solves: a budget of 1 names it, a budget of 2 names none."""
+    plant = _changeover_plant("110")
+    (over,) = [f for f in check_ratings_current(_with_budget(plant, 1)) if f.code == "RATING_STATES_OVER_BUDGET"]
+    assert over.subjects == (make_id(Item, ("CO",)),)
+    assert [f.code for f in check_ratings_current(_with_budget(plant, 2))] == ["RATING_CURRENT_BELOW_BRANCH"]
+
+
+def test_a_fault_chain_over_the_budget_is_an_error_naming_its_items() -> None:
+    """A 6000 A module feeds fuse `G` through the changeover `CO`: a budget of 1 names `CO`'s chain, the default budget names none."""
+    plant = Plant()
+    plus, minus, node = hub(plant, "P"), hub(plant, "M"), hub(plant, "N")
+    plant.net("bus+", (plus,), potential="B+")
+    plant.net("bus-", (minus,), potential="B-")
+    supply(plant, "bat", {"B+": rail("48"), "B-": rail("0")}, current=Current.DC, pins=(plus, minus))
+    run(plant, minus, [module(plant, "m", "6000", "2")], plus)
+    common, make, _ = changeover(plant, "CO")
+    wire(plant, plus, common)
+    wire(plant, make, node)
+    run(plant, node, [fuse(plant, "G", "10")], minus)
+    model = _with_budget(plant, 1)
+    assert oversized_chains(plant.model()) == ()
+    assert oversized_chains(model) == ((make_id(Item, ("CO",)),),)
+    assert [f.subjects for f in check_ratings_current(model) if f.code == "RATING_STATES_OVER_BUDGET"] == [(make_id(Item, ("CO",)),)]

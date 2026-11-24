@@ -4,7 +4,6 @@ A port is connected when a kept connection or net group ends on it, a connection
 undrawn far end strands it, or it is a rail end (model-0325, amended). It is not `port_is_reached`.
 """
 
-from fransys_model.derive.facts.conductor_facts import drawn_conductors
 from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.units import (
@@ -12,7 +11,7 @@ from fransys_model.derive.facts.units import (
     crosses_unit,
     units,
 )
-from fransys_model.derive.power import is_rail_terminal, port_power_kind
+from fransys_model.derive.power import drawn_conductors, is_rail_terminal, port_power_kind
 from fransys_model.derive.structure import schematic_functions
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import PowerKind

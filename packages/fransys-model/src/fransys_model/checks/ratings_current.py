@@ -1,14 +1,16 @@
 """Validator: a function's rated current against its branch's bound (model-0088).
 
-Codes: `RATING_CURRENT_BELOW_BRANCH`, `LOAD_ABOVE_LIMIT`, `LOADS_ABOVE_LIMIT`.
+Codes: `RATING_CURRENT_BELOW_BRANCH`, `RATING_STATES_OVER_BUDGET`, `LOAD_ABOVE_LIMIT`, `LOADS_ABOVE_LIMIT`.
 """
 
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
 from fransys_model.derive.facts.current.bounds import CurrentBound, LimitRole
+from fransys_model.derive.facts.current.chains import oversized_blocks
 from fransys_model.derive.facts.current.load_limits import LoadLimit, bounded_loads
 from fransys_model.derive.facts.current.worst import worst_bounds
+from fransys_model.derive.facts.fault.prospective import oversized_chains
 from fransys_model.derive.facts.figures import figure
 from fransys_model.derive.facts.function_ratings import RATING_SOURCE_LABEL, function_ratings
 from fransys_model.derive.facts.rail_reach import rails_by_potential, reached_kinds
@@ -26,6 +28,7 @@ type _Key = tuple[Id[Function], tuple[Id[Port], ...], Current]
 RATING_CURRENT_BELOW_BRANCH: Final[str] = "RATING_CURRENT_BELOW_BRANCH"
 LOAD_ABOVE_LIMIT: Final[str] = "LOAD_ABOVE_LIMIT"
 LOADS_ABOVE_LIMIT: Final[str] = "LOADS_ABOVE_LIMIT"
+RATING_STATES_OVER_BUDGET: Final[str] = "RATING_STATES_OVER_BUDGET"
 
 
 def _setter(bound: CurrentBound) -> str:
@@ -40,17 +43,29 @@ def _states(bound: CurrentBound) -> str:
     return f", with {' and '.join(named)}" if named else ""
 
 
+def _over_budget(model: Model) -> list[Finding]:
+    """`RATING_STATES_OVER_BUDGET`, one per block or fault chain whose state search is over the budget, naming its items."""
+    return [
+        finding(
+            RATING_STATES_OVER_BUDGET,
+            items,
+            f"items {natural_join(ref(item) for item in items)} switch in one block or chain: the checks cannot search their states within budget",
+        )
+        for items in dict.fromkeys((*oversized_blocks(model), *oversized_chains(model)))
+    ]
+
+
 def check_ratings_current(model: Model) -> tuple[Finding, ...]:
     """Check that no function is rated for less current than its branch can carry.
 
-    `RATING_CURRENT_BELOW_BRANCH` (`ERROR`), one per function, current kind and source, when the
-    rating is strictly below the bound; sorted by `(code, subjects, message)`.
+    `RATING_CURRENT_BELOW_BRANCH` (`ERROR`), one per function, kind and source, when the rating is below
+    the bound; `RATING_STATES_OVER_BUDGET` (`ERROR`), one per block or fault chain over the budget; sorted.
     """
     if not rails_by_potential(model):
         return ()
     bounds = worst_bounds(model)
     reached = reached_kinds(model)
-    found: list[Finding] = []
+    found: list[Finding] = _over_budget(model)
     for (function, kind), bound in bounds.items():
         if kind not in reached.get(function, ()):
             continue

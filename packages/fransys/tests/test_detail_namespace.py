@@ -85,7 +85,8 @@ from fransys.colours import BK
 # GAUGE-UNKNOWN (R2540) adds `unknown` to [words]: it moves again (814aa4649166... before).
 # DOCUMENT-ITEM-DROP (R2922): SCHEMA_VERSION 34 -> 35 moves it once more (c17af9ef5a07... before).
 # HINT-DEAD (R2785): the same 34 -> 35 bump also drops GroupHint.
-_DIGEST_BEFORE_THE_MOVE = "0a2d57fc32889fbf9e75dfbfdd3030b29622ac19e4cd7f8c638825893f9a7fdc"
+# BLOCK-STATES (model-0482, R3675) adds the `[ratings]` house record and bumps SCHEMA_VERSION 35 -> 36: it moves again (0a2d57fc3288... before).
+_DIGEST_BEFORE_THE_MOVE = "5b9a77e9e0e2127d433caf7e05ffe9d7d143e7d096419fd91cc3802a1956be2c"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

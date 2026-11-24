@@ -49,10 +49,7 @@ bridge) has no bound, so real strings end at external items or at a standalone u
 boundary; a device with no conductive port on the path has no position; a device whose paths
 cross its own functions (a link between ports of two functions) is a wire for chains: the
 link adds no position, and the device's own per-path ratings are not checked. An item whose
-contacts move independently is read as one actuator. At most
-`current_states.MAX_ENUMERATED_ITEMS` items with links in both states are enumerated in one
-component (the smallest item ids first); the rest are held at rest, so a finding may be
-missed but none invented.
+contacts move independently is read as one actuator.
 
 Ordered by the chains' positions, so the result is the same for any record order (CLAUDE.md
 invariant 7). Cached on `model.digest`, the last few results.
@@ -63,6 +60,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.current.graph import raw_of
 from fransys_model.derive.facts.current.states import evaluate
+from fransys_model.derive.facts.house_settings import ratings_form_of
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 lazy from fransys_model.derive.facts.current.bounds import CurrentBound
 lazy from fransys_model.vocab.core import Function, Port
@@ -71,6 +69,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive.facts.current.graph import Raw
+    from fransys_model.vocab.core import Item
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -116,10 +115,21 @@ def position_at(raw: Raw, bounds: Mapping[int, tuple[CurrentBound, ...]], at: in
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
+def evaluated(model: Model) -> tuple[Mapping[int, tuple[CurrentBound, ...]], list[list[int]], list[tuple[Id[Item], ...]]]:
+    """`evaluate` of the model's graph at the `[ratings] max_solves` budget: the one evaluation the readers share."""
+    return evaluate(raw_of(model), ratings_form_of(model).max_solves)
+
+
+def oversized_blocks(model: Model) -> tuple[tuple[Id[Item], ...], ...]:
+    """The items of each block whose state search is over the budget; `RATING_STATES_OVER_BUDGET` names them."""
+    return tuple(evaluated(model)[2])
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
 def chain_blocks(model: Model) -> tuple[tuple[CurrentChain, tuple[PositionEnds, ...]], ...]:
     """Each chain with the ends of its positions, aligned; `derive.current_chains` orders them."""
     raw = raw_of(model)
-    bounds, groups = evaluate(raw)
+    bounds, groups, _ = evaluated(model)
     nodes: UnionFind[Id[Port]] = UnionFind()
     for wire in raw.wires:
         nodes.union(wire.first, wire.second)

@@ -2,11 +2,14 @@
 # NET_POTENTIAL_CONFLICT 1 per default-salt build set: refusal or induced finding, asserted through expect_codes.
 # NET_SHORTED 1 per default-salt build set: refusal or induced finding, asserted through expect_codes.
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 import pytest
+from _drawn_pages import drawn_pages
 from _expected_codes import expect_codes
+from _field_designs import fc_design
+from _model_build_cover import cabinet_document
 from fransys.colours import BU, GNYE
 
 from fransys_model.checks.rails import check_rails
@@ -19,15 +22,19 @@ from fransys_model.derive import (
     is_bridge,
     is_pe_conductor,
     is_rail_terminal,
+    port_rails,
+    power_ends_split,
+    power_identity,
     rail_drawn_by,
+    rail_source_unit,
     terminal_items,
     terminal_rows,
     terminal_strips,
     wire_rows,
 )
-from fransys_model.derive.facts.conductor_facts import drawn_conductors
+from fransys_model.derive.designation import port_designation
 from fransys_model.derive.lookups import item_of_port
-from fransys_model.derive.power import port_power_kind, port_power_text
+from fransys_model.derive.power import drawn_conductors, port_power_kind, port_power_text
 from fransys_model.derive.stands import stands
 from fransys_model.layout import PowerSymbol, layout_of
 from fransys_model.vocab import PowerKind
@@ -35,6 +42,8 @@ from fransys_model.vocab.tables import conductors, functions, items, ports
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from fransys_author.surface import Location
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Port
@@ -92,6 +101,16 @@ def test_rail_pins_stand_their_power_kind(model: Model) -> None:
     assert result[_port(model, "P3", "1")] is PowerKind.SUPPLY
     assert result[_port(model, "P1", "2")] is PowerKind.GROUND
     assert result[_port(model, "P5", "1")] is PowerKind.PE
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_symbol_prints_its_text_for_a_supply_its_rails_and_source_for_a_ground_and_pe_for_earth(model: Model) -> None:
+    """The one identity the stands and the drawn netlist both join by (R3699); one set draws every pin, so no group is split."""
+    supply, ground, earth = (_port(model, tag, pin) for tag, pin in (("P1", "1"), ("P1", "2"), ("P5", "1")))
+    assert power_identity(model, supply, PowerKind.SUPPLY, "24V") == "24V"
+    assert power_identity(model, ground, PowerKind.GROUND, "ignored") == (port_rails(model, ground), rail_source_unit(model, ground))
+    assert power_identity(model, earth, PowerKind.PE, None) == "PE"
+    assert power_ends_split(model) == ()
 
 
 def test_a_two_port_earth_net_is_a_wire_as_a_two_port_24v_net_is(model: Model) -> None:
@@ -444,3 +463,76 @@ def test_a_net_reached_through_two_fuses_at_one_distance_prints_its_plain_name()
     model, at = _fused_rails(parallel=True)
     assert port_power_text(model, at["f1"]) == "V1"
     assert port_power_text(model, at["supply"]) == "24V"
+
+
+def _lamps_fed(d: fr.Design, feed: Any, *taps: Any) -> None:
+    """A 24 V PSU wired to `feed`, and one lamp per tap wired to it and to the PSU's 0 V."""
+    with d.function("G", "Group"):
+        psu = d.device("T1", "DEMO-PSU-24")
+        lamps = [d.device(f"H{k}", "DEMO-LAMP-24") for k in range(1, len(taps) + 1)]
+    d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
+    d.dc_supply("S", psu)
+    d.series(psu.output["+"], feed, wire=_WIRE)
+    for tap, lamp in zip(taps, lamps, strict=True):
+        d.series(tap, lamp.lamp[1], wire=_WIRE)
+        d.series(psu.output["-"], lamp.lamp[2], wire=_WIRE)
+
+
+def _bridged_model(d: fr.Design, cab: Location) -> Model:
+    return fr.build(d, cabinet_document(cab)).model
+
+
+def _stand_kinds(model: Model) -> dict[str, PowerKind]:
+    return {port_designation(model, p): k for p, k in stands(model).items()}
+
+
+def _bridged_strip(title: str, strip: str, part: str, **run: Any) -> tuple[fr.Design, Location, Any]:
+    d = fc_design(title, place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    return d, cab, d.terminal_strip(strip, part).run("24V", 2, bridged=True, **run)
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_bridged_pin_draws_no_power_symbol_and_only_its_real_wires() -> None:
+    """A bridged, unflagged fused strip fed by one wire, each terminal feeding one device: the bridge draws no power symbol (R3641)."""
+    d, cab, run = _bridged_strip("Fused", "XF", "DEMO-TB-FUSE-2.5-TWIN")
+    _lamps_fed(d, run[1].inner, run[1].outer, run[2].outer)
+    model = _bridged_model(d, cab)
+    assert any(i.tag == "XF" for i in items(model).values())
+    assert drawn_pages(model)
+    symbols = [port_designation(model, s.port) for s in layout_of(model, PowerSymbol).values()]
+    assert [p for p in symbols if p.startswith(("-XF", "-T1:+"))] == []
+    assert {"-T1:-"} <= set(symbols)
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_flagged_rail_keeps_its_symbols_at_each_device_pin_whose_terminal_is_bridged() -> None:
+    d, cab, run = _bridged_strip("Rail", "XR", "DEMO-TB-2.5", rail=True)
+    _lamps_fed(d, run[1].inner, run[1].outer, run[2].outer)
+    kinds = _stand_kinds(_bridged_model(d, cab))
+    assert {kinds.get("-H1:1"), kinds.get("-H2:1")} == {PowerKind.SUPPLY}, kinds
+    assert not [p for p in kinds if p.startswith("-XR")]
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_bridged_pe_strip_keeps_its_symbols_at_each_device_pe_pin() -> None:
+    d = fc_design("PE", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    bar = d.terminal_strip("XP", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 3, bridged=True)
+    m1, m2 = d.device("M1", "DEMO-MOTOR-4KW"), d.device("M2", "DEMO-MOTOR-4KW")
+    for k, motor in enumerate((m1, m2), 1):
+        d.series(motor.motor["PE"], bar[k].inner, wire=(GNYE, 2.5))
+        d.earth(motor.motor["PE"], bar[k])
+    kinds = _stand_kinds(_bridged_model(d, cab))
+    assert {kinds.get("-M1:PE"), kinds.get("-M2:PE"), kinds.get("-XP:PE:3")} == {PowerKind.PE}, kinds
+
+
+@pytest.mark.rule("G08-POWER")
+def test_a_pin_wired_to_a_bridged_terminal_prints_the_potential_of_the_whole_net() -> None:
+    d = fc_design("Text", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    run = d.terminal_strip("XF", "DEMO-TB-2.5", 3, bridged=True)
+    _lamps_fed(d, run[1].inner, run[2].inner, run[3].inner)
+    model = _bridged_model(d, cab)
+    texts = {port_designation(model, p): port_power_text(model, p) for p in stands(model)}
+    assert [texts.get("-H1:1"), texts.get("-H2:1")] == ["24V", "24V"], texts

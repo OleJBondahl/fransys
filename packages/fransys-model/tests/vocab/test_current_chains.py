@@ -69,7 +69,7 @@ def test_closed_is_always_true_for_a_both_state_part_regardless_of_the_chosen_st
     chosen state that differs from the part's own."""
     item = make_id(Item, ("k",))
     part = Wire(Id(kind="port", value="p1"), Id(kind="port", value="p2"), item, "both")
-    assert current_states._closed(part, {item: "rest"}, set()) is True
+    assert current_states.closed(part, {item: "rest"}) is True
 
 
 def _named_end(plant: Plant, key: str, tag: str, potential: str | None = None) -> Id[Port]:

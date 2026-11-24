@@ -12,7 +12,7 @@ import dataclasses
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.facts.current.blocks import blocks
-from fransys_model.derive.facts.current.bounds import CurrentBound, Tie, block_bounds, tie_of
+from fransys_model.derive.facts.current.bounds import CurrentBound, Tie, block_bounds, holds_source, tie_of
 from fransys_model.derive.facts.current.ties import Joint, open_ends, pairs, two_ports
 from fransys_model.derive.facts.function_ratings import states_current
 from fransys_model.derive.facts.joins import port_joins
@@ -158,3 +158,14 @@ def group(
     kept, ends, _ = _build(edges, wires, opens, root)
     grouped = ([kept[index].at for index in block if index < len(kept)] for block in blocks(ends))
     return [block for block in grouped if block]
+
+
+def sourced(
+    edges: Sequence[Edge],
+    wires: Iterable[Wire],
+    opens: Iterable[Id[Port]],
+    root: Callable[[Id[Port]], Id[Port]],
+) -> set[int]:
+    """The `Edge.at` of the positions in a block that holds a source, with every given part closed."""
+    kept, ends, ties = _build(edges, wires, opens, root)
+    return {kept[index].at for block in blocks(ends) if holds_source(block, ties) for index in block if index < len(kept)}

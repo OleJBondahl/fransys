@@ -8,11 +8,12 @@ A harness wire's conductor is a pair like any other (R546).
 lazy from collections.abc import Iterable
 
 from fransys_model.derive.facts.closure import board_nets
-from fransys_model.derive.facts.conductor_facts import conductor_ends, drawn_conductors
+from fransys_model.derive.facts.conductor_facts import conductor_ends
 from fransys_model.derive.facts.drawn_closure import drawn_groups
 from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.order import stub_far_order
+from fransys_model.derive.power import drawn_conductors
 from fransys_model.derive.rows_drawn import ConductorEnd, MateEnd
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 lazy from fransys_model.vocab.core import Port

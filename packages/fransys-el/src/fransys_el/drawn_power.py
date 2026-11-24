@@ -1,6 +1,6 @@
 """The printed power join and R4 over the drawn netlist (READ-RAILS, READ-POWER-INK).
 
-Two power symbols are one piece when they print the same potential, with the same symbol, in one cabinet.
+Two power symbols are one piece when they print the same potential, with the same symbol, in one scope: the unit of the page's drawing set.
 A power symbol is joined to its pin by ink; the model's hidden net no longer carries a rail across pages.
 """
 
@@ -9,15 +9,14 @@ from typing import TYPE_CHECKING
 from electrical_symbols import marking_slot, power_symbol_key
 from fransys_model.derive import (
     PowerKind,
-    is_rail_terminal,
     item_of_port,
     item_unit,
     net_of,
     port_power_kind,
-    port_rails,
-    rail_scope,
-    rail_source_unit,
+    power_identity,
+    set_unit,
 )
+from fransys_model.layout import DrawingSet, Page, layout_of
 
 from .drawn_finding import drawn_finding
 from .placement_ids import net_key
@@ -26,26 +25,18 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
 
     from fransys_model.kernel import Finding, Id, Model
-    from fransys_model.layout import Page
     from fransys_model.vocab import Port, Unit
 
     from .drawn_netlist import Netlist, PagePart
 
-__all__ = ["PE_KEY", "POWER_KEYS", "inked_power", "join_power", "port_nets", "power_findings", "rail_flagged", "symbol_classes"]
+__all__ = ["PE_KEY", "POWER_KEYS", "join_power", "page_unit", "port_nets", "power_findings", "symbol_classes"]
 
-POWER_KEYS = frozenset(power_symbol_key(kind) for kind in ("supply", "ground", "pe"))
+_KINDS = {power_symbol_key(kind.value): kind for kind in (PowerKind.SUPPLY, PowerKind.GROUND, PowerKind.PE)}
+POWER_KEYS = frozenset(_KINDS)
 _SUPPLY = power_symbol_key("supply")
 _MARKING = marking_slot("")
 PE_KEY = power_symbol_key("pe")
-Identity = str | tuple[frozenset[str], "Id[Unit] | None"] | None
-RailClass = tuple["Id[Unit]", str, Identity]
-
-
-def _identity(model: Model, port: Id[Port], key: str, text: str | None) -> Identity:
-    """What one symbol key prints as one potential: the text for supply, the rails and source unit for ground, `PE` for every PE symbol."""
-    if key == _SUPPLY:
-        return text
-    return PowerKind.PE.name if key == PE_KEY else (port_rails(model, port), rail_source_unit(model, port))
+RailClass = tuple["Id[Unit] | None", str, object]
 
 
 def _pe_classes(model: Model, keys: dict[str, str], ids: Mapping[str, Id[Port]]) -> dict[str, str]:
@@ -81,55 +72,33 @@ def _inked(net: Netlist, page: Id[Page], part: PagePart, port: str) -> bool:
     return pin is not None and power is not None and net.union.find((page, pin)) == net.union.find((page, power))
 
 
-def inked_power(net: Netlist) -> set[str]:
-    """The ports drawn as a power symbol that names its potential and is joined to its pin by ink: R4 replaces the model-net read."""
-    return {port for page, part, port, _, _ in _symbols(net) if _inked(net, page, part, port)}
+def page_unit(model: Model, page: Id[Page]) -> Id[Unit] | None:
+    """The unit of the drawing set of `page`, `None` for the design's own set: the scope a reader of that page reads its symbols in."""
+    return set_unit(layout_of(model, DrawingSet)[layout_of(model, Page)[page].drawing_set])
 
 
-def _class(model: Model, port: Id[Port], key: str, text: str | None) -> RailClass | None:
-    """The (cabinet, symbol key, printed identity) a power symbol joins by; `None` for a symbol in no cabinet."""
-    scope = item_unit(model, item_of_port(model, port))
-    return None if scope is None else (scope, key, _identity(model, port, key, text))
+def _class(model: Model, page: Id[Page], port: Id[Port], key: str, text: str | None) -> RailClass:
+    """The (scope, symbol key, printed identity) a power symbol joins by: the unit of the page's drawing set."""
+    scope = page_unit(model, page)
+    return scope, key, power_identity(model, port, _KINDS[key], text)
 
 
 def symbol_classes(net: Netlist, model: Model) -> Iterator[tuple[str, RailClass, bool]]:
-    """Each power symbol that names its potential and stands in a cabinet: (port, join class, inked)."""
+    """Each power symbol that names its potential: (port, join class, inked)."""
     for page, part, port, key, text in _symbols(net):
-        if (joined := _class(model, net.ids[port], key, text)) is not None:
-            yield port, joined, _inked(net, page, part, port)
-
-
-def rail_flagged(model: Model, joined: RailClass) -> bool:
-    """True when the class joins by its key: a printed supply, or a ground or PE symbol whose cabinet flags a rail of its potential (R1936)."""
-    scope, key, identity = joined
-    potentials = {identity} if isinstance(identity, str) else identity[0] if identity else ()
-    return key == _SUPPLY or any((scope, potential) in rail_scope(model) for potential in potentials)
-
-
-def _strip_classes(net: Netlist, model: Model) -> set[RailClass]:
-    """The classes of the power symbols standing at a flagged rail terminal: the flagged strip's own sources (R2590)."""
-    held = ((port, key, text) for _, _, port, key, text in _symbols(net) if is_rail_terminal(model, item_of_port(model, net.ids[port])))
-    return {joined for port, key, text in held if (joined := _class(model, net.ids[port], key, text)) is not None}
-
-
-def _joins(model: Model, joined: RailClass, strip: set[RailClass]) -> bool:
-    """Whether the class joins by its key: flagged, and when it carries a source unit, only the class the flagged strip stands in."""
-    sourced = isinstance(joined[2], tuple) and joined[2][1] is not None
-    return rail_flagged(model, joined) and (joined in strip or not sourced)
+        yield port, _class(model, page, net.ids[port], key, text), _inked(net, page, part, port)
 
 
 def join_power(net: Netlist, model: Model) -> None:
-    """Join inked power symbols of one identity in one cabinet (a textless one only where its rail is flagged): ink only (CP-S2c-1).
+    """Join the inked power symbols of one class: one scope, one symbol, one printed identity (READ-RAILS); ink only (CP-S2c-1).
 
-    A ground class that carries a source unit joins only when the flagged strip stands in it; the others stay separate (R2590).
+    A ground class that carries a source unit is its own class, so two unbonded sources stay two pieces (R2590).
     """
     first: dict[RailClass, tuple[Id[Page], tuple[int, int]]] = {}
-    strip = _strip_classes(net, model)
     for page, part, port, key, text in _symbols(net):
         if _inked(net, page, part, port):
             at = (page, part.ports[port])
-            if (joined := _class(model, net.ids[port], key, text)) is not None and _joins(model, joined, strip):
-                net.union.union(first.setdefault(joined, at), at)
+            net.union.union(first.setdefault(_class(model, page, net.ids[port], key, text), at), at)
 
 
 def power_findings(net: Netlist, model: Model) -> tuple[Finding, ...]:

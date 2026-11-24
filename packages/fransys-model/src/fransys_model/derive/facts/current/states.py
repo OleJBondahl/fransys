@@ -1,27 +1,22 @@
-"""The law per consistent item state (RATINGS-2 "Switch states").
+"""The law per consistent item state, solved per block (RATINGS-2 "Switch states", model-0482).
 
-Counting every switched link closed adds false loops: a changeover's two throws would be closed
-at once. So the law of `bounds` is evaluated for each consistent state of the items, and
-all the contacts of one item move together (an item is at rest or operated). A switched link is
-closed in the state `link_state` names; `both` (and a conductive link) is always closed.
+Counting every switched link closed adds false loops: a changeover's two throws would be closed at
+once. So the law of `bounds` is evaluated for each consistent state of the items: all the contacts
+of one item move together (an item is at rest or operated), and a switched link is closed in the
+state `link_state` names. `both` (and a conductive link) is always closed. Items are independent.
 
-The graph with every switched link closed is cut into its connected COMPONENTS (the outside does
-not join them: a loop lies in one component and the outside). The enumeration runs per component,
-not per block of the graph. In each component the items owning a `rest` or `operated` link are
-the stateful ones. Items are still treated as independent, but every evaluated state is
-consistent per item (each item is in one state, all its links agreeing):
-- an item whose links there close in ONE state (only make contacts, or only break contacts) is
-  HELD: it is evaluated in the one state where its links close (they count closed). Every
-  evaluated state is consistent per item, so a held item can miss a finding, never invent one;
+The states are enumerated per BLOCK of G*, not per component. G* has the always-closed classes
+(`both` wires joined) as nodes; every position and every switched wire is an edge, and every open
+node has an edge to the outside. A simple cycle of any state lifts to a simple cycle of G*, so a
+position's bound depends only on the links in its own block of G*. In a block:
 - an item with links closing in BOTH states (a changeover, or make and break contacts) is
-  ENUMERATED: 2^m assignments for m such items in the component, so independent components never
-  multiply. At most `MAX_ENUMERATED_ITEMS` are enumerated, the smallest item ids first. The items
-  above the cap are HELD AT REST: evaluated in their rest state only (the links that close at
-  rest closed, the others open), so again every evaluated state is consistent per item. Opening
-  every link of such an item would not do: it is no state of the item, and opening an unrated
-  link splits a node and makes a loop that exists in no state, which raises a bound (a false
-  ERROR). `MAX_ENUMERATED_ITEMS` is read at call time, so a test may lower it. The cap is used
-  in `_stateful_items` and `_closed` only.
+  ENUMERATED: 2^m assignments for the m such items of that block;
+- every other item acts there as a single-throw switch and is CLOSED. This is exact unless a
+  position is left with no bound that a state with that item open gives it: a position shorted by a
+  closed wire, or on a source loop that a closed link spoils. For such a block every item is
+  enumerated (an exact search). Nothing is estimated.
+A block whose search would take more than the budget (`[ratings] max_solves`, 2^n solves for n items)
+is named (`evaluate`), never held: `RATING_STATES_OVER_BUDGET` is its ERROR.
 
 A position is bounded, per current kind, by the HIGHEST bound it has over the assignments in which
 it exists (its own link is closed) and has a bound: a device is below its bound in SOME state
@@ -31,10 +26,11 @@ the assignments giving that same bound, those in the same state in all of them.
 
 import dataclasses
 import itertools
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.current.bounds import highest
-from fransys_model.derive.facts.current.graph import Edge, Raw, Wire, group, solve
+from fransys_model.derive.facts.current.graph import Edge, Raw, Wire, group, solve, sourced
 from fransys_model.elecdef import Current
 from fransys_model.kernel import Id, UnionFind
 from fransys_model.vocab.roles import LINK_STATES
@@ -46,47 +42,37 @@ if TYPE_CHECKING:
     from fransys_model.derive.facts.current.bounds import CurrentBound
     from fransys_model.vocab.core import Item, Port
 
-MAX_ENUMERATED_ITEMS: Final = 8
-_THROWS: Final[tuple[LinkState, ...]] = LINK_STATES
 type _States = tuple[tuple[Id[Item], LinkState], ...]
+type _Bounds = dict[int, tuple[CurrentBound, ...]]
+type _Root = Callable[[Id[Port]], Id[Port]]
 
 
-def _stateful_items(parts: Sequence[Edge | Wire]) -> tuple[list[Id[Item]], set[Id[Item]]]:
-    """The items to enumerate, and those above the cap, among the items owning `parts`.
+def switched(part: Edge | Wire) -> bool:
+    """Whether `part` is a switched link: owned by an item and closed in one of its states only."""
+    return part.item is not None and part.state != "both"
 
-    An item is enumerated when its stateful parts close in both states, at most
-    `MAX_ENUMERATED_ITEMS` of them, the smallest ids first; the others of that kind are capped.
-    """
-    states: dict[Id[Item], set[LinkState]] = {}
+
+def stateful_items(parts: Sequence[Edge | Wire]) -> tuple[list[Id[Item]], list[Id[Item]]]:
+    """The items owning a switched link among `parts`, and those whose links close in both states; sorted."""
+    closes: dict[Id[Item], set[LinkState]] = {}
     for part in parts:
-        if part.item is not None and part.state != "both":
-            states.setdefault(part.item, set()).add(part.state)
-    both = sorted(item for item, closes in states.items() if len(closes) == len(_THROWS))
-    return both[:MAX_ENUMERATED_ITEMS], set(both[MAX_ENUMERATED_ITEMS:])
+        if part.item is not None and switched(part):
+            closes.setdefault(part.item, set()).add(part.state)
+    return sorted(closes), sorted(item for item, states in closes.items() if len(states) == len(LINK_STATES))
 
 
-def _closed(part: Edge | Wire, chosen: Mapping[Id[Item], LinkState], capped: set[Id[Item]]) -> bool:
-    """Whether `part` is closed under the assignment `chosen`.
-
-    Always closed when its state is `both`; above the cap an item is held at rest, so its link
-    closes only at rest. An enumerated item's link is closed in its closing state; held ones always.
-    """
-    if part.state == "both" or part.item is None:
+def closed(part: Edge | Wire, chosen: Mapping[Id[Item], LinkState]) -> bool:
+    """Whether `part` is closed when each item of `chosen` is in its state; an item not in it is closed."""
+    if part.item is None or part.state == "both":
         return True
-    if part.item in capped:
-        return part.state == "rest"
     return chosen.get(part.item, part.state) == part.state
 
 
-def assignments(parts: Sequence[Edge | Wire]) -> Iterator[tuple[_States, list[Edge | Wire]]]:
-    """Each consistent item assignment of one component, with the parts of `parts` it closes.
-
-    The one enumeration both the branch law and the fault graph walk.
-    """
-    enumerated, capped = _stateful_items(parts)
-    for combo in itertools.product(_THROWS, repeat=len(enumerated)):
-        chosen = dict(zip(enumerated, combo, strict=True))
-        yield tuple(chosen.items()), [part for part in parts if _closed(part, chosen, capped)]
+def assignments(parts: Sequence[Edge | Wire], items: Sequence[Id[Item]]) -> Iterator[tuple[_States, list[Edge | Wire]]]:
+    """Each assignment of `items`, with the parts of `parts` it closes."""
+    for combo in itertools.product(LINK_STATES, repeat=len(items)):
+        chosen = dict(zip(items, combo, strict=True))
+        yield tuple(chosen.items()), [part for part in parts if closed(part, chosen)]
 
 
 def _named(options: Sequence[tuple[CurrentBound, _States]]) -> CurrentBound:
@@ -100,25 +86,15 @@ def _named(options: Sequence[tuple[CurrentBound, _States]]) -> CurrentBound:
     return dataclasses.replace(chosen, states=tuple(sorted(set.intersection(*same))))
 
 
-def _component(
-    edges: Sequence[Edge],
-    wires: Sequence[Wire],
-    opens: Sequence[Id[Port]],
-    root: Callable[[Id[Port]], Id[Port]],
-) -> dict[int, tuple[CurrentBound, ...]]:
-    """The bounds of the positions of one component, the highest over its item assignments.
+def _over(parts: Sequence[Edge | Wire], opens: Sequence[Id[Port]], root: _Root, items: Sequence[Id[Item]]) -> _Bounds:
+    """The bounds of the positions of one block, the highest over the assignments of `items`.
 
     A position present in some assignment has an entry, empty if no assignment bounds it.
     """
     options: dict[tuple[int, Current], list[tuple[CurrentBound, _States]]] = {}
     seen: set[int] = set()
-    for chosen, closed in assignments((*edges, *wires)):
-        found = solve(
-            [part for part in closed if isinstance(part, Edge)],
-            [part for part in closed if isinstance(part, Wire)],
-            opens,
-            root,
-        )
+    for chosen, kept in assignments(parts, items):
+        found = solve([p for p in kept if isinstance(p, Edge)], [p for p in kept if isinstance(p, Wire)], opens, root)
         seen.update(found)
         for at, bounds in found.items():
             for bound in bounds:
@@ -126,52 +102,53 @@ def _component(
     return {at: tuple(_named(options[at, kind]) for kind in Current if (at, kind) in options) for at in seen}
 
 
-def _home(allc: UnionFind[Id[Port]], comps: UnionFind[Id[Port]], port: Id[Port]) -> Id[Port]:
-    """The component of `port`: its all-closed class under the position-joined classes."""
-    return comps.find(allc.find(port))
+def _unfinished(found: _Bounds, parts: Sequence[Edge | Wire], opens: Sequence[Id[Port]], root: _Root) -> bool:
+    """Whether a position has no bound that some state of the closed items could give it.
 
-
-def _by_component(
-    raw: Raw, allc: UnionFind[Id[Port]], stateful: Sequence[Wire]
-) -> tuple[dict[Id[Port], list[Edge]], dict[Id[Port], list[Wire]], dict[Id[Port], list[Id[Port]]]]:
-    """The edges, the stateful wires and the open ports of each component with a position.
-
-    A component is a connected part of the all-closed graph (`allc` joins every wire) whose edges
-    are the positions; the outside vertex does not join components.
+    A position with no entry is shorted by a closed wire; one with an empty entry counts only on a source
+    loop of the all-closed block (a state is a subgraph of it).
     """
-    comps: UnionFind[Id[Port]] = UnionFind()
-    for edge in raw.edges:
-        comps.union(allc.find(edge.first), allc.find(edge.second))
-
-    edges: dict[Id[Port], list[Edge]] = {}
-    for edge in raw.edges:
-        edges.setdefault(_home(allc, comps, edge.first), []).append(edge)
-    wires: dict[Id[Port], list[Wire]] = {}
-    for wire in stateful:
-        if _home(allc, comps, wire.first) in edges:
-            wires.setdefault(_home(allc, comps, wire.first), []).append(wire)
-    opens: dict[Id[Port], list[Id[Port]]] = {}
-    for port in sorted(raw.opens):
-        if _home(allc, comps, port) in edges:
-            opens.setdefault(_home(allc, comps, port), []).append(port)
-    return edges, wires, opens
+    edges = [part for part in parts if isinstance(part, Edge)]
+    lacking = [edge.at for edge in edges if not found.get(edge.at)]
+    if not lacking:
+        return False
+    on_loop = sourced(edges, [part for part in parts if isinstance(part, Wire)], opens, root)
+    return any(at not in found or at in on_loop for at in lacking)
 
 
-def evaluate(raw: Raw) -> tuple[dict[int, tuple[CurrentBound, ...]], list[list[int]]]:
-    """The bounds of every position by `Edge.at`, and the blocks of the all-closed graph.
+def _block(parts: Sequence[Edge | Wire], opens: Sequence[Id[Port]], root: _Root, budget: int) -> tuple[_Bounds, tuple[Id[Item], ...]]:
+    """The bounds of one block of G*, and the items it names when it is too large to enumerate."""
+    items, both = stateful_items(parts)
+    if 2 ** len(both) > budget:
+        return _over(parts, opens, root, []), tuple(both)
+    found = _over(parts, opens, root, both)
+    if len(items) == len(both) or not _unfinished(found, parts, opens, root):
+        return found, ()
+    if 2 ** len(items) > budget:
+        return found, tuple(items)
+    return _over(parts, opens, root, items), ()
 
-    The blocks only group. A position present in some state has an entry, empty when no state bounds
-    it, even when the all-closed graph shorts it.
+
+def evaluate(raw: Raw, budget: int) -> tuple[_Bounds, list[list[int]], list[tuple[Id[Item], ...]]]:
+    """The bounds of every position by `Edge.at`, the blocks of the all-closed graph, the oversized blocks.
+
+    A position present in some state has an entry, empty when no state bounds it. An oversized block
+    (a search of more than `budget` solves) is solved with its items closed, and its items are named.
     """
     base: UnionFind[Id[Port]] = UnionFind()
-    allc: UnionFind[Id[Port]] = UnionFind()
     for wire in raw.wires:
-        allc.union(wire.first, wire.second)
         if wire.state == "both":
             base.union(wire.first, wire.second)
-    stateful = [wire for wire in raw.wires if wire.state != "both"]
-    edges, wires, opens = _by_component(raw, allc, stateful)
-    bounds: dict[int, tuple[CurrentBound, ...]] = {}
-    for key, members in edges.items():
-        bounds.update(_component(members, wires.get(key, []), opens.get(key, []), base.find))
-    return bounds, group(raw.edges, stateful, raw.opens, base.find)
+    switched = [wire for wire in raw.wires if wire.state != "both"]
+    parts = [part for part in (*raw.edges, *switched) if base.find(part.first) != base.find(part.second)]
+    nodes = sorted({base.find(port) for port in raw.opens})
+    ends = [(base.find(part.first), base.find(part.second)) for part in parts] + [(node, None) for node in nodes]
+    bounds: _Bounds = {}
+    oversized: list[tuple[Id[Item], ...]] = []
+    for block in blocks(ends):
+        inside = [parts[at] for at in sorted(block) if at < len(parts)]
+        reached = {ends[at][0] for at in block if at >= len(parts)}
+        found, named = _block(inside, [port for port in sorted(raw.opens) if base.find(port) in reached], base.find, budget)
+        bounds.update(found)
+        oversized += [named] if named else []
+    return bounds, group(raw.edges, switched, raw.opens, base.find), oversized

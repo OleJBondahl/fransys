@@ -7,7 +7,7 @@ from pathlib import Path
 import fransys as fr
 
 FONTS = Path(__file__).parents[2] / "packages/fransys/tests/fixtures/fonts"
-FILES = f'files = ["{FONTS / "DejaVuSans.ttf"}", "{FONTS / "DejaVuSans-Bold.ttf"}"]\n'
+FILES = f'files = ["{(FONTS / "DejaVuSans.ttf").as_posix()}", "{(FONTS / "DejaVuSans-Bold.ttf").as_posix()}"]\n'
 CODE = "SETTING_NEW_ENGINE_ONLY"
 
 

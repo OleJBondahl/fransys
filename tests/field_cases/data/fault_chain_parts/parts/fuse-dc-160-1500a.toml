@@ -1,0 +1,26 @@
+schema = 2
+
+[part]
+mpn = "FC-FUSE-DC-160-1500A"
+manufacturer = "Invented"
+description = "DC fuse, 1500 V DC, 160 A, breaks 1500 A at 15 ms"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "element"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }]
+
+[function.block]
+type = "fuse"
+breaking_capacity = [{ max = "1500 A", at = ["DC", "1500 V", "15 ms"] }]
+
+[function.rating]
+voltage = [{ nom = "1500 V", at = ["DC"] }]
+current = [{ nom = "160 A", at = ["DC"] }]

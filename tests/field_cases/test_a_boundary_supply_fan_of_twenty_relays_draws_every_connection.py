@@ -84,6 +84,11 @@ def _build(salt: str, relays: int) -> fr.BuildResult:
 @pytest.mark.parametrize("relays", [20, 16])
 @pytest.mark.parametrize("salt", SALTS)
 def test_every_connection_and_marker_is_drawn(salt: str, relays: int) -> None:
-    """Two unit documents, at 20 relays or 16: no CND, MARKER_UNPLACED, DANGLING_WIRE_END, RAIL_IDENTITY_SHARED or DRAWING_SHORTS_NETS."""
-    codes = {f.code for f in fr.check(_build(salt, relays))}
-    assert codes & {"CONNECTION_NOT_DRAWN", "MARKER_UNPLACED", "DANGLING_WIRE_END", "RAIL_IDENTITY_SHARED", "DRAWING_SHORTS_NETS"} == set()
+    """Two unit documents, at 20 relays or 16: no MARKER_UNPLACED, DANGLING_WIRE_END, RAIL_IDENTITY_SHARED or DRAWING_SHORTS_NETS.
+
+    R3699: no drawing set draws both ends of the wire between the two units' unflagged strips, so it is wired and every end is drawn.
+    """
+    result = _build(salt, relays)
+    codes = {f.code for f in fr.check(result)}
+    assert codes & {"MARKER_UNPLACED", "DANGLING_WIRE_END", "RAIL_IDENTITY_SHARED", "DRAWING_SHORTS_NETS"} == set()
+    assert sum(f.code == "CONNECTION_NOT_DRAWN" for f in result.findings) == 0

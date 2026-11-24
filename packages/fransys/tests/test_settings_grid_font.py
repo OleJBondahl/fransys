@@ -18,7 +18,7 @@ pytestmark = pytest.mark.wp("facade")
 
 FONTS = Path(__file__).parent / "fixtures" / "fonts"
 REGULAR, BOLD = FONTS / "DejaVuSans.ttf", FONTS / "DejaVuSans-Bold.ttf"
-FILES = f'files = ["{REGULAR}", "{BOLD}"]\n'
+FILES = f'files = ["{REGULAR.as_posix()}", "{BOLD.as_posix()}"]\n'
 
 
 def _file(tmp_path: Path, text: str) -> Path:
@@ -74,7 +74,7 @@ def _widened(tmp_path: Path) -> Path:
 
 def test_a_font_whose_advances_overflow_a_symbols_text_fails_the_build(tmp_path: Path) -> None:
     wide = _widened(tmp_path)
-    text = f'[font]\nfiles = ["{wide}", "{BOLD}"]\n'
+    text = f'[font]\nfiles = ["{wide.as_posix()}", "{BOLD.as_posix()}"]\n'
     with pytest.raises(fr.SettingsError, match=r"text outside its body after the new settings"):
         fr.settings(_file(tmp_path, text))
 

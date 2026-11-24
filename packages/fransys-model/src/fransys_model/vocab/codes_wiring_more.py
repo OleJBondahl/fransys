@@ -17,6 +17,21 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="RATING_STATES_OVER_BUDGET",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause=(
+            "So many items with a changeover or make-and-break contact share one wired block, or one fault chain, that the rating "
+            "or fault check cannot search their states within its budget, so it cannot prove no rating is below the branch or the fault current."
+        ),
+        fix=(
+            "Split the circuits of the named items, joining them through a terminal strip that carries no switched link. "
+            'Write: d.terminal_strip("X1", "DEMO-TB-2.5", 4)'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="DRAWN_WITH_UNIT_UNWIRED",
         severity=Severity.ERROR,
         stage="validators",

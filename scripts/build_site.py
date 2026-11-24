@@ -172,6 +172,7 @@ def stage_home() -> None:
         document = pypdfium2.PdfDocument(pdf)
         page = document[kinds.index("schematic")]
         image = page.render(scale=site_gallery.PICTURE_WIDTH / page.get_size()[0]).to_pil()
+        document.close()  # Windows cannot delete the folder while the PDF is open
     shutil.copytree(WEBSITE / "assets", SRC / "assets")
     image.save(SRC / "assets" / "home.png")
 

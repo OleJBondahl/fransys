@@ -1,26 +1,30 @@
 """The prospective fault current at each protective position.
 
-Per protective position D and current kind it reaches, the fault graph (`fault_graph`) is solved
-per consistent item state of D's component (`current_states.assignments`) and per terminal
-(`fault_solve`). D's value is its larger terminal's, the highest over the states.
+Per protective position D and current kind it reaches, the fault graph (`fault_graph`) is solved per
+terminal (`terminal_share`) in each item state of D's chain (`chain`, `states.assignments`). D's value is
+its larger terminal's, the highest over the states. A chain of more items than `[ratings] max_solves`
+allows is named (`oversized_chains`), never held.
 """
 
 import dataclasses
+import functools
 from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
 from fransys_model.derive.facts.closure import port_rails
-from fransys_model.derive.facts.current.chains import CurrentPosition, position_at
+from fransys_model.derive.facts.current.chains import CurrentPosition, evaluated, position_at
 from fransys_model.derive.facts.current.graph import Edge, Wire, raw_of
-from fransys_model.derive.facts.current.states import assignments, evaluate
+from fransys_model.derive.facts.current.states import assignments, closed, stateful_items, switched
 from fransys_model.derive.facts.fault.graph import fault_graph, largest_known
 from fransys_model.derive.facts.fault.solve import (
     NOTHING,
     Fault,
+    chain,
     closed_state,
     highest,
     terminal_share,
 )
+from fransys_model.derive.facts.house_settings import ratings_form_of
 from fransys_model.derive.facts.rail_reach import (
     rails_by_potential,
     reached_kinds,
@@ -32,10 +36,12 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest
 lazy from fransys_model.vocab.core import Function, Port
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping, Sequence
+    from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 
+    from fransys_model.derive.facts.contacts import LinkState
     from fransys_model.derive.facts.fault.graph import FaultGraph
     from fransys_model.derive.facts.fault.solve import Closed, Share
+    from fransys_model.vocab.core import Item
     from fransys_model.vocab.voltage import RailV
 
 type _Faults = Mapping[int, list[tuple[Current, frozenset[str]]]]
@@ -96,32 +102,70 @@ def _components(graph: FaultGraph) -> list[tuple[list[Edge], list[Wire]]]:
     return [(members, wires.get(key, [])) for key, members in edges.items()]
 
 
-def _state_shares(state: Closed, graph: FaultGraph, faults: _Faults, mine: Sequence[int]) -> Iterator[tuple[tuple[int, Current], Share]]:
-    """Each protective position closed in `state`, per kind: the larger of its two terminals."""
-    present = {edge.at for edge in state.edges}
-    for at in (at for at in mine if at in present):
-        first, second = graph.edges[at].first, graph.edges[at].second
-        for kind, rails in faults[at]:
-            ends = ((first, second), (second, first))
-            shares = [terminal_share(state, graph.feeds, Fault(at, a, b, kind, rails)) for a, b in ends]
-            yield (at, kind), highest(shares)
+@dataclasses.dataclass(frozen=True, slots=True)
+class _Position:
+    """A protective position D of one component, its own item pinned to the state that closes it.
+
+    `base` holds the edges and `fixed` wires closed in that state; `switched` are the other wires closed in it.
+    """
+
+    edge: Edge
+    pin: Mapping[Id[Item], LinkState]
+    base: Closed
+    switched: Sequence[Wire]
+    fixed: Sequence[Wire]
+    rails_of: Callable[[Id[Port]], frozenset[str]]
+
+
+def _position(rails_of: Callable[[Id[Port]], frozenset[str]], parts: tuple[list[Edge], list[Wire]], edge: Edge) -> _Position:
+    """Position `edge` of one component, its item at the state that closes it."""
+    edges, wires = parts
+    pin = {edge.item: edge.state} if edge.item is not None and switched(edge) else {}
+    fixed = [wire for wire in wires if not switched(wire)]
+    live = [wire for wire in wires if switched(wire) and closed(wire, pin)]
+    base = closed_state([e for e in edges if closed(e, pin)], fixed, rails_of, (port for wire in live for port in (wire.first, wire.second)))
+    return _Position(edge, pin, base, live, fixed, rails_of)
+
+
+def _states(pos: _Position, parts: Sequence[Edge | Wire], items: Sequence[Id[Item]]) -> Iterator[Closed]:
+    """D with the fixed wires and `parts` closed, in each assignment of `items`."""
+    for _, kept in assignments(parts, items):
+        edges = [pos.edge, *(part for part in kept if isinstance(part, Edge))]
+        yield closed_state(edges, [*pos.fixed, *(part for part in kept if isinstance(part, Wire))], pos.rails_of)
+
+
+def _kind_share(graph: FaultGraph, pos: _Position, kind: Current, rails: frozenset[str], budget: int) -> tuple[Share, tuple[Id[Item], ...]]:
+    """D's value of `kind` over the item states of its chain, and the chain's items when too many to walk.
+
+    Both terminals' chains are walked together (the share of a state is the larger terminal's). Over the budget
+    (2^n states for n items) no item is walked, all are closed, and the items are named.
+    """
+    ends = ((pos.edge.first, pos.edge.second), (pos.edge.second, pos.edge.first))
+    faults = [Fault(pos.edge.at, a, b, kind, rails) for a, b in ends]
+    plans = [chain(pos.base, pos.switched, graph.feeds, fault) for fault in faults]
+    live = [fault for fault, plan in zip(faults, plans, strict=True) if plan is not None]
+    if not live:
+        return NOTHING, ()
+    joined = list({id(part): part for plan in plans if plan is not None for part in plan}.values())
+    items = [item for item in stateful_items(joined)[0] if item not in pos.pin]
+    over = 2 ** len(items) > budget
+    shares = [highest([terminal_share(state, graph.feeds, fault) for fault in live]) for state in _states(pos, joined, [] if over else items)]
+    return _over_states(shares), tuple(items) if over else ()
 
 
 def _component_shares(
-    model: Model, graph: FaultGraph, faults: _Faults, parts: tuple[list[Edge], list[Wire]]
-) -> dict[tuple[int, Current], list[Share]]:
-    """Each protective position of one component, per kind: its share in each item state."""
-    mine = [edge.at for edge in parts[0] if edge.at in faults]
-    found: dict[tuple[int, Current], list[Share]] = {}
-    if not mine:
-        return found
-    for _, closed in assignments((*parts[0], *parts[1])):
-        edges = [part for part in closed if isinstance(part, Edge)]
-        wires = [part for part in closed if isinstance(part, Wire)]
-        state = closed_state(edges, wires, lambda port: port_rails(model, port))
-        for key, share in _state_shares(state, graph, faults, mine):
-            found.setdefault(key, []).append(share)
-    return found
+    model: Model, graph: FaultGraph, faults: _Faults, parts: tuple[list[Edge], list[Wire]], budget: int
+) -> tuple[dict[tuple[int, Current], Share], list[tuple[Id[Item], ...]]]:
+    """Each protective position of one component, per kind: its share, and the chains too large to walk."""
+    rails_of = functools.partial(port_rails, model)
+    found: dict[tuple[int, Current], Share] = {}
+    over: list[tuple[Id[Item], ...]] = []
+    for edge in (edge for edge in parts[0] if edge.at in faults):
+        pos = _position(rails_of, parts, edge)
+        for kind, rails in faults[edge.at]:
+            found[edge.at, kind], named = _kind_share(graph, pos, kind, rails, budget)
+            over += [named] if named else []
+    return found, over
 
 
 def _over_states(shares: Sequence[Share]) -> Share:
@@ -133,35 +177,42 @@ def _over_states(shares: Sequence[Share]) -> Share:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
+def _readings(model: Model) -> tuple[tuple[ProspectiveFault, ...], tuple[tuple[Id[Item], ...], ...]]:
+    """The prospective faults and the chains too large to walk: the one walk `prospective_fault` and `oversized_chains` share."""
+    raw = raw_of(model)
+    graph = fault_graph(model, raw)
+    faults = _faults(model, graph)
+    if not faults:
+        return (), ()
+    bounds = evaluated(model)[0]
+    budget = ratings_form_of(model).max_solves
+    shares: dict[tuple[int, Current], Share] = {}
+    over: dict[tuple[Id[Item], ...], None] = {}
+    for parts in _components(graph):
+        found, named = _component_shares(model, graph, faults, parts, budget)
+        shares.update(found)
+        over.update(dict.fromkeys(named))
+    found_faults = [
+        ProspectiveFault(position_at(raw, bounds, graph.branch[at]), kind, share.current_a, share.time_constant_ms, tuple(sorted(share.functions)))
+        for at, kinds in faults.items()
+        for kind, _ in kinds
+        for share in (shares.get((at, kind), NOTHING),)
+    ]
+    ordered = sorted(found_faults, key=lambda f: (f.position.functions, f.position.ports, f.kind.value))
+    return tuple(ordered), tuple(over)
+
+
 def prospective_fault(model: Model) -> tuple[ProspectiveFault, ...]:
     """The prospective fault current at each protective position, per current kind.
 
     One entry per position whose function is a `protection` one and per kind its rails carry.
     A bolted fault at either terminal joins it to every other rail of its supplies; the loads are
-    left out, every source counts. A
-    position no source reaches reads `0`.
+    left out, every source counts. A position no source reaches reads `0`. Each position is walked
+    over every item state of its chain (`chain`).
     """
-    raw = raw_of(model)
-    graph = fault_graph(model, raw)
-    faults = _faults(model, graph)
-    if not faults:
-        return ()
-    bounds, _ = evaluate(raw)
-    shares: dict[tuple[int, Current], list[Share]] = {}
-    for parts in _components(graph):
-        shares.update(_component_shares(model, graph, faults, parts))
-    found = []
-    for at, kinds in faults.items():
-        position = position_at(raw, bounds, graph.branch[at])
-        for kind, _ in kinds:
-            share = _over_states(shares.get((at, kind), []))
-            found.append(
-                ProspectiveFault(
-                    position,
-                    kind,
-                    share.current_a,
-                    share.time_constant_ms,
-                    tuple(sorted(share.functions)),
-                )
-            )
-    return tuple(sorted(found, key=lambda f: (f.position.functions, f.position.ports, f.kind.value)))
+    return _readings(model)[0]
+
+
+def oversized_chains(model: Model) -> tuple[tuple[Id[Item], ...], ...]:
+    """The items of each chain whose state walk is over the `[ratings] max_solves` budget; `RATING_STATES_OVER_BUDGET` names them."""
+    return _readings(model)[1]

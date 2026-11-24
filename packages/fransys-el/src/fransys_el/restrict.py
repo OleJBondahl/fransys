@@ -135,6 +135,14 @@ def _carried(facts: Facts, scope: DrawingScope, other: Collection[str], unit: Ma
     return replace(facts, far_ends=far, groups=groups)
 
 
+def _carried_facts(problem: PlacementProblem, scope: DrawingScope, home: str) -> tuple[Facts, set[PinRef]]:
+    """The scope's `_carried` facts, and the pins left with no far end: their conductors stay off this page, so a cut has none to name."""
+    unit = {s.id: s.unit for s in problem.symbols}
+    other = {i for i, u in unit.items() if u != home} - scope.symbols
+    carried = _carried(problem.facts, scope, other, unit)
+    return carried, {a for a, _ in problem.facts.far_ends} - {a for a, _ in carried.far_ends}
+
+
 def _facts(facts: Facts, symbols: frozenset[str], bare: Collection[PinRef], gone: Collection[PinRef]) -> Facts:
     """The facts of one scope: each set cut to its symbols, each boundary and mate inside, each far end with its near pin inside.
 
@@ -218,15 +226,14 @@ def restriction(  # noqa: PLR0913 -- the scope's problem takes the set's cut fac
             ),
             frozenset(),
         )
-    nets, dropped = _scoped(problem, scope, bare, lines, scopes, pieces or {})
+    carried, unnamed = _carried_facts(problem, scope, home)
+    nets, dropped = _scoped(problem, scope, {*bare, *unnamed}, lines, scopes, pieces or {})
     anchors = tuple(a for a in problem.anchors if a.pin.sym in scope.symbols)
     touched = {p.sym for n in nets for p in n.pins} | {a.pin.sym for a in anchors}
     syms = tuple(s for s in inside if s.id in touched)
     names = {s.id for s in syms} | {s.group for s in syms if s.group}
     gone = {p for n in problem.nets if n.id in dropped for p in n.pins}  # a dropped net draws no conductor and no stub (drawn_nets `blocked`)
-    unit = {s.id: s.unit for s in problem.symbols}
-    other = {i for i, u in unit.items() if u != home} - scope.symbols
-    facts = _facts(_carried(problem.facts, scope, other, unit), frozenset(s.id for s in syms), bare, gone)
+    facts = _facts(carried, frozenset(s.id for s in syms), bare, gone)
     annexes = label_annexes(syms, options, home, tags)
     part = PlacementProblem(
         problem.area,

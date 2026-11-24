@@ -1,5 +1,6 @@
 """A net a drawing set cuts keeps its in-set pins and names them in `cut` (UNIT-SCOPE, CUT-ENDS)."""
 
+from dataclasses import replace
 from typing import NamedTuple
 
 import fransys as fr
@@ -124,3 +125,16 @@ def test_an_external_root_is_framed_by_others_in_each_set_with_no_unit_above_it(
     assert framed
     assert all(set(f) <= set(titles) for f in framed)
     assert any(len(f[k]) == 3 for f in framed for k in by_others if k in f)
+
+
+def test_a_copy_pin_whose_only_conductor_stays_in_its_own_unit_carries_no_cut_net() -> None:
+    """MATE-DANGLING: a lone stub there names no far pin, so the net's piece in the set is dropped, not drawn as a bare lead."""
+    problem = _problem()
+    net = _shared(problem)
+    lone, *rest = sorted({p.sym for p in net.pins})
+    pin = next(p for p in net.pins if p.sym == lone)
+    far = next(p for p in net.pins if p.sym == rest[0])
+    inner = replace(problem, symbols=tuple(replace(s, unit="v") for s in problem.symbols), facts=replace(problem.facts, far_ends=((pin, far),)))
+    scope = DrawingScope(None, None, frozenset({lone}), copies=frozenset({lone}))
+    scoped = restriction(inner, scope, options=house().options, tags={}).problem
+    assert [n for n in scoped.nets if n.id == net.id] == []

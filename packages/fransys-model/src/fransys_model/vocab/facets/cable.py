@@ -67,7 +67,7 @@ class CoreFacet:
 
     Example: cable `W012`'s first core carries `index=1`, making core-to-pin assignment
     explicit rather than positional. The core's colour is the carrier's product
-    `core_colours[index - 1]`, read by `derive.core_colour` (SC4, decision model-0082): the
+    `core_colours[index - 1]`, read by `derive.conductor_colour` (SC4, decision model-0082): the
     facet stores no colour.
     """
 

@@ -6,26 +6,18 @@ lazy from collections.abc import Iterable, Mapping
 lazy from fransys_model.derive.order import functions_in_order
 lazy from fransys_model.derive.rows_pin_views import PinMate
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Function, Item
+lazy from fransys_model.vocab.core import Function
 
 if TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
 
 
 __all__ = [
-    "first_device",
     "lower_function",
     "pin_items_in_order",
     "pin_mates_in_order",
     "source_end",
 ]
-
-
-def first_device[D: SupportsRichComparison](devices: Iterable[Id[Item]], ranks: Mapping[Id[Item], D]) -> Id[Item]:
-    """LC3: the device of the lowest rank, then the lowest handle."""
-    pool = list(devices)
-    lowest = min(ranks[device] for device in pool)
-    return min(device for device in pool if ranks[device] == lowest)
 
 
 def lower_function[D: SupportsRichComparison](one: Id[Function], other: Id[Function], one_rank: D, other_rank: D) -> Id[Function]:

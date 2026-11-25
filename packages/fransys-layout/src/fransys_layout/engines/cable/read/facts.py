@@ -52,16 +52,19 @@ class _Ctx:
 def _end(model: Model, subject: Id[Any], item: Id[Any], unit: Id[Any] | None, height: int) -> EndFacts:
     """One end's flags, label width and drawn pins."""
     blank = end_outside_nested_unit(model, item, unit)
+    label = end_label(model, item, unit, subject)
     return EndFacts(
         item=item,
         dashed=end_by_others(model, item),
         blank=blank,
-        label_width=text_width_g(end_label(model, item, unit, subject), height=height),
+        label_width=text_width_g(label, height=height),
+        label=label,
         pins=tuple(
             PinFacts(
                 port=pin.port,
                 landed=pin.landed,
                 marking_width=text_width_g(pin.marking, height=height),
+                marking=pin.marking,
                 cores=pin.cores,
             )
             for pin in drawn_pins(model, subject, item, unit)
@@ -85,6 +88,7 @@ def _cores_of(cable: HarnessCable, texts: Mapping[Id[Any], str], height: int, ct
                     end_a=core.anchor,
                     end_b=core.anchor,
                     text_width=text_width_g(texts[core.core], height=height),
+                    text=texts[core.core],
                     open=True,
                     landed=core.landed,
                 )
@@ -97,6 +101,7 @@ def _cores_of(cable: HarnessCable, texts: Mapping[Id[Any], str], height: int, ct
                     end_a=core.end_a,
                     end_b=core.end_b,
                     text_width=text_width_g(texts[core.conductor], height=height),
+                    text=texts[core.conductor],
                     link=core.conductor in ctx.links,
                 )
             )
@@ -112,11 +117,13 @@ def _cables(model: Model, subject: Id[Any], unit: Id[Any] | None, height: int, k
         opens=drawn_open_cores(model, cables),
     )
     texts = core_texts(model, subject, unit)
+    headings = {cable.cable: cable_heading(model, cable) for cable in cables}
     return tuple(
         CableFacts(
             cable=cable.cable,
             external=end_by_others(model, cable.cable),
-            heading_width=text_width_g(cable_heading(model, cable), height=height),
+            heading_width=text_width_g(headings[cable.cable], height=height),
+            heading=headings[cable.cable],
             cores=_cores_of(cable, texts, height, ctx),
         )
         for cable in cables
@@ -133,18 +140,19 @@ def _wires(model: Model, subject: Id[Any], unit: Id[Any] | None, height: int, ke
             end_a=wire.end_a,
             end_b=wire.end_b,
             text_width=text_width_g(wire.text, height=height),
+            text=wire.text,
             link=wire.conductor in links,
         )
         for wire in block_wires(model, subject, unit)
     )
 
 
-def _harness_width(model: Model, subject: Id[Any], unit: Id[Any] | None, height: int) -> int | None:
-    """The harness label's width, or None when the block's subject is a cable (no dashed box)."""
+def _harness_label(model: Model, subject: Id[Any], unit: Id[Any] | None) -> str | None:
+    """The harness label, or None when the block's subject is a cable (no dashed box)."""
     first = block_cables(model, subject, unit)
     if first and first[0].cable == subject:
         return None
-    return text_width_g(printed_designation(model, subject, unit=unit), height=height)
+    return printed_designation(model, subject, unit=unit)
 
 
 def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None, library: SymbolLibrary) -> BlockFacts:
@@ -153,6 +161,7 @@ def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None, library: S
     height = text_room_on(model, sheet_format_of(model, None), library)
     top, bottom = end_rows(model, subject, unit)
     keys = count(1)
+    harness = _harness_label(model, subject, unit)
     return BlockFacts(
         subject=subject,
         unit=unit,
@@ -163,7 +172,8 @@ def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None, library: S
         cables=_cables(model, subject, unit, height, keys),
         top=tuple(_end(model, subject, item, unit, height) for item in top),
         bottom=tuple(_end(model, subject, item, unit, height) for item in bottom),
-        harness_width=_harness_width(model, subject, unit, height),
+        harness_width=None if harness is None else text_width_g(harness, height=height),
+        harness_label=harness,
         wires=_wires(model, subject, unit, height, keys),
         bracket_room=pair_room(height, tuning.marker_padding, WIRING_GRID).room if block_brackets(model, subject, unit) else 0,  # 0 with no bracket
     )

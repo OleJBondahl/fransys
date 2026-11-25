@@ -302,7 +302,7 @@ _DT = "from fransys_model.derive.drawing_text import "
             f"{_DT}row_letter, position_text\n{_DT}partner_position_text, marker_text\nfrom fransys_model.kernel import Id\n",
             ["fransys_model.derive.drawing_text.marker_text"],
         ),
-        ("from fransys_model.layout import derived_layout_ids\n", ["fransys_model.layout.derived_layout_ids"]),
+        ("from fransys_model.layout import DERIVED_KINDS\n", ["fransys_model.layout.DERIVED_KINDS"]),
         ("from fransys_model.layout import Orientation, MarkerSide, LabelKind\n", []),
         ("from fransys_model import layout\n", ["fransys_model.layout"]),
         (f"{_DT}off_stub_line\n", []),
@@ -343,22 +343,20 @@ def test_checker_exempts_the_reader_package_but_not_the_reader_file() -> None:
     init = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=True)
     file = _forbidden_engine_imports("fransys_layout.engines.diagram.read", source, is_init=False)
     assert (inside, init, file) == (set(), set(), {"fransys_model.derive.designation"})
-    wide = (
-        source + "from fransys_model.layout import derived_layout_ids\nfrom fransys_model.vocab.tables import ports\n"
-    )  # `layout` and `vocab` alike
+    wide = source + "from fransys_model.layout import DERIVED_KINDS\nfrom fransys_model.vocab.tables import ports\n"  # `layout` and `vocab` alike
     assert _forbidden_engine_imports("fransys_layout.engines.diagram.read.items", wide, is_init=False) == set()
 
 
 def test_checker_exempts_the_writer_package_for_layout_only() -> None:
     """A module under `write/` may import `layout` but not `derive`; today's `write.py` may not."""
-    source = "from fransys_model.layout import derived_layout_ids\nfrom fransys_model.derive.designation import port_designation\n"
+    source = "from fransys_model.layout import DERIVED_KINDS\nfrom fransys_model.derive.designation import port_designation\n"
     inside = _forbidden_engine_imports("fransys_layout.engines.diagram.write.records", source, is_init=False)
     init = _forbidden_engine_imports("fransys_layout.engines.diagram.write", source, is_init=True)
     file = _forbidden_engine_imports("fransys_layout.engines.diagram.write", source, is_init=False)
     assert (inside, init, file) == (
         {"fransys_model.derive.designation"},
         {"fransys_model.derive.designation"},
-        {"fransys_model.derive.designation", "fransys_model.layout.derived_layout_ids"},
+        {"fransys_model.derive.designation", "fransys_model.layout.DERIVED_KINDS"},
     )
 
 

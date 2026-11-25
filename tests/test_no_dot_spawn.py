@@ -31,7 +31,7 @@ def test_building_the_examples_system_and_unit_documents_spawns_no_subprocess(mo
     system_cover.write_text("# System\n", encoding="utf-8")
     unit_cover = tmp_path / "unit-cover.md"
     unit_cover.write_text("# Unit\n", encoding="utf-8")
-    probe_model = fr.build(parts, draft, fr.document(fr.DocumentPreset.SYSTEM, None, cover=system_cover)).model
+    probe_model = fr.build(parts, draft).model
     pump1_cabinet = _unit_id(probe_model, name="demo-pump-cabinet", prefix="pump1")
 
     system_doc = fr.document(fr.DocumentPreset.SYSTEM, None, cover=system_cover)

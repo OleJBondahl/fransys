@@ -41,11 +41,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="PART_WITHOUT_FOOTPRINT",
-        severity=Severity.WARNING,
+        severity=Severity.INFO,
         stage="kicad",
-        who="consumer",
+        who="part author",
         cause="A board item's part has no footprint, so the KiCad netlist omits it.",
-        fix="No call clears this: add a footprint to the part's data.",
+        fix="Add a `footprint` to the part's data file.",
         page="findings-kicad",
     ),
     CodeInfo(

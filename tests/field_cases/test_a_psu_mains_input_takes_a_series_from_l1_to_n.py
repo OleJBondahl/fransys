@@ -9,7 +9,7 @@ from fransys.colours import BK
 def test_a_series_from_l1_to_n_feeds_the_supply() -> None:
     """The series builds and `check` finds no error."""
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     g1 = d.device("G1", "DEMO-PSU-24")
     d.series(ac.L1, g1.input, ac.N, wire=(BK, 2.5))

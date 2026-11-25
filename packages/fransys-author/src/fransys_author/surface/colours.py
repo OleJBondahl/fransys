@@ -1,46 +1,29 @@
 """IEC 60757 colour codes as importable names: `from ...colours import BU`.
 
-Every value is read from the model's colour lists, so a code the model lacks cannot exist here.
+Every value is read from the library's `Colour` list, so a code it lacks cannot exist here.
 """
 
 from typing import Final
 
-from fransys_author.errors import AuthorError
-from fransys_model.derive import split_colour
-from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES
+from fransys_model.elecdef import Colour
+from fransys_model.vocab import RESERVED_CODES
 
-
-def _code(name: str) -> str:
-    """The model's own spelling of the base or reserved code `name`.
-
-    Does not accept a code the model lacks: that raises at import.
-    """
-    if name not in BASE_COLOURS and name not in RESERVED_CODES.values():
-        msg = f"colour code {name!r} is not in the model's colour lists"
-        raise AuthorError(msg)
-    return name
-
-
-BK: Final = _code("BK")
-BN: Final = _code("BN")
-RD: Final = _code("RD")
-OG: Final = _code("OG")
-YE: Final = _code("YE")
-GN: Final = _code("GN")
-BU: Final = _code("BU")
-VT: Final = _code("VT")
-GY: Final = _code("GY")
-WH: Final = _code("WH")
-PK: Final = _code("PK")
-GD: Final = _code("GD")
-SR: Final = _code("SR")
-TQ: Final = _code("TQ")
+BK: Final = Colour.BK.name
+BN: Final = Colour.BN.name
+RD: Final = Colour.RD.name
+OG: Final = Colour.OG.name
+YE: Final = Colour.YE.name
+GN: Final = Colour.GN.name
+BU: Final = Colour.BU.name
+VT: Final = Colour.VT.name
+GY: Final = Colour.GY.name
+WH: Final = Colour.WH.name
+PK: Final = Colour.PK.name
+GD: Final = Colour.GD.name
+SR: Final = Colour.SR.name
+TQ: Final = Colour.TQ.name
 SH: Final = RESERVED_CODES["shield"]
-GNYE: Final = RESERVED_CODES["protective earth"]
-
-if split_colour(GNYE) is None:
-    _msg = f"GNYE ({GNYE!r}) is not a colour the model accepts"
-    raise AuthorError(_msg)
+GNYE: Final = Colour.GNYE.name
 
 __all__ = [
     "BK",

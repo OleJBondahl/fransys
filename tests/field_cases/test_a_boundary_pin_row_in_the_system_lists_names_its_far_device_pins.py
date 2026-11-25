@@ -41,7 +41,7 @@ def _cab_strip(u: Any) -> _Strip:
     f1 = u.device("F1", "DEMO-MCB-2P")
     x1 = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 2, interface=(1, 2), bridged=True)
     u.series(f1.pole_1["2"], x1[1].inner, wire=WIRE)
-    u.series(f1.pole_1["1"], u.terminal_strip("X0", "DEMO-TB-2.5", 1)[1].inner, wire=WIRE)
+    u.series(f1.pole_1["1"], u.terminal_strip("X2", "DEMO-TB-2.5", 1)[1].inner, wire=WIRE)
     return _Strip(x1)
 
 
@@ -61,7 +61,7 @@ def _system(pins: tuple[str, ...], *, strip_in_unit: bool) -> fr.BuildResult:
             x1 = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 2, bridged=True)
             breaker = u.add(_cab, "N").F1
             u.series(breaker.pole_1["2"], x1[1].inner, wire=WIRE)
-            u.series(breaker.pole_1["1"], u.terminal_strip("X0", "DEMO-TB-2.5", 1)[1].inner, wire=WIRE)
+            u.series(breaker.pole_1["1"], u.terminal_strip("X2", "DEMO-TB-2.5", 1)[1].inner, wire=WIRE)
         for core, pin in enumerate(pins, 1):
             cable.core(core, x1[(core + 1) // 2].outer, pump.M1.motor[pin])
         return _Open()

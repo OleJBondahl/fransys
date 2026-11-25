@@ -98,7 +98,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="render",
         who="Fransys",
         cause="A where-text stands farther from the text before it than one line pitch, the distance the stack guarantees.",
-        fix=_REPORT,
+        fix="No call clears this: a Fransys layout limit, tracked in KI-1516.",
         page="findings-render",
     ),
     CodeInfo(

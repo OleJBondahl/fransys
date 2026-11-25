@@ -49,6 +49,20 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="PE_CORE_WITHOUT_SERIES",
+        severity=Severity.ERROR,
+        stage="validators",
+        who="consumer",
+        cause="A protective (green-yellow) core of a cable lands on no PE pin (no series, or parked off the PE net), so it would print spare.",
+        fix=(
+            "Give the cabinet a PE terminal, join the device's PE pin to protective earth with d.earth, "
+            "and run the cable's series to the device so the core lands on its PE pin. "
+            'Write: pe = x1.run("PE", 2, bridged=True); w1.core(GNYE, m1.motor["PE"], pe[1]); '
+            'd.earth(m1.motor["PE"], pe[1]); d.series(x1[1:4], w1, m1.motor)'
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="GNYE_NOT_PE_DECLARED",
         severity=Severity.ERROR,
         stage="validators",

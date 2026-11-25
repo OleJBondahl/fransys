@@ -43,8 +43,8 @@ def test_every_drawn_symbol_stands_in_one_cell_and_a_hub_in_its_fans_column() ->
     assert {c for t in TERMINALS for c in _cells_of(flow, t)} <= fan_cols
 
 
-def test_every_drawn_symbol_is_held_and_the_trunk_wired_box_is_a_card_with_no_column() -> None:
-    """A terminal is held by its cell's block; the box K, in no cell, by a card of its own (C2)."""
+def test_every_drawn_symbol_is_held_and_the_trunk_wired_box_is_a_card_holding_the_first_leg() -> None:
+    """A terminal is held by its cell's block; the box K, in no cell, by a card of its own holding the plumb first leg (C2)."""
     prob = hub_shape()
     flow = flow_of(prob)
     blocks = [b for bl in blocks_of(prob) for b in bl.blocks]
@@ -53,7 +53,7 @@ def test_every_drawn_symbol_is_held_and_the_trunk_wired_box_is_a_card_with_no_co
         for col_id in b.columns:
             held |= {c.sym for col in flow.columns if col.id == col_id for ln in col.lanes for c in ln.cells}
     assert set(flow.drawn) - held == set()
-    assert [(b.kind, b.anchor, b.columns) for b in blocks if b.kind == "card"] == [("card", "K", ())]
+    assert [(b.kind, b.anchor, b.columns) for b in blocks if b.kind == "card"] == [("card", "K", ("c:T1",))]
 
 
 def test_a_flow_with_every_symbol_in_its_cells_has_no_finding() -> None:

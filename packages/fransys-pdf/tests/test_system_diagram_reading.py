@@ -20,7 +20,7 @@ def _system(tmp_path: Any) -> Any:
     d.revision(1, date="2026-10-15", text="First issue", created="XX")
     d.location("L0", "Workshop")
     with d.function("F", "Field"):
-        hub = d.device("M0", "DEMO-MOTOR-4KW", place="L0")
+        hub = d.device("M2", "DEMO-MOTOR-4KW", place="L0")
         leaf = d.device("M1", "DEMO-MOTOR-4KW", place="L0")
     d.cable("W1", "DEMO-CBL-4G1.5", place="L0").core(1, hub["U"], leaf["U"])
     cover = tmp_path / "cover.md"

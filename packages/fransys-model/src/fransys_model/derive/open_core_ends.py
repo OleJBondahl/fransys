@@ -10,8 +10,9 @@ from fransys_model.vocab.tables import facets_of
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.enums import PortBoundary
 
-from .core_pairs import _product_colours, open_core_is_spare
+from .core_pairs import _product_colours
 from .designation import printed_designation
+from .facts.cables import open_core_is_spare
 from .facts.house_settings import word
 from .facts.roles import port_boundary
 from .indexes import build_indexes

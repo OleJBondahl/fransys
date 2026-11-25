@@ -72,13 +72,14 @@ class TitleBlockText:
 
 @dataclass(frozen=True)  # plain: it holds a record, which a value may not
 class DocumentSheets:
-    """A document's paper, its sizes, its pages' title blocks in page order, each paper's frame."""
+    """A document's paper, its sizes, its pages' title blocks in page order, each paper's frame, the notice text."""
 
     sheet: SheetFormat
     sizes: Sizes
     pages: tuple[SheetPage, ...]
     frames: frozendict[Id[SheetFormat], SheetFrame]
     title_text: TitleBlockText
+    notice: str
 
 
 @value

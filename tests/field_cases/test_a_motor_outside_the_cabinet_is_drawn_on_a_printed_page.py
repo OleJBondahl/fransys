@@ -82,7 +82,7 @@ def test_a_bundled_motor_cable_cut_at_the_cabinet_boundary_draws_its_leads_to_th
     @fr.unit("demo-feeder", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def feeder(c: fr.Design) -> _Io:
         with c.function("INC", "Incomer"):
-            x0 = c.terminal_strip("X0", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
+            x0 = c.terminal_strip("X2", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
             bus = c.ac_supply("400V", 230, x0[1], x0[2], x0[3], n=x0[4])
         with c.function("M1", "Feeder 1"):
             x = c.terminal_strip("X1", "DEMO-TB-2.5", 3, pe="DEMO-TB-PE-2.5", interface=True)

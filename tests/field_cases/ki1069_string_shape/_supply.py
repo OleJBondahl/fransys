@@ -30,7 +30,7 @@ def build_supply(d: fr.Design) -> Supply:
     with d.function("SUP", "24 V supply"):
         x4 = d.terminal_strip("X4", typed.PRT15, interface=True, pe=typed.PRT16)
         mains = (x4.run("L", 1)[1], x4.run("N", 1)[1], x4.run("PE", 1)[1])
-        psu = d.device("PSU1", typed.PRT17)
+        psu = d.device("TC1", typed.PRT17)
         f1 = d.device("F1", typed.PRT01)
         x1 = d.terminal_strip("X1", typed.PRT15).run("24V", POLES, bridged=True)
         x2 = d.terminal_strip("X2", typed.PRT15).run("GND", POLES, bridged=True)

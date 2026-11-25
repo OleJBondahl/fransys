@@ -36,7 +36,7 @@ type _Node = tuple[Id[Page], XY]
 
 @dataclass(frozen=True)
 class References:
-    """What a reader reads of the markers: faults, each marker's node by record id (None: on no ink), each group's nodes, each stub's listed ports."""
+    """What a reader reads of the markers: faults, each marker's node (None: on no ink), each reference's nodes, each stub's listed ports."""
 
     faults: tuple[_Fault, ...]
     markers: dict[str, _Node | None]
@@ -117,7 +117,7 @@ def _read_markers(
     markers = layout_of(model, LinkMarker)
     faults, nodes, read, listed = _ambiguous(model), defaultdict(list), {}, defaultdict(set)
     for (page, cell), ends in reference_targets(model).items():
-        for marker, _, group, text in (end for end in ends if page in pages):
+        for marker, number, group, text in (end for end in ends if page in pages):
             at = drawn.get((page, markers[marker].port.value, text), [])
             held = [(page, one) for one in at if one in pages[page].nodes]
             if not _stands(model, page, cell, at, library):
@@ -125,7 +125,7 @@ def _read_markers(
             elif not held:
                 faults.append((page, marker, f"marker prints {text!r} on no wire of its net"))
             else:
-                nodes[group].extend(held)
+                nodes[group, number].extend(held)
                 read[marker.value] = held[0]
                 if markers[marker].star is StarKind.OFF:
                     listed[held[0]].update(x.port.value for x in markers[marker].pairs)

@@ -14,7 +14,7 @@ def test_the_return_leg_takes_the_second_core() -> None:
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
     d.location("FIELD", "Field")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
-    w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=12)
+    w1 = d.cable("W1", "DEMO-CBL-8G0.75", length_m=12)
     h1 = d.device("H1", "DEMO-LAMP-24", place="FIELD")
     d.series(dc.plus, x1, w1, h1.lamp, w1, x1, dc.minus, wire=(BU, 0.75))
     result = fr.build(d)

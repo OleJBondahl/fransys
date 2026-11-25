@@ -12,10 +12,12 @@ from fransys_model.derive.facts.cables import (
     wired_cores_past_product,
 )
 from fransys_model.derive.facts.colours import (
+    _known,
     coloured_conductors,
     unknown_core_colours,
     unknown_wire_colours,
 )
+from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
 from fransys_model.derive.facts.potentials import is_wired, on_declared_net, pe_ports_off_pe
 from fransys_model.elecdef import PinRole
 from fransys_model.kernel import Id, make_id
@@ -106,6 +108,21 @@ def test_unknown_colours_are_listed_for_wires_and_products() -> None:
     model = plant.model()
     assert [f.colour for f in unknown_wire_colours(model)] == ["QQ"]
     assert [(i, c) for _, i, c in unknown_core_colours(model)] == [(2, "ZZ")]
+
+
+def test_known_colour_is_the_library_grammar_and_the_empty_colour() -> None:
+    # MUTATION: `_known` drops the empty-colour guard
+    accepted = ["", "BK", "TQ", "BK1", "BK12", "BKBN", "GNYE", "GNYE1", "SH"]
+    refused = ["QQ", "BKBK", "BK0", "BK01", "SH1", "SHBK", "bk", "BK-1"]
+    assert [c for c in accepted if not _known(c)] == []
+    assert [c for c in refused if _known(c)] == []
+
+
+def test_green_yellow_with_a_core_number_is_protective_and_fine_on_pe() -> None:
+    assert not core_on_pe_not_gnye("GNYE1", [PinRole.PE])
+    assert not core_on_pe_not_gnye("SH", [PinRole.PE])
+    assert core_on_pe_not_gnye("BK1", [PinRole.PE])
+    assert not core_on_pe_not_gnye("BK1", [None])
 
 
 def test_is_wired_and_pe_ports_off_pe() -> None:

@@ -131,3 +131,20 @@ def test_a_single_pole_connector_pairs_only_when_it_faces_north_and_south(model:
     north_south = _sides(model, function, {"1": Side.N, "2": Side.S})
     assert series_pairs(model, function, east_west) == ()
     assert series_pairs(model, function, north_south) == (SeriesPair(pole=0, north=pins["1"], south=pins["2"]),)
+
+
+def test_an_odd_last_pin_with_no_pole_link_is_a_pole_of_its_own_and_pairs_with_none() -> None:
+    """The gas detector's signal has pins 3 to 9 and no link: poles (3, 4) ... (9, 9), never one pole of all."""
+    d = fr.design("demo_parts")
+    d.location("L0", "Workshop")
+    with d.function("GAS", "Detector"):
+        signal = d.device("B1", "DEMO-GAS-DETECTOR", place="L0").signal
+        for pin, far in (("3", "J1"), ("4", "J2"), ("9", "J3")):
+            d.series(signal[pin], d.device(far, _CONN2, place="L0")[1], wire=(BU, 0.5))
+    built = fr.build(d).model
+    function = _function(built, "GAS/B1", "signal")
+    pins = _pins(built, function)
+    pair = _sides(built, function, {"3": Side.N, "4": Side.S, "9": Side.S})
+    across = _sides(built, function, {"3": Side.N, "9": Side.S})
+    assert series_pairs(built, function, pair) == (SeriesPair(pole=0, north=pins["3"], south=pins["4"]),)
+    assert series_pairs(built, function, across) == ()

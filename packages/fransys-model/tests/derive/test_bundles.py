@@ -165,19 +165,19 @@ def test_nets_that_part_partway_are_one_bundle_over_the_span_they_share() -> Non
 def test_a_function_with_no_declared_pole_link_forms_no_pole_bundle() -> None:
     """A 4-pin connector declares no pole link: its pins pair no poles, so nets from pins 1 and 3 do not bundle."""
     d = fr.design("demo_parts")
-    a, b = d.device("J1", "DEMO-CONN-4P"), d.device("J2", "DEMO-CONN-4P")
+    a, b = d.device("X1", "DEMO-CONN-4P"), d.device("X3", "DEMO-CONN-4P")
     d.series(a[1], b[1], wire=_WIRE)
     d.series(a[3], b[3], wire=_WIRE)
     model = fr.build(d).model
-    assert bundle_of(model, _port(model, "J1", "1")) is None
-    assert bundle_of(model, _port(model, "J1", "3")) is None
+    assert bundle_of(model, _port(model, "X1", "1")) is None
+    assert bundle_of(model, _port(model, "X1", "3")) is None
     assert not [b for b in bundles(model) if b.form == "pole"]
 
 
 def _cabled(*, second_cable_shares_a_net: bool) -> fr.Model:
-    """W1 carries two cores from J1 to J2; W2 optionally leaves J1 pin 1 again (a common net) with a second core."""
+    """W1 carries two cores from X1 to X3; W2 optionally leaves X1 pin 1 again (a common net) with a second core."""
     d = fr.design("demo_parts")
-    j1, j2, j3 = (d.device(tag, "DEMO-HSG-4F", contacts="DEMO-CRIMP-F") for tag in ("J1", "J2", "J3"))
+    j1, j2, j3 = (d.device(tag, "DEMO-HSG-4F", contacts="DEMO-CRIMP-F") for tag in ("X1", "X3", "X4"))
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
     w1.core(1, j1[1], j2[1])
     w1.core(2, j1[2], j2[2])
@@ -193,7 +193,7 @@ def test_a_cables_cores_are_one_line_bundle_in_core_order() -> None:
     model = _cabled(second_cable_shares_a_net=False)
     (cable,) = [b for b in bundles(model) if b.form == "line"]
     assert (cable.form, [lane.pole for lane in cable.nets]) == ("line", [0, 1])
-    port = _port(model, "J1", "1")
+    port = _port(model, "X1", "1")
     assert (bundle_of(model, port) or (cable.id, 0, "pole"))[2] == "pole"
     assert bundle_of(model, port, ("line",)) == (cable.id, 0, "line")
 

@@ -6,6 +6,7 @@ the stored pins to it by hand, so the rows are seen before the facade turns them
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 from fransys_author.design import Design
 
 from fransys_model.derive import (
@@ -35,7 +36,7 @@ def _relay_board(revision, *, names, tags=None):
     u.revision(revision, date=_DATE, text=f"Revision {revision}", created="OJB")
     for name in names:
         u.item("DEMO-RLY-2CO-24", name=name, tag=(tags or {}).get(name))
-    return fr.build(parts, design.draft()), u
+    return fr.build(parts, design.draft(), unit_document(u)), u
 
 
 def _uid(scope):

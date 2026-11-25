@@ -5,6 +5,7 @@ Fixed by model-0132, a Change on an empty-designation row names the unit itself,
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
+from _model_build_cover import unit_document
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -27,7 +28,7 @@ def _build(part: str) -> fr.BuildResult:
 
     d = fr.design("demo_parts")
     d.add(lone, "U1")
-    return fr.build(d)
+    return fr.build(d, unit_document(_NAME))
 
 
 def test_sole_device_unit_diff_names_the_unit(tmp_path: Path) -> None:

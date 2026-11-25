@@ -5,6 +5,7 @@ Fixed by model-0146: the change list is relative to the unit, so it drops the lo
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
+from _model_build_cover import unit_document
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -24,13 +25,13 @@ def _build(*, place: bool) -> fr.BuildResult:
     def placed(u: fr.Design) -> _Open:
         if place:
             u.location("C1", "Place")
-        u.device("lamp1", "DEMO-LAMP-24", place="C1" if place else None)
-        u.device("lamp2", "DEMO-LAMP-24", place="C1" if place else None)
+        u.device("PF1", "DEMO-LAMP-24", place="C1" if place else None)
+        u.device("PF2", "DEMO-LAMP-24", place="C1" if place else None)
         return _Open()
 
     d = fr.design("demo_parts")
     d.add(placed, "U1")
-    return fr.build(d)
+    return fr.build(d, unit_document(_NAME))
 
 
 def test_place_holding_a_whole_unit_is_no_change(tmp_path: Path) -> None:
@@ -50,7 +51,7 @@ class _Boundary(NamedTuple):
 
 @fr.unit("leaf", revision=1, interface_version=1, date="2026-11-19", text="Issue", by="XX")
 def _leaf(u: fr.Design) -> _Boundary:
-    return _Boundary(u.device("J1", "DEMO-CONN-2P", interface=True))
+    return _Boundary(u.device("X1", "DEMO-CONN-2P", interface=True))
 
 
 @fr.unit("holder", revision=1, interface_version=1, date="2026-11-19", text="Issue", by="XX", title="Holder", number="H-1")
@@ -65,9 +66,9 @@ def test_a_released_leaf_nested_under_a_function_scope_still_verifies(tmp_path: 
     """The scope the placement sits in is outside the leaf: its baseline rows never print it."""
     alone = fr.design("demo_parts")
     alone.add(_leaf, "U1")
-    fr.release(fr.build(alone), tmp_path, unit="leaf")
+    fr.release(fr.build(alone, unit_document("leaf")), tmp_path, unit="leaf")
     nested = fr.design("demo_parts")
     nested.add(_holder, "C1")
-    result = fr.build(nested)
+    result = fr.build(nested, unit_document("holder"))
     assert not fr.verify(result, tmp_path)
     fr.release(result, tmp_path, unit="holder")

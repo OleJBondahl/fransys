@@ -5,14 +5,16 @@ rating, a coil window, a breaking capacity); `Current` is the AC/DC condition of
 """
 
 from elecdef import At, Block, Breaker, Connection, Fuse, Quantity, Range, Rating, Role, Unit
+from elecdef.cable import core_colour
 from elecdef.connector import Connector
 from elecdef.pins import Link, LinkKind, Pin, PinRole, Side, poles, throws
-from elecdef.vocab import ContactForm, Current, Gender
+from elecdef.vocab import Colour, ContactForm, Current, Gender
 
 __all__ = [
     "At",
     "Block",
     "Breaker",
+    "Colour",
     "Connection",
     "Connector",
     "ContactForm",
@@ -29,6 +31,7 @@ __all__ = [
     "Role",
     "Side",
     "Unit",
+    "core_colour",
     "poles",
     "throws",
 ]

@@ -10,7 +10,7 @@ can still print it (as its own paragraph) and `check` can still report it (P6, P
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ._typst import literal
 
@@ -125,11 +125,27 @@ def _runs(text: str) -> tuple[Run, ...]:
 
 def _unsupported_construct(line: str) -> str | None:
     """The name of the unsupported construct `line` triggers, or `None` when it is plain text."""
-    for check in _UNSUPPORTED_CHECKS:
-        name = check(line)
-        if name is not None:
-            return name
-    return None
+    return next(filter(None, (check(line) for check in _UNSUPPORTED_CHECKS)), None)
+
+
+class _Group:
+    """The consecutive lines or items of one kind that `parse` is accumulating, and the element they close into."""
+
+    def __init__(self, elements: list[Element], close: Callable[[int, list[Any]], Element]) -> None:
+        self._elements = elements
+        self._close = close
+        self._items: list[Any] = []
+        self._line = 0
+
+    def add(self, index: int, item: object) -> None:
+        if not self._items:
+            self._line = index
+        self._items.append(item)
+
+    def flush(self) -> None:
+        if self._items:
+            self._elements.append(self._close(self._line, self._items))
+            self._items = []
 
 
 class _Blocks:
@@ -137,48 +153,14 @@ class _Blocks:
 
     def __init__(self) -> None:
         self.elements: list[Element] = []
-        self._paragraph: list[str] = []
-        self._paragraph_line = 0
-        self._bullets: list[tuple[Run, ...]] = []
-        self._bullets_line = 0
-        self._numbers: list[tuple[Run, ...]] = []
-        self._numbers_line = 0
-
-    def add_paragraph_line(self, index: int, line: str) -> None:
-        if not self._paragraph:
-            self._paragraph_line = index
-        self._paragraph.append(line)
-
-    def add_bullet(self, index: int, runs: tuple[Run, ...]) -> None:
-        if not self._bullets:
-            self._bullets_line = index
-        self._bullets.append(runs)
-
-    def add_number(self, index: int, runs: tuple[Run, ...]) -> None:
-        if not self._numbers:
-            self._numbers_line = index
-        self._numbers.append(runs)
-
-    def flush_paragraph(self) -> None:
-        if self._paragraph:
-            text = " ".join(self._paragraph)
-            self.elements.append(Paragraph(self._paragraph_line, _runs(text)))
-            self._paragraph = []
-
-    def flush_bullets(self) -> None:
-        if self._bullets:
-            self.elements.append(BulletList(self._bullets_line, tuple(self._bullets)))
-            self._bullets = []
-
-    def flush_numbers(self) -> None:
-        if self._numbers:
-            self.elements.append(NumberedList(self._numbers_line, tuple(self._numbers)))
-            self._numbers = []
+        self.paragraph = _Group(self.elements, lambda line, items: Paragraph(line, _runs(" ".join(items))))
+        self.bullets = _Group(self.elements, lambda line, items: BulletList(line, tuple(items)))
+        self.numbers = _Group(self.elements, lambda line, items: NumberedList(line, tuple(items)))
 
     def flush_all(self) -> None:
-        self.flush_paragraph()
-        self.flush_bullets()
-        self.flush_numbers()
+        self.paragraph.flush()
+        self.bullets.flush()
+        self.numbers.flush()
 
 
 def _fold_block(blocks: _Blocks, index: int, line: str) -> bool:
@@ -200,15 +182,15 @@ def _fold_item(blocks: _Blocks, index: int, line: str) -> bool:
     """Fold a bullet or numbered item into `blocks`; False when `line` is neither."""
     bullet = _BULLET.match(line)
     if bullet is not None:
-        blocks.flush_paragraph()
-        blocks.flush_numbers()
-        blocks.add_bullet(index, _runs(bullet.group(1)))
+        blocks.paragraph.flush()
+        blocks.numbers.flush()
+        blocks.bullets.add(index, _runs(bullet.group(1)))
         return True
     numbered = _NUMBERED.match(line)
     if numbered is not None:
-        blocks.flush_paragraph()
-        blocks.flush_bullets()
-        blocks.add_number(index, _runs(numbered.group(1)))
+        blocks.paragraph.flush()
+        blocks.bullets.flush()
+        blocks.numbers.add(index, _runs(numbered.group(1)))
         return True
     return False
 
@@ -218,9 +200,9 @@ def _handle_line(blocks: _Blocks, index: int, line: str) -> None:
     if line.strip() == "":
         blocks.flush_all()
     elif not (_fold_block(blocks, index, line) or _fold_item(blocks, index, line)):
-        blocks.flush_bullets()
-        blocks.flush_numbers()
-        blocks.add_paragraph_line(index, line)
+        blocks.bullets.flush()
+        blocks.numbers.flush()
+        blocks.paragraph.add(index, line)
 
 
 def parse(text: str) -> tuple[Element, ...]:

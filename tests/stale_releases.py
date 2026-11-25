@@ -6,6 +6,7 @@ moved wrote them. The demo cabinet (`listing_golden_cases`) holds a contact bloc
 
 import hashlib
 import json
+import tempfile
 from typing import Any, NamedTuple
 lazy from pathlib import Path
 
@@ -32,7 +33,9 @@ def _plant(u: Any) -> _Open:
 def build_plant() -> fr.BuildResult:
     d = fr.design("demo_parts")
     d.add(_plant, "P1")
-    return fr.build(d)
+    cover = Path(tempfile.mkdtemp()) / "cover.md"
+    cover.write_text("# Plant\n", encoding="utf-8")
+    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "lg-plant", cover=cover))
 
 
 def release_all(result: fr.BuildResult, into: Path) -> dict[str, Path]:

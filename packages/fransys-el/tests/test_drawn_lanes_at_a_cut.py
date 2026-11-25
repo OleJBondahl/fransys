@@ -7,9 +7,12 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from fransys_el import drawn_references
 from fransys_el.drawn_lanes import join_lanes
+from fransys_el.drawn_references import join_references
 
-from fransys_model.kernel import UnionFind
+from fransys_model.kernel import Id, UnionFind
+from fransys_model.layout import StarKind
 
 
 def _side(
@@ -214,3 +217,57 @@ def test_a_portless_chain_beside_a_far_flush_neighbour_keeps_its_k() -> None:
     lanes = join_lanes(union, pages, SimpleNamespace(groups=groups, stubs={}), nets, 8)  # ty: ignore[invalid-argument-type] - doubles
     assert not lanes.bare
     assert union.find(("T", (0, 16))) == union.find(("P1", (0, 16))) == union.find(("P2", (0, 16)))
+
+
+_GROUP = frozenset({"p"})  # one port set at all four ends: the ref15/ref31 shape (KI-1491)
+_TEXTS = {1: "#1-1A <-> #1-7A", 4: "#4-8A <-> #4-4B"}
+
+
+def _marked(union: UnionFind[Any], name: str, number: int, *lanes: tuple[str, int, int]) -> tuple[str, Any, dict[str, str]]:
+    """A side whose one reference marker stands at the first lane's end, printing the text of reference `number`."""
+    side = _side(union, name, *lanes)
+    box = side[1].drawing.symbols[0].outline
+    end, row = lanes[0][2], lanes[0][1]
+    mark = SimpleNamespace(slots=(("ref", _TEXTS[number]),), x=end, y=row, outline=box, ports=(f"m{name}",))
+    side[1].drawing.symbols, side[1].nodes = [mark], {(end, row)}
+    return side
+
+
+def _join_both(monkeypatch: pytest.MonkeyPatch, union: UnionFind[Any], *numbered: tuple[int, tuple[str, Any, dict[str, str]]]):
+    """Read the markers of the sides through `join_references` (the model's reading doubled), then their lanes."""
+    ends = {(name, (0, "cell")): ((Id(kind="m", value=name), number, _GROUP, _TEXTS[number]),) for number, (name, _, _) in numbered}
+    markers = {Id(kind="m", value=name): SimpleNamespace(port=SimpleNamespace(value=f"m{name}"), star=StarKind.REF) for _, (name, _, _) in numbered}
+    monkeypatch.setattr(drawn_references, "reference_targets", lambda _: ends)
+    monkeypatch.setattr(drawn_references, "layout_of", lambda *_: markers)
+    monkeypatch.setattr(drawn_references, "_ambiguous", lambda _: [])
+    monkeypatch.setattr(drawn_references, "_stands", lambda *_: True)
+    pages = {name: part for _, (name, part, _) in numbered}
+    nets = {k: v for _, (_, _, found) in numbered for k, v in found.items()}
+    refs = join_references(None, pages, None, union)  # ty: ignore[invalid-argument-type] - doubles
+    return refs, join_lanes(union, pages, refs, nets, 8)  # ty: ignore[invalid-argument-type] - doubles
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_markers_on_equal_ports_with_different_numbers_are_two_references_and_both_pair_their_lanes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """KI-1491: a reference is its port set and its number; one group of four ends pairs only its first side, so the second pair stayed apart."""
+    union = UnionFind()
+    a, b = (_marked(union, n, 1, ("L1", 8, 100), ("L2", 16, 100)) for n in "AB")
+    c, d = (_marked(union, n, 4, ("L2", 8, 100), ("L1", 16, 100)) for n in "CD")
+    refs, lanes = _join_both(monkeypatch, union, (1, a), (1, b), (4, c), (4, d))
+    assert set(refs.groups) == {(_GROUP, 1), (_GROUP, 4)}
+    assert not lanes.bare
+    assert union.find(("A", (100, 16))) == union.find(("B", (100, 16)))
+    assert union.find(("C", (100, 16))) == union.find(("D", (100, 16)))  # the second lane of the second reference: no DANGLING_WIRE_END
+    assert union.find(("A", (100, 16))) != union.find(("C", (100, 16)))
+
+
+@pytest.mark.rule("READ-REFERENCES")
+def test_the_same_shape_with_a_lane_cut_short_leaves_its_end_unmet_and_unpaired(monkeypatch: pytest.MonkeyPatch) -> None:
+    """KI-1491: keying by number hides no real miss; a lane that stops short is no foot, so it stays unpaired with and without the key."""
+    union = UnionFind()
+    a, b = (_marked(union, n, 1, ("L1", 8, 100), ("L2", 16, 100)) for n in "AB")
+    c, d = _marked(union, "C", 4, ("L2", 8, 100), ("L1", 16, 100)), _marked(union, "D", 4, ("L2", 8, 100), ("L1", 16, 60))
+    _, lanes = _join_both(monkeypatch, union, (1, a), (1, b), (4, c), (4, d))
+    assert ("C", (100, 16)) not in lanes.joined
+    assert ("D", (60, 16)) not in lanes.joined
+    assert union.find(("C", (100, 16))) != union.find(("D", (60, 16)))

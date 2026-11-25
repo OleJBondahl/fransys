@@ -56,7 +56,7 @@ def _quality(refs: frozendict[str, int], x: int, b: int, d: int, scene: Scene) -
         + WEIGHTS["b"] * b
         + WEIGHTS["d"] * d
         + WEIGHTS["p"] * max(scene.pages - 1, 0)
-        + WEIGHTS["f"] * sum((1 - f) ** 2 for f in scene.fill)
+        + WEIGHTS["f"] * sum((1 - f) * (1 - f) for f in scene.fill)
     )
 
 

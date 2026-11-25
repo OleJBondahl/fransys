@@ -9,7 +9,7 @@ from typing import Any
 import fransys as fr
 import pytest
 from _field_designs import fc_design
-from _model_build_cover import system_document
+from _model_build_cover import system_document, unit_document
 from fransys.colours import BU
 from fransys_overview._js_panels import JS_PANELS
 from test_a_unit_box_takes_its_place_colour_on_the_overview import _cab, _Io
@@ -36,7 +36,7 @@ def data(tmp_path_factory) -> dict[str, Any]:
             d.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
         d.cable("W1", "DEMO-CBL-4G1.5", length_m=10).core(1, far["1"], first.out[1])
         d.cable("W2", "DEMO-CBL-4G1.5", length_m=10).core(1, near["1"], second.out[1])
-    written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
+    written = fr.write(fr.build(d, system_document(), unit_document(first), unit_document(second)), tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()
     block = re.search(r'id="overview-data">(.*?)</script>', page, re.DOTALL)
     assert block is not None

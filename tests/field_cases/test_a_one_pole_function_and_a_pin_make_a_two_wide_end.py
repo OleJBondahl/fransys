@@ -25,7 +25,7 @@ def _parts() -> tuple[fr.Design, Any, Any, Any]:
     d = fr.design("demo_parts")
     q1 = d.device("Q1", "DEMO-MCB-2P")
     n = d.device("N1", None, external=True, pins=("N",))
-    load = d.device("SW1", "DEMO-SWITCH-DC-2P")
+    load = d.device("SF1", "DEMO-SWITCH-DC-2P")
     d.series(q1.pole_1["1"], d.device("G1", None, external=True, pins=("P",)).P, wire=(BK, 2.5))
     return d, q1, n, load
 
@@ -34,8 +34,8 @@ def test_a_one_pole_fuse_and_a_neutral_pin_feed_the_two_poles_in_order() -> None
     d, q1, n, load = _parts()
     d.series((q1.pole_1, n.N), load.main, wire=(BK, 2.5))
     assert _ends(d) == {
-        frozenset((("Q1", "2"), ("SW1", "1"))),
-        frozenset((("N1", "N"), ("SW1", "3"))),
+        frozenset((("Q1", "2"), ("SF1", "1"))),
+        frozenset((("N1", "N"), ("SF1", "3"))),
     }
 
 
@@ -43,8 +43,8 @@ def test_the_order_written_sets_which_pole_each_end_takes() -> None:
     d, q1, n, load = _parts()
     d.series((n.N, q1.pole_1), load.main, wire=(BK, 2.5))
     assert _ends(d) == {
-        frozenset((("N1", "N"), ("SW1", "1"))),
-        frozenset((("Q1", "2"), ("SW1", "3"))),
+        frozenset((("N1", "N"), ("SF1", "1"))),
+        frozenset((("Q1", "2"), ("SF1", "3"))),
     }
 
 

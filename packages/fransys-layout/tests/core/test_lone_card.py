@@ -39,7 +39,7 @@ def two_fans(ends_a: int, ends_b: int, *, a_first: bool = True) -> PlacementProb
     """
     pins = [f"K.p{i}" for i in range(1, ends_a + ends_b + 1)]
     syms = [
-        box_sym("K", "PLC", ends_a + ends_b),
+        box_sym("K", None, ends_a + ends_b),  # no group: a box-driven fan votes over its legs (R3648)
         *(_sym(t, "GA") for t in ("A1", "A2")),
         *(_sym(t, "GB") for t in ("B1", "B2")),
     ]

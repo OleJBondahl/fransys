@@ -11,7 +11,6 @@ from typing import Any
 
 import fransys as fr
 import fransys_parts
-from _model_build_cover import system_document
 from fransys_overview import html
 from fransys_overview._app import APP_JS
 from test_units_worked_example import _system_design
@@ -32,7 +31,7 @@ from fransys_model.derive.block_diagram import box_lines, diagram_lines
 def _laid() -> tuple[Any, str, Any]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    model = fr.build(parts, design.draft(), system_document()).model
+    model = fr.build(parts, design.draft()).model
     laid = lay_out_overview(model, LIBRARY)[0]
     return model, html(model, laid, text_height=8), laid
 

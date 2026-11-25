@@ -9,7 +9,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from _field_designs import fc_design
-from _model_build_cover import system_document
+from _model_build_cover import system_document, unit_document
 from fransys.colours import BU
 
 _LOCATION = 3  # the index of the location split in a box's `cls`; `_js_core.SPLIT_AT`
@@ -42,7 +42,7 @@ def built(tmp_path_factory) -> tuple[Any, dict[str, Any]]:
         neutral = d.terminal_strip("X9", "DEMO-TB-2.5", place="FLD")
         d.series(neutral[1].inner, lamp["2"], wire=(BU, 0.5))
         d.cable("W1", "DEMO-CBL-4G1.5", length_m=10).core(1, lamp["1"], unit.out[1])
-    built = fr.build(d, system_document())
+    built = fr.build(d, system_document(), unit_document(unit))
     written = fr.write(built, tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()
     block = re.search(r'id="overview-data">(.*?)</script>', page, re.DOTALL)

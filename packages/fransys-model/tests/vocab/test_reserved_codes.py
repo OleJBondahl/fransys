@@ -2,8 +2,8 @@
 
 from fransys import colours
 
-from fransys_model.derive import split_colour
-from fransys_model.vocab import BASE_COLOURS, RESERVED_CODES
+from fransys_model.elecdef import Colour, core_colour
+from fransys_model.vocab import COLOUR_GRAMMAR, RESERVED_CODES
 
 
 def test_table_holds_the_screen_and_the_protective_earth_core():
@@ -15,17 +15,18 @@ def test_readers_expose_the_table_values():
     assert RESERVED_CODES["protective earth"] == colours.GNYE
 
 
-def test_gnye_is_gn_and_ye_and_sh_is_no_base_colour():
-    assert RESERVED_CODES["protective earth"] == colours.GN + colours.YE
-    assert RESERVED_CODES["shield"] not in BASE_COLOURS
+def test_the_library_reads_both_reserved_codes():
+    earth, screen = core_colour(RESERVED_CODES["protective earth"]), core_colour(RESERVED_CODES["shield"])
+    assert earth is not None
+    assert earth.protective
+    assert screen is not None
+    assert screen.screen
+    assert RESERVED_CODES["shield"] not in Colour.__members__
 
 
-def test_grammar_still_accepts_both_alone():
-    for code in RESERVED_CODES.values():
-        assert split_colour(code) == (code, "")
-
-
-def test_a_core_number_has_no_leading_zero_and_follows_one_base_code():
-    assert split_colour("BK1") == ("BK", "1")
-    assert split_colour("BK01") is None
-    assert split_colour("SHBK") is None
+def test_grammar_lists_base_codes_in_natural_order():
+    listed = COLOUR_GRAMMAR.split("a base code (")[1].split(")")[0].split(", ")
+    codes = [item.split()[0] for item in listed]
+    assert codes == sorted(codes)
+    assert "GNYE" not in codes
+    assert len(codes) == 14

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from fransys_model.kernel import value
 
-__all__ = ["OutlineSheet", "PageAnchor", "ReferenceLink", "TableGeometry"]
+__all__ = ["OutlineSheet", "PageAnchor", "ReferenceLink"]
 
 
 @value
@@ -37,19 +37,3 @@ class OutlineSheet:
     destination: str
     title: str
     entries: tuple[str, ...]
-
-
-@value
-class TableGeometry:
-    """Where a contact table's lines sit, in G from the top of its box (model-0216, CR2).
-
-    `heading`, `columns`, `titles`, `rule` and `first_row` are tops of the heading, the columns,
-    the "NO"/"NC" texts, the rule under them and row 0; `height` is the whole table.
-    """
-
-    heading: int
-    columns: int
-    titles: int
-    rule: int
-    first_row: int
-    height: int

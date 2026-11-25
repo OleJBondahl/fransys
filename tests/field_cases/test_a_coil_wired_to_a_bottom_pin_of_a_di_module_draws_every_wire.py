@@ -1,6 +1,6 @@
 """Field case: a relay coil wired to a bottom-edge pin of a DI module, with a two-pin switch pair on pins 9 and 10.
-KI-902 (LANE_WIRE_DROPPED) is fixed by FUSE-TERMINAL; that revealed the old DRAWING_SHORTS_NETS of KI-947 (-G1:- and -DI1:15),
-fixed by the guard's hand-off keeping only pins of the wire's own net (SHORT-G1-DI1)."""
+KI-902 (LANE_WIRE_DROPPED) is fixed by FUSE-TERMINAL; that revealed the old DRAWING_SHORTS_NETS of KI-947 (-G1:- and -KE1:15),
+fixed by the guard's hand-off keeping only pins of the wire's own net (SHORT-G1-KE1)."""
 
 import fransys as fr
 from _model_build_cover import cabinet_document
@@ -22,9 +22,9 @@ def _build() -> fr.BuildResult:
         k1 = d.device("K1", "DEMO-RLY-2CO-24")
         d.series(xf[2].outer, k1.coil, dc.minus, wire=_W)
     with d.function("DI", "PLC inputs"):
-        di = d.device("DI1", "DEMO-PLC-DI-16")
+        di = d.device("KE1", "DEMO-PLC-DI-16")
         d.series(k1.coil.A1, di["15"], wire=_W)
-        cv = d.device("CV01", "DEMO-ACT-4P-2SW")
+        cv = d.device("QN1", "DEMO-ACT-4P-2SW")
         d.series(di["9"], cv.sw_1, wire=_W)
         d.series(x2[1].outer, cv.sw_1[5], wire=_W)
         d.series(di["10"], cv.sw_2, wire=_W)

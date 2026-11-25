@@ -16,8 +16,11 @@ from fransys_model.derive import (
     nested_units,
     pin_source_pins,
     previous_release_listing,
+    printed_by_release,
     release_identity,
     revision_text,
+    unit_has_printer,
+    unit_label,
     unit_release,
 )
 lazy from fransys_model.derive.numbering_pins import NumberingPins
@@ -94,11 +97,12 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
         nested_stored_text = stored_listing(nested_release.path)
         if nested_stored_text is None:
             nested_revision_text = revision_text(nested_release.version, nested_release.revision)
+            by_release = " (from_release=True: its own release prints its interior)" if printed_by_release(model, nested) else ""
             findings.append(
                 finding(
                     "RELEASE_NESTED_UNRELEASED",
                     (nested,),
-                    f"{nested_release.name} {nested_revision_text}, nested in this release, has not been released",
+                    f"{nested_release.name} {nested_revision_text}, nested in this release, has not been released{by_release}",
                 )
             )
             continue
@@ -178,10 +182,18 @@ def _release_no_history_finding(model: Model, unit: Id[ModelUnit] | None, releas
     )
 
 
+def _unit_unprinted_findings(model: Model, unit: Id[ModelUnit]) -> list[Finding]:
+    """`RELEASE_UNIT_UNPRINTED`: no document prints the unit's interior, so its release would carry no unit PDF."""
+    if unit_has_printer(model, unit):
+        return []
+    return [finding("RELEASE_UNIT_UNPRINTED", (unit,), f"unit {unit_label(model, unit)} has no document that prints its interior")]
+
+
 def _unit_l4_findings(model: Model, unit: Id[ModelUnit], release: _ReleaseTarget, into: Path) -> list[Finding]:
-    """The checks only a real unit has: `INTERFACE_NOT_BUMPED` and the pin findings."""
+    """The checks only a real unit has: `RELEASE_UNIT_UNPRINTED`, `INTERFACE_NOT_BUMPED` and the pin findings."""
     new_listing = baseline.listing(model, unit)
     return [
+        *_unit_unprinted_findings(model, unit),
         *_interface_not_bumped_findings(unit, release, new_listing),
         *_revision_pins.pin_findings(model, unit, _pin_source(release, into)),
     ]

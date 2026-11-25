@@ -14,7 +14,7 @@ def _build(*, hide: bool, crossed: bool) -> fr.BuildResult:
     if hide:
         d.layout.profile(hide_unused_pins=True)
     module = d.device("K1", "DEMO-PLC-AI-4", place="C1")
-    header = d.device("J1", "DEMO-CONN-2P", place="C1")
+    header = d.device("X1", "DEMO-CONN-2P", place="C1")
     first, second = ("2", "1") if crossed else ("1", "2")
     d.series(header["1"], module.ai_1[first], wire=("WH", 0.5))
     d.series(header["2"], module.ai_1[second], wire=("WH", 0.5))
@@ -29,6 +29,7 @@ def _channel_ports(result: fr.BuildResult) -> list[tuple[str, int, str]]:
 
 
 @pytest.mark.parametrize("crossed", [False, True])
+@pytest.mark.rule("CARD-PIN-PAIR")
 def test_hiding_keeps_a_wired_channel_as_it_is(*, crossed: bool) -> None:
     """0 ERROR with the switch on, and channel 1's ports equal those of the build without it."""
     hidden = _build(hide=True, crossed=crossed)

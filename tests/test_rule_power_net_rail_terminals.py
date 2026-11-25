@@ -6,7 +6,6 @@ distribution_board, mcc). Four have rail terminals; distribution_board and mcc h
 
 import functools
 import importlib
-import importlib.util
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -14,6 +13,7 @@ lazy from collections.abc import Sequence
 
 import fransys as fr
 import pytest
+from gate_scan import load_module
 from hypothesis import given
 from hypothesis import strategies as st
 from plant import Plant
@@ -27,15 +27,6 @@ _ROOT = Path(__file__).parent.parent
 _SKID = _ROOT / "examples" / "demo-skid" / "skid.py"
 
 
-def _load(path: Path, name: str) -> Any:
-    spec = importlib.util.spec_from_file_location(name, path)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 @functools.cache
 def _model(case: str) -> fr.Model:
     if case == "mated":  # the pool's one model with a MateEnd (mates are refused at the check, so no consumer case has one)
@@ -47,7 +38,7 @@ def _model(case: str) -> fr.Model:
         plant.mate(Plant.function_id("plug", "J1"), Plant.function_id("socket", "J1"))
         return plant.model()
     if case == "demo-skid":
-        design, document = _load(_SKID, "demo_skid_rule").design()
+        design, document = load_module("demo_skid_rule", _SKID).design()
         return fr.build(design, document).model
     model = importlib.import_module("placement_corpus.run").observed(case).result.model  # internal/ is not exported
     assert isinstance(model, fr.Model)

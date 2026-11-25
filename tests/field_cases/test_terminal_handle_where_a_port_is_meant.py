@@ -22,10 +22,10 @@ def _ends(model: fr.Model, kind: ConductorKind) -> list[frozenset[Any]]:
 
 
 def _built() -> tuple[fr.Model, fr.Pin, fr.Pin, fr.Pin, fr.Pin]:
-    """Terminals 1 and 2 of X01 and relay pins 12 and 11: the model and each terminal's sides."""
+    """Terminals 1 and 2 of X1 and relay pins 12 and 11: the model and each terminal's sides."""
     d = fr.design("demo_parts", place="CAB")
     d.location("CAB", "Cabinet")
-    strip = d.terminal_strip("X01", _TERMINAL)
+    strip = d.terminal_strip("X1", _TERMINAL)
     relay = d.device("K1", _RELAY)
     cable = d.cable("W1", _CABLE)
     wired, cored = strip[1], strip[2]
@@ -54,7 +54,7 @@ def test_cable_core_given_a_terminal_lands_on_its_outer_side() -> None:
 def test_outer_is_a_valid_wire_end() -> None:
     d = fr.design("demo_parts", place="CAB")
     d.location("CAB", "Cabinet")
-    terminal = d.terminal_strip("X01", _TERMINAL)[1]
+    terminal = d.terminal_strip("X1", _TERMINAL)[1]
     relay = d.device("K1", _RELAY)
     d.series(terminal.outer, relay.co["12"], wire=(BK, 1.5))
     (wire,) = _ends(fr.build(d).model, ConductorKind.WIRE)

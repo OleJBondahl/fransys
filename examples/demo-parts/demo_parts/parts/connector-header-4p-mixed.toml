@@ -17,9 +17,9 @@ kind = "connector"
 symbol = "connector-fixed"
 ports = [
     { name = "A1", role = "generic", symbol_port = "in" },
-    { name = "10", role = "generic", symbol_port = "out" },
+    { name = "10", role = "generic", symbol_port = "in" },
     { name = "2", role = "generic", symbol_port = "in" },
-    { name = "1", role = "generic", symbol_port = "out" },
+    { name = "1", role = "generic", symbol_port = "in" },
 ]
 
 [function.connector]

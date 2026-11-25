@@ -101,3 +101,28 @@ def test_a_cable_with_no_core_table_raises_naming_the_fix() -> None:
     x8, b1 = d.terminal_strip("X8", STRIP), d.device("B1", SENSOR)
     with pytest.raises(AuthorError, match=r"W3 has 0 free cores for 2 poles: use a cable"):
         d.pair(x8[1:3], d.cable("W3", "TEST-CBL-BARE"), b1.sig)
+
+
+@pytest.mark.parametrize(
+    ("mpn", "fn", "ends"),
+    [
+        pytest.param(SENSOR, "sig", lambda x8, f: (x8[1:3], (f[1], f[2])), id="tuple-second-end"),
+        pytest.param(SENSOR, "sig", lambda x8, f: (x8[1:3], f.pins[:2]), id="part-of-a-function"),
+        pytest.param(SENSOR, "sig", lambda x8, f: ((f[1], f[2]), x8[1:3]), id="tuple-first-end"),
+        pytest.param("DEMO-LAMP-24", "lamp", lambda x8, f: (x8[1:3], f), id="sided-function-does-not-flip"),
+    ],
+)
+def test_pair_joins_pin_for_pin_whichever_end_is_a_tuple_a_slice_or_a_sided_function(mpn: str, fn: str, ends: Any) -> None:
+    d = design(pair_library(), place="C1")
+    x8, w3, f = d.terminal_strip("X8", STRIP), d.cable("W3", CABLE), getattr(d.device("B1", mpn), fn)
+    first, second = ends(x8, f)
+    d.pair(first, w3, second)
+    pins = f.pins
+    assert core_ends(d) == {1: frozenset((x8[1].outer.id, pins[0].id)), 2: frozenset((x8[2].outer.id, pins[1].id))}
+
+
+def test_pair_refuses_a_tuple_of_pins_from_two_devices() -> None:
+    d, x8, w3, b1 = _parts()
+    b2 = d.device("B2", SENSOR)
+    with pytest.raises(AuthorError, match="holds the pins of one device"):
+        d.pair(x8[1:3], w3, (b1.sig[1], b2.sig[2]))

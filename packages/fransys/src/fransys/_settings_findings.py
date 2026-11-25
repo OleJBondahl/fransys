@@ -1,7 +1,7 @@
 """`SETTING_NEW_ENGINE_ONLY`: a font key the old engine does not draw with (layout-0323).
 
 The old engine keeps the built-in font until MODEL-TEXT (SETTINGS amendment 5); the
-new engine's drawings take the build's `Library`. One WARNING per key the consumer changed.
+new engine's drawings take the build's `Library`. One INFO per key the consumer changed.
 """
 
 from typing import TYPE_CHECKING, cast
@@ -32,7 +32,7 @@ def _keys(settings: Settings) -> list[tuple[str, str, str, str]]:
 
 
 def new_engine_only_findings(settings: Settings) -> tuple[Finding, ...]:
-    """One WARNING per font key of `settings` that differs from the house library."""
+    """One INFO per font key of `settings` that differs from the house library."""
     return tuple(
         finding(
             CODE,

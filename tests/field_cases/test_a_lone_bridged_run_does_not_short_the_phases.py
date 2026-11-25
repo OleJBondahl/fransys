@@ -29,7 +29,7 @@ def test_one_bridged_run_beside_a_plain_member_of_a_parallel_is_refused() -> Non
 
 def test_a_width_one_bridged_run_still_builds() -> None:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 2)
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5", 2)
     dc = d.dc_supply("S", plus=x0[1], minus=x0[2], voltage=24)
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     d.series(dc.plus, x1.run("P", 3, bridged=True, rail=True), wire=(BK, 1.5))

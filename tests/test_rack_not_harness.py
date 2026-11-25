@@ -16,7 +16,7 @@ def _build(make: Any) -> fr.BuildResult:
     d.location("C1", "Cabinet")
     with d.function("PLC", "PLC"):
         container = make(d)
-        d.device("DI1", _DI, name="di", parent=container, place="C1")
+        d.device("KE1", _DI, name="di", parent=container, place="C1")
     return fr.build(d)
 
 
@@ -25,8 +25,8 @@ def _names(result: fr.BuildResult) -> dict[str, str]:
 
 
 def test_a_rack_container_keeps_its_modules_flat() -> None:
-    """Can-fail: a rack that writes the harness mark prints the module `U1-DI1` and fails."""
+    """Can-fail: a rack that writes the harness mark prints the module `U1-KE1` and fails."""
     result = _build(lambda d: d.rack("U1", place="C1"))
     assert [f.code for f in result.findings if f.code == _CODE] == []
-    assert _names(result)["DI1"] == "DI1"
+    assert _names(result)["KE1"] == "KE1"
     assert _names(result)["U1"] == "U1"

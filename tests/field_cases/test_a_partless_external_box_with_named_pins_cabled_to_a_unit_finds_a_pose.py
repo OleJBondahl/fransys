@@ -10,7 +10,7 @@ from fransys.colours import GNYE
 
 from fransys_model.kernel import id_namespace
 
-_CABLE, _TB, _PE, _N = "DEMO-CBL-4G1.5", "DEMO-TB-2.5", "DEMO-TB-PE-2.5", 15
+_CABLE, _SIG, _TB, _PE, _N = "DEMO-CBL-4G1.5", "DEMO-CBL-8G0.75", "DEMO-TB-2.5", "DEMO-TB-PE-2.5", 15
 
 
 class _Io(NamedTuple):
@@ -43,23 +43,23 @@ def _design() -> tuple[Any, Any]:
         w1.core(GNYE, a2["T-1:3"], a6["PE"])
         d.series((a2["T-1:1"], a2["T-1:2"]), w1, (a6["L"], a6["N"]))
         d.earth(a2["T-1:3"], a6["PE"])
-        w2 = d.cable("W2", _CABLE, external=True)
+        w2 = d.cable("W2", _SIG, external=True)
         d.series((a3["Supply L"], a3["Supply N"], a3["Supply PE"]), w2, (a6["Q2:2"], a6["Q2:4"], a6["PE"]))
         w5 = d.cable("W5", _CABLE, external=True)
         w5.core(GNYE, u.pe[1].outer, a6["PE"])
         w5.spare()
         d.earth(u.pe[1], a6["PE"])
-        w27 = d.cable("W27", _CABLE, external=True)
+        w27 = d.cable("W27", _SIG, external=True)
         d.series((a3["R1 C"], a3["R1 NO"], a3["R2 C"]), w27, (a1["Ch6 +"], a1["Ch6 -"], a1["Ch7 +"]))
         w27.spare()
-        w25 = d.cable("W25", _CABLE, external=True)
+        w25 = d.cable("W25", _SIG, external=True)
         d.series((u.dets[0].signal[3], u.dets[0].signal[4], u.dets[1].signal[3]), w25, (a3["Loop Out+"], a3["Loop Out-"], a3["Loop In+"]))
         for n, (s, g) in enumerate(zip(u.dets, "ABC", strict=True)):
-            w = d.cable(f"W1{n}", _CABLE, external=True)
+            w = d.cable(f"W1{n}", _SIG, external=True)
             d.series((s.supply[1], s.supply[2], s.signal[7]), w, (a2[f"T-5 {g}:0"], a2[f"T-5 {g}:+"], a2[f"T-5 {g}:1"]))
             w.spare()
         for k in range(0, _N, 3):
-            w = d.cable(f"W2{k}", _CABLE, external=True)
+            w = d.cable(f"W2{k}", _SIG, external=True)
             d.series(u.x7[k + 1 : k + 4], w, tuple(a2[f"T-3:{n}"] for n in range(k + 1, k + 4)))
     return d, room
 

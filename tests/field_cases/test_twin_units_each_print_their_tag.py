@@ -1,5 +1,5 @@
 """Field case: two identical boards from one release sit at one place in a cabinet, each under its own tag.
-The bug: an instance printed no identity, so both boards printed the one root tag (-U9-J1 twice), a false duplicate.
+The bug: an instance printed no identity, so both boards printed the one root tag (-U9-X1 twice), a false duplicate.
 Fixed by model-0134 and author-0019, d.add writes the instance tag, which an item prints before its designation."""
 
 from functools import cache
@@ -53,8 +53,8 @@ def test_twin_boards_at_one_place_print_their_own_tags() -> None:
     result = fr.build(d)
     model = result.model
     assert "PRODUCT_DESIGNATION_DUPLICATE" not in _codes(result)
-    assert fr.derive.printed_designation(model, a.J1.id) == "-U1-J1"
-    assert fr.derive.printed_designation(model, b.J1.id) == "-U2-J1"
+    assert fr.derive.printed_designation(model, a.J1.id) == "-U1-X1"
+    assert fr.derive.printed_designation(model, b.J1.id) == "-U2-X1"
     root_a, root_b = (items(model)[x.J1.id].parent for x in (a, b))
     assert root_a is not None
     assert root_b is not None
@@ -87,8 +87,8 @@ def test_a_board_instance_inside_a_cabinet_instance_prints_both_tags() -> None:
     d = _design()
     cab = d.add(_cabinet(), "U1")
     model = fr.build(d).model
-    assert fr.derive.printed_designation(model, cab.B.J1.id) == "-U1-U3-J1"
+    assert fr.derive.printed_designation(model, cab.B.J1.id) == "-U1-U3-X1"
     cabinet_unit = _unit_id(model, "demo-cab")
-    assert fr.derive.printed_designation(model, cab.B.J1.id, unit=cabinet_unit) == "-U3-J1"
+    assert fr.derive.printed_designation(model, cab.B.J1.id, unit=cabinet_unit) == "-U3-X1"
     board_unit = _unit_id(model, "demo-board")
-    assert fr.derive.printed_designation(model, cab.B.J1.id, unit=board_unit) == "-J1"
+    assert fr.derive.printed_designation(model, cab.B.J1.id, unit=board_unit) == "-X1"

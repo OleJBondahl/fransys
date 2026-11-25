@@ -25,7 +25,6 @@ from ._lists import (
     bom_page,
     cable_list_page,
     connector_list_page,
-    designation_list_page,
     plc_list_page,
     terminal_list_page,
     wire_label_list_page,
@@ -71,7 +70,6 @@ def _list_pages(doc: Doc, bridge: BridgeInputs, flow: dict[str, float]) -> dict[
         ListKey.TERMINAL: partial(terminal_list_page, *args, bridge, **flow),
         ListKey.CONNECTOR: partial(connector_list_page, *args, **flow),
         ListKey.WIRE_LABEL: partial(wire_label_list_page, *args, **flow),
-        ListKey.DESIGNATION: partial(designation_list_page, *args, **flow),
         ListKey.BOM: partial(bom_page, *args),
     }
 

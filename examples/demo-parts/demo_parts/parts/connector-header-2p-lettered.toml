@@ -13,7 +13,7 @@ kind = "connector"
 symbol = "connector-fixed"
 ports = [
     { name = "A10", role = "generic", symbol_port = "in" },
-    { name = "A2", role = "generic", symbol_port = "out" },
+    { name = "A2", role = "generic", symbol_port = "in" },
 ]
 
 [function.connector]

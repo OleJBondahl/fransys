@@ -25,6 +25,6 @@ def test_each_far_end_carries_its_instance_tag() -> None:
     model = fr.build(d).model
     head_a, tail_a = stub_far_end(model, _port(model, a.J1, "1"))
     head_b, tail_b = stub_far_end(model, _port(model, b.J1, "1"))
-    assert head_a.endswith("-U1-J1")
-    assert head_b.endswith("-U2-J1")
+    assert head_a.endswith("-U1-X1")
+    assert head_b.endswith("-U2-X1")
     assert (tail_a, tail_b) == (":1", ":1")

@@ -20,6 +20,7 @@ from fransys_model.derive import (
     allocate_plc,
     check_order_hint_cycle,
     check_order_hint_draws_nothing,
+    check_references_off_document,
     check_unprinted_sets,
     document_sheets_of,
     has_documents,
@@ -404,7 +405,7 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
         raw.extend(fransys_render.sheet_check(model, document_sheets_of(model, sheets)))
         raw.extend(block_wire_findings(model, _cables(_Read(model, _library(result)))))
         if needs_schematic_layout(model):
-            raw.extend(fransys_render.check(model))
+            raw.extend(check_references_off_document(model))
     return tuple(raw)
 
 

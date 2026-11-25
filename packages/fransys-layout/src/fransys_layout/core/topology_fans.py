@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .errors import CoreError
-from .flow_values import Attach, Cell
+from .flow_values import Attach, Cell, Fan
 from .values import PinRef
 lazy from .sym_values import Sym
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
     from .topology_elements import Elem, NetEnd
@@ -59,6 +60,29 @@ def attached_pin(ends: tuple[NetEnd, ...]) -> PinRef | None:
         if roles in ({"boxpin", "top"}, {"boxpin", "bottom"}, {"boxpin", "through"}):
             return next(e.pin for e in ends if e.site == "boxpin")
     return None
+
+
+def _south(pins: Iterable[PinRef], syms: Mapping[str, Sym]) -> set[PinRef]:
+    return {p for p in pins if next(q.side for q in syms[p.sym].pins if q.id == p.pin) == "S"}
+
+
+def plumbed(fans: Sequence[Fan], attached: Mapping[tuple[str, int, str], PinRef], syms: Mapping[str, Sym]) -> dict[tuple[str, int, str], PinRef]:
+    """The first load of each net of a fan with one S box-pin driver is attached to that pin, as a direct chain is (PARALLEL-FIRST-PLUMB).
+
+    The first leg is the first by designation. A column that holds a box pin already is left alone, and so is a box whose S pins
+    carry another fan or attachment: the first leg's trunk would run over that pin's drop (KI-216).
+    """
+    taken = {k[0] for k in attached}
+    out: dict[tuple[str, int, str], PinRef] = {}
+    for fan in fans:
+        rest = [a.pin for f in fans if f is not fan for a in f.drivers if a.column is None]
+        shared = {p.sym for p in _south([*rest, *attached.values()], syms)}
+        drivers = Counter(a.net for a in fan.drivers)
+        for d in (a for a in fan.drivers if a.column is None and drivers[a.net] == 1 and a.pin.sym not in shared and _south([a.pin], syms)):
+            first = next((a for a in fan.legs if a.net == d.net), None)
+            if first is not None and first.column is not None and first.column not in taken and first.cell == 0:
+                out[first.column, first.lane, "head"] = d.pin
+    return out
 
 
 def classify(ends: tuple[NetEnd, ...], slot: Slot, syms: Mapping[str, Sym]) -> tuple[list[Att], list[Att], list[str], bool]:

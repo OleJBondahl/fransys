@@ -24,7 +24,7 @@ def test_default_options_are_the_layout_toml_with_the_placement_conventions() ->
     assert got.pin_pairs == (("N", "S"),)
     for key, value in LAYOUT.items():
         if key in GENERAL:
-            continue  # the conventions' own keys: test_the_general_keys_reach_the_conventions
+            continue  # the conventions' own keys: test_the_general_keys_stay_out_of_the_core_options
         assert getattr(got, key) == (Size(*value) if key == "margin" else _tuple(value)), key
 
 
@@ -56,12 +56,11 @@ def test_replacing_one_option_moves_only_that_field() -> None:
 
 
 @pytest.mark.rule("SETTINGS")
-def test_the_general_keys_reach_the_conventions() -> None:
-    """`step` and `pad` of `[layout]`, and the text room passed, are the conventions' values."""
+def test_the_general_keys_stay_out_of_the_core_options() -> None:
+    """`step` and `pad` of `[layout]` are the table's own keys, never core options; the text room passed is the conventions' value."""
     got = house()
-    assert (got.text_height, got.step, got.pad) == (8, 8, 2)
-    moved = house_conventions({**LAYOUT, "pad": 3}, LIBRARY, text_height=8, sheet=SHEET)
-    assert moved.pad == 3
+    assert got.text_height == 8
+    assert house_conventions({**LAYOUT, "pad": 3}, LIBRARY, text_height=8, sheet=SHEET).options == got.options
 
 
 def test_the_lane_step_is_the_library_wire_pitch() -> None:

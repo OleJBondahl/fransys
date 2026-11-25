@@ -1,7 +1,7 @@
 """CONTACT-HEAD-HEADED step 0: the headed fitted table is today's headed table (es-0075).
 
 Today's engine draws a table that shares its foot with a heading line over the NO/NC titles,
-`table_geometry(rows, step, pad, headed=True)`. The layer's `placed_table` with a heading must give
+`22 + rows * 8` G. The layer's `placed_table` with a heading must give
 """
 # NET_POTENTIAL_CONFLICT 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
 # NET_SHORTED 1 per default-salt build set (KI-461): planted_model or demo_model 24 V to 0 V short through strip and mate.
@@ -13,9 +13,9 @@ from table_fixtures import tables
 
 from electrical_symbols import LIBRARY
 from fransys_layout.symbols import Ask, TableAsk, library_symbol, symbol_shape, symbol_views
-from fransys_model.derive.contact_rows import table_geometry
 
-STEP, PAD = 8, 2
+STEP = 8
+BASE, HEADED_BASE = 14, 22  # titles, rule and closing pad; the headed table adds one heading step
 CELLS = {"no": "13 /1.1", "nc": "21 /1.1"}
 
 
@@ -38,14 +38,14 @@ def _height(rows: int, heading: str) -> int:
 @pytest.mark.parametrize("rows", range(1, 8))
 def test_the_headed_table_is_as_high_where_todays_table_is(rows: int) -> None:
     """The heading and title lines are checked in the layout package's own tests."""
-    assert _height(rows, "-K1") == table_geometry(rows, STEP, PAD, headed=True).height
+    assert _height(rows, "-K1") == HEADED_BASE + rows * STEP
 
 
 @pytest.mark.parametrize("make", [demo_model, planted_model])
 def test_the_headed_table_matches_at_the_row_count_of_every_coil(make) -> None:
     model = make()
-    base = table_geometry(0, STEP, PAD, headed=False).height
+    base = BASE
     found = {(t.h - base) // STEP for t in tables(model, kit_for(model)).values()}
     assert found
     for rows in found:
-        assert _height(rows, "-K1") == table_geometry(rows, STEP, PAD, headed=True).height
+        assert _height(rows, "-K1") == HEADED_BASE + rows * STEP

@@ -22,7 +22,7 @@ def _unit(d: fr.Design) -> _Io:
     strip = "DEMO-TB-2.5"
     x4 = d.terminal_strip("X4", strip, 6, description="+24 V")
     x7 = d.terminal_strip("X7", strip, 8, description="0 V", bridged=(2, 8))
-    cu1 = d.device("CU1", "DEMO-CTRL-SUPPLY-2DO-1AI")
+    cu1 = d.device("KE1", "DEMO-CTRL-SUPPLY-2DO-1AI")
     psu = d.device("PSU", "DEMO-PSU-24")
     k1, k2, k4, q1, q2 = (d.device(tag, _RELAY) for tag in ("K1", "K2", "K4", "Q1", "Q2"))
     dc = d.dc_supply("24VDC", plus=psu.output["+"], minus=psu.output["-"], voltage=24, names=("24V", "GND"))

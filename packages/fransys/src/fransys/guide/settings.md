@@ -81,7 +81,7 @@ name = "Liberation Sans Narrow"
 files = ["fonts/LiberationSansNarrow-Regular.ttf", "fonts/LiberationSansNarrow-Bold.ttf"]
 ```
 
-Today's schematic engine keeps the built-in font. The keys apply to the drawings of the new engine, and a build with one set gives one `SETTING_NEW_ENGINE_ONLY` WARNING per key; the WARNING goes when the old engine does (MODEL-TEXT).
+Today's schematic engine keeps the built-in font. The keys apply to the drawings of the new engine, and a build with one set gives one `SETTING_NEW_ENGINE_ONLY` INFO per key; the INFO goes when the old engine does (MODEL-TEXT).
 
 A `[grid]` table shows the reason.
 

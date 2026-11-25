@@ -9,7 +9,7 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.kernel import Finding, Model
 
 from .designation import printed_designation
-from .document_sets import set_unit
+from .document_sets import printed_by_release, set_unit
 from .document_subject import unit_label
 from .facts.unit_index import item_unit
 from .lookups import item_location
@@ -39,6 +39,12 @@ def _subject(model: Model, drawing_set: DrawingSet) -> str:
     return "its location"
 
 
+def _printed_by_release(model: Model, drawing_set: DrawingSet) -> bool:
+    """Whether the set is a unit's whose own release prints it."""
+    unit = set_unit(drawing_set)
+    return unit is not None and printed_by_release(model, unit)
+
+
 def check_unprinted_sets(model: Model) -> tuple[Finding, ...]:
     """One ERROR per drawing set with a page that no document prints, naming its items."""
     drawn = {page.drawing_set for page in layout_of(model, Page).values()}
@@ -51,5 +57,5 @@ def check_unprinted_sets(model: Model) -> tuple[Finding, ...]:
             f"{_items_of(model, s)}. Add a document for {_subject(model, s)}, or nest it.",
         )
         for s in layout_of(model, DrawingSet).values()
-        if s.id in drawn and s.id not in printed
+        if s.id in drawn and s.id not in printed and not _printed_by_release(model, s)
     )

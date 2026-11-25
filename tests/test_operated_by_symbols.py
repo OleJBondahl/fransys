@@ -55,6 +55,7 @@ def test_a_selector_heads_blocks_draw_the_selector_once(drawn: list[Any]) -> Non
     assert [key for _, key in drawn].count("selector-break") == 1
 
 
+@pytest.mark.rule("SWITCH-SYMBOLS")
 def test_a_limit_switch_draws_the_position_switch_once(drawn: list[Any]) -> None:
     """Each contact draws its own position switch."""
     assert [key for _, key in drawn].count("position-switch-make") == 1

@@ -43,7 +43,6 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_model.derive.baseline",
     "fransys_model.derive.block_diagram",
     "fransys_model.derive.cable_drawing",
-    "fransys_model.derive.contact_rows",
     "fransys_model.derive.docs_site",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.grid_mm",

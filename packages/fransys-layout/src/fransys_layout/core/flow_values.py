@@ -55,6 +55,11 @@ class End:
         """The one place that asks whether an end is a folded member's join."""
         return self.kind == "join"
 
+    @property
+    def under_trunk(self) -> bool:
+        """The one place that asks whether a box-pin end is a fan's first leg: it hangs under the trunk and the fan draws it."""
+        return self.lane is not None and self.fan is not None  # only a box-pin end carries a lane
+
 
 class BoxEnd(NamedTuple):
     """A box-pin end of a column: its lane, the box pin, whether it is a foot (else a head) and its net."""
@@ -63,6 +68,7 @@ class BoxEnd(NamedTuple):
     pin: PinRef
     foot: bool
     net: str
+    trunk: bool = False  # the end is a fan's first leg, which hangs under the trunk
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +87,7 @@ class Column:
     def box_pins(self) -> tuple[BoxEnd, ...]:
         """The one place that asks which box pins the column's ends meet: heads first, then feet."""
         return tuple(
-            BoxEnd(e.lane, e.pin, foot, e.net or "")
+            BoxEnd(e.lane, e.pin, foot, e.net or "", e.under_trunk)
             for foot, ends in ((False, self.heads), (True, self.feet))
             for e in ends
             if e.kind == "boxpin" and e.pin is not None and e.lane is not None

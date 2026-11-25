@@ -403,12 +403,12 @@ def _pump(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet, n: int) -> No
 
 
 def _estop_and_signal(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
-    """Group `=ES`: e-stop `S0`; plus the signal.
+    """Group `=ES`: e-stop `S9`; plus the signal.
 
-    The contact string runs rail, `S0` contact 1, `S0` contact 2, then the
+    The contact string runs rail, `S9` contact 1, `S9` contact 2, then the
     auxiliary contact of `K1`, and on to the auxiliary contact of `K2` in `=P2` with no
     """
-    estop = b.stamp(parts["estop"], ("cabinet", "s0"), "S0", "es")
+    estop = b.stamp(parts["estop"], ("cabinet", "s0"), "S9", "es")
     k1, k2 = cab["k1"], cab["k2"]
     b.wire(cab["x2/1"].port("terminal", "external"), estop.port("nc_1", "11"), label=False)
     b.wire(estop.port("nc_1", "12"), estop.port("nc_2", "21"), label=False)

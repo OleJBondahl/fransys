@@ -2,12 +2,14 @@
 
 from fransys_model.derive.facts.cores import conductor_count, core_colour_at, core_count, cores_past_product, is_core
 from fransys_model.derive.facts.item_predicates import is_cable
+from fransys_model.derive.facts.potentials import on_pe_net
+from fransys_model.elecdef import core_colour
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.colours import RESERVED_CODES
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet, OpenCoreFacet
 from fransys_model.vocab.tables import conductors, facets_of, items
 lazy from fransys_model.vocab.connectivity import Conductor
-lazy from fransys_model.vocab.core import Item
+lazy from fransys_model.vocab.core import Item, Port
 lazy from fransys_model.vocab.templates import Part
 
 
@@ -36,6 +38,27 @@ def _conductor_core(model: Model, cable: Id[Item], index: int) -> bool:
 def connected_screens(model: Model) -> tuple[OpenCoreFacet, ...]:
     """Each open core that is a screen of its cable's product and lands on a pin."""
     return tuple(f for f in facets_of(model, OpenCoreFacet).values() if f.at is not None and not _conductor_core(model, f.subject, f.index))
+
+
+def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
+    """Whether an open core of `colour` landing at `at` is a spare: not a screen, not earthed.
+
+    A core landing on a port of the PE net is a protective core earthed at that port. The author
+    joins a PE-role port to the PE net (author-0044), so a PE-role port off it is not earthed.
+    """
+    return colour != RESERVED_CODES["shield"] and not (at is not None and on_pe_net(model, at))
+
+
+def protective_cores_unterminated(model: Model) -> tuple[OpenCoreFacet, ...]:
+    """Each open core of a protective colour that `open_core_is_spare` would print spare: on no pin, or on a pin off the PE net."""
+    found = []
+    for facet in facets_of(model, OpenCoreFacet).values():
+        product = cable_product(model, facet.subject)
+        colour = None if product is None else core_colour_at(product, facet.index)
+        read = None if colour is None else core_colour(colour)
+        if colour is not None and read is not None and read.protective and open_core_is_spare(model, colour, facet.at):
+            found.append(facet)
+    return tuple(found)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

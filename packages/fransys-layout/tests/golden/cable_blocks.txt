@@ -1,146 +1,146 @@
 == demo_cabinet
 W1 [absolute]
-  PlacedBlock subject=W1 unit=None width=64 height=96 pitch=16 harness=None
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=64,width=64,height=32))
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=8)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,open=False)
+  PlacedBlock subject=W1 unit=None width=64 height=96 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=W1,external=False,heading=-W1, 5000 mm,box=Box(x=0,y=64,width=64,height=32))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+C1-X1,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=8,width=16,landed=True,marking=1,landings=[CorePlace(core=W1/core/1,x=8)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=24,width=16,landed=True,marking=2,landings=[CorePlace(core=W1/core/1,x=24)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,text=1 BN,link=True,open=False)
 == flat
 W1 [absolute]
-  PlacedBlock subject=W1 unit=None width=128 height=144 pitch=32 harness=None
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=48,width=128,height=48))
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=X1/terminal/4/fn/terminal/port/external,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/4,x=112)])])
-    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,x=0,y=112,width=128,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=M1/fn/motor/port/W,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=M1/fn/motor/port/PE,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/4,x=112)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=112) Point(x=16,y=96)],text_x=16,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=112) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/4,run_a=[Point(x=112,y=32) Point(x=112,y=48)],run_b=[Point(x=112,y=112) Point(x=112,y=96)],text_x=112,text_y=80,open=False)
+  PlacedBlock subject=W1 unit=None width=128 height=144 pitch=32 harness=None harness_label=None
+    boxes: PlacedCable(cable=W1,external=False,heading=-W1,box=Box(x=0,y=48,width=128,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+ER-X1,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,marking=1,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,marking=2,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=80,width=32,landed=True,marking=3,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=X1/terminal/4/fn/terminal/port/external,x=112,width=32,landed=True,marking=4,landings=[CorePlace(core=W1/core/4,x=112)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,label=+FLD-M1,x=0,y=112,width=128,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=16,width=32,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=32,landed=True,marking=V,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=M1/fn/motor/port/W,x=80,width=32,landed=True,marking=W,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=M1/fn/motor/port/PE,x=112,width=32,landed=True,marking=PE,landings=[CorePlace(core=W1/core/4,x=112)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=112) Point(x=16,y=96)],text_x=16,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=112) Point(x=48,y=96)],text_x=48,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,text=3 GY,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/4,run_a=[Point(x=112,y=32) Point(x=112,y=48)],run_b=[Point(x=112,y=112) Point(x=112,y=96)],text_x=112,text_y=80,text=4 GNYE,link=False,open=False)
 W2 [absolute]
-  PlacedBlock subject=W2 unit=None width=32 height=96 pitch=16 harness=None
-    boxes: PlacedCable(cable=W2,external=False,box=Box(x=0,y=64,width=32,height=32))
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/5/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W2/core/1,x=8)]) PlacedCell(port=X1/terminal/6/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W2/core/1,x=24)])])
-    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,open=False)
+  PlacedBlock subject=W2 unit=None width=32 height=96 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=W2,external=False,heading=-W2,box=Box(x=0,y=64,width=32,height=32))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+ER-X1,x=0,y=16,width=32,height=16,cells=[PlacedCell(port=X1/terminal/5/fn/terminal/port/external,x=8,width=16,landed=True,marking=5,landings=[CorePlace(core=W2/core/1,x=8)]) PlacedCell(port=X1/terminal/6/fn/terminal/port/external,x=24,width=16,landed=True,marking=6,landings=[CorePlace(core=W2/core/1,x=24)])])
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=40) Point(x=24,y=40)],run_b=[Point(x=24,y=32) Point(x=24,y=40)],text_x=16,text_y=48,text=1 BN,link=True,open=False)
 W3 [absolute]
-  PlacedBlock subject=W3 unit=None width=48 height=144 pitch=16 harness=None
-    boxes: PlacedCable(cable=W3,external=False,box=Box(x=0,y=48,width=48,height=48))
-    ends: PlacedEnd(item=X2,top=True,dashed=False,blank=False,x=0,y=16,width=48,height=16,cells=[PlacedCell(port=X2/terminal/3/fn/terminal/port/external,x=8,width=16,landed=True,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=X2/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=X2/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=W3/core/3,x=40)])])
-    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=0,y=112,width=48,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=8,width=16,landed=True,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=M2/fn/motor/port/V,x=24,width=16,landed=True,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=M2/fn/motor/port/W,x=40,width=16,landed=True,landings=[CorePlace(core=W3/core/3,x=40)])])
-    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=48)],run_b=[Point(x=8,y=112) Point(x=8,y=96)],text_x=8,text_y=80,open=False)
-    wires: PlacedWire(conductor=W3/core/2,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
-    wires: PlacedWire(conductor=W3/core/3,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
+  PlacedBlock subject=W3 unit=None width=48 height=144 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=W3,external=False,heading=-W3,box=Box(x=0,y=48,width=48,height=48))
+    ends: PlacedEnd(item=X2,top=True,dashed=False,blank=False,label=+ER-X2,x=0,y=16,width=48,height=16,cells=[PlacedCell(port=X2/terminal/3/fn/terminal/port/external,x=8,width=16,landed=True,marking=3,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=X2/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,marking=1,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=X2/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,marking=2,landings=[CorePlace(core=W3/core/3,x=40)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,label=+FLD-M2,x=0,y=112,width=48,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=8,width=16,landed=True,marking=U,landings=[CorePlace(core=W3/core/1,x=8)]) PlacedCell(port=M2/fn/motor/port/V,x=24,width=16,landed=True,marking=V,landings=[CorePlace(core=W3/core/2,x=24)]) PlacedCell(port=M2/fn/motor/port/W,x=40,width=16,landed=True,marking=W,landings=[CorePlace(core=W3/core/3,x=40)])])
+    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=8,y=32) Point(x=8,y=48)],run_b=[Point(x=8,y=112) Point(x=8,y=96)],text_x=8,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W3/core/2,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=W3/core/3,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,text=3 GY,link=False,open=False)
 == unit
 cab/w [absolute]
-  PlacedBlock subject=cab/w unit=None width=80 height=144 pitch=16 harness=None
-    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=32,y=48,width=24,height=48))
-    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
-    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
-    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
+  PlacedBlock subject=cab/w unit=None width=80 height=144 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=cab/w,external=False,heading=-W1,box=Box(x=32,y=48,width=24,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,label=+C1-X5,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,label=+FLD-M9 (by others),x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,text=1 BN,link=False,open=False)
 cab/w [unit cab/unit]
-  PlacedBlock subject=cab/w unit=cab/unit width=80 height=144 pitch=16 harness=None
-    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=32,y=48,width=24,height=48))
-    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
-    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=40)])])
-    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
+  PlacedBlock subject=cab/w unit=cab/unit width=80 height=144 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=cab/w,external=False,heading=-W1,box=Box(x=32,y=48,width=24,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,label=-X5,x=32,y=16,width=16,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=40,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    ends: PlacedEnd(item=M9,top=False,dashed=True,blank=False,label=+FLD-M9 (by others),x=32,y=112,width=16,height=16,cells=[PlacedCell(port=M9/fn/motor/port/U,x=40,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/1,x=40)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=40,y=112) Point(x=40,y=96)],text_x=40,text_y=80,text=1 BN,link=False,open=False)
 == nested
 pump1/io/w [absolute]
-  PlacedBlock subject=pump1/io/w unit=None width=56 height=144 pitch=16 harness=None
-    boxes: PlacedCable(cable=pump1/io/w,external=False,box=Box(x=16,y=48,width=32,height=48))
-    ends: PlacedEnd(item=pump1/P9,top=True,dashed=False,blank=False,x=16,y=16,width=32,height=16,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=24,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=24)]) PlacedCell(port=pump1/P9/fn/x1/port/1,x=40,width=16,landed=False,landings=[])])
-    ends: PlacedEnd(item=pump1/io/X5,top=False,dashed=False,blank=False,x=16,y=112,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=24,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=24)])])
-    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
+  PlacedBlock subject=pump1/io/w unit=None width=56 height=144 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=pump1/io/w,external=False,heading=-W1,box=Box(x=16,y=48,width=32,height=48))
+    ends: PlacedEnd(item=pump1/P9,top=True,dashed=False,blank=False,label=+ER+C1-P9,x=16,y=16,width=32,height=16,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=24,width=16,landed=True,marking=2,landings=[CorePlace(core=pump1/io/w/core/1,x=24)]) PlacedCell(port=pump1/P9/fn/x1/port/1,x=40,width=16,landed=False,marking=1,landings=[])])
+    ends: PlacedEnd(item=pump1/io/X5,top=False,dashed=False,blank=False,label=+ER+C1-X5,x=16,y=112,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=24,width=16,landed=True,marking=2,landings=[CorePlace(core=pump1/io/w/core/1,x=24)])])
+    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=112) Point(x=24,y=96)],text_x=24,text_y=80,text=1 BN,link=False,open=False)
 pump1/io/w [unit pump1/io/unit]
-  PlacedBlock subject=pump1/io/w unit=pump1/io/unit width=24 height=104 pitch=16 harness=None
-    boxes: PlacedCable(cable=pump1/io/w,external=False,box=Box(x=0,y=48,width=24,height=48))
-    ends: PlacedEnd(item=pump1/io/X5,top=True,dashed=False,blank=False,x=0,y=16,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=8,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
-    ends: PlacedEnd(item=pump1/P9,top=False,dashed=False,blank=True,x=0,y=104,width=16,height=0,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=8,width=16,landed=True,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
-    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=8,y=96) Point(x=8,y=104)],run_b=[Point(x=8,y=48) Point(x=8,y=32)],text_x=8,text_y=80,open=False)
+  PlacedBlock subject=pump1/io/w unit=pump1/io/unit width=24 height=104 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=pump1/io/w,external=False,heading=-W1,box=Box(x=0,y=48,width=24,height=48))
+    ends: PlacedEnd(item=pump1/io/X5,top=True,dashed=False,blank=False,label=-X5,x=0,y=16,width=16,height=16,cells=[PlacedCell(port=pump1/io/X5/terminal/2/fn/terminal/port/internal,x=8,width=16,landed=True,marking=2,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
+    ends: PlacedEnd(item=pump1/P9,top=False,dashed=False,blank=True,label=,x=0,y=104,width=16,height=0,cells=[PlacedCell(port=pump1/P9/fn/x1/port/2,x=8,width=16,landed=True,marking=2,landings=[CorePlace(core=pump1/io/w/core/1,x=8)])])
+    wires: PlacedWire(conductor=pump1/io/w/core/1,run_a=[Point(x=8,y=96) Point(x=8,y=104)],run_b=[Point(x=8,y=48) Point(x=8,y=32)],text_x=8,text_y=80,text=1 BN,link=False,open=False)
 == fan_out
 W1 [absolute]
-  PlacedBlock subject=W1 unit=None width=144 height=152 pitch=16 harness=None
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=16,y=48,width=48,height=48))
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=16,y=16,width=48,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,landings=[CorePlace(core=W1/core/2,x=40)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=56,width=16,landed=True,landings=[CorePlace(core=W1/core/3,x=56)])])
-    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,x=16,y=120,width=16,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=24,width=16,landed=True,landings=[CorePlace(core=W1/core/1,x=24)])])
-    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=64,y=120,width=16,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=72,width=16,landed=True,landings=[CorePlace(core=W1/core/2,x=72)])])
-    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,x=112,y=120,width=16,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=W1/core/3,x=120)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=120) Point(x=24,y=96)],text_x=24,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=72,y=120) Point(x=72,y=104) Point(x=40,y=104) Point(x=40,y=96)],text_x=40,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=56,y=32) Point(x=56,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=112) Point(x=56,y=112) Point(x=56,y=96)],text_x=56,text_y=80,open=False)
+  PlacedBlock subject=W1 unit=None width=144 height=152 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=W1,external=False,heading=-W1,box=Box(x=16,y=48,width=48,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+ER-X1,x=16,y=16,width=48,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=24,width=16,landed=True,marking=1,landings=[CorePlace(core=W1/core/1,x=24)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=40,width=16,landed=True,marking=2,landings=[CorePlace(core=W1/core/2,x=40)]) PlacedCell(port=X1/terminal/3/fn/terminal/port/external,x=56,width=16,landed=True,marking=3,landings=[CorePlace(core=W1/core/3,x=56)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=False,blank=False,label=+FLD-M1,x=16,y=120,width=16,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=24,width=16,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=24)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,label=+FLD-M2,x=64,y=120,width=16,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=72,width=16,landed=True,marking=U,landings=[CorePlace(core=W1/core/2,x=72)])])
+    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,label=+FLD-M3,x=112,y=120,width=16,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=120,width=16,landed=True,marking=U,landings=[CorePlace(core=W1/core/3,x=120)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=24,y=32) Point(x=24,y=48)],run_b=[Point(x=24,y=120) Point(x=24,y=96)],text_x=24,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=40,y=32) Point(x=40,y=48)],run_b=[Point(x=72,y=120) Point(x=72,y=104) Point(x=40,y=104) Point(x=40,y=96)],text_x=40,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=56,y=32) Point(x=56,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=112) Point(x=56,y=112) Point(x=56,y=96)],text_x=56,text_y=80,text=3 GY,link=False,open=False)
 == swap
 cab/w [absolute]
-  PlacedBlock subject=cab/w unit=None width=168 height=152 pitch=16 harness=None
-    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=24,y=48,width=80,height=48))
-    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=48)])])
-    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=96)])])
-    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=48)])])
-    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=136)])])
-    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,open=False)
+  PlacedBlock subject=cab/w unit=None width=168 height=152 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=cab/w,external=False,heading=-W1,box=Box(x=24,y=48,width=80,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,label=+C1-X5,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,marking=2,landings=[CorePlace(core=cab/w/core/2,x=48)])])
+    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,label=+C1-X6,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,marking=2,landings=[CorePlace(core=cab/w/core/4,x=96)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,label=+FLD-M1 (by others),x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,marking=V,landings=[CorePlace(core=cab/w/core/3,x=48)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,label=+FLD-M2 (by others),x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,marking=V,landings=[CorePlace(core=cab/w/core/4,x=136)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,text=3 GY,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,text=4 GNYE,link=False,open=False)
 cab/w [unit cab/unit]
-  PlacedBlock subject=cab/w unit=cab/unit width=168 height=152 pitch=16 harness=None
-    boxes: PlacedCable(cable=cab/w,external=False,box=Box(x=24,y=48,width=80,height=48))
-    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=48)])])
-    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=96)])])
-    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,landings=[CorePlace(core=cab/w/core/3,x=48)])])
-    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,landings=[CorePlace(core=cab/w/core/4,x=136)])])
-    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,open=False)
-    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,open=False)
+  PlacedBlock subject=cab/w unit=cab/unit width=168 height=152 pitch=16 harness=None harness_label=None
+    boxes: PlacedCable(cable=cab/w,external=False,heading=-W1,box=Box(x=24,y=48,width=80,height=48))
+    ends: PlacedEnd(item=cab/X5,top=True,dashed=False,blank=False,label=-X5,x=24,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X5/terminal/1/fn/terminal/port/external,x=32,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=cab/X5/terminal/2/fn/terminal/port/external,x=48,width=16,landed=True,marking=2,landings=[CorePlace(core=cab/w/core/2,x=48)])])
+    ends: PlacedEnd(item=cab/X6,top=True,dashed=False,blank=False,label=-X6,x=72,y=16,width=32,height=16,cells=[PlacedCell(port=cab/X6/terminal/1/fn/terminal/port/external,x=80,width=16,landed=True,marking=1,landings=[CorePlace(core=cab/w/core/3,x=80)]) PlacedCell(port=cab/X6/terminal/2/fn/terminal/port/external,x=96,width=16,landed=True,marking=2,landings=[CorePlace(core=cab/w/core/4,x=96)])])
+    ends: PlacedEnd(item=M1,top=False,dashed=True,blank=False,label=+FLD-M1 (by others),x=24,y=120,width=32,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=48,width=16,landed=True,marking=V,landings=[CorePlace(core=cab/w/core/3,x=48)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=True,blank=False,label=+FLD-M2 (by others),x=112,y=120,width=32,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=120,width=16,landed=True,marking=U,landings=[CorePlace(core=cab/w/core/2,x=120)]) PlacedCell(port=M2/fn/motor/port/V,x=136,width=16,landed=True,marking=V,landings=[CorePlace(core=cab/w/core/4,x=136)])])
+    wires: PlacedWire(conductor=cab/w/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=48)],run_b=[Point(x=32,y=120) Point(x=32,y=96)],text_x=32,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=120,y=120) Point(x=120,y=104) Point(x=48,y=104) Point(x=48,y=96)],text_x=48,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/3,run_a=[Point(x=80,y=32) Point(x=80,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=112) Point(x=80,y=112) Point(x=80,y=96)],text_x=80,text_y=80,text=3 GY,link=False,open=False)
+    wires: PlacedWire(conductor=cab/w/core/4,run_a=[Point(x=96,y=32) Point(x=96,y=48)],run_b=[Point(x=136,y=120) Point(x=136,y=112) Point(x=96,y=112) Point(x=96,y=96)],text_x=96,text_y=80,text=4 GNYE,link=False,open=False)
 == harness_fan
 WH1 [absolute]
-  PlacedBlock subject=WH1 unit=None width=256 height=168 pitch=64
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=112,height=48))
-    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+  PlacedBlock subject=WH1 unit=None width=256 height=168 pitch=64 harness_label=-WH1
+    boxes: PlacedCable(cable=W1,external=False,heading=-WH1-W1, 5000 mm,box=Box(x=8,y=64,width=112,height=48))
+    boxes: PlacedCable(cable=W2,external=False,heading=-WH1-W2,box=Box(x=136,y=64,width=48,height=48))
     harness: Box(x=0,y=40,width=192,height=80)
-    ends: PlacedEnd(item=M1,top=True,dashed=False,blank=False,x=0,y=16,width=192,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W1/core/2,x=96)]) PlacedCell(port=M1/fn/motor/port/W,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
-    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M2/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W1/core/2,x=96)])])
-    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,x=192,y=136,width=64,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=224,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=224)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
-    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=96,y=32) Point(x=96,y=64)],run_b=[Point(x=96,y=136) Point(x=96,y=112)],text_x=96,text_y=96,open=False)
-    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=224,y=136) Point(x=224,y=128) Point(x=160,y=128) Point(x=160,y=112)],text_x=160,text_y=96,open=False)
+    ends: PlacedEnd(item=M1,top=True,dashed=False,blank=False,label=+C1-WH1-M1,x=0,y=16,width=192,height=16,cells=[PlacedCell(port=M1/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M1/fn/motor/port/V,x=96,width=64,landed=True,marking=V,landings=[CorePlace(core=W1/core/2,x=96)]) PlacedCell(port=M1/fn/motor/port/W,x=160,width=64,landed=True,marking=W,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=M2,top=False,dashed=False,blank=False,label=+C1-WH1-M2,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=M2/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=M2/fn/motor/port/V,x=96,width=64,landed=True,marking=V,landings=[CorePlace(core=W1/core/2,x=96)])])
+    ends: PlacedEnd(item=M3,top=False,dashed=False,blank=False,label=+C1-WH1-M3,x=192,y=136,width=64,height=16,cells=[PlacedCell(port=M3/fn/motor/port/U,x=224,width=64,landed=True,marking=U,landings=[CorePlace(core=W2/core/1,x=224)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=96,y=32) Point(x=96,y=64)],run_b=[Point(x=96,y=136) Point(x=96,y=112)],text_x=96,text_y=96,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=224,y=136) Point(x=224,y=128) Point(x=160,y=128) Point(x=160,y=112)],text_x=160,text_y=96,text=1 BN,link=False,open=False)
 == chain
 WH2 [absolute]
-  PlacedBlock subject=WH2 unit=None width=192 height=168 pitch=64
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=48,height=48))
-    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+  PlacedBlock subject=WH2 unit=None width=192 height=168 pitch=64 harness_label=-WH2
+    boxes: PlacedCable(cable=W1,external=False,heading=-WH2-W1,box=Box(x=8,y=64,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,heading=-WH2-W2,box=Box(x=136,y=64,width=48,height=48))
     harness: Box(x=0,y=40,width=192,height=80)
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
-    ends: PlacedEnd(item=X3,top=True,dashed=False,blank=False,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=X3/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
-    ends: PlacedEnd(item=X2,top=False,dashed=False,blank=False,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=X2/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=X2/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=96)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
-    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=112) Point(x=160,y=128) Point(x=96,y=128) Point(x=96,y=136)],run_b=[Point(x=160,y=64) Point(x=160,y=32)],text_x=160,text_y=96,open=False)
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+C1-WH2-X1,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=X3,top=True,dashed=False,blank=False,label=+C1-WH2-X3,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=X3/fn/motor/port/U,x=160,width=64,landed=True,marking=U,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=X2,top=False,dashed=False,blank=False,label=+C1-WH2-X2,x=0,y=136,width=128,height=16,cells=[PlacedCell(port=X2/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=X2/fn/motor/port/V,x=96,width=64,landed=True,marking=V,landings=[CorePlace(core=W2/core/1,x=96)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=112) Point(x=160,y=128) Point(x=96,y=128) Point(x=96,y=136)],run_b=[Point(x=160,y=64) Point(x=160,y=32)],text_x=160,text_y=96,text=1 BN,link=False,open=False)
 == pair
 WH3 [absolute]
-  PlacedBlock subject=WH3 unit=None width=192 height=168 pitch=64
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=64,width=48,height=48))
-    boxes: PlacedCable(cable=W2,external=False,box=Box(x=136,y=64,width=48,height=48))
+  PlacedBlock subject=WH3 unit=None width=192 height=168 pitch=64 harness_label=-WH3
+    boxes: PlacedCable(cable=W1,external=False,heading=-WH3-W1,box=Box(x=8,y=64,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,heading=-WH3-W2,box=Box(x=136,y=64,width=48,height=48))
     harness: Box(x=0,y=40,width=192,height=80)
-    ends: PlacedEnd(item=A1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=A1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
-    ends: PlacedEnd(item=A2,top=True,dashed=False,blank=False,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=A2/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
-    ends: PlacedEnd(item=B1,top=False,dashed=False,blank=False,x=0,y=136,width=64,height=16,cells=[PlacedCell(port=B1/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)])])
-    ends: PlacedEnd(item=B2,top=False,dashed=False,blank=False,x=128,y=136,width=64,height=16,cells=[PlacedCell(port=B2/fn/motor/port/U,x=160,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=160)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,open=False)
-    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=160,y=136) Point(x=160,y=112)],text_x=160,text_y=96,open=False)
+    ends: PlacedEnd(item=A1,top=True,dashed=False,blank=False,label=+C1-WH3-A1,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=A1/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=A2,top=True,dashed=False,blank=False,label=+C1-WH3-A2,x=128,y=16,width=64,height=16,cells=[PlacedCell(port=A2/fn/motor/port/U,x=160,width=64,landed=True,marking=U,landings=[CorePlace(core=W2/core/1,x=160)])])
+    ends: PlacedEnd(item=B1,top=False,dashed=False,blank=False,label=+C1-WH3-B1,x=0,y=136,width=64,height=16,cells=[PlacedCell(port=B1/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)])])
+    ends: PlacedEnd(item=B2,top=False,dashed=False,blank=False,label=+C1-WH3-B2,x=128,y=136,width=64,height=16,cells=[PlacedCell(port=B2/fn/motor/port/U,x=160,width=64,landed=True,marking=U,landings=[CorePlace(core=W2/core/1,x=160)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=64)],run_b=[Point(x=32,y=136) Point(x=32,y=112)],text_x=32,text_y=96,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=160,y=32) Point(x=160,y=64)],run_b=[Point(x=160,y=136) Point(x=160,y=112)],text_x=160,text_y=96,text=1 BN,link=False,open=False)
 == ring
 WH7 [absolute]
-  PlacedBlock subject=WH7 unit=None width=320 height=184 pitch=64
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=8,y=80,width=48,height=48))
-    boxes: PlacedCable(cable=W2,external=False,box=Box(x=200,y=80,width=48,height=48))
-    boxes: PlacedCable(cable=W3,external=False,box=Box(x=264,y=80,width=40,height=48))
+  PlacedBlock subject=WH7 unit=None width=320 height=184 pitch=64 harness_label=-WH7
+    boxes: PlacedCable(cable=W1,external=False,heading=-WH7-W1,box=Box(x=8,y=80,width=48,height=48))
+    boxes: PlacedCable(cable=W2,external=False,heading=-WH7-W2,box=Box(x=200,y=80,width=48,height=48))
+    boxes: PlacedCable(cable=W3,external=False,heading=-WH7-W3,box=Box(x=264,y=80,width=40,height=48))
     harness: Box(x=0,y=56,width=312,height=80)
-    ends: PlacedEnd(item=A,top=True,dashed=False,blank=False,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=A/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=A/fn/motor/port/W,x=96,width=64,landed=True,landings=[CorePlace(core=W3/core/1,x=96)])])
-    ends: PlacedEnd(item=C,top=True,dashed=False,blank=False,x=192,y=16,width=128,height=16,cells=[PlacedCell(port=C/fn/motor/port/V,x=224,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=224)]) PlacedCell(port=C/fn/motor/port/W,x=288,width=64,landed=True,landings=[CorePlace(core=W3/core/1,x=288)])])
-    ends: PlacedEnd(item=B,top=False,dashed=False,blank=False,x=0,y=152,width=128,height=16,cells=[PlacedCell(port=B/fn/motor/port/U,x=32,width=64,landed=True,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=B/fn/motor/port/V,x=96,width=64,landed=True,landings=[CorePlace(core=W2/core/1,x=96)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=80)],run_b=[Point(x=32,y=152) Point(x=32,y=128)],text_x=32,text_y=112,open=False)
-    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=224,y=128) Point(x=224,y=144) Point(x=96,y=144) Point(x=96,y=152)],run_b=[Point(x=224,y=80) Point(x=224,y=32)],text_x=224,text_y=112,open=False)
-    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=96,y=32) Point(x=96,y=40) Point(x=288,y=40)],run_b=[Point(x=288,y=32) Point(x=288,y=40)],text_x=192,text_y=48,open=False)
+    ends: PlacedEnd(item=A,top=True,dashed=False,blank=False,label=+C1-WH7-A,x=0,y=16,width=128,height=16,cells=[PlacedCell(port=A/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=A/fn/motor/port/W,x=96,width=64,landed=True,marking=W,landings=[CorePlace(core=W3/core/1,x=96)])])
+    ends: PlacedEnd(item=C,top=True,dashed=False,blank=False,label=+C1-WH7-C,x=192,y=16,width=128,height=16,cells=[PlacedCell(port=C/fn/motor/port/V,x=224,width=64,landed=True,marking=V,landings=[CorePlace(core=W2/core/1,x=224)]) PlacedCell(port=C/fn/motor/port/W,x=288,width=64,landed=True,marking=W,landings=[CorePlace(core=W3/core/1,x=288)])])
+    ends: PlacedEnd(item=B,top=False,dashed=False,blank=False,label=+C1-WH7-B,x=0,y=152,width=128,height=16,cells=[PlacedCell(port=B/fn/motor/port/U,x=32,width=64,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=32)]) PlacedCell(port=B/fn/motor/port/V,x=96,width=64,landed=True,marking=V,landings=[CorePlace(core=W2/core/1,x=96)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=32,y=32) Point(x=32,y=80)],run_b=[Point(x=32,y=152) Point(x=32,y=128)],text_x=32,text_y=112,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W2/core/1,run_a=[Point(x=224,y=128) Point(x=224,y=144) Point(x=96,y=144) Point(x=96,y=152)],run_b=[Point(x=224,y=80) Point(x=224,y=32)],text_x=224,text_y=112,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W3/core/1,run_a=[Point(x=96,y=32) Point(x=96,y=40) Point(x=288,y=40)],run_b=[Point(x=288,y=32) Point(x=288,y=40)],text_x=192,text_y=48,text=1 BN,link=True,open=False)
 == l1_picture
 W1 [absolute]
-  PlacedBlock subject=W1 unit=None width=128 height=152 pitch=32 harness=None
-    boxes: PlacedCable(cable=W1,external=False,box=Box(x=0,y=48,width=128,height=48))
-    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)])])
-    ends: PlacedEnd(item=H2,top=False,dashed=False,blank=False,x=0,y=120,width=128,height=16,cells=[PlacedCell(port=H2/fn/motor/port/U,x=16,width=32,landed=True,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=H2/fn/motor/port/V,x=48,width=32,landed=True,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=H2/fn/motor/port/PE,x=80,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=H2/fn/motor/port/W,x=112,width=32,landed=True,landings=[CorePlace(core=W1/core/3,x=112)])])
-    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=120) Point(x=16,y=96)],text_x=16,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=96)],text_x=48,text_y=80,open=False)
-    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=120) Point(x=80,y=112) Point(x=112,y=112)],run_b=[Point(x=112,y=120) Point(x=112,y=112)],text_x=95,text_y=104,open=False)
+  PlacedBlock subject=W1 unit=None width=128 height=152 pitch=32 harness=None harness_label=None
+    boxes: PlacedCable(cable=W1,external=False,heading=-W1,box=Box(x=0,y=48,width=128,height=48))
+    ends: PlacedEnd(item=X1,top=True,dashed=False,blank=False,label=+ER-X1,x=0,y=16,width=64,height=16,cells=[PlacedCell(port=X1/terminal/1/fn/terminal/port/external,x=16,width=32,landed=True,marking=1,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=X1/terminal/2/fn/terminal/port/external,x=48,width=32,landed=True,marking=2,landings=[CorePlace(core=W1/core/2,x=48)])])
+    ends: PlacedEnd(item=H2,top=False,dashed=False,blank=False,label=+FLD-H2,x=0,y=120,width=128,height=16,cells=[PlacedCell(port=H2/fn/motor/port/U,x=16,width=32,landed=True,marking=U,landings=[CorePlace(core=W1/core/1,x=16)]) PlacedCell(port=H2/fn/motor/port/V,x=48,width=32,landed=True,marking=V,landings=[CorePlace(core=W1/core/2,x=48)]) PlacedCell(port=H2/fn/motor/port/PE,x=80,width=32,landed=True,marking=PE,landings=[CorePlace(core=W1/core/3,x=80)]) PlacedCell(port=H2/fn/motor/port/W,x=112,width=32,landed=True,marking=W,landings=[CorePlace(core=W1/core/3,x=112)])])
+    wires: PlacedWire(conductor=W1/core/1,run_a=[Point(x=16,y=32) Point(x=16,y=48)],run_b=[Point(x=16,y=120) Point(x=16,y=96)],text_x=16,text_y=80,text=1 BN,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/2,run_a=[Point(x=48,y=32) Point(x=48,y=48)],run_b=[Point(x=48,y=120) Point(x=48,y=96)],text_x=48,text_y=80,text=2 BK,link=False,open=False)
+    wires: PlacedWire(conductor=W1/core/3,run_a=[Point(x=80,y=120) Point(x=80,y=112) Point(x=112,y=112)],run_b=[Point(x=112,y=120) Point(x=112,y=112)],text_x=95,text_y=104,text=3 GY,link=True,open=False)

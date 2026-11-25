@@ -243,7 +243,8 @@ def _split_cycles(
     if cuts:
         fans, cross = split_fans(fans, cross, cuts)
         fan_of_net, cross_nets = _nets_of(fans, cross)
-        columns = _columns(lanes, replace(env, fan_of_net=fan_of_net, cross_nets=cross_nets))
+        attached = {k: v for k, v in env.attached.items() if env.net_of[v] not in cuts}  # a cut net's plumbed first leg goes with its fan
+        columns = _columns(lanes, replace(env, fan_of_net=fan_of_net, cross_nets=cross_nets, attached=attached))
     check_acyclic(columns, fans)
     return columns, fans, cross
 
@@ -306,7 +307,7 @@ def _end(d: LaneDraft, which: int, env: ColumnEnv, box_pin: PinRef | None, lane:
     if pin.end_bias:
         return End("biased", None, ref)
     if box_pin is not None:
-        return End("boxpin", net, box_pin, lane=lane)
+        return End("boxpin", net, box_pin, fan=env.fan_of_net.get(env.net_of.get(box_pin)), lane=lane)
     if net in env.fan_of_net:
         return End("fan", net, ref, fan=env.fan_of_net[net])
     return End("crosslink", net, ref) if net in env.cross_nets else End("open", net, ref)

@@ -7,6 +7,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 from _field_designs import io
+from _model_build_cover import unit_document
 from stale_releases import cut_old, unit_id
 
 from fransys_model.derive import baseline
@@ -18,7 +19,7 @@ _SECOND = fr.unit("demo-io", revision=2, interface_version=1, date="2026-02-01",
 def _build(unit_fn: Any) -> fr.BuildResult:
     d = fr.design("demo_parts")
     d.add(unit_fn(io), "U1")
-    return fr.build(d)
+    return fr.build(d, unit_document("demo-io"))
 
 
 def test_an_unchanged_unit_released_over_a_listing_v1_does_not_bump_its_interface(

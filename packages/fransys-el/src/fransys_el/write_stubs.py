@@ -10,14 +10,12 @@ from fransys_model.derive import stub_far
 from fransys_model.kernel import ModelError
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Sequence
+    from collections.abc import Sequence
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Item, Port
 
 __all__ = ["far_port"]
-
-type PortPairs = Collection[tuple[Id[Port], Id[Port]]]
 
 
 def far_port(model: Model, ports: Sequence[Id[Port]]) -> tuple[Id[Port], Id[Port], Id[Item] | None]:

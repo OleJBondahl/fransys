@@ -44,9 +44,9 @@ kind = "connector"
 symbol = "connector-fixed"
 ports = [
     { name = "1", role = "generic", symbol_port = "in", marking = "P01", joins = "k1.A1" },
-    { name = "2", role = "generic", symbol_port = "out", marking = "P02", joins = "k1.A2" },
+    { name = "2", role = "generic", symbol_port = "in", marking = "P02", joins = "k1.A2" },
     { name = "3", role = "generic", symbol_port = "in", marking = "P03", joins = "k2.B1" },
-    { name = "4", role = "generic", symbol_port = "out", marking = "P04", joins = "k2.B2" },
+    { name = "4", role = "generic", symbol_port = "in", marking = "P04", joins = "k2.B2" },
 ]
 
 [function.connector]
@@ -61,7 +61,7 @@ kind = "connector"
 symbol = "connector-fixed"
 ports = [
     { name = "1", role = "generic", symbol_port = "in", marking = "P01", joins = "in24.L+" },
-    { name = "2", role = "generic", symbol_port = "out", marking = "P02", joins = "in24.M" },
+    { name = "2", role = "generic", symbol_port = "in", marking = "P02", joins = "in24.M" },
 ]
 
 [function.connector]

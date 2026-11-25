@@ -17,7 +17,7 @@ import pytest
 from _direct_case import SHEET
 from fransys_el import build, house_conventions, symbol_kit
 from fransys_el.drawn_power import _inked, _symbols
-from fransys_el.placement_env import port_pins
+from fransys_el.placement_env import make_env
 from test_drawn_symbols_placed_by_core import R825_STUBS
 
 from electrical_symbols import LIBRARY, marking_slot, power_symbol_key
@@ -56,7 +56,7 @@ def _built(name: str) -> Any:
 def _unlaid(name: str) -> tuple[Any, tuple[tuple[PinRef, PinRef], ...], Any]:
     """(the model the layout step gets, its conductors as pin pairs, its port pins) of corpus build `name`."""
     unlaid = _both(name)[1]
-    pins = port_pins(unlaid, symbol_kit(unlaid, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY)
+    pins = make_env(unlaid, symbol_kit(unlaid, LIBRARY), house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET), LIBRARY).pins
     return unlaid, model_conductors(unlaid, pins), pins
 
 
@@ -232,15 +232,15 @@ def test_no_stub_of_a_fan_wired_pin_is_left_unplaced(solved) -> None:
 
 
 @pytest.mark.private_input
-def test_port_pins_hold_every_pin_the_planner_has_a_conductor_at() -> None:
-    """The checker's pin map is the planner's: a pin of `build`'s own `far_ends` is a value of `port_pins`."""
+def test_env_pins_hold_every_pin_the_planner_has_a_conductor_at() -> None:
+    """The checker's pin map is the planner's: a pin of `build`'s own `far_ends` is a value of `Env.pins`."""
     unlaid, _, _ = _unlaid("mcc")
     conventions = house_conventions(fr.settings().layout, LIBRARY, text_height=8, sheet=SHEET)
     kit = symbol_kit(unlaid, LIBRARY)
     problem, _ = build(unlaid, kit, conventions, LIBRARY)
     planned = {p for pair in problem.facts.far_ends for p in pair}
     assert planned
-    assert planned <= set(port_pins(unlaid, kit, conventions, LIBRARY).values())
+    assert planned <= set(make_env(unlaid, kit, conventions, LIBRARY).pins.values())
 
 
 @pytest.mark.private_input

@@ -1,7 +1,7 @@
 """A LEAD joins a device's own lead to a pin of a fitted connector (model-0172).
 
 It is a link like a mount: it closes its net, is never a wire, and the connector reads through
-its parent device (`K1-J1`) while no other child of a device changes.
+its parent device (`K1-X2`) while no other child of a device changes.
 """
 
 from typing import TYPE_CHECKING, Any
@@ -28,7 +28,7 @@ def _designations(result: fr.BuildResult) -> dict[str, str]:
 
 
 def _build() -> fr.BuildResult:
-    """Relays K1 and K2, each with a plug J1 on its coil leads; K1 also has a loose plug J2.
+    """Relays K1 and K2, each with a plug X2 on its coil leads; K1 also has a loose plug X3.
 
     A strip X1 and a plain wire K1 to the strip sit beside them.
     """
@@ -38,10 +38,10 @@ def _build() -> fr.BuildResult:
     g = d.group("G", "Group")
     relays = [d.item(_RELAY, name=f"k{i}", tag=f"K{i}", at=cab, group=g) for i in (1, 2)]
     for relay in relays:
-        plug = d.item(_PLUG, name=f"j1_{relay.key[-1]}", tag="J1", at=cab, group=g, parent=relay)
+        plug = d.item(_PLUG, name=f"j1_{relay.key[-1]}", tag="X2", at=cab, group=g, parent=relay)
         d.link(relay["A1"], plug["1"], kind="lead")
         d.link(relay["A2"], plug["2"], kind="lead")
-    d.item(_PLUG, name="j2", tag="J2", at=cab, group=g, parent=relays[0])
+    d.item(_PLUG, name="j2", tag="X3", at=cab, group=g, parent=relays[0])
     strip = d.strip("X1", at=cab)
     t = strip.terminal("DEMO-TB-2.5", "T1", group=g)
     d.wiring(colour="BU", gauge="0.5")(relays[0]["11"], t.outer)
@@ -81,15 +81,15 @@ def test_a_lead_is_in_no_wire_row_no_cable_row_and_has_no_wire_facet(
 def test_a_connector_fitted_on_its_parents_leads_reads_through_the_parent(
     built: fr.BuildResult,
 ) -> None:
-    """Can-fail: not widening `designating_ancestors` prints both plugs as `J1`."""
+    """Can-fail: not widening `designating_ancestors` prints both plugs as `X2`."""
     named = _designations(built)
-    assert sorted(v for v in named.values() if v.endswith("J1")) == ["K1-J1", "K2-J1"]
+    assert sorted(v for v in named.values() if v.endswith("X2")) == ["K1-X2", "K2-X2"]
     assert not [f for f in built.findings if f.code == "DESIGNATION_DUPLICATE"]
 
 
 def test_a_child_of_a_device_with_no_lead_on_it_stays_flat(built: fr.BuildResult) -> None:
-    """Can-fail: treating every child of a device as fitted prints `K1-J2`."""
-    assert _designations(built)["j2"] == "J2"
+    """Can-fail: treating every child of a device as fitted prints `K1-X3`."""
+    assert _designations(built)["j2"] == "X3"
 
 
 def test_a_strip_stays_x1(built: fr.BuildResult) -> None:

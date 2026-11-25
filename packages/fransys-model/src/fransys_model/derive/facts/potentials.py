@@ -3,6 +3,7 @@
 from fransys_model.derive.facts.closure import PhysicalNet, net_of
 from fransys_model.derive.facts.net_facts import is_earth_net, net_potential
 from fransys_model.derive.facts.roles import is_pe_port
+from fransys_model.derive.facts.wired_ports import wired_ports
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.enums import PowerKind
@@ -67,7 +68,8 @@ def is_wired(model: Model, port: Id[Port]) -> bool:
 @digest_cached(DIGEST_CACHE_SIZE)
 def pe_ports_off_pe(model: Model) -> tuple[Id[Port], ...]:
     """The wired PE-role ports whose physical net holds no earth net."""
-    return tuple(port for port in ports(model) if is_pe_port(model, port) and is_wired(model, port) and not on_pe_net(model, port))
+    wired = wired_ports(model)
+    return tuple(port for port in ports(model) if is_pe_port(model, port) and port in wired and not on_pe_net(model, port))
 
 
 def rail_potential(model: Model, group: RailGroup) -> str | None:

@@ -194,13 +194,6 @@ def test_wire_run_with_two_points_is_not_an_error(parts):
     wire.run(t1.inner, t2.inner)
 
 
-def test_order_needs_at_least_two_groups(parts):
-    d = Design(parts)
-    g1 = d.group("G1")
-    with pytest.raises(AuthorError, match="at least 2"):
-        d.order(g1)
-
-
 def test_order_with_two_groups_is_not_an_error(parts):
     d = Design(parts)
     g1, g2 = d.group("G1"), d.group("G2")

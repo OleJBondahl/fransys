@@ -99,10 +99,10 @@ def _block(d: Any) -> _Io:
 
 
 def two_units_model() -> Model:
-    """One contact K1 feeds the same load in units BLK0 and BLK1; the returns rejoin (nontree 4)."""
+    """One contact K1 feeds the same load in units BLK2 and BLK1; the returns rejoin (nontree 4)."""
     d = fr.design("demo_parts")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
-    u0, u1 = d.add(_block, "BLK0"), d.add(_block, "BLK1")
+    u0, u1 = d.add(_block, "BLK2"), d.add(_block, "BLK1")
     with d.function("FEED", "Feed"):
         d.series(k1.co_1["14"], u0.x1[1].outer, wire=(BU, 0.75))
         d.series(k1.co_1["14"], u1.x1[1].outer, wire=(BU, 0.75))

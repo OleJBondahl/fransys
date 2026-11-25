@@ -82,7 +82,7 @@ def _one_page_per_position(problem: PlacementProblem) -> tuple[dict[str, Lanes],
     """The lanes, the references, and the positions the net n3's own links stand at (not read from ref_pins)."""
     flow = flow_of(problem, OPTIONS)
     (unit,) = order_blocks(blocks_of(problem, OPTIONS), flow, OPTIONS)
-    cut, _, _ = plan_unit(unit, (flow, problem, OPTIONS), frozenset())
+    cut, _ = plan_unit(unit, (flow, problem, OPTIONS), frozenset())
     n = len(cut.seq)
     plan = [(i, i, RowState(Fraction(0), 0, 0, i, None)) for i in range(n)]
     pos = positions(cut.seq, cut.by_id)

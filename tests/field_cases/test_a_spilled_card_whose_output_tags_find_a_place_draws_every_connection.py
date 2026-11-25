@@ -37,7 +37,7 @@ class Io(NamedTuple):
 def _unit(names: dict[str, str]):
     @fr.unit("repro", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
     def unit(d: fr.Design) -> Io:
-        """Controller B1 outputs 1-3 drive relays R1-R3, whose contacts switch contactors C1, C2; B1 USB goes to socket J1."""
+        """Controller B1 outputs 1-3 drive relays R1-R3, whose contacts switch contactors C1, C2; B1 USB goes to socket X1."""
         c1, c2 = d.device("C1", "REPRO-CON-A"), d.device("C2", "REPRO-CON-A")
         m1 = d.device("M1", "REPRO-MON")
         t1 = d.terminal_strip("T1", "REPRO-TB", 5, interface=(1, 2, 3, 4), bridged=(3, 5))
@@ -46,7 +46,7 @@ def _unit(names: dict[str, str]):
         t4 = d.terminal_strip("T4", "REPRO-TB", 4, interface=True)
         p1 = d.device("P1", "REPRO-DCS")
         s1, s2 = d.device("S1", "REPRO-RLY-B"), d.device("S2", "REPRO-RLY-B")
-        j1, b1 = d.device("J1", "REPRO-USB"), d.device("B1", "REPRO-CTRL")
+        j1, b1 = d.device("X1", "REPRO-USB"), d.device("B1", "REPRO-CTRL")
         r1, r2, r3 = (d.device(f"R{n}", "REPRO-RLY-A") for n in (1, 2, 3))
         rack = d.rack("RK")
         n1 = d.device("N1", "REPRO-NODE", parent=rack, position=1)

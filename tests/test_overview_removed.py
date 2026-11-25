@@ -12,7 +12,6 @@ from typing import Any
 
 import fransys as fr
 import fransys_parts
-from _model_build_cover import system_document
 from fransys_overview import html
 from test_units_worked_example import _system_design
 
@@ -37,7 +36,7 @@ def _plant(*, child: bool, device: bool) -> Any:
         design.item("DEMO-CONN-2P", tag="P7", parent=host, at=yard, group=group)
     if device:
         wire(field1[2].outer, design.item("DEMO-SWITCH-2P", tag="K9", at=yard, group=group)["1"])
-    return fr.build(parts, design.draft(), system_document()).model
+    return fr.build(parts, design.draft()).model
 
 
 @cache

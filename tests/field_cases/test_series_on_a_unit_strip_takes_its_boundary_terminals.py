@@ -112,7 +112,7 @@ def test_core_on_a_unit_strip_takes_its_boundary_terminal() -> None:
 def _free_after_wiring(pin_of: Callable[[fr.TerminalStrip], Any]) -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_strip_unit(4), "U1")
-    d.series(pin_of(s.x1), d.device("M0", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.series(pin_of(s.x1), d.device("M5", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     d.series(
         s.x1,
         d.cable("W1", "DEMO-CBL-4G1.5"),
@@ -149,7 +149,7 @@ def test_a_unit_that_names_its_own_terminal_in_a_series_still_offers_it_to_the_c
     @fr.unit("demo-fixed", revision=1, interface_version=1, date="2026-10-06", text="1", by="AB")
     def unit(d: fr.Design) -> _Io:
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 3, interface=True)  # the container lands beside the unit's own wire (R1266)
-        h0, h9 = (d.device(tag, "DEMO-LAMP-24") for tag in ("H0", "H9"))
+        h0, h9 = (d.device(tag, "DEMO-LAMP-24") for tag in ("H4", "H9"))
         d.series(h0.lamp, x1[1], h9.lamp, wire=(BK, 2.5))
         d.series(h0.lamp["1"], h9.lamp["2"], wire=(BK, 2.5))
         return _Io(x1)

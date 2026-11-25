@@ -190,14 +190,15 @@ def test_edges_with_unequal_pin_counts_are_not_paired() -> None:
     assert x[pin_node("box", "p3")] != x[pin_node("box", "p1")]
 
 
-def test_a_pin_no_column_holds_is_not_paired() -> None:
-    """p2 has no column: p2 and p4 do not share an x, and nothing raises; p1 and p3 still pair."""
+@pytest.mark.rule("CARD-PIN-PAIR")
+def test_a_pin_no_column_holds_is_not_counted_or_paired() -> None:
+    """p1 on N and p3 on S hold columns; an idle p4 on S neither counts nor unpairs them, as when it is hidden (KI-1500)."""
     spec, _ = _two_edge_card(pin_pairs=(("N", "S"),))
-    attach = {c: v for c, v in spec.attach.items() if c != "p2"}
-    pcs = {c: spec.pcs[c] for c in attach}
-    x = _packed(replace(spec, cols=tuple(attach), pcs=pcs, attach=attach))
-    assert x[pin_node("box", "p1")] == x[pin_node("box", "p3")]
-    assert x[pin_node("box", "p2")] != x[pin_node("box", "p4")]
+    attach = {c: v for c, v in spec.attach.items() if c in ("p1", "p3")}
+    for edges in ((("p1", "N"), ("p3", "S"), ("p4", "S")), (("p1", "N"), ("p3", "S"))):
+        row = replace(spec, cols=tuple(attach), pcs={c: spec.pcs[c] for c in attach}, attach=attach)
+        x = _packed(with_pitches(replace(row, blocks=(replace(spec.blocks[0], pin_edges=edges),))))
+        assert x[pin_node("box", "p1")] == x[pin_node("box", "p3")]
 
 
 def _card_row(n: int, **extra) -> RowSpec:

@@ -95,7 +95,7 @@ def build_result(
         k[name] = d.item("DEMO-RLY-2CO-24", tag=f"K{name}", at=c1, group=group[name])
         t[name] = [strip.terminal("DEMO-TB-2.5-TWIN", name, group=group[name]) for _ in range(3)]
     rack = d.item(None, tag="U1", at=c1, group=plc_group)
-    do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", parent=rack, position=1, at=c1, group=plc_group)
+    do = d.item("DEMO-PLC-DO-2", tag="KE1", name="do", parent=rack, position=1, at=c1, group=plc_group)
     wire = d.wiring(colour="BU", gauge="0.5")
     links = []
     for i, name in enumerate(GROUPS):

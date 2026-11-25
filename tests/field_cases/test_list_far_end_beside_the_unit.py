@@ -1,5 +1,5 @@
 """Field case: a unit's own lists name a far end beside the unit, at the system's location EXT, with its whole path.
-The bug: the cabinet's terminal list printed -X0:1, dropping +EXT, while its stub printed +EXT-X0.
+The bug: the cabinet's terminal list printed -X2:1, dropping +EXT, while its stub printed +EXT-X2.
 Fixed by model-0143 (amended by a later rule on far ends), an end outside the unit is never short."""
 
 from functools import cache
@@ -23,7 +23,7 @@ def _build() -> tuple[fr.Model, Any]:
     d = fr.design("demo_parts", place="EXT")
     d.location("EXT", "External")
     cab = d.add(_cab, "U1")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 2, external=True)
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5", 2, external=True)
     w1 = d.cable("W1", "DEMO-CBL-4G1.5")
     w1.core(1, x0[1].outer, cab.X1[1].outer)
     w1.core(2, x0[2].outer, cab.X1[2].outer)
@@ -35,5 +35,5 @@ def _build() -> tuple[fr.Model, Any]:
 def test_the_terminal_list_prints_the_whole_path_of_an_end_beside_the_unit() -> None:
     model, unit = _build()
     rows = fr.derive.terminal_rows(model, item_named(model, "X1"), unit=unit)
-    assert rows[0].external_ends == ("+EXT-X0:1",)
-    assert stub_text(model, "X0", "external").startswith("+EXT-X0:")  # the stub names the strip alike
+    assert rows[0].external_ends == ("+EXT-X2:1",)
+    assert stub_text(model, "X2", "external").startswith("+EXT-X2:")  # the stub names the strip alike

@@ -5,7 +5,7 @@ import fransys as fr
 
 def test_pins_follow_the_connector_list_for_a_part_listed_out_of_marking_order() -> None:
     d = fr.design("demo_parts", place="C1")
-    j1 = d.device("J1", "DEMO-CONN-4P-MIXED")
+    j1 = d.device("X1", "DEMO-CONN-4P-MIXED")
     model = fr.build(d).model
     (row,) = fr.derive.connector_rows(model, j1.id)
     listed = [pin.marking for pin in row.pins]

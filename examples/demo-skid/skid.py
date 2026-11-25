@@ -33,7 +33,7 @@ def supply(d: fr.Design, terminals: int) -> tuple[Handle, Handle]:
 def starters(d: fr.Design, live: Handle, rail: Handle) -> list[tuple[Handle, Handle]]:
     """Groups G1 and G2: the mains breaker, its strip, and one fan starter per strip row."""
     with d.function("G1", "Mains"):
-        q0 = d.device("Q0", "DEMO-MCB-3P")
+        q0 = d.device("Q1", "DEMO-MCB-3P")
         x3 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN", 3 * STARTERS)
     made = []
     breakers = [n for n in range(3, 4 + STARTERS) if n != VALVE_BREAKER][:STARTERS]
@@ -93,9 +93,9 @@ def skid(d: fr.Design) -> Skid:
     fans = starters(d, live, rail)
     channels = STARTERS + VALVES
     with d.function("G3", "PLC"):
-        di = d.device("DI1", "DEMO-PLC-DI-16")
-        d.device("AI1", "DEMO-PLC-AI-4", unused=True)  # no wire reaches the analogue cards: spare
-        d.device("AI2", "DEMO-PLC-AI-4", unused=True)
+        di = d.device("KE1", "DEMO-PLC-DI-16")
+        d.device("KE2", "DEMO-PLC-AI-4", unused=True)  # no wire reaches the analogue cards: spare
+        d.device("KE3", "DEMO-PLC-AI-4", unused=True)
         dos = [d.device(f"DO{i + 1}", "DEMO-PLC-DO-2") for i in range(math.ceil(channels / 2))]
     chans = [getattr(dos[c // 2], f"do_{c % 2 + 1}") for c in range(channels)]
     relays = valves(d, live, rail, chans)

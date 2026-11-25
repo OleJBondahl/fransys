@@ -40,10 +40,6 @@ def _designation_rows(model: Model, record: DocumentRow) -> tuple[object, ...]:
     return tuple(designation_list(model, unit=document_unit(model, record.id)))
 
 
-def _bom_rows(model: Model, record: DocumentRow) -> tuple[object, ...]:
-    return document_bom_lines(model, record.id)
-
-
 def list_rows(model: Model, record: DocumentRow, kind: PageKind) -> tuple[object, ...]:
     """The rows `kind`'s list page renders for `record`, for `DOCUMENT_EMPTY_LIST`."""
     rows = {
@@ -53,7 +49,7 @@ def list_rows(model: Model, record: DocumentRow, kind: PageKind) -> tuple[object
         ListKey.WIRE_LABEL: wire_rows_for,
         ListKey.DESIGNATION: _designation_rows,
         ListKey.CABLE: document_cable_rows,
-        ListKey.BOM: _bom_rows,
+        ListKey.BOM: lambda model, record: document_bom_lines(model, record.id),
     }
     return rows[cast("ListKey", page_preset(kind).list_key)](model, record)
 

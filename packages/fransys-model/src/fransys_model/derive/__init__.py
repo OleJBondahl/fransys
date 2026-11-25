@@ -35,7 +35,6 @@ from fransys_model.vocab import (
     Unit,
     UnitRelease,
 )
-from fransys_model.vocab.colours import split_colour
 from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.supply_system import rail_phase_problem
 from fransys_model.vocab.tables import (
@@ -103,7 +102,7 @@ from .document_pages import (
     page_order_key,
 )
 from .document_scope import document_bom_lines, document_scope
-from .document_sets import printing_document, set_unit
+from .document_sets import printed_by_release, printing_document, set_unit, unit_has_printer
 from .document_sheets import (
     document_sheet_format,
     document_sheets,
@@ -168,13 +167,11 @@ from .facts.cores import cores_past_product
 from .facts.drawn_closure import drawn_groups, drawn_net_of, drawn_physical_nets, drawn_pieces
 from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.house_settings import export_form_of
-from .facts.ink_net import ink_net
 from .facts.joins import port_joins
 from .facts.keep_whole import KeepWhole, keep_whole_sets
 from .facts.mates import mate_pairs, mate_port_of
 from .facts.part import (
     THROW_WORDS,
-    channel_signal,
     conductor_of,
     contact_kind_of,
     implied_rest,
@@ -231,7 +228,6 @@ from .ids import (
 from .indexes import Indexes, build_indexes
 from .instance_tag import unit_system_designation
 from .item_boxes import box_port_text, item_box_views
-from .item_installed import item_installed
 from .jumper_lanes import (
     BRIDGE_PIECE_KEYS,
     BRIDGE_PIECES,
@@ -312,9 +308,8 @@ from .page_destination import ItemPage, cell_destination, item_pages, page_desti
 from .page_headings import continued_heading, page_headings, preset_headings
 from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds, page_preset
 from .page_reference_text import covered_documents, page_reference_text, pdf_page, position_at, position_room
-from .page_references import references_off_document
+from .page_references import check_references_off_document, references_off_document
 from .page_titles import page_title, page_title_forms, short_title
-from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
@@ -329,7 +324,6 @@ from .placement_reads import (
     port_function,
     port_name,
 )
-from .plc_rack import channel_pins
 from .plc_rack_cdp import rack_modules_for_cdp
 from .plc_tables import plc_tables
 from .plc_words import plc_list_rows, signal_word
@@ -348,13 +342,13 @@ from .queries import (
     cable_list_rows_of,
     cable_rows,
     cable_title,
+    conductor_colour,
     conductors_on_item,
     connector_item,
     connector_items,
     connector_rows,
     connector_rows_of,
     contents_rows,
-    core_colour,
     current_revision,
     designation_list,
     document_unit,
@@ -565,7 +559,6 @@ __all__ = [
     "BomLine",
     "Boundary",
     "BoxCandidate",
-    "BoxPair",
     "BoxPort",
     "BridgePieceRow",
     "CableBlockRef",
@@ -752,7 +745,6 @@ __all__ = [
     "boundaries",
     "boundary",
     "boundary_rail_wires",
-    "box_pairs",
     "box_port_text",
     "bridge_piece_key",
     "build_indexes",
@@ -772,17 +764,17 @@ __all__ = [
     "cell_text",
     "changeover_functions",
     "changeover_throws",
-    "channel_pins",
-    "channel_signal",
     "channel_takes",
     "check_order_hint_cycle",
     "check_order_hint_draws_nothing",
+    "check_references_off_document",
     "check_unprinted_sets",
     "child_items",
     "coil_cells",
     "coil_table_texts",
     "column_rows",
     "column_values",
+    "conductor_colour",
     "conductor_ends",
     "conductor_of",
     "conductor_role",
@@ -804,7 +796,6 @@ __all__ = [
     "contents_rows",
     "continued_heading",
     "control_of",
-    "core_colour",
     "core_list_rows",
     "core_on_pe_not_gnye",
     "cores_past_product",
@@ -908,7 +899,6 @@ __all__ = [
     "has_project",
     "hidden_pins",
     "implied_rest",
-    "ink_net",
     "internal_links",
     "is_black_box_item",
     "is_bridge",
@@ -927,7 +917,6 @@ __all__ = [
     "item_description",
     "item_designation",
     "item_functions",
-    "item_installed",
     "item_kind",
     "item_label",
     "item_location",
@@ -1066,6 +1055,7 @@ __all__ = [
     "preset_headings",
     "previous_release",
     "previous_release_listing",
+    "printed_by_release",
     "printed_designation",
     "printed_drawing_sets",
     "printed_strip_tag",
@@ -1130,7 +1120,6 @@ __all__ = [
     "signal_lens",
     "signal_word",
     "sizes_of",
-    "split_colour",
     "stale_patterns",
     "standalone",
     "stands",
@@ -1169,6 +1158,7 @@ __all__ = [
     "unit_chain_below",
     "unit_connector_items",
     "unit_design_of",
+    "unit_has_printer",
     "unit_ids",
     "unit_index",
     "unit_items",

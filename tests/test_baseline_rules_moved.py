@@ -11,6 +11,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 from fransys.colours import GNYE
 
 from fransys_model.derive import baseline, unit_release
@@ -44,8 +45,8 @@ def _cabinet(bar: Any) -> Any:
 
 def _build(unit: Any) -> fr.BuildResult:
     d = fr.design("demo_parts")
-    d.add(unit, "U1")
-    return fr.build(d)
+    handle = d.add(unit, "U1")
+    return fr.build(d, unit_document(handle))
 
 
 def _plant(folder: Path, result: fr.BuildResult, version: str | None) -> None:

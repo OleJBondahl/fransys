@@ -19,10 +19,10 @@ def _design() -> tuple[fr.Design, fr.Draft]:
     d.project(title="Bus", number="B-1", customer="Example Co", revision=1, author="XX")
     d.revision(1, date="2026-10-19", text="First issue", created="XX")
     with d.function("INC", "Incomer"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
+        x0 = d.terminal_strip("X90", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
         d.earth(x0.run("PE", 1)[1])
         mains = d.ac_supply("400V", 230, x0[1], x0[2], x0[3], n=x0[4])
-        q0 = d.device("Q0", "DEMO-ISO-4P")
+        q0 = d.device("Q90", "DEMO-ISO-4P")
         d.series(mains, q0.main, wire=16)
         load = q0.main
         bus = d.ac_supply(
@@ -35,7 +35,7 @@ def _design() -> tuple[fr.Design, fr.Draft]:
             names=("1L1", "1L2", "1L3", "1N"),
         )
     with d.function("CTL", "Control supply"):
-        f0, t0 = d.device("F01", "DEMO-MCB-C6"), d.device("T01", "DEMO-PSU-24")
+        f0, t0 = d.device("F90", "DEMO-MCB-C6"), d.device("T90", "DEMO-PSU-24")
         d.series(bus.L1, f0.element, t0.input, bus.N, wire=POWER)
         d.dc_supply("24VDC", t0)
     for k in (1, 2):

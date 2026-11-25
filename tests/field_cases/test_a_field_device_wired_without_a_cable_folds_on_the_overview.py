@@ -8,7 +8,7 @@ from typing import NamedTuple
 import fransys as fr
 import pytest
 from _field_designs import fc_design
-from _model_build_cover import system_document
+from _model_build_cover import system_document, unit_document
 from fransys.colours import BU
 
 
@@ -43,7 +43,7 @@ def built() -> fr.BuildResult:
         on_wire = d.device("H9", "DEMO-LAMP-24")
         d.series(unit.loose[1].outer, on_wire["1"], wire=(BU, 0.5))
         d.series(unit.neutral[2].outer, on_wire["2"], wire=(BU, 0.5))
-    return fr.build(d, system_document())
+    return fr.build(d, system_document(), unit_document(unit))
 
 
 def test_the_check_completes(built) -> None:

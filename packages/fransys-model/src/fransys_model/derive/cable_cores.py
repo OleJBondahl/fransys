@@ -61,7 +61,7 @@ def _colour_of(product: CableProductFacet | None, index: int) -> str:
     return "" if product is None else core_colour_at(product, index) or ""
 
 
-def core_colour(model: Model, conductor: Id[Conductor]) -> str:
+def conductor_colour(model: Model, conductor: Id[Conductor]) -> str:
     """The colour of core `conductor`: its carrier's `core_colours[index - 1]`.
 
     The one reader of a core's colour: the facet holds only the index, and the colour is the cable
@@ -91,7 +91,7 @@ def core_colour(model: Model, conductor: Id[Conductor]) -> str:
 def cable_rows(model: Model, cable: Id[Item], *, unit: Id[Unit] | None = None) -> tuple[CableRow, ...]:
     """One `CableRow` per core of `cable`, sorted by `(core.index, conductor id)`.
 
-    Cores are the `core`-kind conductors naming `cable` as `carrier`; the colour is `core_colour`'s.
+    Cores are the `core`-kind conductors naming `cable` as `carrier`; the colour is `conductor_colour`'s.
 
     Args:
         model: The frozen model to read.

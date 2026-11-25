@@ -39,7 +39,7 @@ def _long_label_circuit(d: fr.Design):
         brk = break_strip.run(f"RUN{pole}", 1)[1]
         d.series(brk.inner, throws[f"{pole}2"], wire=(BK, 1.5))
         d.series(make.inner, throws[f"{pole}4"], wire=(BK, 1.5))
-    feed = d.terminal_strip("X03", _field_case._TERMINAL, place="CAB")
+    feed = d.terminal_strip("X3", _field_case._TERMINAL, place="CAB")
     d.series(feed[1].inner, relay.coil["A1"], wire=(BK, 0.75))
     d.series(feed[2].inner, relay.coil["A2"], wire=(BK, 0.75))
     return _field_case._Open()

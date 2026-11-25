@@ -30,9 +30,8 @@ if TYPE_CHECKING:
         DocumentRow,
         PageId,
         ReplicaOnlySet,
-        SheetRow,
     )
-    from fransys_model.derive.page_nav import OutlineSheet, PageAnchor, ReferenceLink
+    from fransys_model.derive.page_nav import ReferenceLink
     from fransys_model.kernel import Model
 
     from ._doc import Doc
@@ -55,17 +54,6 @@ def schematic_missing_keys(pages_found: tuple[PageId, ...], svgs: Mapping[str, s
     return tuple(render_id(page) for page in pages_found if render_id(page) not in svgs)
 
 
-def _sheet_extras(
-    model: Model,
-    sheet: SheetRow,
-    entry: OutlineSheet,
-    links: tuple[ReferenceLink, ...],
-    anchors: tuple[PageAnchor, ...],
-) -> tuple[str, str]:
-    """What precedes the page's image (its mark) and its links with the anchors they land on."""
-    return sheet_mark(entry), page_links(model, sheet, links, anchors)
-
-
 def _no_drawings_page(doc: Doc, kind: PageKind) -> str:
     """The one `No drawings.` page of `kind`."""
     margin, back = text_margin(doc[3], doc[6]["page_margin_mm"]), background(doc, kind, None)
@@ -83,7 +71,7 @@ def schematic_source(doc: Doc, svgs: Mapping[str, str], links: Mapping[PageId, t
     outline = outline_sheets(model, pages_found)
     for index, (page, entry) in enumerate(zip(pages_found, outline, strict=True)):
         image = f'#image(bytes({literal(svgs[render_id(page)])}), format: "svg")'
-        before, boxes = _sheet_extras(model, sheet, entry, links[page], page_anchors(model, record.id, page))
+        before, boxes = sheet_mark(entry), page_links(model, sheet, links[page], page_anchors(model, record.id, page))
         back = background(doc, kind, index)
         blocks.append(f"#page(margin: 0mm, background: {back})[{before}{image}{boxes}]")
     return "\n#pagebreak()\n".join(blocks)

@@ -95,7 +95,7 @@ def test_a_terminal_wired_into_another_document_keeps_one_scope() -> None:
 
     def top(d: Any) -> None:
         d.add(_skid, "S1", place=None)
-        strip = d.terminal_strip("X0", "DEMO-TB-2.5", 3)
+        strip = d.terminal_strip("X3", "DEMO-TB-2.5", 3)
         d.series(strip, d.cable("W9", "DEMO-CBL-4G1.5", length_m=5), d.device("M9", "DEMO-MOTOR-4KW").motor, wire=2.5)
 
     model = _two_documents(top, place="EXT")
@@ -128,9 +128,9 @@ def _rail(u: Any) -> _Mains:
     q1 = u.device("Q1", "DEMO-ISO-4P")
     for r, pin in zip(runs, "1357", strict=True):
         u.series(r[1].inner, q1.main[pin], **w)
-    rail = u.terminal_strip("X01", "DEMO-TB-2.5").run("L1", 4, bridged=True)
+    rail = u.terminal_strip("X4", "DEMO-TB-2.5").run("L1", 4, bridged=True)
     u.series(q1.main["2"], rail[1].inner, **w)
-    f01, t1 = u.device("F01", "DEMO-MCB-3P"), u.device("T1", "DEMO-PSU-24")
+    f01, t1 = u.device("F1", "DEMO-MCB-3P"), u.device("T1", "DEMO-PSU-24")
     u.series(rail[2].inner, f01.element["1"], **w)
     u.series(f01.element["2"], t1.input["L"], **w)
     u.series(runs[3][1].inner, t1.input["N"], **w)
@@ -151,7 +151,7 @@ def railed():
     d.project(title="Demo plant", number="P-1", customer="Demo Co", revision=1, author="OJB")
     d.revision(1, date="2026-01-01", text="First issue", created="XX")
     cab = d.add(_rail, "U1", place=None)
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", external=True)
+    x0 = d.terminal_strip("X3", "DEMO-TB-2.5", external=True)
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
     for i, k in enumerate(("L1", "L2", "L3", "N"), 1):
         w1.core(i, x0.run(k, 1)[1], cab[i - 1][1])

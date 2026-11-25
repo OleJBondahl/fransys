@@ -68,6 +68,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 | `tag` | required | The instance's printed tag, with no lowercase letter. | `d.add(board, "U1")` |
 | [`place`](authoring.md#name-a-place-and-a-function-block) | `...` | Where the instance stands. | `d.add(board, "U1", place="HOLD")` |
 | `name` | `None` | The identity a released number holds to, when it must differ from the tag. | `d.add(board, "U1", name="module1")` |
+| [`from_release`](documents.md#which-document-prints-a-set) | `False` | Says the unit's own release prints its interior: the system document shows its boundary only and the build gives no `UNPRINTED_SET`. | `d.add(board, "U1", from_release=True)` |
 
 ## `d.unused`
 

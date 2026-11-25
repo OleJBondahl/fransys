@@ -788,3 +788,14 @@ def test_a_stub_at_a_mating_stand_does_not_slide_off_a_collision() -> None:
     slid = stagger([(m, replace(st, mating=False))], OPTIONS, AREA, blocker, {})[0]
     assert isinstance(slid, Marker)
     assert slid != m
+
+
+@pytest.mark.rule("ROUTE-FALLBACK-REFERENCE")
+def test_a_mating_stub_keeps_its_port_beside_a_tag_on_its_side() -> None:
+    """case (2,2) pin 2: a tag whose box meets the mating stub's on its side; the stub stays on its port, a node, not a level out."""
+    ref = Ref("n", RefKind.STUB, (RefEnd(1, None, PIN),))
+    [(stub, st)] = stand_ref(_mating_env(), ref)
+    tag = replace(stub, kind=RefKind.TAG)
+    assert st.mating
+    got = stagger([(tag, replace(st, mating=False)), (stub, st)], OPTIONS, AREA, {}, {})
+    assert got[1] == stub

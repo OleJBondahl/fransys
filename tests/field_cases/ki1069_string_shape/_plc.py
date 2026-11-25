@@ -28,10 +28,10 @@ class Plc(NamedTuple):
 def build_plc(d: fr.Design, supply: Supply) -> Plc:
     with d.function("PLC", "PLC"):
         plc = d.device("PLC1", typed.PRT34)
-        dio = d.device("DIO1", typed.PRT30, parent=plc)
-        di = d.device("DI1", typed.PRT29, parent=plc)
-        ai = d.device("AI1", typed.PRT31, parent=plc)
-        rtd = d.device("RTD1", typed.PRT32, parent=plc)
+        dio = d.device("KE1", typed.PRT30, parent=plc)
+        di = d.device("KE2", typed.PRT29, parent=plc)
+        ai = d.device("KE3", typed.PRT31, parent=plc)
+        rtd = d.device("BT1", typed.PRT32, parent=plc)
         d.device(None, typed.PRT33, name="plc_end", parent=plc)
     d.series(
         (supply.x1[POLE_PLC].inner, supply.x2[POLE_PLC].inner), (plc.supply_system["S24V"], plc.supply_system["SGND"]), wire=((RD, 0.5), (BK, 0.5))

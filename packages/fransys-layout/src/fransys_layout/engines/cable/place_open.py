@@ -25,6 +25,7 @@ def _stub(end: PlacedEnd, y: int, *, top: bool) -> PlacedEnd:
         top=top,
         dashed=False,
         blank=True,
+        label=end.label,
         x=end.x,
         y=y,
         width=0,

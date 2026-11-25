@@ -151,10 +151,14 @@ Its schematic pages follow its block diagram sheets. A design with a system docu
 
 A set of your own devices outside a unit prints on the unit whose strips feed it. A set that no document prints is `UNPRINTED_SET`.
 
+A unit's own set prints on the unit's document, else on the nearest documented unit above it. It never prints on the system document, which shows a unit as its boundary only.
+A unit with no document of its own gives `UNPRINTED_SET`, unless you place it with `d.add(unit, "U1", from_release=True)`: its own release then prints its interior, and the system document shows its boundary.
+`fr.release` of a unit with no document is refused with `RELEASE_UNIT_UNPRINTED`, and a placed unit with no stored release with `RELEASE_NESTED_UNRELEASED`.
+
 A by-others item at the place of an own device that a unit feeds stays on that unit's PDF (KI-990).
 
 `drawn_with=<unit>` on a by-others item, or on the root of by-others items, prints it in that unit's set instead.
-That set prints on the unit's document, else the nearest documented unit above it, else the system document. Items under a root follow it, and a child sets none of its own.
+That set prints on the unit's document, else the nearest documented unit above it. Items under a root follow it, and a child sets none of its own.
 The unit needs a wire to the item, or the build reports `DRAWN_WITH_UNIT_UNWIRED`.
 A reference into the system document names the design's title.
 

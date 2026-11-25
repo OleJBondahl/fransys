@@ -75,7 +75,7 @@ def _build(salt: str, relays: int) -> fr.BuildResult:
         d.location("PLANT", "Plant room")
         load = d.add(_LOADS[relays], "U2", place=None)
         source = d.add(_source, "U1", place=None)
-        cable = d.cable("W2", "DEMO-CBL-4G1.5", length_m=5)
+        cable = d.cable("W2", "DEMO-CBL-8G0.75", length_m=5)
         d.series(source.X[1], cable, load.X[1], wire=1.5)
         d.series(source.X[2], cable, load.X[2], wire=1.5)
         return fr.build(d, unit_document("sup-src"), unit_document("sup-load" if relays == 20 else "sup-load16"))

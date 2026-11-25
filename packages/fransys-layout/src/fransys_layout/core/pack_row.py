@@ -167,19 +167,18 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str]) -> None:
 
 
 def _pair_pins(g: Graph, spec: RowSpec, box: str, block: Block) -> None:
-    """Pin k of one edge and pin k of its paired edge share one x, whatever each column's extent.
+    """The k-th held pin of one edge and of its paired edge share one x, whatever each column's extent.
 
-    Only two edges with as many pins each pair, and only a pin held by a one-pin column; any other
-    pin keeps its own x. Pairing is a preference, not a rule (layout-0341).
+    A held pin is one a one-pin column stands on; no other pin counts, so hiding idle pins moves no
+    pair. Only edges with as many held pins each pair. Pairing is a preference (layout-0341).
     """
     held = {spec.attach[c][1] for c in block.columns if c in spec.attach and c not in spec.more_pins}
     for first, second in spec.options.pin_pairs:
-        pins = [[p for p, e in block.pin_edges if e == edge] for edge in (first, second)]
+        pins = [[p for p, e in block.pin_edges if e == edge and p in held] for edge in (first, second)]
         if len(pins[0]) != len(pins[1]):
             continue
         for a, b in zip(*pins, strict=True):
-            if a in held and b in held:
-                g.equal(pin_node(box, a), pin_node(box, b))
+            g.equal(pin_node(box, a), pin_node(box, b))
 
 
 def _card_columns(g: Graph, spec: RowSpec, block: str, box: str, cols: Sequence[str]) -> None:

@@ -51,7 +51,9 @@ class Unit:
     unit and every unit whose `parent` chain reaches it. Guarded by `validators.structure`
     (`UNIT_CYCLE`). `release`'s own `interface` is now checked at release
     (`INTERFACE_NOT_BUMPED`). `tag` is the instance's written tag (`U1`),
-    `None` to be numbered; `derive.unit_tag` reads the tag.
+    `None` to be numbered; `derive.unit_tag` reads the tag. `from_release` marks an instance whose
+    interior its own release prints (`d.add(fn, tag, from_release=True)`); `derive.printed_by_release`
+    reads it, and the system document shows the unit as its boundary only.
     """
 
     id: Id[Unit]
@@ -59,6 +61,7 @@ class Unit:
     release: Id[UnitRelease]
     parent: Id[Unit] | None
     tag: str | None = None
+    from_release: bool = False
     ext: frozendict[str, Value] = frozendict()
 
 

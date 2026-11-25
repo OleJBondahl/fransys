@@ -31,5 +31,5 @@ def test_a_wholly_idle_interface_box_builds(tmp_path: Path) -> None:
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     own = fr.document(preset, "demo-idle-box", cover=tmp_path / "own.md")
     codes = [f.code for f in fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md")).findings]
-    assert "FUNCTION_NOT_WIRED" in codes
+    assert "FUNCTION_NOT_WIRED" not in codes  # the boundary function is no loose function (R3956)
     assert "SET_WITHOUT_PAGE" not in codes

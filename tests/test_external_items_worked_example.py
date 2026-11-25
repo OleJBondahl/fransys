@@ -8,7 +8,7 @@ import fransys as fr
 import fransys_parts
 import fransys_render
 import pytest
-from _model_build_cover import _COVER
+from _model_build_cover import _COVER, unit_document
 from _worked_wiring import wire_field_to_motor, wire_field_to_switch
 from fransys_author.design import Design
 from test_units_worked_example import (
@@ -30,7 +30,7 @@ _DASH_ATTR = ' stroke-dasharray="'  # an element attribute, not the stylesheet's
 
 
 def _build(*, x0_external=True, switch_external=True):
-    """`demo_system` with an external switch `K1` and a scratch strip `X0` wired to it, plus a
+    """`demo_system` with an external switch `K1` and a scratch strip `X1` wired to it, plus a
     `SYSTEM` document ("by others" is drawn on the cable blocks, a dashed end box and a
     label)."""
     parts = fransys_parts.load("demo_parts")
@@ -38,8 +38,8 @@ def _build(*, x0_external=True, switch_external=True):
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
-    field1, _ = pump_cabinet(d.scope("pump1", at=er), name="C1")
-    field2, _ = pump_cabinet(d.scope("pump2", at=er), name="C2")
+    field1, unit1 = pump_cabinet(d.scope("pump1", at=er), name="C1")
+    field2, unit2 = pump_cabinet(d.scope("pump2", at=er), name="C2")
     fld = d.location("FLD", "Field")
     fld_grp = d.group("FLD", "Field wiring")
     wire_field_to_motor(d, field1, fld=fld, grp=fld_grp, motor_tag="M1")
@@ -47,13 +47,13 @@ def _build(*, x0_external=True, switch_external=True):
     switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=fld_grp, external=switch_external)
     wire_field_to_switch(d, field1[1], switch.fn("x1")["1"], cable_tag="WM1S")
     wire_field_to_switch(d, field2[1], switch.fn("x1")["2"], cable_tag="WM2S")
-    x0 = d.strip("X0", at=fld, external=x0_external)
+    x0 = d.strip("X1", at=fld, external=x0_external)
     x0_terminals = [x0.terminal("DEMO-TB-2.5", group=fld_grp) for _ in range(2)]
-    cable = d.cable("DEMO-CBL-4G1.5", tag="WX0", length_mm=15000)
+    cable = d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=15000)
     cable.core(1, x0_terminals[0].outer, switch.fn("sw")["A"])
     cable.core(2, x0_terminals[1].outer, switch.fn("sw")["B"])
     system_doc = fr.document(DocumentPreset.SYSTEM, None, cover=_COVER)
-    return fr.build(parts, d.draft(), system_doc).model
+    return fr.build(parts, d.draft(), system_doc, unit_document(unit1), unit_document(unit2)).model
 
 
 def _by_key(model, key):
@@ -81,8 +81,8 @@ def _bom_designations(model):
 
 
 def _fixture(model):
-    """The items the tests name: X0, its terminals, the switch, and the control strip X2."""
-    x0 = _by_key(model, "X0")
+    """The items the tests name: X1, its terminals, the switch, and the control strip X2."""
+    x0 = _by_key(model, "X1")
     switch = _by_key(model, "K1")
     x0_terminals = _children(model, x0)
     x2 = next(i.id for i in items_of(model).values() if i.key == ("pump1", "X2"))
@@ -121,7 +121,7 @@ def test_the_cable_between_them_keeps_its_bom_line_and_a_control_terminal_stays(
     model = default_model
     _x0, _x0_terminals, _switch, x2_terminals = _fixture(model)
     lines, designations = _bom_designations(model)
-    cable = _by_key(model, "WX0")
+    cable = _by_key(model, "W1")
     cable_lines = [line for line in lines if line.mpn == "DEMO-CBL-4G1.5"]
     assert len(cable_lines) == 1
     assert printed_designation(model, cable) in cable_lines[0].designations
@@ -153,7 +153,7 @@ def test_external_is_true_for_the_strip_its_terminals_and_the_switch_only(defaul
     assert external(model, switch)
     assert len(x2_terminals) > 0
     assert not any(external(model, terminal) for terminal in x2_terminals)
-    assert not external(model, _by_key(model, "WX0"))
+    assert not external(model, _by_key(model, "W1"))
     assert not external(model, _by_key(model, "M1"))
     # the terminals carry no flag of their own: it is the parent-chain walk that finds them
     assert not any(items_of(model)[terminal].external for terminal in x0_terminals)
@@ -230,11 +230,11 @@ def test_the_block_svg_of_a_cable_with_no_external_end_prints_no_by_others(defau
 
 
 def test_the_block_of_the_cable_from_the_external_strip_draws_both_ends_dashed(default_model):
-    """`WX0` is not external itself, but both its ends are: the `X0` strip and the switch `K1`."""
+    """`W1` is not external itself, but both its ends are: the `X1` strip and the switch `K1`."""
     model = default_model
-    boxes = _end_boxes(model, "WX0")
-    assert set(boxes) == {_by_key(model, "X0"), _by_key(model, "K1")}
-    assert _dashed(model, "WX0") == set(boxes)
+    boxes = _end_boxes(model, "W1")
+    assert set(boxes) == {_by_key(model, "X1"), _by_key(model, "K1")}
+    assert _dashed(model, "W1") == set(boxes)
     assert all(_by_others(model, item) for item in boxes)
 
 

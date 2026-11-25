@@ -16,8 +16,8 @@ def _built(*, external: bool) -> fr.Model:
     d = fr.design("demo_parts", place="CAB")
     d.location("CAB", "Cabinet")
     d.device("H1", _LAMP, external=external)
-    d.terminal_strip("X0", _TERMINAL, 2, external=external)
-    d.cable("W0", _CABLE, external=external)
+    d.terminal_strip("X1", _TERMINAL, 2, external=external)
+    d.cable("W1", _CABLE, external=external)
     return fr.build(d).model
 
 
@@ -29,8 +29,8 @@ def _flags(model: fr.Model) -> dict[str, bool]:
 def test_every_item_call_flags_its_item() -> None:
     """The three items carry the flag; the strip's terminals are external by the parent chain."""
     model = _built(external=True)
-    assert _flags(model) == {"H1": True, "X0": True, "W0": True}
-    strip = next(i for i in items(model).values() if i.tag == "X0")
+    assert _flags(model) == {"H1": True, "X1": True, "W1": True}
+    strip = next(i for i in items(model).values() if i.tag == "X1")
     terminals = [i for i in items(model).values() if i.parent == strip.id]
     assert len(terminals) == 2
     assert all(fr.derive.external(model, t.id) and not t.external for t in terminals)

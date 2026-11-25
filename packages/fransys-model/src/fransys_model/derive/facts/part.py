@@ -5,8 +5,6 @@ library is a `Draft`, calls the same code as the model. The rules sit in `part_p
 `part_throws`, re-exported here.
 """
 
-lazy from collections.abc import Mapping
-
 from fransys_model.derive.facts.part_pins import template_throws
 from fransys_model.derive.facts.part_poles import (
     conductor_of,
@@ -22,14 +20,9 @@ from fransys_model.derive.facts.part_throws import (
     implied_rest,
     is_contact_kind,
 )
-lazy from fransys_model.kernel import Id
-lazy from fransys_model.vocab.enums import SignalType
-lazy from fransys_model.vocab.facets import PlcChannelFacet
-lazy from fransys_model.vocab.templates import FunctionTemplate
 
 __all__ = [
     "THROW_WORDS",
-    "channel_signal",
     "conductor_of",
     "contact_kind_of",
     "implied_rest",
@@ -41,12 +34,3 @@ __all__ = [
     "template_throws",
     "unlinked_poles",
 ]
-
-
-def channel_signal(template: Id[FunctionTemplate], channels: Mapping[Id[FunctionTemplate] | None, PlcChannelFacet]) -> SignalType | None:
-    """The signal type of the PLC channel function template `template`, `None` if it is none.
-
-    `channels` is `plc_channel_facets(model)`, or a library's facets keyed by their subject.
-    """
-    facet = channels.get(template)
-    return None if facet is None else facet.signal

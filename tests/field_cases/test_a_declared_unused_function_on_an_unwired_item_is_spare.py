@@ -37,3 +37,23 @@ def test_a_declared_unused_function_is_spare_not_not_wired() -> None:
 
 def test_the_undeclared_control_still_warns() -> None:
     assert len(_not_wired(_built(declared=False))) == 1
+
+
+def _alone(*, declared: bool) -> fr.BuildResult:
+    @fr.unit("io-alone", revision=1, interface_version=1, date="2026-11-25", text="x", by="AB")
+    def unit(u: Any) -> _Io:
+        board = u.device("B1", "DEMO-PCB-IO")
+        u.device("A1", "DEMO-IO-2X", parent=board, interface=True, unused=("x2",) if declared else False)
+        return _Io()
+
+    d = fr.design("demo_parts")
+    d.add(unit, "U1")
+    return fr.build(d, unit_document("io-alone"))
+
+
+@pytest.mark.rule("NO-SILENT-DROP")
+def test_a_declared_unused_boundary_function_of_a_unit_alone_is_spare_functions() -> None:
+    """KI-1519 (designer R3966): a boundary function declared `unused=` stays a spare function (INFO), not drawn with open pins."""
+    findings = _alone(declared=True).findings
+    assert [f.code for f in findings if f.code == "FUNCTION_NOT_WIRED" and "A1:x2" in f.message] == []
+    assert [f.severity for f in findings if f.code == "SPARE_FUNCTIONS"] == [fr.Severity.INFO]

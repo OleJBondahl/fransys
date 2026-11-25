@@ -63,7 +63,7 @@ def test_an_absent_gender_lints_clean_loads_as_none_and_reaches_the_connector_ro
         port_templates=tuple(port_templates(model).values()),
         internal_links=tuple(internal_links(model).values()),
     )
-    stamped = instantiate(bundle, ("j1",), tag="J1")
+    stamped = instantiate(bundle, ("j1",), tag="X1")
     draft.extend(stamped, origin=_ORIGIN)
     (item,) = (record for record in stamped if isinstance(record, Item))
     (row,) = connector_rows(freeze(draft), item.id)

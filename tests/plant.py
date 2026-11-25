@@ -10,6 +10,8 @@ from typing import Any
 from library_records import freeze
 
 from fransys_model.kernel import Draft, Id, Model, Origin, make_id
+from fransys_model.refdef import Aspect
+from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.connectivity import Conductor, Mate, Net
 from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import ConductorKind, FunctionKind, NetClass, PartCategory, PortBoundary
@@ -346,6 +348,18 @@ class Plant:
         draft = Draft()
         draft.extend(self.insertion_order(shuffled), origin=_ORIGIN)
         return freeze(draft)
+
+    def location(self, key: str, label: str) -> Id[AspectNode]:
+        """A LOCATION node, added on first use."""
+        node_id = make_id(AspectNode, (key,))
+        if not self.has(node_id):
+            self.add(AspectNode(id=node_id, key=(key,), aspect=Aspect.LOCATION, parent=None, label=label, description="Invented"))
+        return node_id
+
+    def place(self, item: Id[Item], node: Id[AspectNode]) -> None:
+        """Place `item` at `node`."""
+        key = (*self._key_of(item), "at", *self._key_of(node))
+        self.add(Placement(id=make_id(Placement, key), key=key, item=item, node=node))
 
     def _key_of(self, record_id: Id[Any]) -> tuple[str, ...]:
         return tuple(str(part) for part in next(record.key for record in self.records if record.id == record_id))

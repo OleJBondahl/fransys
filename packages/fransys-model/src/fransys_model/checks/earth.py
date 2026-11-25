@@ -7,8 +7,8 @@ from fransys_model.derive.facts.colours import coloured_conductors
 from fransys_model.derive.facts.pe_cores import core_on_pe_not_gnye
 from fransys_model.derive.facts.potentials import on_declared_net, on_pe_net, pe_ports_off_pe
 from fransys_model.derive.facts.roles import conductor_role, port_pin_role
+from fransys_model.elecdef import core_colour
 from fransys_model.vocab.codes import finding
-from fransys_model.vocab.colours import RESERVED_CODES
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, ports
 lazy from fransys_model.kernel import Finding
@@ -22,7 +22,6 @@ GNYE_NOT_PE_DECLARED: Final[str] = "GNYE_NOT_PE_DECLARED"
 GNYE_NOT_PE_UNDECLARED: Final[str] = "GNYE_NOT_PE_UNDECLARED"
 PE_NOT_GNYE: Final[str] = "PE_NOT_GNYE"
 PE_PORT_OFF_PE: Final[str] = "PE_PORT_OFF_PE"
-_GNYE: Final[str] = RESERVED_CODES["protective earth"]
 
 
 def _gnye_finding(model: Model, conductor: Conductor, subjects: tuple[Id[Any], ...]) -> Finding:
@@ -40,10 +39,12 @@ def _conductor_findings(model: Model) -> list[Finding]:
         conductor = conductors(model)[conductor_id]
         subjects = (conductor.id,) if facet is None else (conductor.id, facet)
         on_pe = on_pe_net(model, conductor.a)
-        if colour == _GNYE and not on_pe:
+        read = core_colour(colour)
+        protective = read is not None and read.protective
+        if protective and not on_pe:
             found.append(_gnye_finding(model, conductor, subjects))
         single = conductor_role(model, conductor.id).wire and conductor.carrier is None
-        if single and on_pe and colour not in {"", _GNYE}:
+        if single and on_pe and colour and not protective:
             text = f"wire {ref(conductor)} is on a PE net but coloured {colour!r}, not GNYE"
             found.append(finding(PE_NOT_GNYE, subjects, text))
     return found

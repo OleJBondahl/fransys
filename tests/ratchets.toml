@@ -7,8 +7,8 @@
 stock = 0
 
 [clones_tests]
-# Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers. 5 -> 21 when the internal gates moved into tests/ (INTERNAL-TESTPATHS, R916); 16 are theirs (the unit_instances/unit_sets twins are 10); the cleanup round lowers it.
-stock = 7
+# Exact clones (bodies of 25+ AST nodes) among tests/ and packages/*/tests helpers. 5 -> 21 when the internal gates moved into tests/ (INTERNAL-TESTPATHS, R916); 16 are theirs (the unit_instances/unit_sets twins are 10); the cleanup round lowers it; 7 -> 5 by FIX022-TAIL (decision 0450).
+stock = 5
 
 [unread_doors]
 # E19: public names of the kernel, vocab and derive doors with no outside and no transitive reader (25 + 21 + 124).

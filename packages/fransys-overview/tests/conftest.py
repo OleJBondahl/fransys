@@ -10,8 +10,6 @@ import pytest
 from plant import Plant as BasePlant
 
 from fransys_model.kernel import Model, Origin, make_id
-from fransys_model.refdef import Aspect
-from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Function, Item, Port
 from fransys_model.vocab.enums import (
     PartCategory,
@@ -81,23 +79,7 @@ class Plant:
 
     def place(self, item: Id[Item], label: str) -> None:
         """Place `item` at the location node `label`, made on first use."""
-        node = AspectNode(
-            id=make_id(AspectNode, ("loc", label)),
-            key=("loc", label),
-            aspect=Aspect.LOCATION,
-            parent=None,
-            label=label,
-            description=f"Invented location {label}",
-        )
-        placement = Placement(
-            id=make_id(Placement, (*self._keys[item], "at", label)),
-            key=(*self._keys[item], "at", label),
-            item=item,
-            node=node.id,
-        )
-        if node not in self.records:
-            self.records.append(node)
-        self.records.append(placement)
+        self._plant.place(item, self._plant.location(f"loc-{label}", label))
 
     def freeze(self, seed: int | None = None) -> Model:
         """The frozen model of every record so far, in the order of `seed` when there is one."""

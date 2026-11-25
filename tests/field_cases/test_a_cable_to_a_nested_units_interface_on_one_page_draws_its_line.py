@@ -41,11 +41,11 @@ def _line_drawn() -> bool:
 
 
 def _unpaired() -> list[str]:
-    """The nets of `-W1` whose markers are not one pair that names each far end: the cabinet end names `-C1-J1`, the board end `-U1-X7` (R1683)."""
+    """The nets of `-W1` whose markers are not one pair that names each far end: the cabinet end names `-C1-X1`, the board end `-U1-X7` (R1683)."""
     texts: dict[str, list[str]] = {}
     for m in _stub_markers():
         texts.setdefault(m.net, []).extend(v.split()[-1] for _, v in m.slots)
-    return [net for net, ends in texts.items() if sorted(ends) != ["-C1-J1", "-U1-X7"]]
+    return [net for net, ends in texts.items() if sorted(ends) != ["-C1-X1", "-U1-X7"]]
 
 
 def test_the_line_runs_to_the_interface_box_or_a_complete_pair_names_each_far_end() -> None:
@@ -76,7 +76,7 @@ def test_no_stub_end_names_a_box_standing_on_its_own_page() -> None:
 
 
 def _route() -> tuple[Rect, DrawnWire, Rect]:
-    """`-U1-X7`'s box, `-W1`'s line on its page and `-J1`'s box beyond (the route's far end)."""
+    """`-U1-X7`'s box, `-W1`'s line on its page and `-X1`'s box beyond (the route's far end)."""
     for d in _pages():
         line = next((w for w in d.wires if w.style == "trunk"), None)
         if line is not None:

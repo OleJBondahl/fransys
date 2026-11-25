@@ -46,13 +46,6 @@ def test_function_yields_its_handle_and_it_works_after_the_block(parts: Draft) -
     assert a.key != b.key
 
 
-def test_function_without_as_still_works(parts: Draft) -> None:
-    d = design(parts)
-    with d.function("A", "First"):
-        d.device("K1", "TEST-RLY-2CO")
-    assert d.draft().records()
-
-
 def test_order(parts: Draft) -> None:
     _hint_pair(parts, lambda lay, h: lay.order(h.a, h.b), lambda e, h: e.order(h.a, h.b))
 

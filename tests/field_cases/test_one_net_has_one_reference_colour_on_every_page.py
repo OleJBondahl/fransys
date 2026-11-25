@@ -22,11 +22,11 @@ def tags() -> list[tuple[str, str]]:
     d = fc_design("Tints", place="CAB", date="2026-10-15")
     cabinet = d.location("CAB", "Cabinet")
     with d.function("A", "Group A"):
-        j1 = d.device("J1", "DEMO-CONN-2P")
+        j1 = d.device("X1", "DEMO-CONN-2P")
     with d.function("B", "Group B"):
-        j2 = d.device("J2", "DEMO-CONN-2P")
+        j2 = d.device("X2", "DEMO-CONN-2P")
     with d.function("C", "Group C"):
-        j3 = d.device("J3", "DEMO-CONN-2P")
+        j3 = d.device("X3", "DEMO-CONN-2P")
     wire = (BU, 0.75)
     d.series(j1.x1["2"], j2.x1["2"], wire=wire)
     d.series(j2.x1["2"], j3.x1["2"], wire=wire)

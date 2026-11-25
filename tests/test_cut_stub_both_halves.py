@@ -14,7 +14,7 @@ WRAPS = {  # census 2026-10-25: the 7 builds of R847
     "panel_di16p": 1,  # SUPPLY-SLOT (R1605): was 2 (BRIDGE-NOT-DRAWN R1145: was 3)
     "mcc": 1,  # CUT-CONT-D1 (R3565): was 2; KI-1130 (WRAP-ARROW-PAIRS, looks, R2646): CHAIN-FROM-HEAD leaf lanes add row-wrap arrow pairs; was 0
     "distribution_board": 4,  # KI-1130 (R2646): was 2; R1730: ARROW row wraps of net f:U1-F1, at cuts 4 and 16; was 0
-    "distribution_board_large": 10,  # KI-1130 (R2646): was 5; R1800 (KI-705, looks): ARROW wraps of f:U1-F1 cuts 51, 63, 72, 83, f:U1-F9 cut 83
+    "distribution_board_large": 9,  # KI-1130 (R2646): was 5; R1800 (KI-705, looks): ARROW wraps of f:U1-F1, f:U1-F9; was 10 before AD0
     "skid_v48_m6": 3,  # TEXT-IN-LOOP 1 (R1450): a blocked label widens its gap in the recut; was 2
     "demo-skid": 1,
 }

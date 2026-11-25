@@ -176,6 +176,7 @@ def document_sheets(model: Model, document: Id[Document], diagrams: tuple[Diagra
         pages=tuple(pages),
         frames=_frames(model, pages),
         title_text=title_block_words(model),
+        notice=record.notice,
     )
 
 

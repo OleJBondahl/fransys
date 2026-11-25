@@ -1,7 +1,7 @@
 """Decision model-0122: a `protective` link (a fuse or breaker) ends the physical net, not the rail.
 
 Built from `examples/demo-parts` only. A 24 V rail is declared on a fuse's input; the fuse's
-output goes to a terminal of strip X01 (the valve supply). The strip side is on no physical net of
+output goes to a terminal of strip X1 (the valve supply). The strip side is on no physical net of
 """
 
 import fransys_parts
@@ -16,7 +16,7 @@ def _model():
     d = Design(fransys_parts.load("demo_parts"))
     d.supply("24V", current="dc", rails={"+24V": ("24", None)})
     fuse = d.item("DEMO-MCB-C6", name="f1")
-    strip = d.strip("X01")
+    strip = d.strip("X1")
     terminal = strip.terminal("DEMO-TB-2.5", "1")
     d.net("+24V", fuse["1"], cls="power", potential="+24V")
     d.wiring(colour="BK", gauge="1.5")(fuse["2"], terminal.inner)

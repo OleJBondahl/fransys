@@ -10,10 +10,10 @@ from fransys.colours import BK
 def _build() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     with d.function("SUP", "Incoming supply 230 V AC"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+        x0 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
         line, neutral, pe = x0.run("L", 1), x0.run("N", 1), x0.run("PE", 1)
         ac = d.ac_supply("230V", 230, line[1], n=neutral[1])
-        q0 = d.device("Q0", "DEMO-MCB-2P")
+        q0 = d.device("Q1", "DEMO-MCB-2P")
         g1 = d.device("G1", "DEMO-PSU-24-PE")
         d.series(ac.L1, q0.pole_1, g1.input, q0.pole_2, ac.N, wire=(BK, 1.5))
         d.earth(pe[1], g1["PE"])

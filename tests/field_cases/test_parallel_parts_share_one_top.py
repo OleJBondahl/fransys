@@ -38,10 +38,10 @@ def _circuits_in_a_row(d: fr.Design, p: SimpleNamespace) -> None:
 
 # shape: (drawer, tags of the parts that must share one top pin line)
 SHAPES = {
-    "three-lone-parts": (_lone_parts, ("H1", "K1", "Y1")),
+    "three-lone-parts": (_lone_parts, ("H1", "K1", "MB1")),
     "branch-beside": (_branch_beside, ("H1", "S1")),
     "after-a-button": (_after_a_button, ("H1", "S1")),
-    "circuits-in-a-row": (_circuits_in_a_row, ("S1", "H2", "Y1", "S2")),
+    "circuits-in-a-row": (_circuits_in_a_row, ("S1", "H2", "MB1", "S2")),
 }
 
 
@@ -53,7 +53,7 @@ def test_the_parts_of_a_parallel_share_one_top(shape: str, tmp_path: Path) -> No
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"), names=("P24", "P0"))
     lamps = [d.device(f"H{i}", "DEMO-LAMP-24") for i in range(1, 5)]
     buttons = [d.device(f"S{i}", "DEMO-PB-NC") for i in range(1, 4)]
-    draw(d, SimpleNamespace(dc=dc, h=lamps, s=buttons, k=d.device("K1", "DEMO-CTR-3P-24"), y=d.device("Y1", "DEMO-VALVE-24")))
+    draw(d, SimpleNamespace(dc=dc, h=lamps, s=buttons, k=d.device("K1", "DEMO-CTR-3P-24"), y=d.device("MB1", "DEMO-VALVE-24")))
     (tmp_path / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "cover.md"))
     tops = {}

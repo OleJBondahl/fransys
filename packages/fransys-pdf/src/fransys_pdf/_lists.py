@@ -13,7 +13,6 @@ from fransys_model.derive import (
     connector_rows_of,
     continued_heading,
     cores_text,
-    designation_list,
     document_bom_lines,
     document_scope,
     document_unit,
@@ -148,19 +147,6 @@ def wire_label_list_page(model: Model, record: DocumentRow, *, share_pct: float,
         "wires",
         wires,
         column_rows(wire_rows_for(model, record), wires),
-    )
-    return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
-
-
-def designation_list_page(model: Model, record: DocumentRow, *, share_pct: float, gutter_pct: float) -> str:
-    """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
-    name = "designations"
-    designations = list_columns(model, name)
-    table = _table(
-        model,
-        name,
-        designations,
-        column_rows(designation_list(model, unit=document_unit(model, record.id)), designations),
     )
     return flow_columns([table], share_pct=share_pct, gutter_pct=gutter_pct)
 

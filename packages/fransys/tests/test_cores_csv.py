@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 from _field_shared import relay_cab_with_cable_list
+from fransys.colours import GNYE
 
 from fransys_model.vocab.tables import units as units_table
 
@@ -30,13 +31,15 @@ def _lines(text: str) -> list[str]:
 @cache
 def _worked() -> fr.BuildResult:
     d = fr.design("demo_parts")
-    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8)
-    h1 = d.device("H1", "DEMO-LAMP-24")
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8, pe="DEMO-TB-PE-2.5")
+    pe = x1.run("PE", 2, bridged=True)
+    h1 = d.device("H1", "DEMO-PSU-24-PE")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
-    w1.core(1, x1[1], h1[1])
-    w1.core(2, x1[2], h1[2])
+    w1.core(1, x1[1], h1.input["L"])
+    w1.core(2, x1[2], h1.input["N"])
     w1.spare(3, at=x1[7])
-    w1.spare()
+    w1.core(GNYE, pe[1], h1.input["PE"])
+    d.earth(pe[1])
     return fr.build(d)
 
 
@@ -55,7 +58,7 @@ def _paired() -> fr.BuildResult:
 
 def test_the_worked_example_lists_every_core_with_its_ends(tmp_path: Path) -> None:
     text = _cores_csv(fr.write(_worked(), tmp_path))
-    assert text == (f"{_HEADER}\n-W1,1,BN,,-H1:1,-X1:1,\n-W1,2,BK,,-H1:2,-X1:2,\n-W1,3,GY,,-X1:7,,spare\n-W1,4,GNYE,,,,spare\n")
+    assert text == (f"{_HEADER}\n-W1,1,BN,,-H1:L,-X1:1,\n-W1,2,BK,,-H1:N,-X1:2,\n-W1,3,GY,,-X1:7,,spare\n-W1,4,GNYE,,-H1:PE,-X1:PE:1,\n")
 
 
 def test_a_paired_cable_prints_its_pairs_and_the_spare(tmp_path: Path) -> None:

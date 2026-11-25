@@ -5,8 +5,7 @@ for every kind here: it may reference `core` and `facet` ids and nothing referen
 back; an authored kind (hint, rule parameter) has no coordinate or page-number field; a
 derived kind (page, placement, route) is written only by a pass and carries
 `produced_by`. A new kind goes into `AUTHORED_KINDS`, `DERIVED_KINDS`,
-or `LIBRARY_KINDS`, which is what the tests and
-`derived_layout_ids` go by.
+or `LIBRARY_KINDS`, which is what the tests go by.
 """
 
 from .enums import (
@@ -65,11 +64,9 @@ from .results import (
     Page,
     PageGroup,
     PowerSymbol,
-    RoutePoint,
 )
 from .sheets import LayoutSheet
 from .tables import (
-    derived_layout_ids,
     layout_of,
     profile_of,
     sheet_for,
@@ -118,7 +115,6 @@ __all__ = [
     "ReferenceText",
     "RevisionForm",
     "RevisionTableForm",
-    "RoutePoint",
     "SheetFormat",
     "SheetKind",
     "Shown",
@@ -130,7 +126,6 @@ __all__ = [
     "WireLabelText",
     "Words",
     "default_profile",
-    "derived_layout_ids",
     "front_pages_records",
     "house_records",
     "layout_of",

@@ -69,7 +69,7 @@ def test_free_names_and_two_zero_volt_rails_are_two_supplies(lib: Draft) -> None
 
 def test_a_single_phase_is_l1_at_phase_zero(lib: Draft) -> None:
     d = design(lib, place="C1")
-    strip = d.terminal_strip("X0", "TEST-TERM")
+    strip = d.terminal_strip("X2", "TEST-TERM")
     ac = d.ac_supply("230V", 230, strip[1], n=strip[2])
     assert (ac.L1.pin, ac.N.pin) == (strip[1].inner, strip[2].inner)
     assert (ac.L1.phase, ac.L1.potential) == (0, "L1")

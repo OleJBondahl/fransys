@@ -11,7 +11,7 @@ def _count_findings(*, marked: bool = True) -> list[fr.Finding]:
     d = fr.design("demo_parts")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
+    w1 = d.cable("W1", "DEMO-CBL-8G0.75", length_m=5)
     w1.core(BN, x1[1], h1[1])
     w1.core(BK, x1[2], h1[2])
     if marked:

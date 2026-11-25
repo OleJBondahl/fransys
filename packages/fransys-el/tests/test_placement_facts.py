@@ -105,20 +105,20 @@ def test_a_boxed_connector_is_drawn_by_its_pins_and_an_unwired_one_is_unwired() 
     """el-0053: a header's drawn pins join its parent's set; one with no pin drawn is unwired."""
     d = fr.design("demo_parts")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
-    j1 = d.device("J1", "DEMO-CONN-4P", parent=k1)
-    d.device("J2", "DEMO-CONN-4P", parent=k1)
+    j1 = d.device("X1", "DEMO-CONN-4P", parent=k1)
+    d.device("X2", "DEMO-CONN-4P", parent=k1)
     d.series(j1["1"], k1.coil["A1"], wire=(BU, 0.75))
     d.series(j1["3"], k1.coil["A2"], wire=(BU, 0.75))
     model = fr.build(d).model
     env = make_env(model, symbol_kit(model, LIBRARY), house(), LIBRARY)
     facts, skipped = facts_of(env, syms_of(env))
     by_item = {item_designation(model, r.item): f for f, r in functions(model).items()}
-    pins = {env.owner[p] for p in env.pins if port_function(model, p) == by_item["J1"]}
+    pins = {env.owner[p] for p in env.pins if port_function(model, p) == by_item["X1"]}
     assert len(pins) == 2  # pins 1 and 3 are drawn
     box = [s for s in facts.keep_whole if sid(model, "K1.coil") in s]
     assert len(box) == 1
     assert pins <= box[0]
-    assert [(s.id, s.reason) for s in skipped if s.what == "function"] == [(render_id(by_item["J2"]), "function_unwired")]
+    assert [(s.id, s.reason) for s in skipped if s.what == "function"] == [(render_id(by_item["X2"]), "function_unwired")]
 
 
 def test_far_ends_pair_each_drawn_pin_with_the_pin_its_conductor_lands_on(

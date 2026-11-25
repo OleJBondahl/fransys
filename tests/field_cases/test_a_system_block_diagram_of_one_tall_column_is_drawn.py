@@ -19,7 +19,7 @@ def test_a_system_block_diagram_of_one_tall_column_is_drawn() -> None:
         cover = Path(tmp) / "cover.md"
         cover.write_text("# Station\n", encoding="utf-8")
         d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
-        hub = d.device("P0", "DEMO-CONN-2P")
+        hub = d.device("P90", "DEMO-CONN-2P")
         for k in range(1, _LEAVES + 1):
             leaf = d.device(f"P{k}", "DEMO-CONN-2P")
             d.cable(f"W{k}", "DEMO-CBL-4G1.5", length_m=2).core(1, hub[1], leaf[1])

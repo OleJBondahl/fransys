@@ -5,7 +5,7 @@ from fransys_model.refdef import Aspect
 
 from .aspects import AspectNode, Placement
 from .codes import FINDING_CODES
-from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_CODES
+from .colours import COLOUR_GRAMMAR, RESERVED_CODES
 from .conductor_marks import CONDUCTOR_MARKS
 from .connectivity import Conductor, Mate, Net, RailGroup
 from .core import Function, Item, Port, Unit, UnitRelease
@@ -99,7 +99,6 @@ register_namespaces("facet", "layout")
 register_schema_version(SCHEMA_VERSION)
 
 __all__ = [
-    "BASE_COLOURS",
     "COLOUR_GRAMMAR",
     "CONDUCTOR_MARKS",
     "DESIGNATION_SCHEME",

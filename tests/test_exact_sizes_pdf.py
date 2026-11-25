@@ -15,7 +15,6 @@ import fransys_parts
 import fransys_render
 import pytest
 import typst
-from _model_build_cover import system_document
 from _pdf_lists import source
 from _pdf_measure import capital_boxes, font_names, stroke_widths, text_objects
 from root_library import freeze, role_height_mm
@@ -223,7 +222,7 @@ def units_pdfs(tmp_path_factory) -> list[bytes]:
     parts = fransys_parts.load("demo_parts")
     design, _, _ = _system_design(parts, tags=("P1", "P2"))
     draft = design.draft()
-    probe = fr.build(parts, draft, system_document()).model
+    probe = fr.build(parts, draft).model
     covers = tmp_path_factory.mktemp("covers")
     for name in ("cabinet", "board", "system"):
         (covers / f"{name}.md").write_text(f"# {name}\n", encoding="utf-8")

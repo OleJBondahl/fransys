@@ -50,7 +50,7 @@ def _skid_body(d: Any, *, hide: bool) -> _Io:  # noqa: PLR0915  one linear repro
         psu = d.device("T1", "DEMO-PSU-24")
         dc = d.dc_supply("S", psu)
         x24 = d.terminal_strip("X24", "DEMO-TB-FUSE-2.5", 29, bridged=True)
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 29, bridged=True)
+        x0 = d.terminal_strip("X1", "DEMO-TB-2.5", 29, bridged=True)
         d.series(runs[0][6].outer, f1.pole_1, psu.input["L"], wire=(BU, 2.5))
         d.series(nrun[6].outer, f1.pole_2, psu.input["N"], wire=(BU, 2.5))
         d.series(dc.plus, x24[1].inner, wire=_W)
@@ -87,7 +87,7 @@ def _skid_body(d: Any, *, hide: bool) -> _Io:  # noqa: PLR0915  one linear repro
             r = d.device(f"KV{k}", "DEMO-RLY-4CO-24")
             d.series(getattr(do[1], f"do_{next(do_ch[1])}"), r.coil, dc.minus, wire=_W)
     with group("PLC", "Controller"):
-        cpu = d.device("A0", "DEMO-PLC-CPU", parent=rack)
+        cpu = d.device("A1", "DEMO-PLC-CPU", parent=rack)
         d.series(x24[29].inner, cpu.power["24V"], wire=_W)
         d.series(cpu.power["0V"], x0[29].inner, wire=_W)
     d.layout.order(*order)

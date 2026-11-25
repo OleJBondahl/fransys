@@ -50,7 +50,7 @@ def _build(phases: int, *, rail: bool = False) -> fr.BuildResult:
     cabinet = d.location("CAB", "Cabinet")
     cab = d.add(_cabinet(phases, rail=rail), "U1", place=None)
     with d.function("IN", "Incoming"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
+        x0 = d.terminal_strip("X2", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
         for k, run in enumerate(cab.LS, 1):
             d.series(x0.run(f"L{k}", 1)[1].inner, run[1].outer, wire=(BU, 0.5))
         d.series(x0.run("PE", 1)[1].inner, cab.PE[1].outer, wire=(GNYE, 0.5))

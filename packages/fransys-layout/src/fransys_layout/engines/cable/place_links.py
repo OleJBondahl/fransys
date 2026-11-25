@@ -103,6 +103,8 @@ def _wire(facts: BlockFacts, link: Link, line: Line, left: int) -> PlacedWire:
         run_b=(line[3], line[2]),
         text_x=left + link.core.text_width // 2,
         text_y=y + room(facts) // 2 if link.top else y - room(facts) // 2,
+        text=link.core.text,
+        link=True,
     )
 
 

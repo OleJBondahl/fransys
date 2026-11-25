@@ -107,7 +107,7 @@ def test_a_page_under_the_minimum_fill_is_refused_unless_it_is_the_last() -> Non
     text = thin.spec.findings[0].text
     assert re.fullmatch(
         r"unit \S*, block \S+: page filled 1% \(below min_fill 25%\): "
-        r"the cut kept the block whole; lower min_fill or split the unit",
+        r"no cut of the blocks fills it more",
         text,
     ), text
     relaxed = cut_of(

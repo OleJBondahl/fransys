@@ -40,11 +40,11 @@ def _design(*, hide: bool = False) -> tuple[Any, Any]:  # noqa: PLR0915, C901  o
         d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
         dc = d.dc_supply("S", psu)
         x24 = d.terminal_strip("X24", "DEMO-TB-FUSE-2.5", 29, bridged=True)
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 29, bridged=True)
+        x0 = d.terminal_strip("X1", "DEMO-TB-2.5", 29, bridged=True)
         d.series(dc.plus, x24[1].inner, wire=(BU, 0.5))
         d.series(dc.minus, x0[1].inner, wire=(BU, 0.5))
-    f24 = d.terminal_strip("XF24", "DEMO-TB-2.5", 300, bridged=True)
-    f0 = d.terminal_strip("XF0", "DEMO-TB-2.5", 300, bridged=True)
+    f24 = d.terminal_strip("XD24", "DEMO-TB-2.5", 300, bridged=True)
+    f0 = d.terminal_strip("XD1", "DEMO-TB-2.5", 300, bridged=True)
     d.series(x24[27].inner, f24[1].inner, wire=(BU, 0.5))
     d.series(x0[27].inner, f0[1].inner, wire=(BU, 0.5))
     rails = (f24, f0)
@@ -97,7 +97,7 @@ def _design(*, hide: bool = False) -> tuple[Any, Any]:  # noqa: PLR0915, C901  o
     for k, (mod, ch) in enumerate(((rtd_a, 1), (rtd_a, 2), (rtd_b, 1)), 1):
         with d.function(f"RT{k}", f"Temperature {k}") as g:
             s = d.device(f"B{k + 2}", "DEMO-LOOP-4P")
-            w = d.cable(f"WR{k}", "DEMO-CBL-4G1.5", length_m=10)
+            w = d.cable(f"WR{k}", "DEMO-CBL-8G0.75", length_m=10)
             f = getattr(mod, f"rtd_{ch}")
             for pin in ("1", "2", "3"):
                 mp = str(int(pin) + 4 * (ch - 1))
@@ -114,7 +114,7 @@ def _design(*, hide: bool = False) -> tuple[Any, Any]:  # noqa: PLR0915, C901  o
     order.append(g)
     # 1 PLC controller, 1 analog module group, 1 digital output group
     with d.function("PLC", "Controller") as g:
-        cpu = d.device("A0", "DEMO-PLC-CPU", parent=rack)
+        cpu = d.device("A90", "DEMO-PLC-CPU", parent=rack)
         d.series(x24[20].inner, cpu.power["24V"], wire=(BU, 0.5))
         d.series(cpu.power["0V"], x0[20].inner, wire=(BU, 0.5))
     order.append(g)

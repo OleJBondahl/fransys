@@ -37,7 +37,7 @@ def _build():
     group = u.group("BRD", "Board")
     board = u.item("DEMO-PCB-IO", tag="U2", at=side_a, group=group)
     x1 = u.item("DEMO-CONN-2P", tag="X1", parent=board, at=side_a, group=group)
-    lamp = u.item("DEMO-LAMP-24", tag="L1", parent=board, at=side_b, group=group)
+    lamp = u.item("DEMO-LAMP-24", tag="U1", parent=board, at=side_b, group=group)
     u.boundary(x1)
     field = d.location("C", "Field")
     plug = d.item("DEMO-CONN-2P", tag="P1", at=field)
@@ -62,7 +62,7 @@ def _far_unit(model, marker: LinkMarker):
 
 
 def test_no_stub_on_a_units_own_set_names_an_item_of_that_unit() -> None:
-    """The wire `X1:2` - `L1:2` between a root pin and a child at another location is drawn, not
+    """The wire `X1:2` - `U1:2` between a root pin and a child at another location is drawn, not
     stubbed; the wire to the top-level plug still ends in a stub that names the plug."""
     # UNDO: stages/offstubs.py `crosses_location`: drop `and a.drawing_set_key !=
     #     b.drawing_set_key` (the two top-level locations cross again: `+A-U2-X1:2` stubs)
@@ -74,5 +74,5 @@ def test_no_stub_on_a_units_own_set_names_an_item_of_that_unit() -> None:
     assert all(_far_unit(model, m) is None for m in stubs)
     texts = " ".join(marker_text(model, m) for m in stubs)
     assert "U2-X1" not in texts
-    assert "U2-L1" not in texts
+    assert "U2-U1" not in texts
     assert "P1" in texts

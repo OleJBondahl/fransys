@@ -1,10 +1,11 @@
 """The one document that prints each drawing set (R331): exactly one, never two.
 
-Over units only (R361, R363): (1) a set prints on the nearest documented enclosing unit, the design
-root counting as one (a top-level set prints on the document whose subject is its own place, and
-never climbs through places); (2) else on the documented unit that feeds it; (3) else on the design
-root's document, the one with no subject whose pages hold a SCHEMATIC (R1213); (4) else it has no
-printer and `check_unprinted_sets` warns. A set in a documented unit never takes a place document.
+Over units only (R361, R363): (1) a unit set prints on the nearest documented enclosing unit; (2) a
+top-level set prints on the document whose subject is its own place, else on the documented unit
+that feeds it, else on the design root's document, the one with no subject whose pages hold a
+SCHEMATIC (R1213); (3) else it has no printer and `check_unprinted_sets` reports it, unless the unit is
+marked `from_release` (`printed_by_release`: its release prints it). A unit set never
+takes the root's document (SYSTEM-UNIT-SETS). A set in a documented unit never takes a place document.
 """
 
 from fransys_model.layout import DrawingSet, layout_of
@@ -21,7 +22,7 @@ from .lookups import item_location, unit_chain
 from .memo import Memo
 from .page_presets import document_page_kinds
 
-__all__ = ["printing_document", "set_printers", "set_unit"]
+__all__ = ["printed_by_release", "printing_document", "set_printers", "set_unit", "unit_has_printer"]
 
 
 def set_unit(drawing_set: DrawingSet) -> Id[Unit] | None:
@@ -83,9 +84,19 @@ _context_of = Memo(_context)
 
 
 def _unit_printer(model: Model, unit: Id[Unit]) -> Id[Document] | None:
-    """The document of the nearest unit above `unit` (itself first) that has one, else the root's."""
-    by_unit = _context_of(model)[0]
-    return _printer_of_unit(model, unit, by_unit) or by_unit.get(None)
+    """The document of the nearest unit above `unit` (itself first) that has one; a unit set never takes the root's."""
+    return _printer_of_unit(model, unit, _context_of(model)[0])
+
+
+def unit_has_printer(model: Model, unit: Id[Unit]) -> bool:
+    """Whether a document prints `unit`'s interior: its subject is the unit or a unit holding it."""
+    return _unit_printer(model, unit) is not None
+
+
+def printed_by_release(model: Model, unit: Id[Unit]) -> bool:
+    """Whether `unit`, or a unit above it, is marked `from_release`: its own release prints its interior."""
+    table = units(model)
+    return any(table[one].from_release for one in unit_chain(model, unit))
 
 
 def printing_document(model: Model, unit: Id[Unit] | None, location: Id[AspectNode] | None) -> Id[Document] | None:

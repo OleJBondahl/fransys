@@ -611,7 +611,6 @@ def _list_page(page, m, doc, **flow):
 
 
 _FLOWING = ("terminal_list_page", "plc_list_page", "wire_label_list_page")
-_FLOWING += ("designation_list_page", "connector_list_page")
 
 
 @pytest.mark.parametrize("page", _FLOWING)

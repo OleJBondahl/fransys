@@ -16,10 +16,10 @@ from fransys.colours import BK, BU
 def _built() -> fr.BuildResult:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     with d.function("FAN", "Fan"):
-        q0 = d.device("Q0", "DEMO-MCB-3P")
+        q0 = d.device("Q2", "DEMO-MCB-3P")
         q1 = d.device("Q1", "DEMO-CTR-3P-24")
         f1 = d.device("F1", "DEMO-OVERLOAD-3P")
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
@@ -86,7 +86,7 @@ def _cabinet(d: fr.Design) -> fr.BuildResult:
 def test_a_series_through_the_overload_draws_each_wire_to_the_pin_the_model_connects() -> None:
     """KI-875: supply, Q1, F1, a whole strip, motor: Q1 pole k out is drawn joined to F1 pole k in."""
     d = fr.design("demo_parts", place="CAB")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     q1, f1 = d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
     x1, m1 = d.terminal_strip("X1", "DEMO-TB-2.5"), d.device("M1", "DEMO-MOTOR-4KW")
@@ -101,11 +101,11 @@ def test_a_series_through_the_overload_draws_each_wire_to_the_pin_the_model_conn
 def test_the_guide_motor_starter_in_a_cabinet_builds_without_an_error() -> None:
     """KI-876: the guide's motor starter with place= and CABINET_SCHEMATIC has no ERROR finding (it gave PLACEMENT_PROBLEM: YCycleError)."""
     d = fr.design("demo_parts", place="CAB")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     g1 = d.device("G1", "DEMO-PSU-24")
     dc = d.dc_supply("24VDC", g1)
-    q0, q1, f1 = d.device("Q0", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
+    q0, q1, f1 = d.device("Q2", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
     s1, s2 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC"), d.device("S2", "DEMO-CTR-BLOCK-1NO1NC")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
     w1, m1 = d.cable("W1", "DEMO-CBL-4G1.5"), d.device("M1", "DEMO-MOTOR-4KW")

@@ -20,45 +20,45 @@ RELAY = typed.PRT36
 RELAY_EMERGENCY_STOP = typed.PRT14
 FUSE_HOLDER = typed.PRT28
 CONNECTORS = {
-    "J1": typed.PRT24,
-    "J2": typed.PRT23,
-    "J3": typed.PRT24,
-    "J4": typed.PRT24,
-    "J5": typed.PRT24,
-    "J6": typed.PRT23,
-    "J7": typed.PRT26,
-    "J8": typed.PRT27,
-    "J9": typed.PRT25,
+    "X1": typed.PRT24,
+    "X2": typed.PRT23,
+    "X3": typed.PRT24,
+    "X4": typed.PRT24,
+    "X5": typed.PRT24,
+    "X6": typed.PRT23,
+    "X7": typed.PRT26,
+    "X8": typed.PRT27,
+    "X9": typed.PRT25,
 }
 FUSES = (("F1", typed.PRT12), ("F2", typed.PRT13))
 RELAYS = (("K1", RELAY), ("K2", RELAY), ("K3", RELAY_EMERGENCY_STOP), ("K4", RELAY))
 NETS = {
-    "V24": ("F1.2", "F2.2", "J5.1", "K4.24", "K4.A1", "J8.8"),
-    "GND": ("J1.2", "J8.7", "J9.4", "J3.2", "J4.2", "J5.4", "J6.2", "K3.A2", "K4.11"),
-    "V24_IN": ("F1.1", "J1.1"),
-    "V24_BDV_CU": ("F2.1", "J8.9"),
-    "EM_STOP_IN": ("J1.3", "K3.A1"),
-    "HVIL_OK_PLC": ("J2.1", "K4.21"),
-    "CONTACTOR_EN_PLC": ("J2.2", "K1.A1", "K2.A1"),
-    "Q1_AUX_A": ("J8.10", "J7.3"),
-    "Q1_AUX_B": ("J8.12", "J7.4"),
-    "Q1_BDV_OUT_NEG": ("J8.1", "K1.14"),
-    "Q1_COIL_POS": ("J8.4", "J7.1"),
-    "Q1_COIL_NEG": ("K1.11", "J7.2"),
-    "Q2_AUX_A": ("J8.11", "J7.7"),
-    "Q2_AUX_B": ("J8.13", "J7.8"),
-    "Q2_BDV_OUT_NEG": ("J8.2", "K1.24"),
-    "Q2_COIL_POS": ("J8.5", "J7.5"),
-    "Q2_COIL_NEG": ("K1.21", "J7.6"),
-    "PCH_BDV_OUT_POS": ("J8.6", "K2.14"),
-    "PCH_BDV_OUT_NEG": ("J8.3", "K2.24"),
-    "PCH_COIL_POS": ("J7.9", "K2.11"),
-    "PCH_COIL_NEG": ("J7.10", "K2.21"),
-    "SYSTEM_CAN_H": ("J9.5", "J3.3", "J4.3"),
-    "SYSTEM_CAN_L": ("J9.2", "J3.1", "J4.1"),
-    "STRING_CAN_H": ("J9.3", "J5.2"),
-    "STRING_CAN_L": ("J9.1", "J5.3"),
-    "HVIL_LOOP_RET": ("J6.1", "K4.A2"),
+    "V24": ("F1.2", "F2.2", "X5.1", "K4.24", "K4.A1", "X8.8"),
+    "GND": ("X1.2", "X8.7", "X9.4", "X3.2", "X4.2", "X5.4", "X6.2", "K3.A2", "K4.11"),
+    "V24_IN": ("F1.1", "X1.1"),
+    "V24_BDV_CU": ("F2.1", "X8.9"),
+    "EM_STOP_IN": ("X1.3", "K3.A1"),
+    "HVIL_OK_PLC": ("X2.1", "K4.21"),
+    "CONTACTOR_EN_PLC": ("X2.2", "K1.A1", "K2.A1"),
+    "Q1_AUX_A": ("X8.10", "X7.3"),
+    "Q1_AUX_B": ("X8.12", "X7.4"),
+    "Q1_BDV_OUT_NEG": ("X8.1", "K1.14"),
+    "Q1_COIL_POS": ("X8.4", "X7.1"),
+    "Q1_COIL_NEG": ("K1.11", "X7.2"),
+    "Q2_AUX_A": ("X8.11", "X7.7"),
+    "Q2_AUX_B": ("X8.13", "X7.8"),
+    "Q2_BDV_OUT_NEG": ("X8.2", "K1.24"),
+    "Q2_COIL_POS": ("X8.5", "X7.5"),
+    "Q2_COIL_NEG": ("K1.21", "X7.6"),
+    "PCH_BDV_OUT_POS": ("X8.6", "K2.14"),
+    "PCH_BDV_OUT_NEG": ("X8.3", "K2.24"),
+    "PCH_COIL_POS": ("X7.9", "K2.11"),
+    "PCH_COIL_NEG": ("X7.10", "K2.21"),
+    "SYSTEM_CAN_H": ("X9.5", "X3.3", "X4.3"),
+    "SYSTEM_CAN_L": ("X9.2", "X3.1", "X4.1"),
+    "STRING_CAN_H": ("X9.3", "X5.2"),
+    "STRING_CAN_L": ("X9.1", "X5.3"),
+    "HVIL_LOOP_RET": ("X6.1", "K4.A2"),
     "COIL_RET_EM_STOP": ("K1.A2", "K2.A2", "K3.14"),
     "COIL_RET_HVIL": ("K3.13", "K4.14"),
 }
@@ -84,11 +84,11 @@ type Placed = Any
 
 def _pin(device: Placed, tag: str, pin: str):
     _part, function = _function(tag, pin)
-    return getattr(device, function)[int(pin) if tag[0] in "JF" else pin]
+    return getattr(device, function)[int(pin) if tag[0] in "XF" else pin]
 
 
 def _function(tag: str, pin: str) -> tuple[str, str]:
-    if tag.startswith("J"):
+    if tag.startswith("X"):
         return (CONNECTORS[tag], "header")
     if tag.startswith("F"):
         return (FUSE_HOLDER, "fuse")
@@ -105,15 +105,15 @@ def build(d: fr.Design) -> Interface:
     d.layout.profile(hide_unused_pins=True)
     board = d.device(None, BOARD_PART, name="board")
     interface = Interface(
-        pwr_estop=d.device("J1", typed.PRT24, parent=board, interface=True),
-        plc_io=d.device("J2", typed.PRT23, parent=board, interface=True),
-        can_in=d.device("J3", typed.PRT24, parent=board, interface=True),
-        can_out=d.device("J4", typed.PRT24, parent=board, interface=True),
-        current_sensor=d.device("J5", typed.PRT24, parent=board, interface=True),
-        hvil=d.device("J6", typed.PRT23, parent=board, interface=True),
-        contactors=d.device("J7", typed.PRT26, parent=board, interface=True),
-        bdv=d.device("J8", typed.PRT27, parent=board, interface=True),
-        bdv_can=d.device("J9", typed.PRT25, parent=board, interface=True),
+        pwr_estop=d.device("X1", typed.PRT24, parent=board, interface=True),
+        plc_io=d.device("X2", typed.PRT23, parent=board, interface=True),
+        can_in=d.device("X3", typed.PRT24, parent=board, interface=True),
+        can_out=d.device("X4", typed.PRT24, parent=board, interface=True),
+        current_sensor=d.device("X5", typed.PRT24, parent=board, interface=True),
+        hvil=d.device("X6", typed.PRT23, parent=board, interface=True),
+        contactors=d.device("X7", typed.PRT26, parent=board, interface=True),
+        bdv=d.device("X8", typed.PRT27, parent=board, interface=True),
+        bdv_can=d.device("X9", typed.PRT25, parent=board, interface=True),
     )
     devices: dict[str, Placed] = dict(zip(CONNECTORS, interface, strict=True))
     for tag, link in FUSES:

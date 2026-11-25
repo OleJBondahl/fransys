@@ -33,7 +33,7 @@ def _control(d: Any) -> _Psu:
         d.series(psu.output["+"], di.di_1["1"], wire=WIRE)
         d.series(psu.output["-"], lamp["2"], wire=WIRE)
     with d.function("PLC", "Outputs"):
-        card = d.device("DO1", None, pins=("13", "14", "23", "24", "43", "44"), external=True)
+        card = d.device("KE1", None, pins=("13", "14", "23", "24", "43", "44"), external=True)
     with d.function("K", "Relay"):
         relay = d.device("K1", "DEMO-RLY-4CO-24")
     for pole, pin in FEEDS.items():

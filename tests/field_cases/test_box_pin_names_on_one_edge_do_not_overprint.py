@@ -17,7 +17,7 @@ def test_a_box_prints_each_pin_name_in_its_slot_ink_and_no_two_overprint() -> No
     d = fr.design("demo_parts", place="CAB")
     with d.function("PLC", "Card"):
         card = d.device("A1", None, pins=pins, external=True)
-    zero = d.terminal_strip("X0", "DEMO-TB-2.5", 2, bridged=True, rail=True)
+    zero = d.terminal_strip("X1", "DEMO-TB-2.5", 2, bridged=True, rail=True)
     d.dc_supply("S", plus=d.terminal_strip("X24", "DEMO-TB-2.5", 1)[1], minus=zero[1], voltage=24)
     with d.function("B", "Relays"):
         relay = d.device("K1", "DEMO-RLY-2CO-24")

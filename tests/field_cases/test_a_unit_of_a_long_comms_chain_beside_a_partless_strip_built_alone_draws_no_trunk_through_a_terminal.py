@@ -40,7 +40,7 @@ def _unit(d: Any) -> _Io:
         d.series((x2[1].outer, x2[3].outer, x2[5].outer), mods[0].bus.pins[:3], wire=COMMS[:3])
         d.series(mods[-1].bus.OUT_3, x2[7].outer, wire=COMMS[3])
     with d.function("D", "Detector"):
-        det = d.device("XX-XX", "CHAIN-GAS-DETECTOR", interface=True)
+        det = d.device("BQ1", "CHAIN-GAS-DETECTOR", interface=True)
         d.series(det.sup[2], det.sig[6], wire=(BK, 0.75))
     return _Io()
 

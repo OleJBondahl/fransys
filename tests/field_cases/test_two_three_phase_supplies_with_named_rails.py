@@ -15,7 +15,7 @@ _STAR_VOLTS = "132.79"  # 230 V line to line is 230 / sqrt(3) from each phase to
 
 def _design(names: tuple[str, ...]) -> fr.Design:
     d = fr.design("demo_parts", place="C1")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5", 4)
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
     out_a, out_b = (d.terminal_strip(tag, "DEMO-TB-2.5", 3) for tag in ("X8", "X9"))
     mains = d.ac_supply("400V", 230, x0[1], x0[2], x0[3], n=x0[4])

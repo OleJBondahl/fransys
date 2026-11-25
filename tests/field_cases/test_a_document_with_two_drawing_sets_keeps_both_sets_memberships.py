@@ -6,11 +6,14 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
-from _field_designs import fc_unit
-from _model_build_cover import unit_document
+from _expected_codes import expect_codes
+from _field_designs import fc_design, fc_unit
+from _model_build_cover import _COVER, unit_document
 from fransys.colours import BK, BU
 
+from fransys_model.derive import document_drawing_sets
 from fransys_model.layout import DrawingSet, Membership, layout_of
+from fransys_model.vocab.tables import documents
 
 
 class _Io(NamedTuple):
@@ -54,3 +57,30 @@ def test_every_drawing_set_keeps_its_membership_rows() -> None:
 
 
 # TEXT_HIDES_TEXT: a falling stock of this file's builds, KI-1133 (R2647, TEXT-WIRE P0).
+
+
+def _system_of_two_cabinets() -> fr.BuildResult:
+    d = fc_design("Two cabinets")
+    d.add(_cabinet, "C1", place=None)
+    d.add(_cabinet, "C2", place=None)
+    result = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=_COVER))
+    expect_codes(result, "UNPRINTED_SET")
+    return result
+
+
+@pytest.mark.rule("UNIT-SCOPE")
+def test_a_system_document_of_two_identical_units_holds_no_set_inside_a_unit() -> None:
+    """SYSTEM-UNIT-SETS: a unit set fell back to the root document, so the system PDF printed every unit's inside."""
+    model = _system_of_two_cabinets().model
+    (system,) = documents(model)
+    assert layout_of(model, DrawingSet)
+    assert [s for s in document_drawing_sets(model, system) if s.unit is not None] == []
+
+
+@pytest.mark.rule("UNIT-SCOPE")
+def test_each_unit_set_that_no_document_prints_is_an_error_naming_the_fix() -> None:
+    result = _system_of_two_cabinets()
+    unit_sets = [s for s in layout_of(result.model, DrawingSet).values() if s.unit is not None]
+    errors = [f for f in result.findings if f.code == "UNPRINTED_SET"]
+    assert len(errors) == len(unit_sets) > 0
+    assert all("Add a document for" in f.message for f in errors)

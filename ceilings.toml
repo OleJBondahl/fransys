@@ -36,7 +36,6 @@ surface_docstring_lines = 15
 "packages/fransys-model/src/fransys_model/derive/list_cells.py::pin_lines" = 1
 "packages/fransys-model/src/fransys_model/derive/order_groups.py::function_groups_in_order" = 2
 "packages/fransys-model/src/fransys_model/layout/house_builders.py::house_records" = 1
-"packages/fransys-model/src/fransys_model/layout/tables.py::derived_layout_ids" = 1
 "packages/fransys-model/src/fransys_model/vocab/tables.py::facet_subject" = 1
 "packages/fransys/src/fransys/_exports.py::export_names" = 2
 "packages/fransys/src/fransys/_exports.py::write" = 1

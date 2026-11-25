@@ -142,8 +142,8 @@ def stagger(
 ) -> list[Marker | Demand]:
     """Markers on one side of one row that overlap along the edge stand one drawn box further out each.
 
-    A slot outside `area` (R436) or on another net's pin or lead end (R845) is refused, the next
-    one tried; none left is the room Demand (layout-0559). No other step; an overlap is counted (R453).
+    A slot outside `area` (R436) or on another net's pin or lead end (R845) is refused, the next one tried; none left is the room Demand
+    (layout-0559). An overlap is counted (R453); a stub at its pin's mating port takes no level, off it it stands on no node.
     """
     ctx = (options, area, keeps, own)
     got = staggered(
@@ -152,7 +152,10 @@ def stagger(
         [m.x if _along_x(st) else m.y for m, st in pairs],
         [_along_x(st) for _, st in pairs],
     )
-    return [_slot(_moved(m, st, 0 if _fed(m, st, keeps) else lv, step), st, step, ctx) for (m, st), (lv, step) in zip(pairs, got, strict=True)]
+    return [
+        _slot(_moved(m, st, 0 if st.mating or _fed(m, st, keeps) else lv, step), st, step, ctx)
+        for (m, st), (lv, step) in zip(pairs, got, strict=True)
+    ]
 
 
 def _all_keeps(env: MarkEnv, placement: Placement, problem: PlacementProblem, options: Options, fixed: Mapping[int, Fixed]) -> dict[int, list[Keep]]:

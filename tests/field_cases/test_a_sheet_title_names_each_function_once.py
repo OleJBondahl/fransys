@@ -39,7 +39,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[Any, Path]:
     d.revision(1, date="2026-10-26", text="First issue", created="XX")
     cabinet = d.add(_cabinet, "C1", place=None)
     with d.function("SUP", "Incoming supply"):
-        up = d.terminal_strip("X0", "DEMO-TB-2.5", external=True).run("L1", 2)
+        up = d.terminal_strip("X2", "DEMO-TB-2.5", external=True).run("L1", 2)
         cable = d.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
         cable.core(1, up[1], cabinet.U[1])
         cable.core(2, up[2], cabinet.U[2])

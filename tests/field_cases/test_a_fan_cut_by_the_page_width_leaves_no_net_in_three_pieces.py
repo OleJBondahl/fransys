@@ -77,7 +77,7 @@ def _built(*, motors_inside: bool = False) -> Any:
     d.location("EXT", "External")
     cab = d.add(_cabinet_in if motors_inside else _cabinet, "U1", place=None)
     with d.function("SUP", "Supply"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+        x0 = d.terminal_strip("X2", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
         w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
         for core, (outside, inside) in enumerate(zip((x0.run(k, 1) for k in ("L1", "L2", "L3", "PE")), cab[:4], strict=True), start=1):
             w1.core(core, outside[1], inside[1])

@@ -2,7 +2,6 @@
 
 from .bridge import bridge_pieces
 from .cables import cable_blocks
-from .check import check
 from .codes import FINDING_CODES
 from .diagram import diagram_sheets
 from .draw import DrawError, svg
@@ -14,7 +13,6 @@ __all__ = [
     "DrawError",
     "bridge_pieces",
     "cable_blocks",
-    "check",
     "diagram_sheets",
     "sheet_check",
     "sheets",

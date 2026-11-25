@@ -1,7 +1,5 @@
 """Layout: typed accessors over `Model.tables` for `layout.*` kinds (design/layout-namespace.md)."""
 
-from typing import Any
-
 from fransys_model.kernel import Id, Model, SchemaError, namespace_of
 from fransys_model.vocab.tables import kind_of, table_of
 lazy from fransys_model.vocab.core import Unit
@@ -13,7 +11,6 @@ from .formats import (
     default_profile,
 )
 from .house_text import HouseProfile
-from .kinds import DERIVED_KINDS
 from .paper import PaperChoice
 
 
@@ -86,14 +83,3 @@ def sheet_for(model: Model, kind: PageKind) -> SheetFormat:
     """
     paper = paper_of(model)
     return sheet_format_of(model, paper.by_kind.get(kind.value, paper.default))
-
-
-def derived_layout_ids(model: Model, kinds: tuple[type, ...] = DERIVED_KINDS) -> tuple[Id[Any], ...]:
-    """Return the id of every `layout.*` result of `kinds` in `model`, sorted.
-
-    What a layout pass hands to `evolve(remove=...)` before writing a fresh result:
-    results are replaced wholesale, never patched. The schematic pass takes the default and
-    leaves every authored
-    kind alone.
-    """
-    return tuple(sorted(record_id for kind in kinds for record_id in table_of(model, kind)))

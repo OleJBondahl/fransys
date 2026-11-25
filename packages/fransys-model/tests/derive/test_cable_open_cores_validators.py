@@ -13,11 +13,11 @@ from fransys_model.checks.cables import (
 )
 from fransys_model.checks.connectivity import FUNCTION_HALF_CONNECTED, check_connectivity
 from fransys_model.checks.earth import PE_PORT_OFF_PE, check_earth
-from fransys_model.derive.core_pairs import open_core_is_spare
-from fransys_model.elecdef import PinRole
+from fransys_model.derive.facts.cables import open_core_is_spare
+from fransys_model.elecdef import LinkKind, PinRole
 from fransys_model.kernel import Id, Severity, make_id
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import FunctionKind, PartCategory, PortBoundary
+from fransys_model.vocab.enums import FunctionKind, NetClass, PartCategory, PortBoundary
 from fransys_model.vocab.facets.cable import (
     CableFacet,
     CableProductFacet,
@@ -149,3 +149,37 @@ def test_a_lone_pe_port_with_no_wire_stays_silent() -> None:
     plant, port = _pe_port_plant(wired=False)
     assert check_earth(plant.model()) == ()
     assert open_core_is_spare(plant.model(), "GNYE", port)
+
+
+def _pe_terminal_run() -> Plant:
+    """A PE run of -X1..-X4, each two ports joined by the part's own link; -X1 earthed and wired, -X4 wired off the earth net."""
+    plant = Plant()
+    part, template, first, second = plant.relay_part()
+    plant.link(first, second, LinkKind.CONDUCTIVE)
+    ports = {}
+    for name in ("x1", "x2", "x3", "x4"):
+        function = plant.function(plant.item(name, part=part.id), "fn", template=template.id)
+        for source in (first, second):
+            key = (name, "fn", source.name)
+            port = Port(
+                id=make_id(Port, key),
+                key=key,
+                function=function,
+                template=source.id,
+                name=source.name,
+                boundary=PortBoundary.GENERIC,
+                pin_role=PinRole.PE,
+            )
+            plant.add(port)
+            ports[name, source.name] = port.id
+    plant.net("earth", (ports["x1", "1"],), net_class=NetClass.PE)
+    plant.wire(ports["x1", "2"], make_pin(plant, "l1", "L1"), key="w1")
+    plant.wire(ports["x4", "2"], make_pin(plant, "l4", "L4"), key="w4")
+    return plant
+
+
+def test_a_spare_pe_terminal_is_silent_and_a_wired_one_off_the_earth_net_warns() -> None:
+    # MUTATION: `pe_ports_off_pe` reads `is_wired`, which counts a terminal's own link
+    model = _pe_terminal_run().model()
+    warned = {finding.subjects[0] for finding in check_earth(model) if finding.code == PE_PORT_OFF_PE}
+    assert warned == {make_id(Port, ("x4", "fn", "2"))}

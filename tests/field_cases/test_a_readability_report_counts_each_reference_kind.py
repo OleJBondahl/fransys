@@ -15,9 +15,9 @@ def _build() -> fr.BuildResult:
         k1 = d.device("K1", "DEMO-RLY-2CO-24")
         feed = d.terminal_strip("X1", "DEMO-TB-2.5")
         h1, h2, h3 = (d.device(f"H{n}", "DEMO-LAMP-24") for n in (1, 2, 3))
-        j1 = d.device("J1", "DEMO-CONN-2P")
+        j1 = d.device("X2", "DEMO-CONN-2P")
     with d.function("B", "Group B"):
-        j2 = d.device("J2", "DEMO-CONN-2P")
+        j2 = d.device("X3", "DEMO-CONN-2P")
     wire = (BU, 0.75)
     d.series(feed.run("L", 1)[1].inner, k1.coil["A1"], wire=wire)
     d.series(k1.co_1["11"], feed.run("M", 1)[1].inner, wire=wire)

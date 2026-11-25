@@ -19,7 +19,7 @@ def test_a_breakers_pins_are_refused_with_the_branch_rule() -> None:
 
 def test_the_neutral_pin_of_a_breaker_is_refused_too() -> None:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     f4 = d.device("F4", "DEMO-MCB-3P")
     with pytest.raises(AuthorError, match=r"a fused branch is not a supply"):
         d.ac_supply("BRANCH", 230, x0[1], n=f4.element["2"])
@@ -27,7 +27,7 @@ def test_the_neutral_pin_of_a_breaker_is_refused_too() -> None:
 
 def test_a_terminal_strip_still_declares_a_supply() -> None:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     ac = d.ac_supply("MAINS", 230, x0[1], n=x0[2])
     f4 = d.device("F4", "DEMO-MCB-2P")
     d.series(ac.L1, f4.pole_1, wire=(BK, 1.5))

@@ -408,7 +408,7 @@ def test_net_key_carries_scope_prefix(parts):
 def test_mate_joins_two_connector_functions(parts):
     d = Design(parts)
     housing = d.item("TEST-CONN-2P", tag="X1")
-    edge = d.item("TEST-EDGE-2P", tag="J1")
+    edge = d.item("TEST-EDGE-2P", tag="X2")
     d.mate(housing.fn("conn"), edge.fn("conn"))
     mate = _one(d.draft(), Mate)
     assert {mate.a, mate.b} == {housing.fn("conn").id, edge.fn("conn").id}
@@ -417,7 +417,7 @@ def test_mate_joins_two_connector_functions(parts):
 def test_mate_accepts_single_function_items(parts):
     d = Design(parts)
     housing = d.item("TEST-CONN-2P", tag="X1")
-    edge = d.item("TEST-EDGE-2P", tag="J1")
+    edge = d.item("TEST-EDGE-2P", tag="X2")
     d.mate(housing, edge)
     assert len(_only(d.draft(), Mate)) == 1
 
@@ -425,12 +425,12 @@ def test_mate_accepts_single_function_items(parts):
 def test_mate_key_is_the_same_regardless_of_argument_order(parts):
     d1 = Design(parts)
     housing1 = d1.item("TEST-CONN-2P", tag="X1")
-    edge1 = d1.item("TEST-EDGE-2P", tag="J1")
+    edge1 = d1.item("TEST-EDGE-2P", tag="X2")
     d1.mate(housing1.fn("conn"), edge1.fn("conn"))
 
     d2 = Design(parts)
     housing2 = d2.item("TEST-CONN-2P", tag="X1")
-    edge2 = d2.item("TEST-EDGE-2P", tag="J1")
+    edge2 = d2.item("TEST-EDGE-2P", tag="X2")
     d2.mate(edge2.fn("conn"), housing2.fn("conn"))
 
     mate1 = _one(d1.draft(), Mate)
@@ -442,7 +442,7 @@ def test_mate_from_a_nested_scope_prefixes_the_key(parts):
     d = Design(parts)
     u = d.scope("p1")
     housing = u.item("TEST-CONN-2P", tag="X1")
-    edge = u.item("TEST-EDGE-2P", tag="J1")
+    edge = u.item("TEST-EDGE-2P", tag="X2")
     u.mate(housing.fn("conn"), edge.fn("conn"))
     mate = _one(d.draft(), Mate)
     assert mate.key[0] == "p1"
@@ -451,7 +451,7 @@ def test_mate_from_a_nested_scope_prefixes_the_key(parts):
 def test_bridge_makes_one_jumper_per_consecutive_pair_on_internal_ports(parts):
     """Three terminals bridged give two `jumper` conductors."""
     d = Design(parts)
-    x01 = d.strip("X01")
+    x01 = d.strip("X3")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(3)]
     d.bridge(*l1)
     conductors = _only(d.draft(), Conductor)
@@ -467,7 +467,7 @@ def test_bridge_makes_one_jumper_per_consecutive_pair_on_internal_ports(parts):
 def test_bridge_jumper_carries_no_carrier_and_keys_under_the_scopes_prefix(parts):
     d = Design(parts)
     u = d.scope("p1")
-    x01 = u.strip("X01")
+    x01 = u.strip("X3")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(2)]
     u.bridge(*l1)
     conductor = _one(d.draft(), Conductor)
@@ -479,7 +479,7 @@ def test_bridge_jumper_carries_no_carrier_and_keys_under_the_scopes_prefix(parts
 
 def test_bridge_gives_each_consecutive_pair_a_distinct_key(parts):
     d = Design(parts)
-    x01 = d.strip("X01")
+    x01 = d.strip("X3")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(3)]
     d.bridge(*l1)
     conductors = _only(d.draft(), Conductor)
@@ -491,7 +491,7 @@ def test_bridge_puts_every_bridged_terminal_in_one_terminal_rows_group(parts):
     from fransys_model.kernel import freeze, merge
 
     d = Design(parts)
-    x01 = d.strip("X01")
+    x01 = d.strip("X3")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(3)]
     d.bridge(*l1)
     model = with_house(freeze(merge(parts, d.draft())))

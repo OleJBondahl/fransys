@@ -83,8 +83,8 @@ def test_a_neighbours_straight_run_no_longer_crosses_a_ports_own_first_step() ->
     scope.revision(1, date="2026-09-26", text="First issue", created="XX")
     c = scope.location("CAB", "Cabinet")
     field = scope.location("FIELD", "Field strips")
-    make = scope.strip("X01", at=field)
-    brk = scope.strip("X02", at=field)
+    make = scope.strip("X1", at=field)
+    brk = scope.strip("X2", at=field)
     relay = scope.item("DEMO-RLY-4CO-24", tag="K1", at=c)
     wire = scope.wiring(colour="BU", gauge="0.75")
     for pole in (3, 4):

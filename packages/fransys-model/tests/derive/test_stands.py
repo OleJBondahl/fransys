@@ -127,7 +127,7 @@ def test_a_pin_that_stands_a_symbol_is_connected_by_its_stand() -> None:
         pe = d.terminal_strip("PE", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
         lamp = d.device("P1", "DEMO-LAMP-24")
         d.earth(lamp.lamp["1"], pe[1].outer, pe[2].outer)
-        zero = d.terminal_strip("Z1", "DEMO-TB-2.5", 1).run("L", 1)
+        zero = d.terminal_strip("A1", "DEMO-TB-2.5", 1).run("L", 1)
         d.series(lamp.lamp["2"], zero[1].outer, wire=_WIRE)
     model = fr.build(d).model
     assert stands(model)
@@ -135,13 +135,13 @@ def test_a_pin_that_stands_a_symbol_is_connected_by_its_stand() -> None:
 
 
 def _rail_design(*, flag_second: bool = False, potentials: bool = True, two_units: bool = False) -> fr.Design:
-    """A bridged 24 V strip X1 (flagged) and a 0 V strip Z1; X2 is a second 24 V strip, flagged when asked."""
+    """A bridged 24 V strip X1 (flagged) and a 0 V strip A1; X2 is a second 24 V strip, flagged when asked."""
     d = fr.design("demo_parts")
 
     def build(owner: fr.Design, *, second: bool) -> None:
         with owner.function("F", "Group"):
             live = owner.terminal_strip("X1", "DEMO-TB-2.5", 3).run("L", 3, bridged=True, rail=True)
-            zero = owner.terminal_strip("Z1", "DEMO-TB-2.5", 3).run("L", 3, bridged=True)
+            zero = owner.terminal_strip("A1", "DEMO-TB-2.5", 3).run("L", 3, bridged=True)
             lamp = owner.device("P1", "DEMO-LAMP-24")
             owner.series(lamp.lamp["1"], live[2].outer, wire=_WIRE)
             owner.series(lamp.lamp["2"], zero[2].outer, wire=_WIRE)
@@ -208,7 +208,7 @@ def _cross_boundary(*, bonded: bool) -> fr.BuildResult:
 
     @fr.unit("demo-g3-top", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
     def top(u: fr.Design) -> _Nothing:
-        one, two, recv = u.add(_g3_source, "J1"), u.add(_g3_source, "J2"), u.add(_g3_receiver, "R1")
+        one, two, recv = u.add(_g3_source, "X3"), u.add(_g3_source, "X4"), u.add(_g3_receiver, "R1")
         u.series(one.out.outer, recv.first[1].outer, wire=_WIRE)
         u.series(two.out.outer, recv.second[1].outer, wire=_WIRE)
         if bonded:
@@ -246,7 +246,7 @@ def test_a_rail_group_on_a_fused_terminal_is_an_error() -> None:
     d = fr.design("demo_parts")
     with d.function("F", "Group"):
         live = d.terminal_strip("X1", "DEMO-TB-FUSE-2.5", 2).run("L", 2, bridged=True, rail=True)
-        zero = d.terminal_strip("Z1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
+        zero = d.terminal_strip("A1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True, rail=True)
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
     result = fr.build(d)
     expect_codes(result, "RAIL_ON_FUSED")
@@ -269,7 +269,7 @@ def _flagged_strip_case(potential: str, lamps: int) -> Model:
     d = fr.design("demo_parts")
     with d.function("F", "Group"):
         flag = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 1).run("L", 1, rail=True)
-        zero = d.terminal_strip("Z1", "DEMO-TB-2.5", lamps).run("L", lamps)
+        zero = d.terminal_strip("A1", "DEMO-TB-2.5", lamps).run("L", lamps)
         devices = [d.device(f"P{i}", "DEMO-LAMP-24") for i in range(1, lamps + 1)]
         for k, lamp in enumerate(devices, 1):
             d.series(lamp[1], flag[1].outer, wire=(GNYE, 0.5) if potential == "PE" else _WIRE)
@@ -348,17 +348,17 @@ def test_pe_follows_the_24v_path_through_a_flagged_terminal(lamps: int) -> None:
 
 
 def _pe_cabinet(tmp_path: Path, *, hide: bool = False) -> fr.BuildResult:
-    """A flagged PE strip with its jumper, a motor wired to Z1 whose PE pin is wired to the strip, and Z1:4 wired to Z2."""
+    """A flagged PE strip with its jumper, a motor wired to A1 whose PE pin is wired to the strip, and A1:4 wired to A2."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True, rail=True)
     motor = d.device("M1", "DEMO-MOTOR-4KW")
-    zero = d.terminal_strip("Z1", "DEMO-TB-2.5", 4).run("L", 4)
+    zero = d.terminal_strip("A1", "DEMO-TB-2.5", 4).run("L", 4)
     for k, pin in enumerate("UVW", 1):
         d.series(motor.motor[pin], zero[k].outer, wire=_WIRE)
     d.series(motor.motor["PE"], bar[1].inner, wire=(GNYE, 2.5))
     d.earth(motor.motor["PE"], bar[1])
-    other = d.terminal_strip("Z2", "DEMO-TB-2.5", 1)
+    other = d.terminal_strip("A2", "DEMO-TB-2.5", 1)
     d.series(zero[4].inner, other[1].inner, wire=_WIRE)
     tmp_path.mkdir(parents=True, exist_ok=True)
     (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
@@ -394,7 +394,7 @@ def test_hide_pe_leaves_out_exactly_the_pe_conductors_and_the_lists_keep_them(tm
 
 
 def test_hide_pe_draws_no_protective_earth_and_every_other_connection_with_cnd_0(tmp_path: Path) -> None:
-    """Can-fail (el-0119): an option that left the stand or the PE wire in, or took a Z1 wire out, shows a PE symbol or a CND finding."""
+    """Can-fail (el-0119): an option that left the stand or the PE wire in, or took a A1 wire out, shows a PE symbol or a CND finding."""
     shown, hidden = _pe_cabinet(tmp_path / "a"), _pe_cabinet(tmp_path / "b", hide=True)
     assert PowerKind.PE in stands(hidden.model).values()
     assert PowerKind.PE not in drawn_stands(hidden.model).values()

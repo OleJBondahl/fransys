@@ -27,7 +27,7 @@ def _built() -> Model:
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("A", "Outputs"):
-        card = d.device("DO1", None, pins=PINS, external=True)
+        card = d.device("KE1", None, pins=PINS, external=True)
     with d.function("S", "Supply"):
         source = d.device("A1", "DEMO-CTRL-8")
     with d.function("R", "Relay"):
@@ -40,14 +40,14 @@ def _built() -> Model:
 
 
 def _x_of_poles_and_pins() -> tuple[dict[Any, Any], dict[Any, Any], dict[Any, Any]]:
-    """The x of each K1 pole's symbol, of each DO1 pin (box origin plus offset) and its side."""
+    """The x of each K1 pole's symbol, of each KE1 pin (box origin plus offset) and its side."""
     model = _built()
     name_of = {f.id.value: f.name for f in functions(model).values()}
     poles, pins, sides = {}, {}, {}
     for drawn in symbol_subjects(model):
         if drawn.tag == "K1":
             poles[int(name_of[drawn.owner][-1])] = drawn.x
-        elif drawn.tag == "DO1":
+        elif drawn.tag == "KE1":
             pins = {pin: drawn.x + offset for pin, offset in dict(drawn.offsets).items()}
             sides = dict(drawn.sides)
     return poles, pins, sides

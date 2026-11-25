@@ -81,7 +81,9 @@ def cable_boxes(facts: BlockFacts, found: Spans, pitch: int, box_y: int, x0: int
             width = _wide(facts, n)
             placed[n] = Box(x=right + 2 * G, y=box_y, width=width, height=height)
             right += 2 * G + width
-    return tuple(PlacedCable(cable=cable.cable, external=cable.external, box=placed[n]) for n, cable in enumerate(facts.cables))
+    return tuple(
+        PlacedCable(cable=cable.cable, external=cable.external, heading=cable.heading, box=placed[n]) for n, cable in enumerate(facts.cables)
+    )
 
 
 def dashed_box(label: int, boxes: Sequence[Box], first_x: int | None, y: int) -> Box:

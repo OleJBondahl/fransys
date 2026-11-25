@@ -106,7 +106,7 @@ def test_libraries_skip_a_part_authored_in_python():
         part=with_lib.id,
         parent=None,
         position=None,
-        tag="Z1",
+        tag="A1",
         description="",
     )
     no_lib_item_key = ("item", "z2")
@@ -116,7 +116,7 @@ def test_libraries_skip_a_part_authored_in_python():
         part=no_lib.id,
         parent=None,
         position=None,
-        tag="Z2",
+        tag="A2",
         description="",
     )
     draft = Draft()

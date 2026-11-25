@@ -11,7 +11,7 @@ import fransys_pdf
 import fransys_render
 import pytest
 from _expected_codes import expect_codes
-from fransys import BuildFailedError, DocumentPreset, Severity
+from fransys import BuildFailedError, DocumentPreset, Severity, pipeline
 from fransys_author.design import Design
 
 from fransys_model.layout import Page, layout_of
@@ -64,7 +64,8 @@ def test_check_of_an_errored_build_runs_no_pdf_or_render_check(tmp_path, monkeyp
         pytest.fail("a check that needs layout ran on a model with an ERROR")
 
     monkeypatch.setattr(fransys_pdf, "check", _refuse)
-    monkeypatch.setattr(fransys_render, "check", _refuse)
+    monkeypatch.setattr(fransys_render, "sheet_check", _refuse)
+    monkeypatch.setattr(pipeline, "check_references_off_document", _refuse)
     findings = fr.check(result)
     expect_codes(result, "BOUNDARY_NOT_IN_UNIT", "BOUNDARY_UNCONNECTED")
     assert findings[0].severity is Severity.ERROR

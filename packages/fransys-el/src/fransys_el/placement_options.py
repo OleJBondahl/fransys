@@ -57,8 +57,6 @@ class Conventions:
     options: Options
     text_height: int
     area: Size
-    step: int
-    pad: int
 
 
 def options(conventions: Conventions, library: Library) -> Options:
@@ -84,12 +82,9 @@ def house_conventions(layout: Mapping[str, object], library: Library, *, text_he
 
     `GENERAL` names the table's own keys; the rest are `Options`.
     """
-    general = {key: layout[key] for key in GENERAL}
     rest = {key: value for key, value in layout.items() if key not in GENERAL}
     return Conventions(
         core_options(rest, library.grid.wire_pitch),
         text_height=text_height,
         area=sheet_area(sheet),
-        step=cast("int", general["step"]),
-        pad=cast("int", general["pad"]),
     )

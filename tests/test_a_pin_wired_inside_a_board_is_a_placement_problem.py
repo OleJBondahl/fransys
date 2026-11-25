@@ -16,7 +16,7 @@ def test_a_channel_pin_wired_under_a_board_is_a_placement_problem() -> None:
     d = fr.design("demo_parts", place="C1")
     cab = d.location("C1", "Cabinet")
     rack = d.device("R1", "DEMO-PCB-IO")
-    card = d.device("DO1", "DEMO-PLC-DO-2", parent=rack, position=1)
+    card = d.device("KE1", "DEMO-PLC-DO-2", parent=rack, position=1)
     relay = d.device("K1", "DEMO-RLY-2CO-24")
     d.series(card.do_1["1"], relay.coil["A1"], wire=(BU, 0.5))
     d.series(card.do_2["2"], relay.coil["A2"], wire=(BU, 0.5))

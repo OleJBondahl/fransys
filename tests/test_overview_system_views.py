@@ -8,7 +8,6 @@ from typing import Any
 
 import fransys as fr
 import fransys_parts
-from _model_build_cover import system_document
 from test_units_worked_example import _system_design
 
 from electrical_symbols import LIBRARY
@@ -21,7 +20,7 @@ from fransys_model.layout import OverviewMode, OverviewRefKind
 def _laid() -> tuple[Any, Any]:
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    model = fr.build(parts, design.draft(), system_document()).model
+    model = fr.build(parts, design.draft()).model
     out, findings = lay_out_overview(model, LIBRARY)
     return model, (out, findings)
 

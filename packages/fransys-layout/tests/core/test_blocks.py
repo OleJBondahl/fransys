@@ -9,7 +9,7 @@ from options_fixtures import core_options
 
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.blocks_members import column_group
-from fransys_layout.core.flow_values import BlockList, Cell, FlowGraph, Lane
+from fransys_layout.core.flow_values import Attach, BlockList, Cell, FlowGraph, Lane
 from fransys_layout.core.hang_build import stack_extra
 from fransys_layout.core.hang_levels import FLAGS
 from fransys_layout.core.pack_row import row_width
@@ -58,6 +58,25 @@ def test_fan_takes_the_majority_group_of_its_legs() -> None:
     syms = [sym("s1", "B"), sym("s2", "A"), sym("s3", "A")]
     cols = [column("c1", "s1"), column("c2", "s2"), column("c3", "s3")]
     assert flat(build(syms, cols, [fan("f1", "c1", "c2", "c3")]))[0].group == "A"
+
+
+@pytest.mark.rule("PARALLEL-FIRST-PLUMB")
+def test_a_fan_block_votes_over_its_own_columns_only() -> None:
+    """c1 left the fan for the card of A1; its legs no longer vote, so c2's group stands, not the tie's winner R1."""
+    syms = [box_sym("A1", "PLC", 2), sym("k1", "R1"), sym("k2", "R2")]
+    cols = [column("c1", "k1", pin=("A1", "p1")), column("c2", "k2")]
+    hints = Hints(group_order=("PLC", "R1", "R2"))
+    blocks = flat(build(syms, cols, [fan("f1", "c1", "c2")], hints))
+    assert [(b.kind, b.group) for b in blocks] == [("card", "PLC"), ("fan", "R2")]
+
+
+@pytest.mark.rule("PARALLEL-FIRST-PLUMB")
+def test_a_fan_driven_by_a_box_pin_takes_the_box_group_before_the_vote() -> None:
+    syms = [box_sym("A1", "PLC", 2), sym("k2", "R2"), sym("k3", "R2")]
+    cols = [column("c2", "k2"), column("c3", "k3")]
+    driven = replace(fan("f1", "c2", "c3"), drivers=(Attach(None, 0, 0, PinRef("A1", "p2"), net="n"),))
+    blocks = flat(build(syms, cols, [driven], Hints(group_order=("PLC", "R2"))))
+    assert [(b.kind, b.group) for b in blocks if b.kind == "fan"] == [("fan", "PLC")]
 
 
 def test_fan_tie_goes_to_the_lowest_group_in_group_order_then_natural() -> None:

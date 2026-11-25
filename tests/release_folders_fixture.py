@@ -1,6 +1,7 @@
 """One small board unit and its releases, from demo parts only."""
 
 import fransys as fr
+from _model_build_cover import unit_document
 from fransys_author.design import Design
 
 
@@ -26,7 +27,7 @@ def build_board(*, version=1, revision=1, history=None, colour="BU", settings=No
     wire(x1["1"], k1.fn("coil")["A1"])
     wire(x1["2"], k1.fn("coil")["A2"])
     u.boundary(x1)
-    return fr.build(parts, design.draft(), settings=settings), u
+    return fr.build(parts, design.draft(), unit_document(u), settings=settings), u
 
 
 def release_board(into, **kwargs):
@@ -69,7 +70,7 @@ def build_cabinet(*, board_revision=1, extra_wire=False, with_board=True):
         u.wiring(colour="BU", gauge="0.5")(p1["1"], p2["1"])
     if with_board:
         u.unused(_board(u.scope("brd", at=place), board_revision))
-    return fr.build(parts, design.draft()), u
+    return fr.build(parts, design.draft(), unit_document(u)), u
 
 
 def _board(scope, revision):

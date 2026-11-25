@@ -3,7 +3,12 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.checks._finding import ordered
-from fransys_model.derive.facts.cables import cable_products_by_part, core_count_gaps, wired_cores_past_product
+from fransys_model.derive.facts.cables import (
+    cable_products_by_part,
+    core_count_gaps,
+    protective_cores_unterminated,
+    wired_cores_past_product,
+)
 from fransys_model.vocab.codes import finding
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items, parts
@@ -16,13 +21,14 @@ CABLE_CORES_FEWER: Final[str] = "CABLE_CORES_FEWER"
 CABLE_CORES_MORE: Final[str] = "CABLE_CORES_MORE"
 CORE_INDEX_PAST_PRODUCT: Final[str] = "CORE_INDEX_PAST_PRODUCT"
 GAUGE_UNKNOWN: Final[str] = "GAUGE_UNKNOWN"
+PE_CORE_WITHOUT_SERIES: Final[str] = "PE_CORE_WITHOUT_SERIES"
 
 
 def check_cables(model: Model) -> tuple[Finding, ...]:
     """Check each cable `Item`'s core `Conductor`s match its `cable_product` facet.
 
     `CABLE_CORES_FEWER`/`CABLE_CORES_MORE`: wired plus open cores differ from `len(core_colours)`. `CORE_INDEX_PAST_PRODUCT`: index past the product.
-    `GAUGE_UNKNOWN` (`INFO`): one per cable part with a stated unknown `gauge_mm2` (R2540). Sorted.
+    `PE_CORE_WITHOUT_SERIES`: a protective core in no series (model-0484). `GAUGE_UNKNOWN` (`INFO`): an unknown `gauge_mm2` (R2540). Sorted.
     """
     found = [
         finding(
@@ -38,6 +44,14 @@ def check_cables(model: Model) -> tuple[Finding, ...]:
             text += ": wire it, or mark it with W1.spare(...)"
         code = CABLE_CORES_FEWER if have < want else CABLE_CORES_MORE
         found.append(finding(code, (cable, product), text))
+    found.extend(
+        finding(
+            PE_CORE_WITHOUT_SERIES,
+            (core.subject, core.id),
+            f"cable {ref(items(model)[core.subject])} core {core.index} is a protective core on no PE pin: it would print spare, unterminated",
+        )
+        for core in protective_cores_unterminated(model)
+    )
     found.extend(
         finding(
             GAUGE_UNKNOWN,

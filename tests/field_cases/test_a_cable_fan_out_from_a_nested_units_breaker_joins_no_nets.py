@@ -38,7 +38,7 @@ def _cab(u: Any) -> _Io:
 def _skid(u: Any) -> _Open:
     cab = u.add(_cab, "N")
     x9 = u.terminal_strip("X9", "DEMO-TB-FUSE-2.5", 2)
-    w0 = u.cable("W0", "DEMO-CBL-4G1.5", length_m=5)
+    w0 = u.cable("W90", "DEMO-CBL-4G1.5", length_m=5)
     w0.core(1, x9[1], cab.F1.pole_1["1"])
     w0.core(2, x9[2], cab.F1.pole_2["3"])
     feed = cab.X1[1].outer

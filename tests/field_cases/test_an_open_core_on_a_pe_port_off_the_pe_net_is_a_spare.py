@@ -3,7 +3,7 @@ The bug: the core counted as earthed because the port's role is PE, so PE_PORT_O
 Fixed by G2 (EARTH-04, EARTH-05), "earthed" means "on the PE net", so the core is a spare and PE_PORT_OFF_PE fires."""
 
 import fransys as fr
-from fransys.colours import BK, GNYE
+from fransys.colours import BK, BN
 
 
 def _build() -> fr.BuildResult:
@@ -12,7 +12,7 @@ def _build() -> fr.BuildResult:
     m1 = d.device("M1", "DEMO-MOTOR-4KW")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5")
     d.series(m1.motor["PE"], x1[1], wire=(BK, 1.5))
-    w1.spare(GNYE, at=m1.motor["PE"])
+    w1.spare(BN, at=m1.motor["PE"])
     return fr.build(d)
 
 
@@ -20,7 +20,7 @@ def test_the_core_is_listed_as_a_spare() -> None:
     model = _build().model
     (cable,) = fr.derive.cable_items(model)
     (row,) = fr.derive.open_core_rows(model, cable)
-    assert (row.colour, row.spare) == (GNYE, True)
+    assert (row.colour, row.spare) == (BN, True)
 
 
 def test_the_port_off_the_pe_net_gives_the_warning() -> None:

@@ -247,8 +247,8 @@ def test_whitelist_entry_count_is_at_most_the_ceiling(
 def test_an_other_entry_citing_its_own_package_is_counted(
     defining_packages: dict[str, frozenset[str]],
 ) -> None:
-    same = ("port_pairs", "OTHER", "fransys-model/src/fransys_model/x.py", 1)
-    cross = ("port_pairs", "OTHER", "fransys-render/src/fransys_render/cables.py", 1)
+    same = ("series_pairs", "OTHER", "fransys-model/src/fransys_model/x.py", 1)
+    cross = ("series_pairs", "OTHER", "fransys-render/src/fransys_render/cables.py", 1)
     assert _counted_entries([same, cross], defining_packages) == [same]
 
 

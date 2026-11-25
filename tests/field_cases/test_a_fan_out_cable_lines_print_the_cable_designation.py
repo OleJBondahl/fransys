@@ -13,13 +13,13 @@ _CABLE = "DEMO-CBL-4G1.5"
 
 @pytest.fixture(scope="module")
 def built() -> fr.BuildResult:
-    """Cable W1 from J1 to J2, J3 and J4; cable W2 from J1 to J5."""
+    """Cable W1 from X1 to X2, X3 and X4; cable W2 from X1 to X5."""
     d = fr.design("demo_parts")
-    j = {tag: d.device(tag, _PLUG) for tag in ("J1", "J2", "J3", "J4", "J5")}
+    j = {tag: d.device(tag, _PLUG) for tag in ("X1", "X2", "X3", "X4", "X5")}
     fan = d.cable("W1", _CABLE)
-    for core, far in enumerate(("J2", "J3", "J4"), start=1):
-        fan.core(core, j["J1"][core], j[far][core])
-    d.cable("W2", _CABLE).core(1, j["J1"][4], j["J5"][1])
+    for core, far in enumerate(("X2", "X3", "X4"), start=1):
+        fan.core(core, j["X1"][core], j[far][core])
+    d.cable("W2", _CABLE).core(1, j["X1"][4], j["X5"][1])
     return fr.build(d)
 
 

@@ -18,7 +18,7 @@ def _build(mpn: str) -> fr.BuildResult:
     d.project(title="Fuse", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-11-09", text="First issue", created="XX")
     cab = d.location("CAB", "Cabinet")
-    xf = d.terminal_strip("XF2", mpn, 2, bridged=True)
+    xf = d.terminal_strip("XD2", mpn, 2, bridged=True)
     with d.function("G", "Group"):
         psu = d.device("T1", "DEMO-PSU-24")
         h1 = d.device("H1", "DEMO-LAMP-24")

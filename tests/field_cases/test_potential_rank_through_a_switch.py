@@ -13,7 +13,7 @@ from fransys_model.vocab.tables import functions, items, ports
 
 
 def _build() -> fr.BuildResult:
-    """Switch S0 feeds lamps P0 and P1 from 24 V, switch S1 feeds lamp P2; 0 V is a rail row."""
+    """Switch S1 feeds lamps P1 and P1 from 24 V, switch S1 feeds lamp P2; 0 V is a rail row."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
@@ -41,9 +41,9 @@ def _port(model, tag: str, function: str, name: str):
 
 def test_a_pin_behind_a_switch_ranks_as_its_rail() -> None:
     model = _build().model
-    ahead = _port(model, "S0", "sw", "A")
-    behind = _port(model, "S0", "sw", "B")
-    lamp_pin = _port(model, "P0", "lamp", "1")
+    ahead = _port(model, "S1", "sw", "A")
+    behind = _port(model, "S1", "sw", "B")
+    lamp_pin = _port(model, "P1", "lamp", "1")
     assert port_potential_rank(model, ahead) is not None
     assert port_potential_rank(model, behind) == port_potential_rank(model, ahead)
     assert port_potential_rank(model, lamp_pin) == port_potential_rank(model, ahead)
@@ -51,9 +51,9 @@ def test_a_pin_behind_a_switch_ranks_as_its_rail() -> None:
 
 def test_the_pin_ahead_of_the_switch_draws_a_bar_and_the_pins_behind_it_do_not() -> None:
     model = _build().model
-    ahead = _port(model, "S0", "sw", "A")
-    behind = _port(model, "S0", "sw", "B")
-    lamp_pin = _port(model, "P0", "lamp", "1")
+    ahead = _port(model, "S1", "sw", "A")
+    behind = _port(model, "S1", "sw", "B")
+    lamp_pin = _port(model, "P1", "lamp", "1")
     assert net_of(model, ahead) != net_of(model, behind)  # the physical net stops at the switch
     assert port_power_kind(model, ahead) is PowerKind.SUPPLY
     assert port_power_kind(model, behind) is PowerKind.NONE

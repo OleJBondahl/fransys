@@ -10,7 +10,7 @@ from pathlib import Path
 import fransys as fr
 import fransys_parts
 import pytest
-from _model_build_cover import cabinet_document, system_document
+from _model_build_cover import cabinet_document
 from demo_designs import cabinet_design
 from document_scope_probe import cases, check, document_scope, names, subject
 from fransys_author.design import Design
@@ -179,7 +179,7 @@ def models():
         document = cabinet_document(Design(parts).location("C1", "Demo cabinet"))
         built[name] = fr.build(parts, design.draft(), document).model
     design, _field1, _field2 = _system_design(parts)
-    built["worked"] = fr.build(parts, design.draft(), system_document()).model
+    built["worked"] = fr.build(parts, design.draft()).model
     spec = importlib.util.spec_from_file_location("demo_skid_design", SKID)
     assert spec is not None
     assert spec.loader is not None

@@ -26,6 +26,7 @@ def _pin(name: str, core: int) -> PinFacts:
         port=make_id(Port, (name,)),
         landed=True,
         marking_width=16,
+        marking=name,
         cores=(make_id(Conductor, (f"c{core}",)),),
     )
 
@@ -47,6 +48,7 @@ def _row(side: str, ends: list[int], label: int, *, blank: bool = False) -> tupl
                 dashed=False,
                 blank=blank,
                 label_width=label,
+                label=f"{side}{end}",
                 pins=tuple(ports),
             )
         )
@@ -81,6 +83,7 @@ def block_facts(
                 end_a=make_id(Port, (names[0],)),
                 end_b=make_id(Port, (names[1],)),
                 text_width=text,
+                text=f"c{k}",
                 link=True,
             )
         )
@@ -92,6 +95,7 @@ def block_facts(
             end_a=make_id(Port, (top_pins[t, i],)),
             end_b=make_id(Port, (bottom_pins[b, i],)),
             text_width=text,
+            text=f"c{i}",
         )
         for i, (t, b) in enumerate(cores)
     ) + tuple(links)
@@ -102,7 +106,7 @@ def block_facts(
         turn_penalty=4,
         crossing_penalty=16,
         pad=8,
-        cables=(CableFacts(cable=make_id(Item, ("w",)), external=False, heading_width=64, cores=core_facts),),
+        cables=(CableFacts(cable=make_id(Item, ("w",)), external=False, heading_width=64, heading="w", cores=core_facts),),
         top=top,
         bottom=bottom,
     )

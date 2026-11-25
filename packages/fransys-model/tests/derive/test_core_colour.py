@@ -1,4 +1,4 @@
-"""`derive.core_colour`: a core's colour is its carrier's product's `core_colours[index - 1]`."""
+"""`derive.conductor_colour`: a core's colour is its carrier's product's `core_colours[index - 1]`."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -7,7 +7,7 @@ import pytest
 from plant import Plant
 from query_builders import make_part, make_pin
 
-from fransys_model.derive import core_colour
+from fransys_model.derive import conductor_colour
 from fransys_model.kernel import Id, SchemaError, make_id
 from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet, CoreFacet
@@ -74,19 +74,19 @@ def test_a_core_of_a_cable_with_no_product_has_no_colour() -> None:
     # MUTATION: `_product_colours` returns `("",)` instead of `()` for a cable with no part
     plant, _, cable = _plant(None)
     core = _core(plant, cable, 1)
-    assert core_colour(plant.model(), core) == ""
+    assert conductor_colour(plant.model(), core) == ""
 
 
 def test_a_core_with_no_core_facet_raises() -> None:
-    # MUTATION: `core_colour` falls back to `colours[0]` when it finds no `core` facet
+    # MUTATION: `conductor_colour` falls back to `colours[0]` when it finds no `core` facet
     plant, _, cable = _plant()
     core = _core(plant, cable, None)
     with pytest.raises(SchemaError, match="no `core` facet"):
-        core_colour(plant.model(), core)
+        conductor_colour(plant.model(), core)
 
 
 def test_a_core_past_its_product_has_no_colour() -> None:
     # MUTATION: `_colour_at` wraps the index (`colours[index % len(colours) - 1]`) or raises
     plant, _, cable = _plant()
     core = _core(plant, cable, 4)
-    assert core_colour(plant.model(), core) == ""
+    assert conductor_colour(plant.model(), core) == ""

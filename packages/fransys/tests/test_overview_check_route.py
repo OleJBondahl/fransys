@@ -29,7 +29,7 @@ def _unit_draft(parts):
     scope.revision(1, date="2026-09-26", text="First issue", created="XX")
     cab = scope.location("CAB", "Cabinet")
     supply = scope.group("SUP", "Supply")
-    strip = scope.strip("X01", at=cab)
+    strip = scope.strip("X1", at=cab)
     relay = scope.item("DEMO-RLY-4CO-24", tag="K1", at=cab, group=supply)
     wire = scope.wiring(colour="BK", gauge="1.5")
     for pole in (3, 4):

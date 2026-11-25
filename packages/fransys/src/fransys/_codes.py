@@ -156,6 +156,15 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-release",
     ),
     CodeInfo(
+        code="RELEASE_UNIT_UNPRINTED",
+        severity=Severity.ERROR,
+        stage="release",
+        who="consumer",
+        cause="A unit being released has no document whose subject is the unit or a unit holding it, so its release would hold no unit PDF.",
+        fix=("Add a document for the unit before you release it. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, <unit>, cover=<cover>)"),
+        page="findings-release",
+    ),
+    CodeInfo(
         code="REVISION_ALREADY_RELEASED",
         severity=Severity.ERROR,
         stage="release",
@@ -166,7 +175,7 @@ _OWN: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="SETTING_NEW_ENGINE_ONLY",
-        severity=Severity.WARNING,
+        severity=Severity.INFO,
         stage="build",
         who="consumer",
         cause=(

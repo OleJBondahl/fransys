@@ -42,7 +42,7 @@ def test_a_container_strip_wired_to_a_nested_unit_lands_outer(*, strip_first: bo
 def test_a_container_strip_wired_to_a_pin_of_its_own_unit_lands_inner() -> None:
     d = fr.design("demo_parts", place="C1")
     x1 = d.terminal_strip("X1", _FUSE, 2)
-    h0 = d.device("H0", "DEMO-LAMP-24")
+    h0 = d.device("H2", "DEMO-LAMP-24")
     d.series(x1[1], h0["1"], wire=(BK, 1.5))
     d.unused(x1[2], h0["2"])
     assert _terminal_side(fr.build(d)) == "internal"

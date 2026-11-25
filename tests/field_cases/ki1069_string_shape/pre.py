@@ -24,7 +24,7 @@ class Interface(NamedTuple):
 
 @fr.unit(NAME, version=VERSION, revision=REVISION, interface_version=INTERFACE, title=TITLE, number=NUMBER, date="2026-10-06", text="demo", by="XX")
 def build(d: fr.Design) -> Interface:
-    coil = d.device("J3", COIL_CONNECTOR, interface=True)
+    coil = d.device("X3", COIL_CONNECTOR, interface=True)
     board = d.device("A1", BOARD_PART)
     hv_in = d.device("HV_IN", HV_TERMINAL, parent=board, interface=True)
     hv_out = d.device("HV_OUT", HV_TERMINAL, parent=board, interface=True)

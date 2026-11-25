@@ -84,9 +84,9 @@ def test_a_drawing_page_counts_every_cover_page_whatever_the_history_length(tmp_
         "starter", version=1, revision=rows, interface_version=1, date="2026-01-01", text=f"Revision {rows}: changed wiring", by="AB", history=history
     )
     def build(d: fr.Design) -> _Io:
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+        x0 = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN")
         ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
-        q0, q1, f1 = d.device("Q0", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
+        q0, q1, f1 = d.device("Q2", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24"), d.device("F1", "DEMO-OVERLOAD-3P")
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
         m1, w1 = d.device("M1", "DEMO-MOTOR-4KW"), d.cable("W1", "DEMO-CBL-4G1.5")
         d.series(ac, q0.element, q1.main, f1.main, x1, w1, m1, wire=(BK, 2.5))

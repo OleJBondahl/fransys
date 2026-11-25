@@ -87,7 +87,9 @@ from fransys.colours import BK
 # HINT-DEAD (R2785): the same 34 -> 35 bump also drops GroupHint.
 # BLOCK-STATES (model-0482, R3675) adds the `[ratings]` house record and bumps SCHEMA_VERSION 35 -> 36: it moves again (0a2d57fc3288... before).
 # MATE-STUB-SIDE (R3727) rebinds the DEMO-HSG-4M/4F carrier pins to `in`: the demo library moves it again (5b9a77e9e0e2... before).
-_DIGEST_BEFORE_THE_MOVE = "13dedc89141a3a4632c5fea49674366a4e74fc15a88819deb9b77fcffee86161"
+# RAIL-CLOSURE-2 (R3913): the demo connector parts bind every pin to `in`: the demo library moves it again (13dedc89141a... before).
+# SYSTEM-UNIT-SETS (model-0485): SCHEMA_VERSION 36 -> 37 moves it again (13dedc89141a... before).
+_DIGEST_BEFORE_THE_MOVE = "482cd41bc66cf921a545f76094819313bd4ff15646d6813d0f629df0034f19e9"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

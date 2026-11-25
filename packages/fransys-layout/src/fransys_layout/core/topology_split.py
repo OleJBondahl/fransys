@@ -33,7 +33,7 @@ type Boxes = dict[str, str]
 
 def _box_end(col: Column) -> tuple[str, str] | None:
     """The box and the node of the cell a column's first box-pin end stands on (stage 5 attach)."""
-    first = next(iter(col.box_pins), None)
+    first = next((b for b in col.box_pins if not b.trunk), None)
     if first is None:
         return None
     return first.pin.sym, f"{col.id}:{first.lane}:{len(col.lanes[first.lane].cells) - 1 if first.foot else 0}"

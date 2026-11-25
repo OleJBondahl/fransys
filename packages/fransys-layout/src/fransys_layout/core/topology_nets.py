@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from .flow_values import Attach, CrossLink, Fan
 from .net_keys import is_lone_cut
-from .topology_fans import Att, FanDraft, LaneDraft, Slot, attached_pin, classify, deal, own_wired, resolve, turn_foot_hub
+from .topology_fans import Att, FanDraft, LaneDraft, Slot, attached_pin, classify, deal, own_wired, plumbed, resolve, turn_foot_hub
 from .values import Finding, PinRef
 
 if TYPE_CHECKING:
@@ -57,7 +57,8 @@ def fans_of(
         else:
             cross.extend(_net_cross(net, ends, parts, env))
     fans = tuple(_fan(_merged(key, items, one_side=env.one_side)) for key, items in parts.items())
-    return (fans, *_links(cross, attached, held, env))
+    wires, attached, found = _links(cross, attached, held, env)
+    return fans, wires, attached | plumbed(fans, attached, env.syms), found
 
 
 def _net_cross(net: str, ends: tuple[NetEnd, ...], parts: Parts, env: FanEnv) -> list[tuple[str, list[NetEnd], tuple[str, ...]]]:

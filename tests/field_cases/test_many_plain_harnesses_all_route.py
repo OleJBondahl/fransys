@@ -45,11 +45,11 @@ def _build(title: str, count: int, cover_dir: Path) -> fr.BuildResult:
         return _Open()
 
     d = fc_design("Demo plant", customer="Demo Co", author="d", date="2026-01-01", text="first", created="AB")
-    d.add(harnesses, "DEMO")
+    unit = d.add(harnesses, "DEMO")
     cover = cover_dir / "cover.md"
     cover.write_text("# Harnesses\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover)
-    return fr.build(d, doc)
+    return fr.build(d, doc, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, unit, cover=cover))
 
 
 @pytest.fixture(scope="module", params=["Demo", "D"])

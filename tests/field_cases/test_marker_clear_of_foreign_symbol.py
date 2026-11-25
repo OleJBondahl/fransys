@@ -78,7 +78,7 @@ def _di_build() -> fr.BuildResult:
     cab = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X2", "DEMO-TB-2.5", 80)
     with d.function("DI", "PLC inputs"):
-        di = d.device("DI1", "DEMO-PLC-DI-16")
+        di = d.device("KE1", "DEMO-PLC-DI-16")
     for n in range(16):
         with d.function(f"L{n}", f"Load {n}"):
             load = d.device(f"CV{n:02d}", "DEMO-ACT-4P-2SW")

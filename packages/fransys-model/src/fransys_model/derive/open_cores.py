@@ -4,8 +4,9 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .core_pairs import _product_colours, open_core_is_spare
+from .core_pairs import _product_colours
 from .designation import port_designation, printed_designation, unit_list_context
+from .facts.cables import open_core_is_spare
 from .lookups import require
 from .open_core_ends import _open_by_cable
 from .rows_cores import OpenCoreRow

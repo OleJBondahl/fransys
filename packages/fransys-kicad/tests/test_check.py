@@ -261,7 +261,7 @@ def test_every_pin_in_a_net_is_not_unconnected(new_design):
 def test_a_part_without_a_footprint_is_omitted_and_reported(demo_board):
     model = demo_board.freeze()
     finding = _only(check(model, demo_board.board.item), "PART_WITHOUT_FOOTPRINT")
-    assert finding.severity is Severity.WARNING
+    assert finding.severity is Severity.INFO
     assert finding.subjects == (demo_board.standoff.item,)
     assert "H1" in finding.message
     assert '"H1"' not in netlist(model, demo_board.board.item)

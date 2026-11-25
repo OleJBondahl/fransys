@@ -58,8 +58,8 @@ def test_a_connector_is_one_view_per_wired_pin_and_an_idle_one_is_not_drawn() ->
     wire = d.wiring(colour="BU", gauge="0.5")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
     k2 = d.item("DEMO-RLY-2CO-24", tag="K2", name="k2", at=c1, group=grp)
-    plug = d.item("DEMO-CONN-2P", tag="J1", name="j1", at=c1, group=grp)
-    d.item("DEMO-CONN-2P", tag="J7", name="j7", at=c1, group=grp)
+    plug = d.item("DEMO-CONN-2P", tag="X3", name="j1", at=c1, group=grp)
+    d.item("DEMO-CONN-2P", tag="X7", name="j7", at=c1, group=grp)
     wire(k1.fn("co_1")["14"], plug["1"])
     wire(k2.fn("co_1")["14"], plug["2"])
     model = fr.build(parts, d.draft(), cabinet_document(c1)).model

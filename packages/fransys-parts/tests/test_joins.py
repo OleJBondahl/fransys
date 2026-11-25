@@ -70,7 +70,7 @@ def _codes(root):
 
 
 def test_a_header_joined_to_a_relay_port_lints_clean_and_stores_the_target_id_once(tmp_path):
-    body = _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2", "out")], "J1")
+    body = _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2")], "J1")
     root = _library(tmp_path, body)
     assert fransys_parts.lint(root) == ()
 
@@ -93,7 +93,7 @@ def test_a_header_joined_to_a_relay_port_lints_clean_and_stores_the_target_id_on
             "JOIN_INTO_CONNECTOR",
         ),
         (
-            _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A1", "out")], "J1"),
+            _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A1")], "J1"),
             "JOIN_PORT_TWICE",
         ),
     ],
@@ -108,7 +108,7 @@ def test_a_bad_join_is_an_error_finding_and_load_raises(tmp_path, body, code):
 
 
 def test_a_header_position_repeated_by_a_relay_port_is_port_name_shared(tmp_path):
-    body = _connector("j1", [_pin("1", "r.1"), _pin("2", "r.2", "out")], "J1")
+    body = _connector("j1", [_pin("1", "r.1"), _pin("2", "r.2")], "J1")
     relay = """
 [[function]]
 name = "r"
@@ -140,7 +140,7 @@ def _named(*connectors):
 def test_a_port_naming_a_connector_pin_stores_the_target_once_and_lints_clean(tmp_path):
     (tmp_path / "library.toml").write_text(_LIBRARY)
     (tmp_path / "parts").mkdir()
-    (tmp_path / "parts" / "x.toml").write_text(_named("j1.2", "j1.1") + _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"))
+    (tmp_path / "parts" / "x.toml").write_text(_named("j1.2", "j1.1") + _connector("j1", [_pin("1"), _pin("2")], "J1"))
     assert fransys_parts.lint(tmp_path) == ()
 
     templates = port_templates(freeze(fransys_parts.load_path(tmp_path)))
@@ -153,11 +153,11 @@ def test_a_port_naming_a_connector_pin_stores_the_target_once_and_lints_clean(tm
 @pytest.mark.parametrize(
     ("connectors", "tail", "code"),
     [
-        (("j1.3", None), _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"), "PORT_PIN_NOT_ON_CONNECTOR"),
+        (("j1.3", None), _connector("j1", [_pin("1"), _pin("2")], "J1"), "PORT_PIN_NOT_ON_CONNECTOR"),
         (("nope.1", None), _connector("j1", [_pin("1")], "J1"), "PORT_PIN_NOT_ON_CONNECTOR"),
         (("k1.1", None), "", "PORT_PIN_NOT_ON_CONNECTOR"),
-        (("j1.1", "j1.1"), _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"), "PORT_PIN_TAKEN"),
-        (("j1.2", None), _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2", "out")], "J1"), "PORT_CONNECTOR_AND_JOIN"),
+        (("j1.1", "j1.1"), _connector("j1", [_pin("1"), _pin("2")], "J1"), "PORT_PIN_TAKEN"),
+        (("j1.2", None), _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2")], "J1"), "PORT_CONNECTOR_AND_JOIN"),
     ],
     ids=["pin-missing", "function-missing", "not-a-connector", "pin-taken", "also-joined"],
 )
@@ -168,3 +168,11 @@ def test_a_bad_connector_key_is_an_error_finding_and_load_raises(tmp_path, conne
     assert _codes(tmp_path)[code].severity is Severity.ERROR
     with pytest.raises(PartLibraryError):
         fransys_parts.load_path(tmp_path)
+
+
+def test_a_connector_pin_bound_to_out_is_an_error_naming_the_wire_side(tmp_path):
+    """KI-1493: `out` of connector-fixed stands at its mating face, so a wire end there meets the mate marker."""
+    root = _library(tmp_path, _connector("j1", [_pin("1"), _pin("2", symbol_port="out")], "J1"))
+    found = _codes(root)["CONNECTOR_PIN_NOT_ON_WIRE_SIDE"]
+    assert found.severity is Severity.ERROR
+    assert "'out'" in found.message

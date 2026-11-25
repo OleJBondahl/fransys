@@ -203,7 +203,7 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
     """A core symbol id maps to the function it draws, so a fix naming `<subject>` gets one.
 
     Open gap: CARD_OVERFULL and NO_BLOCK pass a box (blocks_card.py:125, blocks_check.py:24), and
-    WIRE_MEETS_NET can pass ids outside the map. Covered by SPEC-022 (finding subject
+    WIRE_MEETS_NET names no subject since R3951 item 6. Covered by SPEC-022 (finding subject
     """
     from typing import get_args
 
@@ -212,7 +212,7 @@ def test_a_core_symbol_id_maps_to_its_record(written: Written) -> None:
 
     emitted = set(get_args(FindingCode))
     wants = sorted(info.code for info in (*LAYOUT_CODES, *FINDING_CODES) if info.code in emitted and "<subject>" in info.fix)
-    assert {"LABEL_NO_ROOM", "LANE_WIRE_DROPPED", "WIRE_MEETS_NET"} <= set(wants)
+    assert {"LABEL_NO_ROOM", "LANE_WIRE_DROPPED"} <= set(wants)
     symbols = symbol_subjects(written.model, written.kit)
     sym = next(iter(symbols))
     net = next(iter(net_ports(written.model)))
@@ -375,6 +375,14 @@ def test_a_fill_under_min_text_names_the_unit_label_not_its_id(written: Written)
     (found,) = kernel_findings(written.out, [core], {}, written.pages)
     assert unit.value not in found.message
     assert found.message.startswith(f"unit {unit_label(written.model, unit)}, block b")
+
+
+def test_a_thin_page_is_a_note_never_a_warning(written: Written) -> None:
+    """KI-1470: a kept thin page is one INFO, whatever page cuts a build gets; the premise is the core finding handed in."""
+    core = Finding("FILL_UNDER_MIN", f"unit {next(iter(written.model.tables['unit'])).value}, block b: page filled 5%", min(written.pages), "b")
+    found = [f for f in kernel_findings(written.out, [core], {}, written.pages) if f.code == "FILL_UNDER_MIN"]
+    assert len(found) == 1  # the premise: one thin page in, one note out
+    assert {f.severity for f in found} == {Severity.INFO}
 
 
 def test_the_drawn_net_text_is_the_net_key_of_its_port_not_the_first_port_value(written: Written) -> None:

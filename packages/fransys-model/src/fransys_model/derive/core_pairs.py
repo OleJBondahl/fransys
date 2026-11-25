@@ -5,11 +5,9 @@ Cores cell each have one function here; layout, render and the lists call them.
 """
 
 from fransys_model.derive.facts.cables import cable_products_by_part
-from fransys_model.derive.facts.potentials import on_pe_net
 from fransys_model.kernel import Id, Model, value
-from fransys_model.vocab.colours import RESERVED_CODES
 from fransys_model.vocab.tables import items
-lazy from fransys_model.vocab.core import Item, Port
+lazy from fransys_model.vocab.core import Item
 lazy from fransys_model.vocab.facets.cable import CableProductFacet, CorePair
 
 
@@ -26,15 +24,6 @@ def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
     """The `core_colours` of `cable`'s part's `cable_product`, `()` when it has none."""
     product = cable_product(model, cable)
     return () if product is None else product.core_colours
-
-
-def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
-    """Whether an open core of `colour` landing at `at` is a spare: not a screen, not earthed.
-
-    A core landing on a port of the PE net is a protective core earthed at that port. The author
-    joins a PE-role port to the PE net (author-0044), so a PE-role port off it is not earthed.
-    """
-    return colour != RESERVED_CODES["shield"] and not (at is not None and on_pe_net(model, at))
 
 
 @value

@@ -34,7 +34,7 @@ def test_the_worked_example_fits_a_housing_on_four_leads() -> None:
     with d.function("K", "Contactor control"):
         k1 = d.device("K1", _CTR)
         j1 = d.device(
-            "J1",
+            "X2",
             _HOUSING,
             parent=k1,
             joins={"1": k1.coil["A1"], 2: k1.coil["A2"], "3": k1.aux["13"], "4": k1.aux["14"]},
@@ -49,11 +49,11 @@ def test_the_worked_example_fits_a_housing_on_four_leads() -> None:
     assert sorted(map(sorted, _leads(result))) == sorted(map(sorted, wanted))
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
     named = {i.tag: item_designation(result.model, i.id) for i in items(result.model).values()}
-    assert named["J1"] == "K1-J1"
+    assert named["X2"] == "K1-X2"
 
 
 def _refused(**joins_for: Any) -> AuthorError:
-    """The error `d.device("J1", ...)` raises with the given `parent` and `joins`."""
+    """The error `d.device("X2", ...)` raises with the given `parent` and `joins`."""
     d = _design()
     with d.function("K", "Contactor control"):
         k1 = d.device("K1", _CTR)
@@ -64,7 +64,7 @@ def _refused(**joins_for: Any) -> AuthorError:
         joins = joins_for["joins"]
         resolved = joins(scope) if callable(joins) else joins
         with pytest.raises(AuthorError) as caught:
-            d.device("J1", _HOUSING, parent=parent, joins=resolved)
+            d.device("X2", _HOUSING, parent=parent, joins=resolved)
     return caught.value
 
 
@@ -110,4 +110,4 @@ def test_one_new_pin_twice_by_two_spellings_raises() -> None:
         parent="k1",
         joins=lambda s: {1: s["k1"].coil["A1"], "1": s["k1"].coil["A2"]},
     )
-    assert "pin '1' of J1 twice" in str(error)
+    assert "pin '1' of X2 twice" in str(error)

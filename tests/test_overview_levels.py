@@ -9,7 +9,6 @@ from typing import Any
 import fransys as fr
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
 from test_units_worked_example import _system_design
 
 from fransys_model.derive import (
@@ -29,7 +28,7 @@ from fransys_model.vocab.tables import units
 def model():
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    return fr.build(parts, design.draft(), system_document()).model
+    return fr.build(parts, design.draft()).model
 
 
 def test_the_system_level_is_the_block_diagram_rows(model) -> None:

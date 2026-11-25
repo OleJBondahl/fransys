@@ -54,7 +54,7 @@ def test_a_version_34_envelope_is_refused() -> None:
     stored["schema_version"] = 34
     with pytest.raises(SchemaVersionError) as excinfo:
         from_data(stored)
-    assert (excinfo.value.expected, excinfo.value.actual) == (36, 34)
+    assert (excinfo.value.expected, excinfo.value.actual) == (37, 34)
 
 
 def test_a_second_version_is_refused_and_the_same_one_is_a_no_op() -> None:

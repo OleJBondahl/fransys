@@ -2,12 +2,17 @@
 
 from fransys_model.derive.facts.cables import cable_product
 from fransys_model.derive.facts.cores import core_colour_at, core_colour_list
+from fransys_model.elecdef import core_colour
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.colours import split_colour
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.tables import conductors, facets_of
 lazy from fransys_model.vocab.connectivity import Conductor
+
+
+def _known(colour: str) -> bool:
+    """The empty colour (none recorded) or a code `elecdef` reads."""
+    return colour == "" or core_colour(colour) is not None
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -33,7 +38,7 @@ def coloured_conductors(
 
 def unknown_wire_colours(model: Model) -> tuple[WireFacet, ...]:
     """The wire facets whose colour is no IEC 60757 code; an empty colour is legal."""
-    return tuple(f for f in facets_of(model, WireFacet).values() if split_colour(f.colour) is None)
+    return tuple(f for f in facets_of(model, WireFacet).values() if not _known(f.colour))
 
 
 def unknown_core_colours(model: Model) -> tuple[tuple[CableProductFacet, int, str], ...]:
@@ -42,5 +47,5 @@ def unknown_core_colours(model: Model) -> tuple[tuple[CableProductFacet, int, st
         (product, index, colour)
         for product in facets_of(model, CableProductFacet).values()
         for index, colour in core_colour_list(product)
-        if split_colour(colour) is None
+        if not _known(colour)
     )

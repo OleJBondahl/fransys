@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from .blocks_members import make_env
 from .cut_costs import boundaries, column_items, positions
-from .cut_dp import Cut, cut_unit, page_findings
+from .cut_dp import Cut, page_findings, pages
 from .cut_ends import ref_pins
 from .cut_guard import unplaced
 from .cut_ledger import account, copies
@@ -91,8 +91,8 @@ def plan_unit(
     env: tuple[FlowGraph, PlacementProblem, Options],
     copyable: frozenset[str],
     measured: Measured | None = None,
-) -> tuple[Cut, Plan, bool]:
-    """The unit's DP input, its page plan, and whether min_fill was given up."""
+) -> tuple[Cut, Plan]:
+    """The unit's DP input and its page plan."""
     flow, problem, options = env
     page_w = problem.area.w - 2 * options.margin.w
     page_h = problem.area.h - options.page_headroom
@@ -111,8 +111,7 @@ def plan_unit(
         measured.arrows if measured else {},
         measured.rows if measured else {},
     )
-    plan, relaxed = cut_unit(cut)
-    return cut, plan, relaxed
+    return cut, pages(cut) or []
 
 
 def _cut_unit(
@@ -122,14 +121,14 @@ def _cut_unit(
     done: Done,
     measured: Measured | None = None,
 ) -> None:
-    cut, plan, relaxed = plan_unit(unit, env, copyable, measured)
+    cut, plan = plan_unit(unit, env, copyable, measured)
     first = len(done.pages) + 1
     page_of = {q: first + p for p, (i, k, _) in enumerate(plan) for q in range(i, k + 1)}
     done.pages.extend(_page_plans(unit, cut, plan, first, make_env(*env)))
     pins = ref_pins(env[0], positions(cut.seq, cut.by_id))
     done.refs.extend(references(cut, plan, page_of, copyable, pins))
     done.tags |= row_tags(cut, plan, env[0])
-    done.findings.extend(page_findings(cut, plan, first, unit.unit, relaxed=relaxed))
+    done.findings.extend(page_findings(cut, plan, first, unit.unit))
     done.where.update({n: page_of[i] for n, i in positions(cut.seq, cut.by_id).items()})
 
 

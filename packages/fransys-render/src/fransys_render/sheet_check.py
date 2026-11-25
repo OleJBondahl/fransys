@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from electrical_symbols import TITLE_BLOCK_MIN_BAND_MM, TITLE_BLOCK_MIN_WIDTH_MM
-from fransys_model.derive import documents, title_block_forms
+from fransys_model.derive import title_block_forms
 lazy from fransys_model.kernel import Finding, findings_sorted
 
 from ._sheet_draw import notice_room, title_rooms, title_symbol
@@ -66,15 +66,14 @@ def _document_findings(model: Model, subject: Id[Document], listing: DocumentShe
     frame = listing.frames[listing.sheet.id]
     if (short := _no_room(subject, listing.sheet.name, frame)) is not None:
         return [short], False
-    record = documents(model)[subject]
     sizes = listing.sizes
-    block = title_symbol(frame, notice=bool(record.notice))
+    block = title_symbol(frame, notice=bool(listing.notice))
     found = title_block_overflows(title_block_forms(model, subject, listing), listing, title_rooms(block))
     findings = [_overflow(subject, o.field, o.where, o.shown) for o in found]
     if (stack := _stack_overlap(subject, listing.sheet.name, frame.band, sizes)) is not None:
         findings.append(stack)
     width, capacity = notice_room(block, sizes)
-    unfit = bool(record.notice) and notice_unfit(record.notice, width_mm=width, font_mm=sizes.label, capacity=capacity)
+    unfit = bool(listing.notice) and notice_unfit(listing.notice, width_mm=width, font_mm=sizes.label, capacity=capacity)
     return findings, unfit
 
 

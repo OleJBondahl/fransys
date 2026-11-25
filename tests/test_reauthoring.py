@@ -89,7 +89,7 @@ def _reauthor(catalogue: Draft) -> Draft:
     _, _, k2, _, _, _ = pump(2, p2, 9)
 
     # -- =ES: e-stop, two contacts in one chain, nc_2 straddles into =P1 --
-    estop = d.item("EX-ESTOP-2NC", tag="S0", at=c1, group=es)
+    estop = d.item("EX-ESTOP-2NC", tag="S9", at=c1, group=es)
     wire(rail.outer, estop.fn("nc_1")["11"])
     wire(estop.fn("nc_1")["12"], estop.fn("nc_2")["21"])
     wire(estop.fn("nc_2")["22"], k1.fn("aux")["13"])

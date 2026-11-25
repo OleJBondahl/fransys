@@ -35,6 +35,23 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-wires",
     ),
     CodeInfo(
+        code="REFERENCE_OFF_DOCUMENT",
+        severity=Severity.WARNING,
+        stage="render",
+        who="consumer",
+        cause=(
+            "A printed reference points to a page that no page of its own document holds, and its "
+            "text names no document. The message "
+            "names the reference, its page and the target page."
+        ),
+        fix=(
+            "Print both drawing sets in one document, or print the target's drawing set in a "
+            "document so the reference names it. "
+            "Write: fr.document(<preset>, <subject>, cover=<cover>)"
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="SET_WITHOUT_PAGE",
         severity=Severity.ERROR,
         stage="render",
@@ -83,6 +100,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         fix=(
             "Add a document for the set's unit or location, passing its handle as the subject, "
             "or nest the unit in one that has one. "
+            "A unit whose own release prints it is placed with d.add(<unit>, <tag>, from_release=True). "
             "A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). "
             "Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)"
         ),

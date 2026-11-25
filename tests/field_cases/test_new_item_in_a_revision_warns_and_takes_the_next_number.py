@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import fransys as fr
 import pytest
 from _demo_board import demo_board
+from _model_build_cover import unit_document
 
 from fransys_model.vocab.tables import items, units
 
@@ -76,7 +77,7 @@ def _build(
     d = fr.design("demo_parts", place="C1")
     d.location("C1", "Cabinet")
     d.add(cab, "U1")
-    return fr.build(d, releases=releases)
+    return fr.build(d, unit_document("demo-cab"), releases=releases)
 
 
 def _inside(model: fr.Model, unit: Any, cabinet: Any) -> Any:
@@ -85,13 +86,13 @@ def _inside(model: fr.Model, unit: Any, cabinet: Any) -> Any:
 
 
 def _numbers(result: fr.BuildResult) -> dict[str, str]:
-    """Each relay and board by name: the unit's own printed text for it (a board by its `J1`)."""
+    """Each relay and board by name: the unit's own printed text for it (a board by its `X1`)."""
     model = result.model
     unit = next(u for u in fr.derive.units(model) if fr.derive.unit_release(model, u).name == "demo-cab")
     found = {}
     for item in items(model).values():
         if item.key[-1] != "U9" and _inside(model, item.unit, unit):
-            name = item.key[-2] if item.key[-1] == "J1" else item.key[-1]
+            name = item.key[-2] if item.key[-1] == "X1" else item.key[-1]
             found[name] = fr.derive.printed_designation(model, item.id, unit=unit)
     return found
 
@@ -103,14 +104,14 @@ def _warnings(result: fr.BuildResult) -> list[fr.Finding]:
 def test_a_new_floating_relay_warns_and_takes_the_next_free_number(released: Path) -> None:
     first = _build(1, relays=("k_a", "k_b"), modules=("m1", "m2"))
     assert _warnings(first) == []
-    assert _numbers(first) == {"k_a": "-K1", "k_b": "-K2", "m1": "-U1-J1", "m2": "-U2-J1"}
+    assert _numbers(first) == {"k_a": "-K1", "k_b": "-K2", "m1": "-U1-X1", "m2": "-U2-X1"}
     # revision 1.2 retires `k_b` (K2) and adds `k_c`: K3, never K2 again
     second = _build(2, relays=("k_a", "k_c"), modules=("m1", "m2"), releases=released)
     (warning,) = _warnings(second)
     assert warning.severity is fr.Severity.INFO
     assert "-U1-K3" in warning.message  # the printed name, not the key
     assert "K3" in warning.message
-    assert _numbers(second) == {"k_a": "-K1", "k_c": "-K3", "m1": "-U1-J1", "m2": "-U2-J1"}
+    assert _numbers(second) == {"k_a": "-K1", "k_c": "-K3", "m1": "-U1-X1", "m2": "-U2-X1"}
 
 
 def test_a_new_item_with_a_written_tag_gives_no_such_finding(released: Path) -> None:
@@ -125,7 +126,7 @@ def test_a_new_item_with_a_written_tag_gives_no_such_finding(released: Path) -> 
     assert _numbers(second)["k_n"] == "-K7"
     assert _numbers(second)["k_a"] == "-K1"
     # the boards are tagged, so only the relays can warn
-    assert _numbers(second)["m2"] == "-U2-J1"
+    assert _numbers(second)["m2"] == "-U2-X1"
 
 
 def test_retagging_a_released_item_is_designation_moved_at_release(own_releases: Path) -> None:

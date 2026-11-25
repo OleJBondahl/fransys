@@ -16,23 +16,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
-        code="REFERENCE_OFF_DOCUMENT",
-        severity=Severity.WARNING,
-        stage="render",
-        who="consumer",
-        cause=(
-            "A printed reference points to a page that no page of its own document holds, and its "
-            "text names no document. The message "
-            "names the reference, its page and the target page."
-        ),
-        fix=(
-            "Print both drawing sets in one document, or print the target's drawing set in a "
-            "document so the reference names it. "
-            "Write: fr.document(<preset>, <subject>, cover=<cover>)"
-        ),
-        page="findings-render",
-    ),
-    CodeInfo(
         code="TITLE_BLOCK_NOTICE_OVERFLOW",
         severity=Severity.WARNING,
         stage="render",

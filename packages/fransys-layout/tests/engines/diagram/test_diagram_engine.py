@@ -5,7 +5,7 @@ from functools import cache
 from typing import Any
 
 import pytest
-from diagram_models import chain, loose, one_box, station
+from diagram_models import chain, loose, one_box, plugs, station
 
 from electrical_symbols import LIBRARY
 from fransys_layout import lay_out_diagrams
@@ -16,8 +16,10 @@ from fransys_layout.geometry import WIRING_GRID, Point
 from fransys_layout.lint import lint_diagram
 from fransys_layout.lint.codes import (
     DIAGRAM_BOX_OVERLAP,
+    DIAGRAM_LABEL_STRUCK,
     DIAGRAM_LINE_OFF_BOX,
     DIAGRAM_LINE_THROUGH_BOX,
+    DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
 )
 from fransys_model.kernel import Severity
@@ -162,3 +164,14 @@ def _cut_facts():
 def test_the_read_findings_come_through(model, code):
     assert code in {f.code for f in lay_out_diagrams(model(), LIBRARY)[1]}
     assert code not in {f.code for f in lay_out_diagrams(station(), LIBRARY)[1]}
+
+
+_SHARED = (5, ((4, 1), (2, 3), (2, 1), (5, 4), (2, 4), (1, 4)))
+_STRUCK = (6, ((6, 2), (1, 2), (2, 3), (3, 6), (2, 4), (3, 5), (5, 1), (1, 5)))
+
+
+@pytest.mark.parametrize(("count", "edges"), [_SHARED, _STRUCK], ids=["two-cables-between-boxes", "perpendicular-line-and-label"])
+def test_dense_cables_draw_every_line_on_its_own_track_clear_of_every_label(count, edges):
+    layout, findings = lay_out_diagrams(plugs(count, edges), LIBRARY)
+    assert sum(len(sheet.lines) for diagram in layout.diagrams for sheet in diagram.sheets) == len(edges)
+    assert not {f.code for f in findings} & {DIAGRAM_LINES_SHARE_TRACK, DIAGRAM_LABEL_STRUCK}

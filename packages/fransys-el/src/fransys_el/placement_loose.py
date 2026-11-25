@@ -22,11 +22,13 @@ def without_loose(env: Env, syms: Sequence[Sym], nets: Sequence[Net], anchors: S
     """The symbols a net or anchor touches, and a `Skipped` per function whose symbol none does.
 
     A function on an item that keeps another, or declared `unused=`, is a spare; else FUNCTION_UNWIRED, but a rail terminal none (R911).
+    A unit's boundary function is never loose (model-0426, R3956): its symbol is kept with its pins open, a rail terminal aside.
     """
-    touched = {ref.sym for net in nets for ref in net.pins} | {a.pin.sym for a in anchors}
+    item = {f: function_item(env.model, function_of(env.model, f)) for f in env.owner}
+    edge = {sid for f, sid in env.owner.items() if function_of(env.model, f) in env.boundary and not is_rail_terminal(env.model, item[f])}
+    touched = {ref.sym for net in nets for ref in net.pins} | {a.pin.sym for a in anchors} | edge
     kept = tuple(s for s in syms if s.id in touched)
     gone = {s.id for s in syms} - touched
-    item = {f: function_item(env.model, function_of(env.model, f)) for f in env.owner}
     live = {item[f] for f, sid in env.owner.items() if sid in touched}
     lost = {
         Skipped("function", render_id(f), unwired_reason(env.model, function_of(env.model, f), kept_sibling=item[f] in live))

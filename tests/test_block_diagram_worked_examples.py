@@ -39,7 +39,7 @@ def _station(*, second_strip=False):
         u.boundary(handle)
     field = d.group("EXT", "Field")
     ext = d.location("EXT", "External")
-    x0 = d.strip("X0", external=True, at=ext)
+    x0 = d.strip("X2", external=True, at=ext)
     t0 = x0.terminal("DEMO-TB-2.5", group=field)
     m1 = d.item("DEMO-MOTOR-4KW", tag="M1", group=field, at=ext)
     m2 = d.item("DEMO-MOTOR-4KW", tag="M2", group=field, at=ext)

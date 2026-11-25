@@ -185,8 +185,3 @@ def test_every_ruled_name_is_the_model_derive_object():
     for name in RULED:
         model_name = _MODEL_NAME.get(name, name)
         assert getattr(fr.derive, name) is getattr(model_derive, model_name), name
-
-
-def test_a_dropped_name_is_not_on_the_facade():
-    assert not hasattr(fr.derive, "box_pairs")
-    assert hasattr(model_derive, "box_pairs")

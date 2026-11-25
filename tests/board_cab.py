@@ -30,7 +30,7 @@ board = fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01"
 @fr.unit("demo-cab", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def board_cab(u: Any) -> Open:
     nested = u.add(board, "U1")
-    j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
+    j1 = u.device("X1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     for n in (1, 2):
         lamp = u.device(f"H{n}", "DEMO-LAMP-24")
         u.series(j1[n], lamp["1"], wire=(BK, 0.5))

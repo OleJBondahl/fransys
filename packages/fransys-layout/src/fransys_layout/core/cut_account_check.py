@@ -11,6 +11,7 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from .cut_ledger import standing
+from .cut_pieces import key
 from .unionfind import UnionFind
 from .values import Finding, PinRef
 
@@ -27,18 +28,14 @@ __all__ = ("account_findings", "unaccounted")
 type Pair = tuple[PinRef, PinRef]
 
 
-def _key(pin: PinRef) -> str:
-    return f"{pin.sym}/{pin.pin}"
-
-
 def _state(joined: UnionFind, carried: Collection[str], end: Pair, stubs: int) -> str:
     """What is wrong with `end`, given the pieces that join pins, the pieces a carrier stands in and the stubs that name it; "" when nothing."""
     near, far = end
-    if joined.find(_key(near))[0] == joined.find(_key(far))[0]:
+    if joined.find(key(near))[0] == joined.find(key(far))[0]:
         return "accounted twice: drawn as a wire and named by a stub" if stubs else ""
     if stubs > 1:
         return "accounted twice: named by two stubs"
-    return "" if joined.find(_key(near))[0] in carried else "not accounted: no wire and no marker stands for it"
+    return "" if joined.find(key(near))[0] in carried else "not accounted: no wire and no marker stands for it"
 
 
 def account_findings(
@@ -56,8 +53,8 @@ def account_findings(
     joined = UnionFind()
     for piece in pieces:
         for pin in piece[1:]:
-            joined.union(_key(piece[0]), _key(pin))
-    carried = {joined.find(_key(p))[0] for p in stood}
+            joined.union(key(piece[0]), key(pin))
+    carried = {joined.find(key(p))[0] for p in stood}
     named = Counter((p, far) for m in markers for p in (m.end, *m.also) for far in m.far)
     out = []
     for near, far in far_ends:

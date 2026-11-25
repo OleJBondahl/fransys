@@ -1,6 +1,6 @@
 """Field case: a powered device whose connector function, on the unit's interface, is left unwired builds.
 The bug (v0.21.1): the build raised KeyError Id(kind='port') in write_skipped._spare_functions, reading port ids as function ids.
-Fixed by el-0063, spare subjects are read through function_of, and SPARE_FUNCTIONS is an INFO finding naming the item."""
+Fixed by el-0063, spare subjects are read through function_of; since R3956 the interface connector is drawn, no SPARE_FUNCTIONS."""
 
 from typing import NamedTuple
 
@@ -33,4 +33,4 @@ def test_the_unwired_connector_is_a_spare_function_info() -> None:
     errors = [f.message for f in result.findings if f.severity == fr.Severity.ERROR]
     assert errors == []
     spare = [f for f in result.findings if f.code == "SPARE_FUNCTIONS"]
-    assert [f.severity for f in spare] == [fr.Severity.INFO]
+    assert spare == []  # the connector is a boundary function: drawn with open pins, never spare (model-0426, R3956)

@@ -5,7 +5,9 @@ then gave UNUSED_POINT_WIRED in the system build. Fixed by model-0426 (designer 
 from typing import Any, NamedTuple
 
 import fransys as fr
+import pytest
 from _expected_codes import expect_codes
+from _model_build_cover import unit_document
 
 _CODES = {"FUNCTION_HALF_CONNECTED", "FUNCTION_NOT_WIRED"}
 
@@ -51,3 +53,32 @@ def test_the_system_build_with_the_carrier_wiring_it_is_clean() -> None:
 
 def test_the_system_build_without_the_carriers_wire_still_reports() -> None:
     expect_codes(_built(wired=False), "FUNCTION_HALF_CONNECTED", "BOUNDARY_UNCONNECTED")
+
+
+@fr.unit("idle-interface", revision=1, interface_version=1, date="2026-11-25", text="x", by="AB")
+def _idle(u: Any) -> _Io:
+    return _Io(u.device("X1", "DEMO-LAMP-24", interface=True))  # the whole interface device, no wire inside the unit
+
+
+def test_a_wholly_unwired_interface_device_of_a_unit_alone_is_drawn_with_open_pins_and_no_finding() -> None:
+    """KI-1519 (designer R3956): a boundary function is no loose function (model-0426), so NO-SILENT-DROP leaves it on the page."""
+    d = fr.design("demo_parts")
+    d.add(_idle, "U1")
+    result = fr.build(d, unit_document("idle-interface"))
+    assert [f.code for f in result.findings if f.code == "FUNCTION_NOT_WIRED"] == []
+    assert [t.text for dr in result.drawings.values() for t in dr.texts] == ["-X1"]
+
+
+@fr.unit("idle-strip", revision=1, interface_version=1, date="2026-11-25", text="x", by="AB")
+def _strip(u: Any) -> _Io:
+    return _Io(u.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=(1, 2)))  # an interface strip no conductor reaches
+
+
+@pytest.mark.rule("SPARE-TERMINALS")
+def test_an_unwired_interface_strip_terminal_of_a_unit_alone_is_a_spare_terminal() -> None:
+    """KI-1519 (designer R3966): an interface terminal no conductor reaches is spare: one INFO, no loose-function warning."""
+    d = fr.design("demo_parts")
+    d.add(_strip, "U1")
+    findings = fr.build(d, unit_document("idle-strip")).findings
+    assert [f.severity for f in findings if f.code == "SPARE_TERMINALS"] == [fr.Severity.INFO]
+    assert [f.code for f in findings if f.code == "FUNCTION_NOT_WIRED"] == []

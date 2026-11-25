@@ -32,7 +32,7 @@ def _cab(u: fr.Design) -> _Io:
     k1 = u.device("K1", "DEMO-CTR-LEADS")
     h1 = u.device("H1", "DEMO-LAMP-24")
     u.series(dc.plus, f1.element, s1.no, u.parallel(k1.coil, h1.lamp), dc.minus, wire=0.75)
-    x0 = u.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = u.terminal_strip("X1", "DEMO-TB-2.5", 4)
     out = u.terminal_strip("X2", "DEMO-TB-2.5", 3)
     mains = u.ac_supply("400V", 230, x0[1], x0[2], x0[3])
     u.series(mains, u.device("Q1", "DEMO-MCB-3P").element, out, wire=0.75)

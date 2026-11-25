@@ -14,7 +14,7 @@ def _build() -> fr.BuildResult:
     d.project(title="Feed", number="B-1", customer="Example Co", revision=1, author="XX")
     d.revision(1, date="2026-10-19", text="First issue", created="XX")
     with d.function("M", "Feeder"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
+        x0 = d.terminal_strip("X2", "DEMO-TB-2.5", 4, pe="DEMO-TB-PE-2.5")
         xa = d.terminal_strip("XA", "DEMO-TB-2.5-TWIN", 2)
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3, pe="DEMO-TB-PE-2.5")
         f, q = d.device("F21", "DEMO-MCB-2P"), d.device("Q21", "DEMO-CTR-3P-NC")

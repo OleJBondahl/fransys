@@ -11,8 +11,8 @@ _PIN_ORDER = ["A2", "A10"]
 @pytest.fixture(scope="module")
 def built() -> tuple[fr.BuildResult, object]:
     d = fr.design("demo_parts", place="C1")
-    j1 = d.device("J1", "DEMO-CONN-2P-LETTERED")
-    j2 = d.device("J2", "DEMO-CONN-2P-LETTERED")
+    j1 = d.device("X1", "DEMO-CONN-2P-LETTERED")
+    j2 = d.device("X2", "DEMO-CONN-2P-LETTERED")
     cable = d.cable("W1", "DEMO-CBL-4G1.5", name="cable")
     for core, pin in enumerate(_PIN_ORDER, start=1):
         cable.core(core, j1.x1[pin], j2.x1[pin])

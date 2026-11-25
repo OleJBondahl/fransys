@@ -39,7 +39,7 @@ def built() -> fr.BuildResult:
     cabinet = d.location("CAB", "Cabinet")
     cab = d.add(_cabinet, "U1", place=None)
     with d.function("IN", "Incoming"):
-        x0 = d.terminal_strip("X0", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
+        x0 = d.terminal_strip("X2", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
         cable = d.cable("W1", "DEMO-CBL-4G1.5", length_m=10)
         cable.core(1, x0.run("L1", 1)[1], cab.L1[1])
         cable.core(2, x0.run("N", 1)[1], cab.N[1])

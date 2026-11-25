@@ -27,7 +27,7 @@ def card_case_drafts(channels: int = 32, cards: int = 1) -> tuple[Any, ...]:
         with d.function(f"PLC{n}" if cards > 1 else "PLC", "Card"):
             card = d.device(f"A{n}", None, pins=chunk, external=True)
         boxes.update(dict.fromkeys(chunk, card))
-    zero = d.terminal_strip("X0", "DEMO-TB-2.5", channels, bridged=True, rail=True)  # a point takes one conductor (R1266)
+    zero = d.terminal_strip("X1", "DEMO-TB-2.5", channels, bridged=True, rail=True)  # a point takes one conductor (R1266)
     rail = d.terminal_strip("X24", "DEMO-TB-2.5", 1)
     d.dc_supply("S", plus=rail[1], minus=zero[1], voltage=24)
     with d.function("B", "Relays"):

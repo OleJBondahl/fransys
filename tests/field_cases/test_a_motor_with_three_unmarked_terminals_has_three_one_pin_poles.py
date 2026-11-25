@@ -17,7 +17,7 @@ def built() -> fr.Model:
     d.location("L0", "Workshop")
     with d.function("DRV", "Drive"):
         m = d.device("M1", "DEMO-MOTOR-4KW", place="L0")
-        for pin, far in (("U", "J1"), ("V", "J2"), ("W", "J3")):
+        for pin, far in (("U", "X1"), ("V", "X2"), ("W", "X3")):
             d.series(m[pin], d.device(far, "DEMO-CONN-2P", place="L0")[1], wire=(BU, 0.5))
     return fr.build(d).model
 

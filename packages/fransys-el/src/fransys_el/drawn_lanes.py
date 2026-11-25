@@ -27,7 +27,6 @@ XY = tuple[int, int]
 type _Node = tuple[Id[Page], XY]
 _TRUNK = "trunk"  # the layout's only fact for a lane wire (DrawnWire has no role field): a Core candidate
 _STEP = 2  # pitches between two lanes of one bundle: a net with no lane leaves a row empty (R3372)
-_SHORT = ""  # the net of a piece that holds ports of two nets: already a short, so it joins nothing
 
 
 @dataclass(frozen=True)

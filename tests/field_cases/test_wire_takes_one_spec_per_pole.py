@@ -32,7 +32,7 @@ def _strip_to_breaker(wire: Any) -> fr.Design:
 
 def _supply_to_strip(wire: Any) -> fr.Design:
     d = fr.design("demo_parts", place="C1")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = d.terminal_strip("X3", "DEMO-TB-2.5", 4)
     out = d.terminal_strip("X2", "DEMO-TB-2.5", 3)
     mains = d.ac_supply("400V", 230, x0[1], x0[2], x0[3])
     d.series(mains, d.device("Q1", "DEMO-MCB-3P").element, out, wire=wire)
@@ -84,11 +84,11 @@ def test_one_spec_still_wires_every_pole() -> None:
 def test_a_parallel_branch_takes_the_colour_of_its_pole() -> None:
     """Two breakers in parallel: each pole keeps its colour on both branches."""
     d = fr.design("demo_parts", place="C1")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN", 4)
+    x0 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN", 4)
     out = d.terminal_strip("X2", "DEMO-TB-2.5-TWIN", 3)  # two branches land on a point (R1266)
     mains = d.ac_supply("400V", 230, x0[1], x0[2], x0[3])
     q1, q2 = (d.device(tag, "DEMO-MCB-3P") for tag in ("Q1", "Q2"))
     d.series(mains, d.parallel(q1.element, q2.element), out, wire=_POLES)
     rows = fr.derive.wire_rows(fr.build(d).model)
-    by_pole = {(r.from_, r.colour) for r in rows if r.from_.startswith("+C1-X0")}
-    assert by_pole == {("+C1-X0:1", BN), ("+C1-X0:2", BK), ("+C1-X0:3", GY)}
+    by_pole = {(r.from_, r.colour) for r in rows if r.from_.startswith("+C1-X3")}
+    assert by_pole == {("+C1-X3:1", BN), ("+C1-X3:2", BK), ("+C1-X3:3", GY)}

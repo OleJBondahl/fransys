@@ -90,7 +90,7 @@ def _wire_ends_at(drawing, x, y):
 
 
 def _rack_of_three_modules():
-    """Modules whose position order (DO9, DO2, DO5) runs against their keys and their tags,
+    """Modules whose position order (KE9, KE2, KE5) runs against their keys and their tags,
     each with its own relay wired to its first channel."""
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
@@ -98,9 +98,9 @@ def _rack_of_three_modules():
     strip = d.strip("X1", at=c1)
     wire = d.wiring(colour="BU", gauge="0.5")
     for name, tag, position, relay in (
-        ("z", "DO9", 1, "k3"),
-        ("a", "DO2", 2, "k2"),
-        ("m", "DO5", 3, "k1"),
+        ("z", "KE9", 1, "k3"),
+        ("a", "KE2", 2, "k2"),
+        ("m", "KE5", 3, "k1"),
     ):
         module = d.item("DEMO-PLC-DO-2", tag=tag, name=name, parent=rack, position=position, at=c1, group=plc)
         k = d.item("DEMO-RLY-2CO-24", tag=relay.upper(), name=relay, at=c1, group=plc)
@@ -146,11 +146,11 @@ def test_several_groups_share_one_page() -> None:
 
 
 def _plc_modules():
-    """DO1 with both channels wired to relay coils; DI1 with both channels unwired."""
+    """KE1 with both channels wired to relay coils; KE3 with both channels unwired."""
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
-    do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
-    di = d.item("DEMO-PLC-DI-2", tag="DI1", name="di", at=c1, group=plc)
+    do = d.item("DEMO-PLC-DO-2", tag="KE1", name="do", at=c1, group=plc)
+    di = d.item("DEMO-PLC-DI-2", tag="KE3", name="di", at=c1, group=plc)
     wire = d.wiring(colour="BU", gauge="0.5")
     strip = d.strip("X1", at=c1)
     for name, channel in (("k1", "do_1"), ("k2", "do_2")):
@@ -186,7 +186,7 @@ def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> 
 
 
 def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
-    """Wired DO1 and unwired DI1 are each one generic box; no plc-channel end exists."""
+    """Wired KE1 and unwired KE3 are each one generic box; no plc-channel end exists."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
     #     keeps a wired one-port channel as its own view (gone with layout-0099)
     model = _plc_modules()
@@ -283,7 +283,7 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
     # UNDO: fransys_el/placement_sides.py:half_split puts the wired pin on S
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
-    do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
+    do = d.item("DEMO-PLC-DO-2", tag="KE1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     _close(d, c1, plc, k1.fn("coil")["A2"])
@@ -335,7 +335,7 @@ def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_th
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-24", text="First issue", created="XX")
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
-    do = d.item("DEMO-PLC-DO-3", tag="DO1", name="do", at=c1, group=plc)
+    do = d.item("DEMO-PLC-DO-3", tag="KE1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     _close(d, c1, plc, k1.fn("coil")["A2"])

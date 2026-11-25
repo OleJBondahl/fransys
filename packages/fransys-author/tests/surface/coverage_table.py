@@ -12,11 +12,6 @@ def surface(spelling: str) -> tuple[Entry, ...]:
     return (("surface", spelling),)
 
 
-def pending(order: str, spelling: str) -> tuple[Entry, ...]:
-    """One pending entry: `order` names the pending work that lands the spelling."""
-    return (("pending", order, spelling),)
-
-
 def dropped(reason: str) -> tuple[Entry, ...]:
     """One dropped entry."""
     return (("dropped", reason),)

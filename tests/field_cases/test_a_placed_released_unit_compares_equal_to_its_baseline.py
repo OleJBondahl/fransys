@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 from fransys.colours import RD
 
 
@@ -26,11 +27,11 @@ def test_a_placed_released_unit_compares_equal_to_its_baseline(place: str | None
     """The standalone listing keeps its bytes, and the nested unit compares equal to it, placed or supplied or not."""
     alone = fr.design("demo_parts")
     alone.add(_leaf, "U1")
-    fr.release(fr.build(alone, releases=tmp_path), tmp_path, unit="demo-leaf")
+    fr.release(fr.build(alone, unit_document("demo-leaf"), releases=tmp_path), tmp_path, unit="demo-leaf")
     listing = (tmp_path / "demo-leaf/1.1/baseline/listing.json").read_bytes()
     assert hashlib.sha256(listing).hexdigest() == "d908b8dbb5c32f29e55bb10282be2b85853fcffb67e7f4c840bc59f8744f9c75"
     d = fr.design("demo_parts")
     feed = d.add(_leaf, "U1", place=place).feed
     if supply:
         d.ac_supply("400V", 230, feed[1], feed[2], feed[3], n=feed[4], names=("L1", "L2", "L3", "N"))
-    assert "BASELINE_DIFFERS" not in [f.code for f in fr.verify(fr.build(d, releases=tmp_path), tmp_path)]
+    assert "BASELINE_DIFFERS" not in [f.code for f in fr.verify(fr.build(d, unit_document("demo-leaf"), releases=tmp_path), tmp_path)]

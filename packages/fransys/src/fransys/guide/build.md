@@ -255,9 +255,9 @@ def board(revision, *, spare=None):
     return release_design
 
 
-release_result = fr.build(board(1))
-release_errors = [f for f in fr.check(release_result) if f.severity is fr.Severity.ERROR]
-assert release_errors == [], release_errors
+doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-io-board", cover=cabinet_cover)
+release_result = fr.build(board(1), doc)
+assert not [f for f in fr.check(release_result) if f.severity is fr.Severity.ERROR]
 
 target = fr.release(release_result, Path("releases"), unit="demo-io-board")
 assert target == Path("releases") / "demo-io-board" / "1.1"
@@ -284,9 +284,8 @@ into `data/changes.csv`) once a previous release exists; the first release of a 
 file. A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.
 
 ```python
-second_result = fr.build(board(2, spare="X2"))
-second_errors = [f for f in fr.check(second_result) if f.severity is fr.Severity.ERROR]
-assert second_errors == [], second_errors
+second_result = fr.build(board(2, spare="X2"), doc)
+assert not [f for f in fr.check(second_result) if f.severity is fr.Severity.ERROR]
 
 preview = fr.diff(second_result, Path("releases"), unit="demo-io-board")
 assert "Added `-X2`" in preview

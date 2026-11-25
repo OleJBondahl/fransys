@@ -20,7 +20,7 @@ from fransys_model.derive import (
 
 from .drawn_finding import drawn_finding
 from .drawn_power import POWER_KEYS, page_unit
-from .drawn_where import stand_places, where_text
+from .drawn_where import where_targets, where_text
 from .kit_keys import function_of
 from .write_tables import HEAD
 
@@ -95,8 +95,7 @@ def _where(model: Model, net: Netlist) -> Iterator[_Row]:
         for text in (t for t in part.drawing.texts if getattr(t, "kind", "") == "WHERE" and net.keys.get(t.owner or "") is not None):
             function = function_of(model, net.keys[text.owner or ""])
             here = next((r for r in rows.get(function, ()) if r[0] == page), None)
-            others = (r for r in rows.get(function, ()) if r[0] != page)
-            wanted = {where_text(model, here, there) for there in (*others, *(at for _, at in stand_places(model, function)))} if here else set()
+            wanted = {where_text(model, here, there) for there in where_targets(model, function, rows.get(function, ()), page)} if here else set()
             if text.text not in wanted:
                 yield (
                     (function,),

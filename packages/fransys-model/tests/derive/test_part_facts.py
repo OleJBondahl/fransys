@@ -11,7 +11,6 @@ from examples import relay_part_bundle
 
 from fransys_model.derive import (
     THROW_WORDS,
-    channel_signal,
     conductor_of,
     contact_kind_of,
     implied_rest,
@@ -27,8 +26,7 @@ from fransys_model.derive.facts.part_poles import unlinked_poles
 from fransys_model.elecdef import LinkKind, PinRole, Side
 from fransys_model.kernel import Id, ModelError
 from fransys_model.vocab import CONDUCTOR_MARKS, ProtectionType
-from fransys_model.vocab.enums import ConductorMark, FunctionKind, PortBoundary, SignalType
-from fransys_model.vocab.facets import PlcChannelFacet
+from fransys_model.vocab.enums import ConductorMark, FunctionKind, PortBoundary
 from fransys_model.vocab.templates import InternalLink, PortTemplate
 lazy from fransys_model.derive.rows_poles import Pole
 
@@ -218,20 +216,6 @@ def test_the_conductor_table_copies_the_parts_markings() -> None:
     assert CONDUCTOR_MARKS["W1"] is ConductorMark.L3
     assert set(CONDUCTOR_MARKS.values()) == set(ConductorMark)
     assert len(CONDUCTOR_MARKS) == len(ConductorMark) + 8
-
-
-def test_channel_signal_reads_the_facet_or_none() -> None:
-    """A channel template gives its facet's signal; any other template gives none."""
-    template = Id(kind="function_template", value="2" * 32)
-    facet = PlcChannelFacet(
-        id=Id(kind="facet.plc_channel", value="3" * 32),
-        key=("f",),
-        subject=template,
-        signal=SignalType.AI_CURRENT,
-        channel=1,
-    )
-    assert channel_signal(template, {template: facet}) is SignalType.AI_CURRENT
-    assert channel_signal(_FUNCTION, {template: facet}) is None
 
 
 def test_poles_of_one_function_of_a_bundle() -> None:

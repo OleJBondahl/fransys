@@ -79,28 +79,25 @@ _CORE: tuple[CodeInfo, ...] = (
         code="OUTLINE_NO_ROOM",
         severity=Severity.ERROR,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "A nested unit stands on its parent's page, but its frame does not fit the page or would hold "
             "another unit's symbol; the unit is drawn with no frame."
         ),
-        fix=(
-            "Move the unit's devices together on the page, or give the unit its own page. "
-            "Write: d.function(name, text) to place each device in one group."
-        ),
+        fix="No call clears this: a Fransys layout limit, tracked in KI-1517.",
         page="findings-render",
     ),
     CodeInfo(
         code="ALIGN_DROPPED",
         severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "Symbols of a row group or a band rank, mated pins, or the legs of a trunk, "
             "cannot stand level because the stacks in their columns contradict it; "
             "layout dropped the alignment."
         ),
-        fix=("Shorten the stack, or move the members to the same end of their columns. Write: d.series(a, b, c) to stand a path in one column."),
+        fix="No call clears this: a Fransys layout limit, tracked in KI-127 and KI-712.",
         page="findings-render",
     ),
     CodeInfo(
@@ -142,20 +139,20 @@ _CORE: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="FILL_UNDER_MIN",
-        severity=Severity.WARNING,
+        severity=Severity.INFO,
         stage="render",
-        who="consumer",
-        cause="A page is filled less than the minimum because no cut of the blocks fills it more.",
-        fix=("Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group."),
+        who="note",
+        cause="A page is filled less than the minimum because no cut of the blocks, measured as placed, fills it more.",
+        fix="Nothing is wrong; the page holds all it can without splitting a block.",
         page="findings-render",
     ),
     CodeInfo(
         code="HEAD_OFF_LEGS",
         severity=Severity.WARNING,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause="A trunk is cut by a page and its head stands on the page with fewer of its legs.",
-        fix=("Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first."),
+        fix="No call clears this: a Fransys layout limit, tracked in KI-1008 and KI-1264.",
         page="findings-render",
     ),
     CodeInfo(
@@ -167,7 +164,7 @@ _CORE: tuple[CodeInfo, ...] = (
             "A symbol is drawn but stands in no cell of any column, or in more cells than it has "
             "elements, so layout places it by no rule; the message names it."
         ),
-        fix="No call clears this: report it with the smallest model that shows it.",
+        fix="No call clears this: a Fransys layout limit, tracked in KI-1515.",
         page="findings-render",
     ),
     CodeInfo(
@@ -186,15 +183,12 @@ _CORE: tuple[CodeInfo, ...] = (
         code="WIRE_MEETS_NET",
         severity=Severity.ERROR,
         stage="render",
-        who="consumer",
+        who="Fransys",
         cause=(
             "A fixed wire (a lane wire, join, trunk or drop) meets another net's wire and no "
             "detour exists, so it is drawn as placed; the message names the wire and its ends."
         ),
-        fix=(
-            "Move a symbol of <subject> or widen the gap beside it so the wire has a free path. "
-            "Write: d.add(unit, tag) to move the device into a unit."
-        ),
+        fix="No call clears this: a Fransys layout limit, tracked in KI-521.",
         page="findings-wires",
     ),
     CodeInfo(

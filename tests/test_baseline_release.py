@@ -12,6 +12,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from _expected_codes import expect_codes
+from _model_build_cover import unit_document
 from fransys_author.design import Design
 from fransys_reports import changes_csv, changes_markdown
 
@@ -242,7 +243,7 @@ def _system_result(*, extra_item):
     if extra_item:
         loc = design.location("SYS", "System")
         grp = design.group("SYS", "System")
-        design.item("DEMO-CONN-2P", tag="Z1", at=loc, group=grp)
+        design.item("DEMO-CONN-2P", tag="A1", at=loc, group=grp)
     result = fr.build(parts, design.draft())
     _assert_no_errors(result)
     return result
@@ -335,7 +336,7 @@ def colour_twin(released, tmp_path_factory):
     parts = fr.parts("demo_parts")
     design = Design(parts)
     cabinet_scope, board_scope = _cabinet_unit(design.scope("cab"), name="C1", wire_colour="BK")
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(cabinet_scope))
     _assert_no_errors(result)
 
     into = _copy_into(tmp_path_factory, base_into)
@@ -378,7 +379,7 @@ def _build_interface_board(  # noqa: PLR0913 -- one keyword per release/scenario
         x2 = u.item("DEMO-CONN-2P", tag="X2", parent=board, group=grp)
         u.boundary(x2)
         u.unused(x2)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -502,7 +503,7 @@ def _build_rating_board(parts, *, revision, wire_colour="BU"):
     wire(x1["1"], k1.fn("coil")["A1"])
     wire(x1["2"], k1.fn("coil")["A2"])
     u.boundary(x1)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -540,7 +541,7 @@ def _module_unit(s, *, wire_colour="BU"):
     u = s.unit("baseline-module", revision=1, interface="1")
     u.revision(1, date="2026-09-26", text="First release", created="OJB")
     grp = u.group("MOD", "Module")
-    u.item(None, tag="MOD1", group=grp)
+    u.item(None, tag="A2", group=grp)
     board_x1, board_scope = _board_unit(u.scope("brd"), wire_colour=wire_colour)
     u.boundary(board_x1)
     return u, board_x1, board_scope
@@ -564,7 +565,7 @@ def two_level_scenario(tmp_path_factory):
         cab.item("DEMO-CONN-2P", tag="P1", at=c, group=grp)
         module_scope, board_x1, board_scope = _module_unit(cab.scope("mod", at=c), wire_colour=wire_colour)
         cab.unused(board_x1)
-        result = fr.build(parts, design.draft())
+        result = fr.build(parts, design.draft(), unit_document(cab))
         _assert_no_errors(result)
         return result, board_scope, module_scope, cab
 
@@ -610,7 +611,7 @@ def _relay_board(parts, *, revision, coil_b, aux, releases=None):
     u.item("DEMO-RLY-2CO-24", name="coil-a")
     if coil_b:
         u.item("DEMO-RLY-2CO-24", name="coil-b")
-    result = fr.build(parts, design.draft(), releases=releases)
+    result = fr.build(parts, design.draft(), unit_document(u), releases=releases)
     return result, u
 
 
@@ -659,7 +660,7 @@ def test_two_releases_and_a_standalone_build_give_byte_equal_numbering(released,
     parts = fr.parts("demo_parts")
     design = Design(parts)
     standalone_cabinet_scope, standalone_board_scope = _cabinet_unit(design.scope("cab"), name="C1")
-    standalone_result = fr.build(parts, design.draft())
+    standalone_result = fr.build(parts, design.draft(), unit_document(standalone_cabinet_scope))
     _assert_no_errors(standalone_result)
     into_c = tmp_path_factory.mktemp("numbering_c")
     fr.release(standalone_result, into_c, unit=standalone_board_scope)
@@ -679,7 +680,7 @@ def _tagged_relay(parts, *, revision, tag):
     u = design.scope("tag").unit("tagged-relay-unit", revision=revision, interface="1")
     u.revision(revision, date="2026-09-26", text=f"Revision {revision}", created="OJB")
     u.item("DEMO-RLY-2CO-24", name="coil", tag=tag)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -692,7 +693,8 @@ def _partless_tagged_item(parts, *, revision, tag):
     u = design.scope("hns").unit("partless-harness-unit", revision=revision, interface="1")
     u.revision(revision, date="2026-09-26", text=f"Revision {revision}", created="OJB")
     u.item(None, name="hns", tag=tag)
-    result = fr.build(parts, design.draft())
+    u.item("DEMO-RLY-2CO-24", name="coil")  # a drawn item, so the unit document has a drawing
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -750,7 +752,7 @@ def _board_with_nested_relay(parts, *, revision, board_tag):
     u.revision(revision, date="2026-09-26", text=f"Revision {revision}", created="OJB")
     board = u.item("DEMO-PCB-IO", name="board", tag=board_tag)
     u.item("DEMO-RLY-2CO-24", tag="K1", parent=board)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -792,7 +794,7 @@ def _mixed_partless_and_coded(parts, *, revision, keep_both):
         u.item("DEMO-RLY-2CO-24", name="coil", tag="K1")
     else:
         u.item("DEMO-RLY-2CO-24", name="only-survivor", tag="K9")
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -862,7 +864,7 @@ def _movable_relay(parts, *, revision, under_board2):
     board1 = u.item("DEMO-PCB-IO", name="board1")
     board2 = u.item("DEMO-PCB-IO", name="board2")
     u.item("DEMO-RLY-2CO-24", name="relay", parent=board2 if under_board2 else board1)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     return result, u
 
 
@@ -886,7 +888,7 @@ def test_an_item_moved_to_another_board_takes_a_new_number_and_reserves_the_old_
     board1 = u_v2.item("DEMO-PCB-IO", name="board1")
     board2 = u_v2.item("DEMO-PCB-IO", name="board2")
     u_v2.item("DEMO-RLY-2CO-24", name="relay", parent=board2)
-    result_v2 = fr.build(parts, design.draft(), releases=into)
+    result_v2 = fr.build(parts, design.draft(), unit_document(u_v2), releases=into)
     _assert_no_errors(result_v2)
     # board1/board2 are top-level items of the unit's own scope: each one's own relative key
     # is simply its own name, one plain segment, with no further ancestor board of its own.
@@ -918,7 +920,7 @@ def test_version_2s_first_release_seeds_no_pins_from_version_1(tmp_path_factory)
     u_v2.revision(1, version=2, date="2026-09-26", text="First v2 release", created="OJB")
     u_v2.item("DEMO-RLY-2CO-24", name="aux")
     u_v2.item("DEMO-RLY-2CO-24", name="coil-a")
-    result_v2 = fr.build(parts, design.draft(), releases=into)
+    result_v2 = fr.build(parts, design.draft(), unit_document(u_v2), releases=into)
     _assert_no_errors(result_v2)
     assert u_v2.unit_id is not None
     pins_v2 = numbering_pins.pins(result_v2.model, u_v2.unit_id)
@@ -943,14 +945,14 @@ def test_an_authored_pin_is_never_auto_seeded_onto_a_now_untagged_item(tmp_path_
     u_v1 = design_v1.scope("ag").unit("authored-guard-unit", revision=1, interface="1")
     u_v1.revision(1, date="2026-09-26", text="Revision 1", created="OJB")
     u_v1.item("DEMO-RLY-2CO-24", name="coil", tag="K5")
-    result_v1 = fr.build(parts, design_v1.draft())
+    result_v1 = fr.build(parts, design_v1.draft(), unit_document(u_v1))
     _release_clean(result_v1, into, u_v1)
 
     design_v2 = Design(parts)
     u_v2 = design_v2.scope("ag").unit("authored-guard-unit", revision=2, interface="1")
     u_v2.revision(2, date="2026-09-26", text="Revision 2", created="OJB")
     u_v2.item("DEMO-RLY-2CO-24", name="coil")
-    result_v2 = fr.build(parts, design_v2.draft(), releases=into)
+    result_v2 = fr.build(parts, design_v2.draft(), unit_document(u_v2), releases=into)
     _assert_no_errors(result_v2)
     assert u_v2.unit_id is not None
     pins_v2 = numbering_pins.pins(result_v2.model, u_v2.unit_id)
@@ -972,7 +974,7 @@ def test_seeding_skips_an_item_outside_the_unit_and_one_already_tagged(tmp_path_
     u_v1 = design_v1.scope("sk1").unit("seeding-skip-unit", revision=1, interface="1")
     u_v1.revision(1, date="2026-09-26", text="Revision 1", created="OJB")
     u_v1.item("DEMO-RLY-2CO-24", name="coil")
-    result_v1 = fr.build(parts, design_v1.draft())
+    result_v1 = fr.build(parts, design_v1.draft(), unit_document(u_v1))
     _release_clean(result_v1, into, u_v1)
 
     design_v2 = Design(parts)
@@ -980,7 +982,7 @@ def test_seeding_skips_an_item_outside_the_unit_and_one_already_tagged(tmp_path_
     u_v2 = design_v2.scope("sk1").unit("seeding-skip-unit", revision=2, interface="1")
     u_v2.revision(2, date="2026-09-26", text="Revision 2", created="OJB")
     u_v2.item("DEMO-RLY-2CO-24", name="coil", tag="K9")  # now independently tagged
-    result_v2 = fr.build(parts, design_v2.draft(), releases=into)
+    result_v2 = fr.build(parts, design_v2.draft(), unit_document(u_v2), releases=into)
     _assert_no_errors(result_v2)
     assert u_v2.unit_id is not None
     pins_v2 = numbering_pins.pins(result_v2.model, u_v2.unit_id)
@@ -1006,7 +1008,7 @@ def test_pin_source_skips_a_same_version_sibling_ordered_above_the_current_one(
     u_3 = design_3.scope("rb").unit("relay-board", revision=3, interface="1")
     u_3.revision(3, date="2026-09-26", text="Revision 3", created="OJB")
     u_3.item("DEMO-RLY-2CO-24", name="coil-a")
-    result_3 = fr.build(parts, design_3.draft())
+    result_3 = fr.build(parts, design_3.draft(), unit_document(u_3))
     _release_clean(result_3, into, u_3)
 
     result_2, u_2 = _relay_board(parts, revision=2, coil_b=False, aux=True, releases=into)
@@ -1050,7 +1052,7 @@ def _second_board_release(parts, into, *, revision, version=1, wire_colour):
     """
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour=wire_colour, revision=revision, version=version)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     target = _release_clean(result, into, u)
     return result, u, target
 
@@ -1122,7 +1124,7 @@ def test_sk_diff_before_releasing_matches_the_eventual_changes_md(released, seco
     fresh_into = _copy_into(tmp_path_factory, base_into)
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="RD", revision=2)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     _assert_no_errors(result)
 
     text = fr.diff(result, fresh_into, unit=u)
@@ -1137,7 +1139,7 @@ def test_sk_diff_with_no_release_at_all_raises_file_not_found(tmp_path_factory):
     into = tmp_path_factory.mktemp("diff_no_release")
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"))
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     _assert_no_errors(result)
 
     with pytest.raises(FileNotFoundError) as exc:
@@ -1156,7 +1158,7 @@ def test_sk_diff_against_the_current_release_shows_only_the_unreleased_edit(
     parts, into, _second_target, _unit, _diff, _md, _csv = second_board_scenario
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="BK", revision=2)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     _assert_no_errors(result)
 
     text = fr.diff(result, into, unit=u)
@@ -1175,7 +1177,7 @@ def test_sk_diff_against_an_explicit_revision_reads_that_release_directly(
     parts, into, _second_target, _unit, _diff, _md, _csv = second_board_scenario
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="BK", revision=3)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     _assert_no_errors(result)
 
     default_text = fr.diff(result, into, unit=u)
@@ -1196,7 +1198,7 @@ def test_a_cross_version_release_gives_a_version_change_row(second_board_scenari
     parts, into, _second_target, _unit, _diff, _md, _csv = second_board_scenario
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="RD", version=2, revision=1)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     third_target = _release_clean(result, into, u)
 
     second_listing = baseline.loads((into / "baseline-board" / "1.2" / "baseline" / "listing.json").read_text(encoding="utf-8"))
@@ -1221,7 +1223,7 @@ def test_a_noop_rerelease_leaves_the_change_files_mtimes_unchanged(second_board_
 
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="RD", revision=2)
-    result = fr.build(parts, design.draft())
+    result = fr.build(parts, design.draft(), unit_document(u))
     returned = _release_clean(result, into, u)
     assert returned == second_target
 
@@ -1267,8 +1269,8 @@ def test_verify_gives_one_baseline_differs_per_board_instance_not_per_release(
     parts = fr.parts("demo_parts")
     design = Design(parts)
     cab1_scope, board1_scope = _cabinet_unit(design.scope("cab1"), name="C1")
-    _cab2_scope, _board2_scope = _cabinet_unit(design.scope("cab2"), name="C2")
-    result = fr.build(parts, design.draft())
+    cab2_scope, _board2_scope = _cabinet_unit(design.scope("cab2"), name="C2")
+    result = fr.build(parts, design.draft(), unit_document(cab1_scope), unit_document(cab2_scope))
     _assert_no_errors(result)
 
     into = tmp_path_factory.mktemp("two_board_instances")
@@ -1276,9 +1278,9 @@ def test_verify_gives_one_baseline_differs_per_board_instance_not_per_release(
     fr.release(result, into, unit=cab1_scope)
 
     changed_design = Design(parts)
-    _changed_cab1_scope, changed_board1_scope = _cabinet_unit(changed_design.scope("cab1"), name="C1", wire_colour="BK")
-    _changed_cab2_scope, changed_board2_scope = _cabinet_unit(changed_design.scope("cab2"), name="C2", wire_colour="BK")
-    changed_result = fr.build(parts, changed_design.draft())
+    changed_cab1_scope, changed_board1_scope = _cabinet_unit(changed_design.scope("cab1"), name="C1", wire_colour="BK")
+    changed_cab2_scope, changed_board2_scope = _cabinet_unit(changed_design.scope("cab2"), name="C2", wire_colour="BK")
+    changed_result = fr.build(parts, changed_design.draft(), unit_document(changed_cab1_scope), unit_document(changed_cab2_scope))
     changed_errors = [f for f in fr.check(changed_result) if f.severity is fr.Severity.ERROR]
     assert changed_errors == [], changed_errors
 
@@ -1386,7 +1388,7 @@ def test_a_listing_6_revision_cut_by_0_22_4_verifies_clean_and_releases_the_next
     parts = fr.parts("demo_parts")
     design = Design(parts)
     _x1, u = _board_unit(design.scope("brd"))
-    first = fr.build(parts, design.draft())
+    first = fr.build(parts, design.draft(), unit_document(u))
     folder = _release_clean(first, tmp_path, u)
     with monkeypatch.context() as patch:
         patch.setattr(baseline_codec, "KEYED_LISTING_VERSION", 6)

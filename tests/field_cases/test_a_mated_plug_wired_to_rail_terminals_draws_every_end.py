@@ -5,6 +5,7 @@ Unmated plug or no rail flag is clean."""
 from typing import Any, NamedTuple
 
 import fransys as fr
+from _core_boxes import overlaps
 from _model_build_cover import unit_document
 
 _REL: dict[str, Any] = {"revision": 1, "interface_version": 1, "date": "2026-11-24", "text": "First", "by": "XX"}
@@ -53,3 +54,19 @@ def test_a_mated_pin_that_stands_draws_its_conductor_end_once() -> None:
             assert len(stands) == len(ends) <= 1
             stood += len(stands)
     assert stood == 2
+
+
+def test_a_power_symbol_of_a_mated_pin_stands_clear_of_the_pins_marker() -> None:
+    """KI-1493: the power symbol of a mated rail pin never covers its mate marker, so no marker text is hidden (R2647)."""
+    d = fr.design("demo_parts", "mate_parts")
+    drawings = fr.build(d, unit_document(d.add(_parent, "U1"))).drawings.values()
+    checked = 0
+    for drawing in drawings:
+        for stand in (s for s in drawing.symbols if s.key in ("ground", "power-supply")):
+            mark = next(m for m in drawing.symbols if m.key == "marker-arrow-turned" and set(m.ports) & set(stand.ports))
+            assert stand.outline is not None
+            assert mark.outline is not None
+            a, b = stand.outline, mark.outline
+            assert not overlaps((a.x, a.y, a.x + a.w, a.y + a.h), (b.x, b.y, b.x + b.w, b.y + b.h))
+            checked += 1
+    assert checked == 2

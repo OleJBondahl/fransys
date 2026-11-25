@@ -47,7 +47,7 @@ def _bank(*, chained: bool, count: int = _COUNT):
             u.series(feed[2], relays[2].coil["A2"], wire=("WH", 0.75))
             u.series(feed[2].outer, relays[-1].coil["A2"], wire=("WH", 0.75))
             others = (*relays[:2], *relays[3:-1])
-            zero = u.terminal_strip("X0", "DEMO-TB-2.5", len(others)).run("0V", len(others), bridged=True)
+            zero = u.terminal_strip("X2", "DEMO-TB-2.5", len(others)).run("0V", len(others), bridged=True)
             for n, r in enumerate(others, 1):
                 u.series(r.coil["A2"], zero[n].inner, wire=("BU", 0.75))
         if chained:

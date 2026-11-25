@@ -17,6 +17,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+import library_twins_scan
 import pytest
 from gate_scan import src_modules
 from library_twins_scan import library_twins
@@ -941,6 +942,15 @@ def gate(section: str, *, done: bool = False) -> list[str]:
 
 def test_no_library_twin_grows_or_stays_after_its_deletion():
     assert compare(library_twins(), load_allowlist()["library_twins"]) == []
+
+
+def test_the_library_twin_gate_catches_a_re_added_enum(tmp_path, monkeypatch):
+    twin = tmp_path / "twin.py"
+    twin.write_text("from enum import Enum\n\n\nclass Direction(Enum):\n    UP = 1\n    DOWN = 2\n", encoding="utf-8")
+    monkeypatch.setattr(library_twins_scan, "src_modules", lambda: [("fransys_x.twin", twin)])
+    sites = library_twins()
+    assert sites["name:fransys_x.twin::Direction"] == ["fransys_x.twin::Direction"]
+    assert compare(sites, {}) != []
 
 
 def test_the_plc_channel_template_facets_are_read_only_in_roles():

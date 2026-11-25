@@ -1,6 +1,6 @@
 """Field case: a core numbered past its cable product's cores is a finding, not a crash.
-The bug: `core_colour` raised `SchemaError` for the index outside the product, so every list built on it crashed.
-Fixed by model-0266 (G1): the validator gives ERROR `CORE_INDEX_PAST_PRODUCT`; `core_colour` returns an empty string past the product."""
+The bug: `conductor_colour` raised `SchemaError` for the index outside the product, so every list built on it crashed.
+Fixed by model-0266 (G1): the validator gives ERROR `CORE_INDEX_PAST_PRODUCT`; `conductor_colour` returns an empty string past the product."""
 
 import dataclasses
 
@@ -8,7 +8,7 @@ import fransys as fr
 from fransys.colours import BK, BN
 
 from fransys_model.checks import ALL_VALIDATORS
-from fransys_model.derive import cable_items, cable_rows, core_colour, open_core_rows
+from fransys_model.derive import cable_items, cable_rows, conductor_colour, open_core_rows
 from fransys_model.kernel import Origin, evolve
 from fransys_model.vocab import facets_of
 from fransys_model.vocab.facets.cable import CoreFacet
@@ -41,5 +41,5 @@ def test_a_core_past_its_product_gives_the_error_and_no_list_raises() -> None:
     (cable,) = cable_items(model)
     cable_rows(model, cable)
     open_core_rows(model, cable)
-    colours = [core_colour(model, f.subject) for f in facets_of(model, CoreFacet).values()]
+    colours = [conductor_colour(model, f.subject) for f in facets_of(model, CoreFacet).values()]
     assert "" in colours

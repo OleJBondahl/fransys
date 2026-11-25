@@ -7,6 +7,7 @@ A core id is the function's order text, then its Id text. A pin is a
 from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
+from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.core import PinRef
 from fransys_model.derive import (
     port_name,
@@ -14,7 +15,7 @@ from fransys_model.derive import (
 from fransys_model.derive.order import function_order_text, functions_in_order
 from fransys_model.kernel import render_id
 
-from .kit_keys import PickKey, function_of, held_ports, is_known
+from .kit_keys import PickKey, box_ports, function_of, held_ports, is_known
 from .placement_kit import Pick, SymbolKit, refuse
 
 if TYPE_CHECKING:
@@ -70,7 +71,8 @@ def symbol_of(kit: SymbolKit, ids: frozendict[PickKey, str]) -> frozendict[PickK
 
 def _check(model: Model, lead: PickKey, pick: Pick, text: str) -> None:
     """Every port of the lead and its members is named, and nothing else is."""
-    own = {p for f in (lead, *pick.members) for p in held_ports(model, f)}
+    held = box_ports if pick.key == GENERIC_BOX_KEY else held_ports
+    own = {p for f in (lead, *pick.members) for p in held(model, f)}
     missing = own - set(pick.ports)
     if missing:
         refuse(

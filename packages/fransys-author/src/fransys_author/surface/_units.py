@@ -104,10 +104,13 @@ class Units:
         *,
         place: str | EllipsisType | None = ...,
         name: str | None = None,
+        from_release: bool = False,
     ) -> R:
         """Build the unit `definition` as instance `tag` (printed `-tag`).
 
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
+        `from_release=True` says the unit's own release prints its interior: the system document
+        shows its boundary only, and `fr.release` refuses it when that release holds no unit document.
         """
         check_history(definition)
         key = self._claim(check_add(tag, name), per_function=True)
@@ -120,6 +123,7 @@ class Units:
             title=definition.title,
             number=definition.number,
             tag=tag,
+            from_release=from_release,
         )
         for entry in (*definition.history, definition.entry):
             scope.revision(**entry)

@@ -17,13 +17,13 @@ from fransys_model.vocab import DocumentPreset
 
 
 def _design(leaves: int):
-    """A cabinet-less system: motor `M0` joined by one cable to each of `leaves` motors."""
+    """A cabinet-less system: motor `M90` joined by one cable to each of `leaves` motors."""
     parts = fransys_parts.load("demo_parts")
     d = Design(parts)
     d.project(**_PROJECT)
     d.revision(1, date="2026-10-07", text="First issue", created="XX")
     loc, grp = d.location("C1", "Cabinet"), d.group("EXT", "Field")
-    hub = d.item("DEMO-MOTOR-4KW", tag="M0", at=loc, group=grp)
+    hub = d.item("DEMO-MOTOR-4KW", tag="M90", at=loc, group=grp)
     for n in range(1, leaves + 1):
         leaf = d.item("DEMO-MOTOR-4KW", tag=f"M{n}", at=loc, group=grp)
         d.cable("DEMO-CBL-4G1.5", tag=f"W{n}").core(1, hub["U"], leaf["U"])

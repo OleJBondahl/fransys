@@ -1,7 +1,6 @@
 """Layout: which kinds are authored hints and which are derived results (layout-namespace.md).
 
-A new kind goes into exactly one of the tuples: the tests and `derived_layout_ids` go
-by them. Each pass removes only its own tuple's kinds (CT5, Q3).
+A new kind goes into exactly one of the tuples: the tests go by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 """
 
 from .formats import Profile, SheetFormat

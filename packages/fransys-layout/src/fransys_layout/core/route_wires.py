@@ -156,7 +156,7 @@ def _end_wires(env: RouteEnv, col: Column) -> Drawn:
     out = Drawn()
     for head, ends in ((True, col.heads), (False, col.feet)):
         for pos, end in enumerate(ends):
-            if end.kind == "boxpin":
+            if end.kind == "boxpin" and not end.under_trunk:
                 out += _box_wire(env, col, (head, pos), end)
     return out
 

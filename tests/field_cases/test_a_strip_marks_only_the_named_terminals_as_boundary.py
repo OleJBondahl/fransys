@@ -31,7 +31,7 @@ def _built(*, wire_inside: bool = False) -> fr.BuildResult:
     if wire_inside:
         h2 = d.device("H2", "DEMO-LAMP-24")
         d.series(u.X1[3].outer, h2.lamp["1"], wire=(BK, 1.5))
-        d.series(h2.lamp["2"], d.terminal_strip("X0", "DEMO-TB-2.5", 1).run("0V", 1)[1].inner, wire=(BK, 1.5))
+        d.series(h2.lamp["2"], d.terminal_strip("X2", "DEMO-TB-2.5", 1).run("0V", 1)[1].inner, wire=(BK, 1.5))
     return fr.build(d)
 
 

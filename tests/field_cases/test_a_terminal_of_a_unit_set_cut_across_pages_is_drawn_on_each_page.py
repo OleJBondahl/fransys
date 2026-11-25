@@ -21,7 +21,7 @@ def _bank(u: fr.Design) -> _Io:
     feed = u.terminal_strip("X1", "DEMO-TB-2.5-TWIN", 1, interface=True)
     with u.function("R", "Relays"):
         relays = [u.device(f"K{i + 1}", "DEMO-RLY-2CO-24") for i in range(_RELAYS)]
-    zero = u.terminal_strip("X0", "DEMO-TB-2.5", _RELAYS).run("0V", _RELAYS, bridged=True)
+    zero = u.terminal_strip("X2", "DEMO-TB-2.5", _RELAYS).run("0V", _RELAYS, bridged=True)
     u.series(feed[1].inner, relays[0].coil["A1"], wire=("WH", 0.75))
     u.series(feed[1].outer, relays[-1].coil["A1"], wire=("WH", 0.75))
     for a, b in itertools.pairwise(relays):

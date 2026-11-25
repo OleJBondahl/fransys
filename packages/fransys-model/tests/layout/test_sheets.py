@@ -19,7 +19,6 @@ from fransys_model.layout import (
     SHEET_KINDS,
     LayoutSheet,
     SheetKind,
-    derived_layout_ids,
 )
 
 _ORIGIN = Origin(file="test_sheets.py", line=1, note="fixture")
@@ -58,7 +57,6 @@ def test_a_sheet_round_trips_and_its_id_derives_from_its_key(kind: SheetKind) ->
     model = freeze(draft)
     assert loads(dumps(model)) == model
     assert sheet.id == make_id(LayoutSheet, sheet.key)
-    assert derived_layout_ids(model, kinds=SHEET_KINDS) == (sheet.id,)
 
 
 def test_the_kind_is_registered_and_listed_in_exactly_one_tuple() -> None:

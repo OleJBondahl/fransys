@@ -101,14 +101,14 @@ def test_a_table_on_the_series_replaces_only_its_rows() -> None:
 
 def test_an_ac_control_path_takes_the_rail_rows_at_its_ends_and_control_between() -> None:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5")
     ac = d.ac_supply("230V", "230", x0[1], n=x0[2])
     s1, k2 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC"), d.device("K2", "DEMO-CTR-3P-24")
     d.series(ac.L1, s1.no, k2.coil, ac.N, wire=0.75)
     rows = _rows(d)
-    assert _wire(rows, "-X0:1", "-S1:53") == (BK, 0.75)  # AC_L1
+    assert _wire(rows, "-X2:1", "-S1:53") == (BK, 0.75)  # AC_L1
     assert _wire(rows, "-S1:54", "-K2:A1") == (RD, 0.75)  # AC_CONTROL
-    assert _wire(rows, "-K2:A2", "-X0:2") == (BU, 0.75)  # AC_N
+    assert _wire(rows, "-K2:A2", "-X2:2") == (BU, 0.75)  # AC_N
 
 
 def test_a_dc_power_path_keeps_supply_and_ground_rows_on_every_wire() -> None:
@@ -142,19 +142,19 @@ def test_a_size_that_is_not_positive_raises(size) -> None:
 
 def test_a_single_phase_power_path_is_l1_and_n_through_a_two_pole_switch() -> None:
     d = fr.design("demo_parts", wiring={fr.AC_L1: BN, fr.AC_N: BU})
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5")
     ac = d.ac_supply("230V", "230", x0[1], n=x0[2])
     s1, e1 = d.device("S1", "DEMO-SWITCH-DC-2P"), d.device("E1", "DEMO-HEATER-24")
     d.series(ac, s1.main, e1.load, wire=1.5)
     rows = _rows(d)
-    assert _wire(rows, "-X0:1", "-S1:1") == (BN, 1.5)
-    assert _wire(rows, "-X0:2", "-S1:3") == (BU, 1.5)
+    assert _wire(rows, "-X2:1", "-S1:1") == (BN, 1.5)
+    assert _wire(rows, "-X2:2", "-S1:3") == (BU, 1.5)
     assert _wire(rows, "-S1:2", "-E1:+") == (BN, 1.5)
     assert _wire(rows, "-S1:4", "-E1:-") == (BU, 1.5)  # the second pole stays N, not L2
 
 
 def _dol(d, ac) -> None:
-    q0, q1 = d.device("Q0", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24")
+    q0, q1 = d.device("Q2", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24")
     f1, m1 = d.device("F1", "DEMO-OVERLOAD-3P"), d.device("M1", "DEMO-MOTOR-4KW")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
     w1 = d.cable("W1", "DEMO-CBL-4G1.5")
@@ -163,29 +163,29 @@ def _dol(d, ac) -> None:
 
 def test_a_supply_with_n_feeds_a_three_pole_path_and_no_wire_lands_on_n() -> None:
     d = fr.design("demo_parts", wiring={fr.AC_L1: BN, fr.AC_L2: BK, fr.AC_L3: RD, fr.AC_N: BU})
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     _dol(d, ac)
     rows = _rows(d)
-    assert _wire(rows, "-X0:1", "-Q0:1") == (BN, 2.5)
-    assert _wire(rows, "-X0:2", "-Q0:3") == (BK, 2.5)
-    assert _wire(rows, "-X0:3", "-Q0:5") == (RD, 2.5)
-    assert not [k for k in rows if "-X0:4" in k]
+    assert _wire(rows, "-X2:1", "-Q2:1") == (BN, 2.5)
+    assert _wire(rows, "-X2:2", "-Q2:3") == (BK, 2.5)
+    assert _wire(rows, "-X2:3", "-Q2:5") == (RD, 2.5)
+    assert not [k for k in rows if "-X2:4" in k]
 
 
 def test_a_four_pole_first_element_on_a_supply_with_n_wires_n() -> None:
     d = fr.design("demo_parts", wiring={fr.AC_L1: BN, fr.AC_L2: BK, fr.AC_L3: RD, fr.AC_N: BU})
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
-    q0, x1 = d.device("Q0", "DEMO-CO-4P-24"), d.terminal_strip("X1", "DEMO-TB-2.5")
+    q0, x1 = d.device("Q2", "DEMO-CO-4P-24"), d.terminal_strip("X1", "DEMO-TB-2.5")
     d.series(ac, q0.co.no, x1, wire=2.5)
     rows = _rows(d)
-    assert _wire(rows, "-X0:4", "-Q0:41") == (BU, 2.5)
+    assert _wire(rows, "-X2:4", "-Q2:41") == (BU, 2.5)
 
 
 def test_a_two_pole_first_element_on_a_three_phase_supply_with_n_names_both_counts() -> None:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X2", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     s1, e1 = d.device("S1", "DEMO-SWITCH-DC-2P"), d.device("E1", "DEMO-HEATER-24")
     with pytest.raises(fr.AuthorError, match=r"S1 has 2 poles, the path from 400V carries 3 .* or 4 .*d\.series"):

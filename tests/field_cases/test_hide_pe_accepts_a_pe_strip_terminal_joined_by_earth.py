@@ -14,7 +14,7 @@ def _build(tmp_path: Path, *, hide: bool, runs: bool = False) -> fr.BuildResult:
     toml.write_text(f"[export]\nhide_pe = {str(hide).lower()}\n")
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5-TWIN")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     pe = d.terminal_strip("PE", "DEMO-TB-PE-2.5", 2, bridged=True)
     with d.function("FAN", "Fan"):

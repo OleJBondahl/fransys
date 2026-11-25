@@ -18,7 +18,7 @@ def _core_pins(d: fr.Design) -> list[tuple[str, str]]:
 
 def test_two_four_pin_connectors_pair_one_to_one_through_a_cable() -> None:
     d = fr.design("demo_parts", place="CAB")
-    j1, j2 = d.device("J1", "DEMO-CONN-4P"), d.device("J2", "DEMO-CONN-4P")
+    j1, j2 = d.device("X1", "DEMO-CONN-4P"), d.device("X2", "DEMO-CONN-4P")
     w5 = d.cable("W5", "DEMO-CBL-2X2X0.75-SP", length_m=3)
     d.series(j1.x1, w5, j2.x1, wire=(BK, 0.75))
     assert _core_pins(d) == [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4")]

@@ -14,7 +14,7 @@ def built() -> fr.BuildResult:
     """One two-core cable between two demo headers."""
     d = fr.design("demo_parts", "gauge_parts")
     d.location("L0", "Workshop")
-    j1, j2 = (d.device(tag, "DEMO-CONN-4P", place="L0") for tag in ("J1", "J2"))
+    j1, j2 = (d.device(tag, "DEMO-CONN-4P", place="L0") for tag in ("X1", "X2"))
     cable = d.cable("W1", "GAUGE-CBL-2C", name="sensor", place="L0")
     cable.core(1, j1[1], j2[1])
     cable.core(2, j1[2], j2[2])

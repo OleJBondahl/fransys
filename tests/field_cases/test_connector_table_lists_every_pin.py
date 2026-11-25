@@ -23,7 +23,7 @@ class _Open(NamedTuple):
 
 @fr.unit("demo-conn-cab", text="first", by="AB", **_REL)
 def _cab(u: Any) -> _Open:
-    j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
+    j1 = u.device("X2", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     lamp = u.device("H1", "DEMO-LAMP-24")
     u.series(j1[1], lamp["1"], wire=(BK, 0.5))
     u.series(j1[2], lamp["2"], wire=(BK, 0.5))
@@ -48,10 +48,10 @@ def _source(root: Path) -> str:
 
 
 def test_the_connector_table_lists_every_pin_with_its_ends(tmp_path: Path) -> None:
-    """The table is headed `-J1`; pin 4 (no wire) is a row; pin 3 shows its wire's far end."""
+    """The table is headed `-X2`; pin 4 (no wire) is a row; pin 3 shows its wire's far end."""
     source = _source(tmp_path)
     assert 'strong(text("Pin"))' in source
-    assert '#heading(level: 2, text("-J1"))' in source
+    assert '#heading(level: 2, text("-X2"))' in source
     table = source[source.index('strong(text("Pin"))') :].split("\n]", 1)[0]
     assert 'text("1"), box(text("-H1:1"))' in table
     assert 'text("3"), box(text("-T1:+"))' in table  # the wire's far end
@@ -67,7 +67,7 @@ class _J8(NamedTuple):
 
 @fr.unit("demo-conn-box", text="x", by="AB", **_REL)
 def _box(u: Any) -> _J8:
-    j8 = u.device("J8", "DEMO-CONN-2P", interface=True)
+    j8 = u.device("X8", "DEMO-CONN-2P", interface=True)
     lamp = u.device("P2", "DEMO-LAMP-24")
     u.series(j8["2"], lamp.lamp["1"], wire=(BK, 0.5))
     u.series(u.terminal_strip("X1", "DEMO-TB-2.5")[1].inner, lamp.lamp["2"], wire=(BK, 0.5))
@@ -110,5 +110,5 @@ def texts() -> dict[str, list[str]]:
 def test_a_top_level_units_pin_wired_from_outside_stays_with_its_stub(
     texts: dict[str, list[str]],
 ) -> None:
-    assert any(t.startswith("-J8:1") for t in texts["demo-conn-box"])
+    assert any(t.startswith("-X8:1") for t in texts["demo-conn-box"])
     assert any("H9" in t for t in texts["demo-conn-box"])

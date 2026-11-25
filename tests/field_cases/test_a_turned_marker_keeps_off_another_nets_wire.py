@@ -37,7 +37,7 @@ def _reversing(d):
         for out, inp in ((2, 1), (4, 3), (6, 5)):
             d.series(kr.main[out], f1.main[inp], wire=PWR)
     with d.function("CTRL", "Control"):
-        s0 = d.device("S0", "DEMO-PB-NC")
+        s0 = d.device("S1", "DEMO-PB-NC")
         d.series(dc.plus, f1.aux, s0.sw, kf.coil, dc.minus, wire=CTRL)
         d.series(s0.sw, kr.coil, dc.minus, wire=CTRL)
     return _Io()

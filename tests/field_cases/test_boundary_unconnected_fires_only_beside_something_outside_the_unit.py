@@ -14,7 +14,7 @@ class _Io(NamedTuple):
 
 @fr.unit("demo-switch", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
 def _switch(u: Any) -> _Io:
-    sw = u.device("SW1", "DEMO-SW-8P", interface=True)
+    sw = u.device("SF1", "DEMO-SW-8P", interface=True)
     lamp = u.device("H1", "DEMO-LAMP-24")
     u.series(sw.p1["1"], lamp["1"], wire=("RD", 50))
     u.series(sw.p2["1"], lamp["2"], wire=("BK", 50))

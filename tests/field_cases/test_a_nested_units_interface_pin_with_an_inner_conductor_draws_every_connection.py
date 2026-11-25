@@ -57,10 +57,10 @@ def _carrier(d: Any) -> _Open:
     cab = d.add(_cabinet, "CAB")
     with d.function("TR", "Transformer T1"):
         t1 = d.device("T1", "DEMO-TRAFO-400-230")
-        w1 = d.cable("W1", "DEMO-CBL-4G1.5")
+        w1 = d.cable("W1", "DEMO-CBL-8G0.75")
         w1.core(1, cab.X1[1].inner, t1.primary["1U"])
         w1.core(2, cab.X1[2].inner, t1.primary["1V"])
-        w2 = d.cable("W2", "DEMO-CBL-4G1.5")
+        w2 = d.cable("W2", "DEMO-CBL-8G0.75")
         w2.core(1, cab.F1.main[1], t1.secondary["2U"])
         w2.core(2, cab.F1.main[3], t1.secondary["2V"])
     return _Open()
@@ -72,7 +72,7 @@ def _detector_build() -> fr.BuildResult:
     u = d.add(_detector, "U1")
     with d.function("FEED", "Detector feed"):
         a = d.device("A1", None, external=True, place="ROOM", pins=("0", "+", "1"))
-        w = d.cable("W1", "DEMO-CBL-4G1.5", external=True)
+        w = d.cable("W1", "DEMO-CBL-8G0.75", external=True)
         d.series((u.b.supply[1], u.b.supply[2], u.b.signal[7]), w, (a["0"], a["+"], a["1"]))
         w.spare()
     docs = (

@@ -21,7 +21,7 @@ def _build(*, potential: bool = True) -> fr.BuildResult:
     cab = d.location("CAB", "Cabinet")
     with d.function("G", "Group"):
         solo = d.device("T1", "DEMO-PSU-24")
-        lone = d.device("P0", "DEMO-LAMP-24")
+        lone = d.device("P90", "DEMO-LAMP-24")
         feed = d.device("T2", "DEMO-PSU-24")
         lamps = [d.device(f"P{i}", "DEMO-LAMP-24") for i in range(1, _LAMPS + 1)]
     # one supply per PSU: the solo pair's rails are named apart, the voltages stay 24 V and 0 V
@@ -51,17 +51,17 @@ def _solo_markers(model) -> Counter[Any]:
     """The link markers at the solo pair's pins, by `(tag, pin)`: a cut pair has one each."""
     table = ports(model)
     return Counter(
-        (_tag(table[m.port].key), table[m.port].key[-1]) for m in layout_of(model, LinkMarker).values() if _tag(table[m.port].key) in {"T1", "P0"}
+        (_tag(table[m.port].key), table[m.port].key[-1]) for m in layout_of(model, LinkMarker).values() if _tag(table[m.port].key) in {"T1", "P90"}
     )
 
 
-_PAIRS = {("T1", "+"): 1, ("T1", "-"): 1, ("P0", "1"): 1, ("P0", "2"): 1}
+_PAIRS = {("T1", "+"): 1, ("T1", "-"): 1, ("P1", "1"): 1, ("P1", "2"): 1}
 
 
 def test_a_two_port_24v_net_draws_no_bar_and_the_distributing_net_draws_bars() -> None:
     model = _build().model
     barred = _tags(model, layout_of(model, PowerSymbol).values())
-    assert barred.isdisjoint({"T1", "P0"})
+    assert barred.isdisjoint({"T1", "P90"})
     assert {"T2", "P1", f"P{_LAMPS}"} <= barred
     assert _solo_markers(model) == _PAIRS  # the cut shows one reference pair per net
 

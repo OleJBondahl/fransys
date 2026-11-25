@@ -1,5 +1,5 @@
 """Field case: a lamp wired to pin 1 of an I/O board instance tagged U2, which the container draws as a black box.
-The bug: a black box's title line must not carry the instance tag, which stands only in boundary texts such as -U2-J1:1 (owner 2026-10-05).
+The bug: a black box's title line must not carry the instance tag, which stands only in boundary texts such as -U2-X1:1 (owner 2026-10-05).
 Fixed by model-0134, the black box's title keeps the release title and revision, and the tag stands in every boundary text."""
 
 from typing import Any, NamedTuple
@@ -18,7 +18,7 @@ class _Io(NamedTuple):
 @fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _board(u: Any) -> _Io:
     root = u.device("U9", "DEMO-PCB-IO")
-    return _Io(u.device("J1", "DEMO-CONN-2P", parent=root, interface=True))
+    return _Io(u.device("X1", "DEMO-CONN-2P", parent=root, interface=True))
 
 
 def _container_texts() -> tuple[fr.Model, list[str]]:

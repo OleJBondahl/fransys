@@ -53,7 +53,7 @@ class BoardIo(NamedTuple):
 def board(u: fr.Design) -> BoardIo:
     """A PCB with an interface connector wired to a lamp."""
     pcb = u.device("A1", "DEMO-PCB-IO")
-    j1 = u.device("J1", "DEMO-CONN-2P", parent=pcb, interface=True)
+    j1 = u.device("X2", "DEMO-CONN-2P", parent=pcb, interface=True)
     h1 = u.device("H1", "DEMO-LAMP-24", parent=pcb)
     u.series(j1["1"], h1["1"], wire=(BK, 0.75))
     u.series(j1["2"], h1["2"], wire=(BK, 0.75))
@@ -62,9 +62,9 @@ def board(u: fr.Design) -> BoardIo:
 
 def bridged_feeder() -> tuple[Any, Any, Any, Any]:
     d = fr.design("demo_parts")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 4)
+    x0 = d.terminal_strip("X3", "DEMO-TB-2.5", 4)
     ac = d.ac_supply("400V", 230, x0[1], x0[2], x0[3], n=x0[4])
-    return d, ac, d.device("Q0", "DEMO-MCB-3P"), d.terminal_strip("X1", "DEMO-TB-2.5")
+    return d, ac, d.device("Q90", "DEMO-MCB-3P"), d.terminal_strip("X1", "DEMO-TB-2.5")
 
 
 def plc_di_design() -> tuple[fr.Design, Any, Any]:

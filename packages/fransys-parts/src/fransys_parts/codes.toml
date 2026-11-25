@@ -233,6 +233,15 @@ fix = "A `contact_co` port takes no `symbol_port`, since its throw roles bind th
 page = "findings-parts"
 
 [[code]]
+code = "CONNECTOR_PIN_NOT_ON_WIRE_SIDE"
+severity = "ERROR"
+stage = "library load"
+who = "part author"
+cause = "A port of a `connector` function sets `symbol_port` to a port other than `in`, the wire side of its symbol."
+fix = "A connector pin binds the wire side of its symbol, so its wire end stands away from its mate marker. Write: symbol_port = \"in\""
+page = "findings-parts"
+
+[[code]]
 code = "CONTACT_WITHOUT_SWITCHED_LINK"
 severity = "ERROR"
 stage = "library load"

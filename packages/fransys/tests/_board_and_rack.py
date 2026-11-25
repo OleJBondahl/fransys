@@ -22,7 +22,7 @@ def build_board_and_rack_model() -> Model:
 
 
 def build_board_and_rack() -> fr.BuildResult:
-    """A board `PCB1` (one function of its own, with no pin) and a PLC rack `R1` with one (channel-less)
+    """A board `A2` (one function of its own, with no pin) and a PLC rack `R1` with one (channel-less)
     module, via `fr.build`.
     """
     board_part = Part(
@@ -53,7 +53,7 @@ def build_board_and_rack() -> fr.BuildResult:
         part=board_part.id,
         parent=None,
         position=None,
-        tag="PCB1",
+        tag="A2",
         description="Invented board",
     )
     board_function = Function(

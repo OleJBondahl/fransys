@@ -30,8 +30,8 @@ def _circuit(d: fr.Design) -> _Open:
     """
     d.location("CAB", "Cabinet")
     d.location("FIELD", "Field strips")
-    field_a = d.terminal_strip("X01", _TERMINAL, place="FIELD")
-    field_b = d.terminal_strip("X02", _TERMINAL, place="FIELD")
+    field_a = d.terminal_strip("X1", _TERMINAL, place="FIELD")
+    field_b = d.terminal_strip("X2", _TERMINAL, place="FIELD")
     relay = d.device("K1", _CHANGEOVER, place="CAB")
     for pole in (3, 4):
         make = field_a.run(f"RUN{pole}", 1)[1]
@@ -41,7 +41,7 @@ def _circuit(d: fr.Design) -> _Open:
         d.series(make.inner, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
     # layout-0218: an unwired coil is drawn nowhere; its feed from a cabinet strip keeps K1's
     # coil, and so its contact table and the contacts' cross-references, on the page
-    feed = d.terminal_strip("X03", _TERMINAL, place="CAB")
+    feed = d.terminal_strip("X3", _TERMINAL, place="CAB")
     d.series(feed[1].inner, relay.coil["A1"], wire=(BK, 0.75))
     d.series(feed[2].inner, relay.coil["A2"], wire=(BK, 0.75))
     return _Open()

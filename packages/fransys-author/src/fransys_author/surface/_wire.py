@@ -8,7 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._unit_strip import is_unit_strip
-from fransys_model.derive import split_colour
+from fransys_model.elecdef import core_colour
 from fransys_model.vocab import COLOUR_GRAMMAR
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def _gauge(mm2: object) -> Decimal:
 
 
 def _colour(colour: object) -> str:
-    if not isinstance(colour, str) or not colour or split_colour(colour) is None:
+    if not isinstance(colour, str) or not colour or core_colour(colour) is None:
         msg = f"wire= colour {colour!r} is not allowed; use {COLOUR_GRAMMAR}"
         raise AuthorError(msg)
     return colour

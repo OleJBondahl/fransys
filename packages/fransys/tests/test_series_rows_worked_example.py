@@ -23,10 +23,10 @@ def _build() -> list[Any]:
             fr.AC_L3: GY,
         },
     )
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3])
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
-    q0, q1 = d.device("Q0", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24")
+    q0, q1 = d.device("Q2", "DEMO-MCB-3P"), d.device("Q1", "DEMO-CTR-3P-24")
     f1, m1 = d.device("F1", "DEMO-OVERLOAD-3P"), d.device("M1", "DEMO-MOTOR-4KW")
     s1, s2 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC"), d.device("S2", "DEMO-CTR-BLOCK-1NO1NC")
     k1, k2 = d.device("K1", "DEMO-RLY-2CO-24"), d.device("K2", "DEMO-CTR-3P-24")
@@ -54,10 +54,10 @@ def _check(rows: list[Any], a: str, b: str, colour, size: float) -> None:
 def test_a_power_path_keeps_each_poles_phase_colour_through_every_element() -> None:
     rows = _build()
     colour = {1: BN, 3: BK, 5: GY}
-    for supply, pole in zip(("X0:1", "X0:2", "X0:3"), (1, 3, 5), strict=True):
-        _check(rows, supply, f"Q0:{pole}", colour[pole], 2.5)
+    for supply, pole in zip(("X1:1", "X1:2", "X1:3"), (1, 3, 5), strict=True):
+        _check(rows, supply, f"Q2:{pole}", colour[pole], 2.5)
     for pole in (1, 3, 5):
-        _check(rows, f"Q0:{pole + 1}", f"Q1:{pole}", colour[pole], 2.5)
+        _check(rows, f"Q2:{pole + 1}", f"Q1:{pole}", colour[pole], 2.5)
         _check(rows, f"Q1:{pole + 1}", f"F1:{pole}", colour[pole], 2.5)
 
 

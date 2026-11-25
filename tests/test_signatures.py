@@ -69,7 +69,7 @@ class _Io(NamedTuple):
 @fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _unit_board(u: Any) -> _Io:
     _UNIT_DESIGNS.append(u)
-    return _Io(u.device("J1", "DEMO-CONN-2P", interface=True))
+    return _Io(u.device("X2", "DEMO-CONN-2P", interface=True))
 
 
 _UNIT_DESIGNS: list[Any] = []
@@ -80,7 +80,7 @@ def _live() -> list[tuple[str, object]]:
     d = fr.design("demo_parts", place="C1")
     d.location("C1", "Cabinet")
     d.add(_unit_board, "U2")
-    device = d.device("J1", "DEMO-CONN-4P-MIXED")
+    device = d.device("X2", "DEMO-CONN-4P-MIXED")
     fn = device.x1
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
     objects = {

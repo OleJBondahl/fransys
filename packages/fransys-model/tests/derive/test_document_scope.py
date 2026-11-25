@@ -28,7 +28,7 @@ EXPECTED = {
             "harnesses": (),
             "bom_scope": "location/L0",
             "strips": ("X1",),
-            "connector_items": ["LOOSE/LA1", "LOOSE/LA2"],
+            "connector_items": ["LOOSE/PF1", "LOOSE/PF2"],
         },
         "location:group/LOOSE": {
             "unit": None,
@@ -36,7 +36,7 @@ EXPECTED = {
             "harnesses": (),
             "bom_scope": "group/LOOSE",
             "strips": (),
-            "connector_items": ["LOOSE/LA1", "LOOSE/LA2"],
+            "connector_items": ["LOOSE/PF1", "LOOSE/PF2"],
         },
     }
 }
@@ -50,8 +50,8 @@ def models():
     d = fr.design("demo_parts")
     d.location("L0", "Workshop")
     with d.function("LOOSE", "Loose"):
-        a = d.device("LA1", "DEMO-CONN-2P", place="L0")
-        b = d.device("LA2", "DEMO-CONN-2P", place="L0")
+        a = d.device("PF1", "DEMO-CONN-2P", place="L0")
+        b = d.device("PF2", "DEMO-CONN-2P", place="L0")
         d.cable("CBL", "DEMO-CBL-4G1.5", name="cc", place="L0").core(1, a[1], b[1])
     d.series(a[2], b[2], wire=(BU, 0.5))
     with d.function("STRIP", "Strip"):

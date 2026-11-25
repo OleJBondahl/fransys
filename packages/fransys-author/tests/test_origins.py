@@ -137,7 +137,7 @@ def test_net_origin_is_the_calling_line(parts):
 def test_mate_origin_is_the_calling_line(parts):
     d = Design(parts)
     housing = d.item("TEST-CONN-2P", tag="X1")
-    edge = d.item("TEST-EDGE-2P", tag="J1")
+    edge = d.item("TEST-EDGE-2P", tag="X2")
     line = here() + 1
     d.mate(housing, edge)
     from fransys_model.vocab import Mate

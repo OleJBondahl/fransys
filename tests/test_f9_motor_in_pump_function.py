@@ -153,7 +153,7 @@ def _build_nested_board():
     board = cab.scope("a2", at=c1, group=plc).unit("demo-io-board", revision=1, interface="1")
     board.revision(1, date="2026-01-01", text="First release", created="XX")
     pcb = board.item("DEMO-PCB-IO", name="board")
-    j1 = board.item("DEMO-CONN-2P", tag="J1", parent=pcb)
+    j1 = board.item("DEMO-CONN-2P", tag="X3", parent=pcb)
     k1 = board.item("DEMO-RLY-2CO-24", name="k1", parent=pcb)
     wire = board.wiring(colour="BU", gauge="0.5")
     wire(j1["1"], k1.fn("coil")["A1"])
@@ -165,16 +165,16 @@ def _build_nested_board():
 
 def test_a_nested_board_keeps_its_short_list_and_its_unit_name_title() -> None:
     """The board's items stand in the cabinet's `=PLC`, so `=PLC` is not the board's own: its
-    designation list prints "-J1" with no "=PLC" and its pages are titled with the unit's
+    designation list prints "-X3" with no "=PLC" and its pages are titled with the unit's
     name, not "WAGO PLC". Can-fail, checked by hand: never un-own a function node in
     `own_nodes` (drop the `elif all_items[item].unit is not None` branch) and the list prints
-    "=PLC-J1" and the pages read "WAGO PLC"."""
+    "=PLC-X3" and the pages read "WAGO PLC"."""
     model = _build_nested_board()
     board = next(u for u in units(model) if unit_release(model, u).name == "demo-io-board")
     references = {row.reference for row in designation_list(model, unit=board)}
     assert references
     assert not any("=" in reference for reference in references)
-    assert "-J1" in references
+    assert "-X3" in references
     sets = layout_of(model, DrawingSet)
     pages = [p for p in layout_of(model, Page).values() if sets[p.drawing_set].unit == board]
     assert pages

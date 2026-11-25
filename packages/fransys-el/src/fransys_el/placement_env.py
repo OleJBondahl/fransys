@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
     board_of_ports,
+    boundary,
     enclosing_boards,
     far_pins,
     function_item,
@@ -12,10 +13,11 @@ from fransys_model.derive import (
     item_parents,
     port_designation,
     schematic_functions,
+    unit_ids,
 )
 from fransys_model.derive.order import plc_module_ranks
 
-from .kit_keys import function_of, held_ports
+from .kit_keys import function_of, held_ports, hidden_box_ports
 from .placement_ids import pin_names, symbol_ids, symbol_key, symbol_of
 from .placement_kit import refuse
 from .placement_spares import spare_leads
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from .placement_kit import SymbolKit
     from .placement_options import Conventions
 
-__all__ = ["Env", "drawn_pins", "make_env", "pin_ref", "port_pins", "refuse_inside_board"]
+__all__ = ["Env", "drawn_pins", "make_env", "pin_ref", "refuse_inside_board"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +57,7 @@ class Env:
     undrawn: frozenset[Id[Port]]
     spare: frozendict[PickKey, str] = frozendict()
     ranks: frozendict[PickKey, int] = frozendict()
+    boundary: frozenset[Id[Function]] = frozenset()
 
 
 def _ranks(model: Model, ids: Iterable[PickKey]) -> frozendict[PickKey, int]:
@@ -83,18 +86,11 @@ def make_env(model: Model, kit: SymbolKit, conventions: Conventions, library: Li
         symbol_of(kit, ids),
         pins,
         item_parents(model),
-        (undrawn_pins(model) - set(pins)) | {p for k in spare for p in held_ports(model, k)},
+        (undrawn_pins(model) - set(pins)) | {p for k in spare for p in held_ports(model, k)} | hidden_box_ports(model, kit),
         spare,
         _ranks(model, ids),
+        frozenset(f for u in unit_ids(model) for f in boundary(model, u)),
     )
-
-
-def port_pins(model: Model, kit: SymbolKit, conventions: Conventions, library: Library) -> frozendict[Id[Port], PinRef]:
-    """The `PinRef` each drawn port of `model` stands at: `Env.pins`, the one map `build` reads.
-
-    A port with no entry is undrawn (an undrawn connector pin, a spare lead). Raises `ProblemError` as `build` does.
-    """
-    return make_env(model, kit, conventions, library).pins
 
 
 def drawn_pins(env: Env, ports: Iterable[Id[Port]]) -> tuple[PinRef, ...]:

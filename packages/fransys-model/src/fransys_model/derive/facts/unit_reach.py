@@ -5,8 +5,8 @@ is uncached on a view.
 """
 
 from fransys_model.derive.facts.children import unit_parent
-from fransys_model.derive.facts.closure import port_item
 from fransys_model.derive.facts.units import boundary, crosses_unit
+from fransys_model.derive.lookups import item_of_port
 from fransys_model.vocab.tables import HasTables, conductors, units, unused_boundaries
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Function, Port, Unit
@@ -18,7 +18,7 @@ def wired_inside_outside(model: HasTables) -> tuple[frozenset[Id[Port]], frozens
     outside: set[Id[Port]] = set()
     for conductor in conductors(model).values():
         for end, other in ((conductor.a, conductor.b), (conductor.b, conductor.a)):
-            crossing = crosses_unit(model, port_item(model, end), port_item(model, other))
+            crossing = crosses_unit(model, item_of_port(model, end), item_of_port(model, other))
             (outside if crossing else inside).add(end)
     return frozenset(inside), frozenset(outside)
 

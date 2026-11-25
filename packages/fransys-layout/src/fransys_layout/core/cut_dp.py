@@ -5,7 +5,8 @@ it); its height is an estimate. Rows after a page's first hold only short items 
 under `min_fill` unless it is last or ends at a forced break; a page cut through a two-pin net is
 P2. Nothing is refused: one item, or one whole block but a wide fan, is a row however wide, a
 page's first row however tall (layout-0280); a fan wider alone than the page wraps at a column
-(layout-0309); when `min_fill` cannot be met the cut is redone without it.
+(layout-0309). `min_fill` ranks before cost: the cut with the fewest thin pages wins, so a page that
+no cut can fill is kept thin and reported, and no other page gives its fill up.
 """
 
 from __future__ import annotations
@@ -27,8 +28,6 @@ if TYPE_CHECKING:
     from .cut_measured import RowKey
     from .flow_values import Block
     from .values import Options
-
-INF = float("inf")
 
 
 def _q(weight: float) -> Fraction:
@@ -196,20 +195,20 @@ def fill(state: RowState, cut: Cut) -> float:
     return state.area / (cut.page_w * cut.page_h)
 
 
-def _best_state(states: Mapping[int, RowState], cut: Cut, *, last: bool) -> RowState | None:
-    chosen: RowState | None = None
-    chosen_cost: Fraction | float = INF
+def _best_state(states: Mapping[int, RowState], cut: Cut, *, last: bool) -> tuple[Cost, RowState] | None:
+    """The state of fewest thin pages (0 or 1: this page), then least cost."""
+    chosen: tuple[Cost, RowState] | None = None
     for st in states.values():
-        share = fill(st, cut)
-        if share < cut.options.min_fill and not last:
-            continue
+        thin = int(fill(st, cut) < cut.options.min_fill and not last)
         cost = st.cost + _q(cut.options.w_f) * (1 - Fraction(st.area, cut.page_w * cut.page_h)) ** 2
-        if cost < chosen_cost:
-            chosen, chosen_cost = replace(st, cost=cost), cost
+        if chosen is None or (thin, cost) < chosen[0]:
+            chosen = ((thin, cost), replace(st, cost=cost))
     return chosen
 
 
-Best = list[tuple[Fraction | float, int, RowState | None]]
+Cost = tuple[int, Fraction]
+"""A cut's cost: its thin pages, then its weights; compared in this order, so thin pages are never traded for cost."""
+Best = list[tuple[Cost, int, RowState | None]]
 
 
 def _relax(best: Best, i: int, states: Sequence[Mapping[int, RowState]], cut: Cut) -> None:
@@ -219,10 +218,11 @@ def _relax(best: Best, i: int, states: Sequence[Mapping[int, RowState]], cut: Cu
     for k in range(i, n):
         if k - 1 in forced and k > i:
             break
-        state = _best_state(states[k], cut, last=k == n - 1 or k in forced)
-        if state is None:
+        found = _best_state(states[k], cut, last=k == n - 1 or k in forced)
+        if found is None:
             continue
-        total = best[i][0] + state.cost + _q(cut.options.w_p) + cost_in
+        (thin, state_cost), state = found
+        total = (best[i][0][0] + thin, best[i][0][1] + state_cost + _q(cut.options.w_p) + cost_in)
         if total <= best[k + 1][0]:  # a tie goes to the later start, so the earlier page takes more rows: 2|1 over 1|2 (R1685)
             best[k + 1] = (total, i, state)
 
@@ -230,14 +230,14 @@ def _relax(best: Best, i: int, states: Sequence[Mapping[int, RowState]], cut: Cu
 def pages(cut: Cut) -> Plan | None:
     """Best page partition: (first, last, rows) per page, by F(k) = min F(i-1) + page(i, k) + w_p.
 
-    None when no partition meets min_fill; the caller redoes the cut without it.
+    None when no page fits a state at all.
     """
     n = len(cut.seq)
-    best: Best = [(INF, -1, None)] * (n + 1)
-    best[0] = (Fraction(0), -1, None)
+    best: Best = [((n + 1, Fraction(0)), -1, None)] * (n + 1)
+    best[0] = ((0, Fraction(0)), -1, None)
     sizes = row_sizes(cut)
     for i in range(n):
-        if best[i][0] < INF:
+        if best[i][0][0] <= n:
             _relax(best, i, rows(cut, i, sizes), cut)
     return _unwind(best, n)
 
@@ -254,30 +254,18 @@ def _unwind(best: Best, n: int) -> Plan | None:
     return out[::-1]
 
 
-def cut_unit(cut: Cut) -> tuple[Plan, bool]:
-    """The page plan, and whether min_fill had to be given up to place every item."""
-    plan = pages(cut)
-    if plan is not None:
-        return plan, False
-    relaxed = replace(cut, options=replace(cut.options, min_fill=0.0))
-    return pages(relaxed) or [], True
-
-
 def _thin_page(cut: Cut, unit: str, i: int, share: float, page: int) -> Finding:
     block = cut.seq[i].block
     floor = cut.options.min_fill
-    text = (
-        f"unit {unit}, block {block}: page filled {share:.0%} (below min_fill {floor:.0%}): "
-        "the cut kept the block whole; lower min_fill or split the unit"
-    )
+    text = f"unit {unit}, block {block}: page filled {share:.0%} (below min_fill {floor:.0%}): no cut of the blocks fills it more"
     return Finding("FILL_UNDER_MIN", text, page, block)
 
 
-def page_findings(cut: Cut, plan: Plan, first: int, unit: str, *, relaxed: bool) -> tuple[Finding, ...]:
+def page_findings(cut: Cut, plan: Plan, first: int, unit: str) -> tuple[Finding, ...]:
     """FILL_UNDER_MIN for a thin page kept; PAGE_OVERFLOW is the placement verdict's (widen.overflows)."""
     out: list[Finding] = []
     for p, (i, k, state) in enumerate(plan):
         last = k == len(cut.seq) - 1 or cut.seq[k + 1].forced_break_before
-        if relaxed and not last and fill(state, cut) < cut.options.min_fill:
+        if not last and fill(state, cut) < cut.options.min_fill:
             out.append(_thin_page(cut, unit, i, fill(state, cut), first + p))
     return tuple(out)

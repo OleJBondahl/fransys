@@ -17,7 +17,7 @@ _SIDE = 30  # the frame's side letters and top numbers, in points
 _FRAME = 12.8  # the frame's right edge, from the page's right, in points
 _TOP = 20  # a table's top rule lies below this margin; the frame's top ticks do not
 _EPS = 0.3  # a glyph box may touch a rule by this much
-_STRIP = "X-STRIP-LONG-NAME-FEEDBACK-VALVES-OPEN-LIMIT-SWITCH"
+_STRIP = "X_STRIP_LONG_NAME_FEEDBACK_VALVES_OPEN_LIMIT_SWITCH"
 _DEVICE = "KVALVE-FEEDBACK-OPEN-LIMIT-SWITCH-EXTRA-LONG-TOKEN"
 
 Box = tuple[float, float, float, float]

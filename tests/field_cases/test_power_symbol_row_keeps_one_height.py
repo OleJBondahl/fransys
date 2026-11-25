@@ -22,7 +22,7 @@ def _build() -> fr.BuildResult:
     with d.function("G", "Group"):
         psu = d.device("T1", "DEMO-PSU-24")
         module = d.device("K1", "DEMO-PLC-DO-2")
-        plug = d.device("J1", "DEMO-CONN-2P")
+        plug = d.device("X1", "DEMO-CONN-2P")
         board = d.device("B1", "DEMO-IO-2X")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("S", psu)
@@ -67,7 +67,7 @@ def test_the_ground_clears_its_box() -> None:
     k1, _, _ = _cells(model, "K1")[0]
     box = _keepout(k1)
     grounds = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground"]
-    jack = [s for s in grounds if (model.key_of(s.port) or ("",))[0] == "G/J1"]
+    jack = [s for s in grounds if (model.key_of(s.port) or ("",))[0] == "G/X1"]
     assert jack
     for one in jack:
         body = translate(symbol_boxes("ground", orient=one.orientation.name)[0], dx=one.x, dy=one.y)
@@ -78,8 +78,8 @@ def test_the_ground_row_keeps_one_height() -> None:
     """Each pin row keeps one height and the leads stay straight."""
     model = _build().model
     _, channel_x, channel_y = _cells(model, "K1")[0]
-    jack = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground" and (model.key_of(s.port) or ("",))[0] == "G/J1"]
-    plug, board = _cells(model, "J1"), _cells(model, "B1")
+    jack = [s for s in layout_of(model, PowerSymbol).values() if s.symbol == "ground" and (model.key_of(s.port) or ("",))[0] == "G/X1"]
+    plug, board = _cells(model, "X1"), _cells(model, "B1")
     assert len({y for *_, y in plug}) == 1
     assert len({y for *_, y in board}) == 1
     for cell, x, _ in board:

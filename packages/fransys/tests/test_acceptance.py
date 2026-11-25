@@ -145,7 +145,7 @@ def test_windows_forbidden_flags_a_bad_name(bad):
     assert _windows_forbidden(bad)
 
 
-@pytest.mark.parametrize("good", ["DEMO-1-v1.1-bom.csv", "netlist-PCB1.net", "item-0123.svg"])
+@pytest.mark.parametrize("good", ["DEMO-1-v1.1-bom.csv", "netlist-A2.net", "item-0123.svg"])
 def test_windows_forbidden_passes_a_good_name(good):
     assert not _windows_forbidden(good)
 
@@ -275,7 +275,7 @@ def test_board_netlist_is_written_to_intermediates_named_from_its_reference(tmp_
     result = BuildResult(model=model, findings=())
     intermediates = tmp_path / "intermediates"
     fr.write(result, tmp_path / "out", intermediates=intermediates)
-    assert (intermediates / "netlist-PCB1.net").exists()
+    assert (intermediates / "netlist-A2.net").exists()
 
 
 def test_out_dir_never_receives_an_svg(tmp_path, demo_cabinet_result):

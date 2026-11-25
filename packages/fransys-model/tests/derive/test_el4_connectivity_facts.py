@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from plant import Plant
 
-from fransys_model.derive.facts.closure import board_of_ports, port_item
+from fransys_model.derive.facts.closure import board_of_ports
 from fransys_model.derive.facts.net_facts import declared_nets_of
 from fransys_model.derive.facts.potential_without_supply import (
     declared_rails,
@@ -16,6 +16,7 @@ from fransys_model.derive.facts.supply_sources import (
     supply_differences,
 )
 from fransys_model.derive.facts.wired_ports import half_connected, mated_ports, wired_ports
+from fransys_model.derive.lookups import item_of_port
 from fransys_model.elecdef import Current
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Rail, SupplySystem
@@ -43,11 +44,11 @@ def test_declared_nets_of_lists_the_nets_that_hold_a_port() -> None:
     assert declared_nets_of(model, c) == ()
 
 
-def test_port_item_and_one_board() -> None:
+def test_item_of_port_and_one_board() -> None:
     plant = Plant()
     a, b = plant.pin("x", "f", "1"), plant.pin("y", "f", "1")
     model = plant.model()
-    assert port_item(model, a) == make_id(Item, ("x",))
+    assert item_of_port(model, a) == make_id(Item, ("x",))
     assert board_of_ports(model, (a, b)) is None
     assert board_of_ports(model, ()) is None
 

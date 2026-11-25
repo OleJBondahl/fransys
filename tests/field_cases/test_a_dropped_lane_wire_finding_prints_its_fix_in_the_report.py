@@ -29,7 +29,7 @@ def _build(d: fr.Design) -> _Io:
         relay = d.device("K1", "DEMO-RLY-2CO-24")
         hold = d.device("Q1", "DEMO-RLY-2CO-24")
         button = d.device("S1", "DEMO-PB-NO")
-        load = d.device("Y1", "DEMO-RLY-2CO-24")
+        load = d.device("MB1", "DEMO-RLY-2CO-24")
         d.series(strip[1].outer, relay.coil, strip[2].outer, wire=_WIRE)
         d.series(hold.coil, relay.co_1.nc, button.sw, wire=_WIRE)
         d.series(strip[5].outer, hold.coil, wire=_WIRE)

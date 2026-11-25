@@ -45,7 +45,7 @@ class _Supply(NamedTuple):
 
 @fr.unit("demo-plc-cab", **_UNIT)
 def _plc_cab(u: Any) -> _Plc:
-    return _Plc(u.device("AI1", "DEMO-PLC-AI-4", interface=("ai_1",)))
+    return _Plc(u.device("KE1", "DEMO-PLC-AI-4", interface=("ai_1",)))
 
 
 @fr.unit("demo-relay-cab", **_UNIT)
@@ -64,13 +64,13 @@ def _skid(u: Any) -> _Plc:
 
 
 def _wire_plc(c: Any, io: _Plc) -> None:
-    field = c.device("J1", "DEMO-CONN-2P")
+    field = c.device("X1", "DEMO-CONN-2P")
     c.series(field["1"], io.AI1.ai_1["1"], wire=("WH", 0.5))
     c.series(field["2"], io.AI1.ai_1["2"], wire=("WH", 0.5))
 
 
 def _wire_relay(c: Any, io: _Relay) -> None:
-    field = c.device("J1", "DEMO-CONN-2P")
+    field = c.device("X1", "DEMO-CONN-2P")
     c.series(field["1"], io.K1.coil["A1"], wire=("WH", 0.5))
     c.series(field["2"], io.K1.coil["A2"], wire=("WH", 0.5))
 

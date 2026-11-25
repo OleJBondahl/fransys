@@ -3,14 +3,18 @@
 from typing import Any
 lazy from collections.abc import Mapping
 
-from fransys_model.derive.page_reference_text import far_prefix
+from fransys_model.derive.designation import port_designation
+from fransys_model.derive.page_reference_text import far_prefix, page_reference_text
 from fransys_model.derive.printed_sets import document_drawing_sets
 from fransys_model.derive.rows_readability import OffDocumentReference
 from fransys_model.layout import DrawingSet, LinkMarker, Page, layout_of
+from fransys_model.vocab.codes import finding
 from fransys_model.vocab.tables import documents
-lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.kernel import Finding, Id, Model
 
-__all__ = ["references_off_document"]
+__all__ = ["check_references_off_document", "references_off_document"]
+
+REFERENCE_OFF_DOCUMENT = "REFERENCE_OFF_DOCUMENT"
 
 
 def _documents_of_sets(model: Model) -> dict[Id[DrawingSet], set[Id[Any]]]:
@@ -46,3 +50,19 @@ def references_off_document(model: Model) -> tuple[OffDocumentReference, ...]:
         if subject not in off and _off_document(model, pages[page], pages[target], printed):
             off[subject] = OffDocumentReference(subject=subject, page=page, target=target)
     return tuple(off.values())
+
+
+def check_references_off_document(model: Model) -> tuple[Finding, ...]:
+    """One `REFERENCE_OFF_DOCUMENT` (`WARNING`) per reference to another, unnamed document, in `references_off_document` order."""
+    pages, markers = layout_of(model, Page), layout_of(model, LinkMarker)
+    return tuple(
+        finding(
+            REFERENCE_OFF_DOCUMENT,
+            (one.subject,),
+            f"the reference at {port_designation(model, markers[one.subject].port)} on "
+            f"{page_reference_text(model, pages[one.page])} points to "
+            f"{page_reference_text(model, pages[one.target])}, "
+            "a page of another document, and its text does not name that document",
+        )
+        for one in references_off_document(model)
+    )

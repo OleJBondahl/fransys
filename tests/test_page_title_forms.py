@@ -139,7 +139,7 @@ def test_one_label_under_two_unit_prefixes_stands_in_one_place_on_every_sheet(tm
     d.series(cab.X2[2].outer, h3.lamp["1"], wire=(BU, 0.5))
     cover = tmp_path / "cover.md"
     cover.write_text("# Plant\n", encoding="utf-8")
-    built = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover))
+    built = fr.build(d, fr.document(fr.DocumentPreset.SYSTEM, None, cover=cover), fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
     titles = [page_title(built.model, page) for page in layout_of(built.model, Page).values()]
     assert "Alpha, Bravo, Charlie" in titles, titles
     assert "INK_WITHOUT_CONDUCTOR" not in {f.code for f in fr.check(built)}  # KI-1377 guard

@@ -34,7 +34,7 @@ def motor_feeder_case_drafts(starters: int = 3, *, control: bool = True) -> tupl
         rail = d.terminal_strip("X11", "DEMO-TB-2.5", n).run("M", n, bridged=True, rail=True)
         d.dc_supply("24VDC", plus=live[1], minus=rail[1], voltage=24)
     with d.function("G1", "Mains"):
-        q0 = d.device("Q0", "DEMO-MCB-3P")
+        q0 = d.device("Q1", "DEMO-MCB-3P")
         x3 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN", 3 * starters)
     with d.function("G2", "Fan starters"):
         for s in range(starters):

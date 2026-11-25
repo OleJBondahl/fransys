@@ -214,7 +214,7 @@
 "fransys_parts._ratings::unit" = 1
 "fransys_pdf._lists::unit" = 1
 "fransys_pdf._markdown::kind" = 2
-"fransys_render.cables::unit" = 5
+"fransys_render.cables::unit" = 1
 "fransys_render.diagram::unit" = 2
 "fransys_wago.modules::kind" = 2
 "fransys_wago.modules::unit" = 1
@@ -241,7 +241,6 @@
 "fransys_el.symbol_kit::port_templates" = 1
 "fransys_el.symbol_kit::ports" = 2
 "fransys_layout.engines.overview.read.readings::units" = 1
-"fransys_render.sheet_check::documents" = 1
 
 # KI-063 (decision 0423): each kind read becomes a named fact (NF-2 covers 13 scan sites).
 [kind_reads]
@@ -312,21 +311,10 @@
 [render_derive_imports]
 "fransys_render._diagram_lines::diagram_marker_text" = 1
 "fransys_render.cables::block_brackets" = 1
-"fransys_render.cables::block_cables" = 1
-"fransys_render.cables::cable_heading" = 1
-"fransys_render.cables::core_texts" = 1
-"fransys_render.cables::drawn_pins" = 1
-"fransys_render.cables::end_label" = 1
 "fransys_render.cables::pair_room" = 1
-"fransys_render.cables::printed_designation" = 1
-"fransys_render.cables::row_links" = 1
-"fransys_render.check::page_reference_text" = 1
-"fransys_render.check::port_designation" = 1
-"fransys_render.check::references_off_document" = 1
 "fransys_render.diagram::box_lines" = 1
 "fransys_render.diagram::diagram_lines" = 1
 "fransys_render.diagram::diagram_sheet_key" = 1
-"fransys_render.sheet_check::documents" = 1
 
 [render_svg_literals]
 
@@ -622,7 +610,6 @@
 "fransys_model.derive.wire_list::_all_wire_rows" = 1
 "fransys_model.derive.wiring::conductors_on_item" = 2
 "fransys_model.layout.order::by_index" = 1
-"fransys_model.layout.tables::derived_layout_ids" = 1
 "fransys_model.vocab.connectivity::__post_init__" = 1
 "fransys_model.vocab.instantiate::_by_id" = 1
 "fransys_model.vocab.instantiate::_refuse_repeated_names" = 1
@@ -845,7 +832,6 @@
 "fransys_pdf.checks::_markdown_findings" = 1
 "fransys_pdf.checks::_mixed_sheet_format_findings" = 1
 "fransys_pdf.checks::_replica_only_findings" = 1
-"fransys_render.check::_reference_off_document_findings" = 1
 "fransys_render.sheet_check::_no_room" = 2
 "fransys_render.sheet_check::_stack_overlap" = 1
 "fransys_reports.changes::changes_markdown" = 2
@@ -881,7 +867,6 @@
 "name:fransys_pdf._markdown::parse" = 1
 "name:fransys_pdf.checks::check" = 1
 "name:fransys_render._drawn_text::text_tag" = 1
-"name:fransys_render.check::check" = 1
 "packages/fransys-author/src/fransys_author/surface/_tags.py" = 28
 "packages/fransys-author/src/fransys_author/surface/_unit_tags.py" = 10
 "packages/fransys-model/src/fransys_model/derive/contacts.py" = 41
@@ -890,7 +875,7 @@
 "packages/fransys-model/src/fransys_model/derive/facts/part_throws.py" = 25
 "packages/fransys-model/src/fransys_model/derive/texts/designation_render.py" = 34
 "packages/fransys-model/src/fransys_model/derive/texts/designation_segments.py" = 88
-"packages/fransys-model/src/fransys_model/vocab/colours.py" = 63
+"packages/fransys-model/src/fransys_model/vocab/colours.py" = 14
 "packages/fransys-model/src/fransys_model/vocab/designation_scheme.py" = 44
 "packages/fransys-model/src/fransys_model/vocab/facets/rating.py" = 54
 "packages/fransys-model/src/fransys_model/vocab/markings.py" = 15

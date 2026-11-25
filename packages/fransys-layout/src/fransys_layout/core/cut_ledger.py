@@ -107,8 +107,7 @@ def _page_pin(fan: Fan, page: int, where: Mapping[str, int], keys: Mapping[PinRe
 
 def _copy_stand(fan: Fan, page: int, where: Mapping[str, int]) -> StandClass:
     """A copy on a page where the fan has one attachment stands at its trunk end, where that attachment's drop ends; else at its pin."""
-    on = sum(where.get(a.column or a.pin.sym) == page for a in (*fan.drivers, *fan.legs))
-    return StandClass.TRUNK_END if on == 1 else StandClass.PIN
+    return StandClass.TRUNK_END if _attached_on(fan, where)[page] == 1 else StandClass.PIN
 
 
 def copies(flow: FlowGraph, where: Mapping[str, int], copyable: AbstractSet[str], keys: Mapping[PinRef, tuple[int, int]]) -> list[Ref]:

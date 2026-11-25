@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 PARTS = {
     "G1": "TEST-PSU-24V",
-    "Q0": "TEST-MCB-3P",
+    "Q2": "TEST-MCB-3P",
     "Q1": "TEST-KM-3P",
     "F1": "TEST-OL-3P",
     "S1": "TEST-BTN-NC",
@@ -24,7 +24,7 @@ PARTS = {
 def engine(lib: Draft) -> Draft:
     e = Design(lib)
     c1 = e.location("C1", "")
-    x0, x1 = e.strip("X0", at=c1), e.strip("X1", at=c1)
+    x0, x1 = e.strip("X2", at=c1), e.strip("X1", at=c1)
     t = [x0.terminal("TEST-TERM", index=n) for n in (1, 2, 3)]
     rails = {"L1": ("230", 0), "L2": ("230", 120), "L3": ("230", 240)}
     e.supply("400V", current="ac", rails=rails, pins=[x.inner for x in t])
@@ -43,9 +43,9 @@ def engine(lib: Draft) -> Draft:
     e.net("24V", out["+"], cls="power", potential="24V")
     e.net("0V", out["-"], cls="power", potential="0V")
     power = e.wiring(colour="BK", gauge="2.5")
-    for a, b in zip(t, [i["Q0"].fn("main")[p] for p in "135"], strict=True):
+    for a, b in zip(t, [i["Q2"].fn("main")[p] for p in "135"], strict=True):
         power(a.inner, b)
-    for source, load in (("Q0", "Q1"), ("Q1", "F1")):
+    for source, load in (("Q2", "Q1"), ("Q1", "F1")):
         for a, b in zip("246", "135", strict=True):
             power(i[source].fn("main")[a], i[load].fn("main")[b])
     x1t = [x1.terminal("TEST-TERM", index=n) for n in (1, 2, 3)]
@@ -68,11 +68,11 @@ def engine(lib: Draft) -> Draft:
 
 def surface(lib: Draft) -> Draft:
     d = design(lib, place="C1")
-    x0 = d.terminal_strip("X0", "TEST-TERM")
+    x0 = d.terminal_strip("X2", "TEST-TERM")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3])
     g1 = d.device("G1", "TEST-PSU-24V")
     dc = d.dc_supply("24VDC", g1)
-    q0, q1 = d.device("Q0", "TEST-MCB-3P"), d.device("Q1", "TEST-KM-3P")
+    q0, q1 = d.device("Q2", "TEST-MCB-3P"), d.device("Q1", "TEST-KM-3P")
     f1 = d.device("F1", "TEST-OL-3P")
     s1, s2 = d.device("S1", "TEST-BTN-NC"), d.device("S2", "TEST-BTN-NO")
     x1 = d.terminal_strip("X1", "TEST-TERM", pe="DEMO-TB-PE-2.5")
@@ -89,14 +89,14 @@ def _devices(d, table: dict[str, str]) -> dict[str, Any]:
 
 def efficient(lib: Draft) -> Draft:
     d = design(lib, place="C1")
-    x0 = d.terminal_strip("X0", "TEST-TERM")
+    x0 = d.terminal_strip("X2", "TEST-TERM")
     ac = d.ac_supply("400V", "230", *(x0[n] for n in (1, 2, 3)))
     i = _devices(d, PARTS)
     dc = d.dc_supply("24VDC", i["G1"])
     x1 = d.terminal_strip("X1", "TEST-TERM", pe="DEMO-TB-PE-2.5")
     w1 = d.cable("W1", "TEST-CBL-4")
     m1 = d.device("M1", "TEST-MOTOR-3P", place=None)
-    d.series(ac, i["Q0"].main, i["Q1"].main, i["F1"], x1, w1, m1, wire=(BK, 2.5))
+    d.series(ac, i["Q2"].main, i["Q1"].main, i["F1"], x1, w1, m1, wire=(BK, 2.5))
     latch = d.parallel(i["S2"], i["Q1"].aux)
     d.series(dc.plus, i["S1"], latch, i["F1"].aux, i["Q1"].coil, dc.minus, wire=(BU, 0.75))
     return d.draft()

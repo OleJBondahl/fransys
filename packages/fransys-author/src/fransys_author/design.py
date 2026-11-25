@@ -88,13 +88,14 @@ class Scope(UnitScope, BuildScope, LinkScope, SupplyScope):
         title: str = "",
         number: str = "",
         tag: str | None = None,
+        from_release: bool = False,
     ) -> Scope:
         """Write a `UnitRelease` and a `Unit` of it, and return a scope whose unit is the `Unit`.
 
         The release (`name`, `version`, `revision`, `interface`, `title`, `number`) is the product:
         every instance of one release writes an identical record, which the draft keeps once.
         `title` and `number` are the unit's own title and document number, default `""`;
-        `tag` is the instance's tag.
+        `tag` is the instance's tag; `from_release` marks the instance as printed by its own release.
         Every item created through the returned scope, or one nested in it, gets `unit=`
         the new `Unit`, whose `parent` is the unit of `self`, or `None`.
 
@@ -115,7 +116,7 @@ class Scope(UnitScope, BuildScope, LinkScope, SupplyScope):
         # Not `_add`: its name-clash AuthorError words a `name=` fix; a release conflict is
         # the draft's own `MergeConflictError`, naming both origins.
         self._design._draft.add(release, origin=origin)
-        record = ModelUnit(id=unit_id, key=key, release=release.id, parent=self._unit, tag=tag)
+        record = ModelUnit(id=unit_id, key=key, release=release.id, parent=self._unit, tag=tag, from_release=from_release)
         self._design._add(record, origin)
         return Scope(
             self._design,

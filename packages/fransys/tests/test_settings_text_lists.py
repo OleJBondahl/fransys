@@ -15,8 +15,8 @@ pytestmark = pytest.mark.wp("facade")
 def test_the_list_words_are_the_consumers(tmp_path: Path) -> None:
     text = '[words]\nlist_join = " + "\nand_word = "og"\nmore_word = "til"\n'
     ours, theirs = skid_model(), skid_model(consumer_file(tmp_path, text))
-    page = next(p for p in layout_of(ours, Page).values() if page_title_forms(ours, p)[0].count(", ") == 1)
-    assert page_title_forms(ours, page)[0].count(", ") == 1
-    assert page_title_forms(theirs, page)[0].count(" + ") == 1
+    page = next(p for p in layout_of(ours, Page).values() if page_title_forms(ours, p)[0].count(", ") == 2)
+    assert page_title_forms(ours, page)[0].count(", ") == 2
+    assert page_title_forms(theirs, page)[0].count(" + ") == 2
     assert _more_form(ours, ("Pump", "A", "B")) == "Pump and 2 more"
     assert _more_form(theirs, ("Pump", "A", "B")) == "Pump og 2 til"

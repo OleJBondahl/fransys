@@ -1,5 +1,5 @@
 """Field case: no wire joins two pins that each draw a rail's power symbol.
-The bug: the wire J2:1 to K1:11 was drawn with the 24 V bar standing in its middle.
+The bug: the wire X4:1 to K1:11 was drawn with the 24 V bar standing in its middle.
 Fixed by layout-0120 (rule V3, owner 2026-10-02): each pin draws its own symbol and no wire is drawn between them."""
 
 from itertools import pairwise
@@ -25,8 +25,8 @@ def _board() -> fr.BuildResult:
     with d.function("G", "Group"):
         k1 = d.device("K1", "DEMO-RLY-2CO-24")
         k2 = d.device("K2", "DEMO-RLY-2CO-24")
-        j1 = d.device("J1", "DEMO-CONN-2P")
-        j2 = d.device("J2", "DEMO-CONN-2P")
+        j1 = d.device("X3", "DEMO-CONN-2P")
+        j2 = d.device("X4", "DEMO-CONN-2P")
         d.dc_supply("S", plus=j2.x1["1"], minus=j1.x1["1"], voltage=24)
         live = [j2.x1["1"], k1.co_1["11"], k2.co_1["11"]]
         zero = [j1.x1["1"], k1.coil["A2"], k2.coil["A2"]]

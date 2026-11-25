@@ -34,10 +34,10 @@ def _numbered(parts, d) -> Model:
 
 @cache
 def station() -> Model:
-    """Cabinet `-U1` (strips X1, X3, connector C1), motors M1 and M2, switch K1, strip X0.
+    """Cabinet `-U1` (strips X1, X3, connector C1), motors M1 and M2, switch K1, strip X2.
 
-    Four cables: W1 X1:1 to X0, W11 X3 to M1, W21 X3 to M2, W3 K1 to plug P3 mated to C1.
-    The system reading has 4 lines over 5 boxes; K1 and X0 are by others.
+    Four cables: W1 X1:1 to X2, W11 X3 to M1, W21 X3 to M2, W3 K1 to plug P3 mated to C1.
+    The system reading has 4 lines over 5 boxes; K1 and X2 are by others.
     """
     parts, d = _design()
     u = d.scope("cab").unit("demo-pump-cabinet", revision=2, interface="1", tag="U1")
@@ -50,7 +50,7 @@ def station() -> Model:
     for handle in (t1, t11, t21, c1):
         u.boundary(handle)
     field = d.group("EXT", "Field")
-    t0 = d.strip("X0", external=True).terminal(_TB, group=field)
+    t0 = d.strip("X2", external=True).terminal(_TB, group=field)
     m1 = d.item(_MOTOR, tag="M1", group=field)
     m2 = d.item(_MOTOR, tag="M2", group=field)
     k1 = d.item(_SWITCH, tag="K1", group=field, external=True)
@@ -119,3 +119,14 @@ def diagram_facts(boxes, lines, width: int = 1868, height: int = 1248) -> Diagra
         width=width,
         height=height,
     )
+
+
+@cache
+def plugs(count: int, edges: tuple[tuple[int, int], ...]) -> Model:
+    """Connector items P1..Pcount joined by one one-core cable per edge (an edge may repeat)."""
+    parts, d = _design()
+    group = d.group("FLD", "Field")
+    items = [d.item(_CONN, tag=f"P{i}", group=group) for i in range(1, count + 1)]
+    for k, (a, b) in enumerate(edges, start=1):
+        d.cable(_CABLE, tag=f"W{k}").core(1, items[a - 1]["1"], items[b - 1]["1"])
+    return _numbered(parts, d)

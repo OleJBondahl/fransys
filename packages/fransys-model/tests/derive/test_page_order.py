@@ -10,7 +10,6 @@ from fransys_model.derive import (
     DiagramSheet,
     diagram_sheet_order_key,
     document_pages,
-    item_installed,
     ordered_pages,
 )
 lazy from fransys_model.vocab.core import Unit
@@ -56,11 +55,3 @@ def test_diagram_sheets_run_absolute_reading_first_then_by_number() -> None:
 
     a, b, c = sheet(2, _UNIT), sheet(1, _UNIT), sheet(3, None)
     assert sorted((a, b, c), key=diagram_sheet_order_key) == [c, b, a]
-
-
-def test_item_installed_reads_the_item_record() -> None:
-    plant = Plant()
-    on, off = plant.item("on"), plant.item("off", installed=False)
-    model = plant.model()
-    assert item_installed(model, on) is True
-    assert item_installed(model, off) is False

@@ -58,14 +58,14 @@ def _pairs(a, b, names: list[tuple[str, str]]) -> set[frozenset[Any]]:
 
 def test_two_four_pin_connectors_pair_one_to_one_in_pin_order(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2 = d.device("J1", "TEST-CONN-4"), d.device("J2", "TEST-CONN-4")
+    j1, j2 = d.device("X2", "TEST-CONN-4"), d.device("X3", "TEST-CONN-4")
     d.series(j1.x, j2.x, wire=WIRE)
     assert _wires(d) == _pairs(j1.x, j2.x, [(n, n) for n in "1234"])
 
 
 def test_pins_with_other_names_pair_in_pin_order_through_a_cable(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2 = d.device("J1", "TEST-CONN-NAMED"), d.device("J2", "TEST-CONN-OTHER")
+    j1, j2 = d.device("X2", "TEST-CONN-NAMED"), d.device("X3", "TEST-CONN-OTHER")
     w1 = d.cable("W1", "TEST-CBL-3")
     d.series(j1.x, w1, j2.x, wire=WIRE)
     cores = {frozenset((r.a, r.b)) for r in d.draft().records() if isinstance(r, Conductor)}
@@ -74,7 +74,7 @@ def test_pins_with_other_names_pair_in_pin_order_through_a_cable(lib: Draft) -> 
 
 def test_a_strip_between_carries_the_pairs(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2 = d.device("J1", "TEST-CONN-3"), d.device("J2", "TEST-CONN-3")
+    j1, j2 = d.device("X2", "TEST-CONN-3"), d.device("X3", "TEST-CONN-3")
     x1 = d.terminal_strip("X1", "TEST-TERM", 3)
     d.series(j1.x, x1, j2.x, wire=WIRE)
     assert len(_wires(d)) == 6
@@ -82,22 +82,22 @@ def test_a_strip_between_carries_the_pairs(lib: Draft) -> None:
 
 def test_unequal_pin_counts_name_both(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2 = d.device("J1", "TEST-CONN-4"), d.device("J2", "TEST-CONN-3")
-    with pytest.raises(AuthorError, match=r"J1\.x has 4 pins and J2\.x has 3"):
+    j1, j2 = d.device("X2", "TEST-CONN-4"), d.device("X3", "TEST-CONN-3")
+    with pytest.raises(AuthorError, match=r"X2\.x has 4 pins and X3\.x has 3"):
         d.series(j1.x, j2.x, wire=WIRE)
 
 
 def test_equal_pin_names_in_different_orders_name_both_orders(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2 = d.device("J1", "TEST-CONN-NAMED"), d.device("J2", "TEST-CONN-NAMED-REVERSED")
+    j1, j2 = d.device("X2", "TEST-CONN-NAMED"), d.device("X3", "TEST-CONN-NAMED-REVERSED")
     with pytest.raises(AuthorError, match=r"a, b against b, a"):
         d.series(j1.x, j2.x, wire=WIRE)
 
 
 def test_a_sideless_function_in_the_middle_raises(lib: Draft) -> None:
     d = design(lib, place="C1")
-    j1, j2, j3 = (d.device(f"J{i}", "TEST-CONN-3") for i in (1, 2, 3))
-    with pytest.raises(AuthorError, match=r"J2\.x has no line/load pole pair.*j2\.x\.pins"):
+    j1, j2, j3 = (d.device(f"X{i}", "TEST-CONN-3") for i in (1, 2, 3))
+    with pytest.raises(AuthorError, match=r"X2\.x has no line/load pole pair.*x2\.x\.pins"):
         d.series(j1.x, j2.x, j3.x, wire=WIRE)
 
 
@@ -105,6 +105,6 @@ def test_a_sideless_end_against_a_supply_raises(lib: Draft) -> None:
     d = design(lib, place="C1")
     psu = d.device("G1", "TEST-PSU-24V")
     dc = d.dc_supply("24VDC", psu.out)
-    j1 = d.device("J1", "TEST-CONN-NAMED")
-    with pytest.raises(AuthorError, match=r"J1\.x has no line/load pole pair.*j1\.x\.pins"):
+    j1 = d.device("X2", "TEST-CONN-NAMED")
+    with pytest.raises(AuthorError, match=r"X2\.x has no line/load pole pair.*x2\.x\.pins"):
         d.series(dc.plus, j1.x, wire=WIRE)

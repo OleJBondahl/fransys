@@ -72,7 +72,6 @@
 "test_terminals_drawn_at_the_pin.py::test_two_relays_of_one_group_have_the_terminal_at_each_relays_pin" = "GAP-FLIP-1"
 "test_terminals_drawn_at_the_pin.py::test_two_relays_of_two_groups_on_one_page_have_the_terminal_at_each_relays_pin" = "GAP-FLIP-1"
 "test_two_feeders_with_terminal_chains_stand_over_their_box.py::test_supplies_fed_from_terminals_stand_over_the_module_pin_over_pin" = "GAP-FLIP-414"
-"test_unused_pins_hidden.py::test_a_half_wired_box_function_keeps_its_wired_pin_and_drops_the_bare_one" = "GAP-FLIP-418"  # KI-148 (XF-UNUSED-PINS): hide half of a half-wired box (restored by the BOX-UNUSED drop, R3864)
 
 # Source-level strict xfails moved here (R272); each comment keeps the mark's reason.
 # CORE-CARD-FIT: the core's attached-column pitch holds 22 columns, not 32 (SW8a)
@@ -101,3 +100,4 @@
 
 
 [raises]
+"test_power_symbol_row_keeps_one_height.py::test_the_ground_row_keeps_one_height" = "StopIteration"

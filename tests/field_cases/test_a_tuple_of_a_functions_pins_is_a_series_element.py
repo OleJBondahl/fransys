@@ -21,7 +21,7 @@ def _sensor() -> tuple[fr.Design, fr.TerminalStrip, Any]:
 
 def test_three_cores_land_on_pins_one_two_and_four() -> None:
     d, x3, s1 = _sensor()
-    w1 = d.cable("W1", "DEMO-CBL-4G1.5")
+    w1 = d.cable("W1", "DEMO-CBL-8G0.75")
     d.series(x3[1:4], w1, (s1.x1[1], s1.x1[2], s1.x1[4]), wire=(BK, 1.5))
     assert _ends(d) == {frozenset((("X3", str(strip)), ("S1", str(pin)))) for strip, pin in ((1, 1), (2, 2), (3, 4))}
 

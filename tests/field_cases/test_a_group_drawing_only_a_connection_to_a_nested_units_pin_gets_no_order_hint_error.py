@@ -25,7 +25,7 @@ def _cab(d: Any) -> _Io:
     g1 = d.device("G1", "DEMO-PSU-24")
     dc = d.dc_supply("24VDC", g1.output)
     with d.function("PDI", "Inputs"):
-        di1 = d.device("DI1", "DEMO-PLC-DI-2", interface=("di_2",))
+        di1 = d.device("KE1", "DEMO-PLC-DI-2", interface=("di_2",))
     s1 = d.device("S1", "DEMO-LS-1NO1NC", interface=True)
     d.series(s1.no["14"], dc.minus, wire=(BU, 0.5))
     return _Io(di1, s1)

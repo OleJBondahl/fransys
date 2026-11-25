@@ -15,7 +15,7 @@ from fransys_layout.core import Box, inside, overlaps
 from fransys_layout.drawing import page_texts, struck_texts, text_overlaps
 lazy from fransys_model.kernel import Finding
 
-from .codes import FINDING_CODES
+from .drawn_finding import drawn_finding
 from .drawn_geometry import crooked, dot_on_marker, dot_on_pin, over_markers, stray, through_bodies
 
 if TYPE_CHECKING:
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 __all__ = ["drawing_invariant_findings"]
 
 XY = tuple[int, int]
-_INFO = {info.code: info for info in FINDING_CODES}
 
 
 def _at(box: Box) -> str:
@@ -91,7 +90,7 @@ def where_far(drawing: Drawing) -> list[str]:
 
 def _findings(code: str, page: Id[Page], members: list[str]) -> list[Finding]:
     """One finding per member, so a finding count is a member count; the message names the member."""
-    return [_INFO[code].finding((page,), member) for member in members]
+    return [drawn_finding(code, (page,), member) for member in members]
 
 
 def _page_findings(page: Id[Page], part: PagePart) -> list[Finding]:

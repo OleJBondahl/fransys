@@ -96,15 +96,6 @@ class Page:
 
 
 @value
-class RoutePoint:
-    """One vertex of a polyline; `index` is its place along the polyline."""
-
-    index: int
-    x: int
-    y: int
-
-
-@value
 class MarkerPair:
     """One conductor an off stub ends: `port` is its side, `far` the port at the other end, `carrier` the item that carries it (`None` for a wire)."""
 

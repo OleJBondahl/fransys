@@ -10,18 +10,18 @@ from fransys.colours import BU
 
 
 def _columns() -> dict[str, list[int]]:
-    """The x of the coil K1, the suppressor D1 and the two terminals, by their drawn symbol."""
+    """The x of the coil K1, the suppressor F1 and the two terminals, by their drawn symbol."""
     d = fc_design("Coil", place="CAB", date="2026-10-02")
     _cabinet = d.location("CAB", "Cabinet")
     feed, back = d.terminal_strip("X1", "DEMO-TB-2.5", 1), d.terminal_strip("X2", "DEMO-TB-2.5", 1)
     with d.function("G", "Group"):
         k1 = d.device("K1", "DEMO-CTR-3P-24")
-        d1 = d.device("D1", "DEMO-FUSE-ABAT")
+        f1 = d.device("F1", "DEMO-FUSE-ABAT")
     wire = (BU, 0.5)
     d.series(feed[1].outer, k1.coil["A1"], wire=wire)
     d.series(k1.coil["A2"], back[1].outer, wire=wire)
-    d.series(k1.coil["A1"], d1["1"], wire=wire)
-    d.series(k1.coil["A2"], d1["2"], wire=wire)
+    d.series(k1.coil["A1"], f1["1"], wire=wire)
+    d.series(k1.coil["A2"], f1["2"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     columns: dict[str, list[int]] = {}
     for drawing in drawn_pages(model).values():

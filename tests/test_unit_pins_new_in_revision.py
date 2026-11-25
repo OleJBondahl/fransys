@@ -9,6 +9,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pytest
+from _model_build_cover import unit_document
 from fransys_author.design import Design
 
 _CODE = "DESIGNATION_NEW_IN_REVISION"
@@ -29,7 +30,7 @@ def _cabinet(revision, *, relays=("k_a", "k_b"), boards=("m1", "m2"), written=No
         board = cab.scope(name).unit("pins-board", revision=1, interface="1", tag=tags.get(name, f"U{n}"))
         board.revision(1, date=_DATE, text="First", created="OJB")
         board.item("DEMO-PCB-IO", name="pcb")
-    return fr.build(parts, design.draft(), releases=releases), cab, board
+    return fr.build(parts, design.draft(), unit_document(cab), releases=releases), cab, board
 
 
 @pytest.fixture(scope="module")

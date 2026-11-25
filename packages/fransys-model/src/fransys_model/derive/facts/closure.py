@@ -11,6 +11,7 @@ from fransys_model.derive.facts.contacts import link_state
 from fransys_model.derive.facts.joins import port_joins
 from fransys_model.derive.facts.mates import mate_pairs
 from fransys_model.derive.facts.units import enclosing_boards, is_sole_unit_root
+from fransys_model.derive.lookups import item_of_port
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.core import Function, Port
 from fransys_model.vocab.tables import (
@@ -131,7 +132,7 @@ def board_of_ports(model: HasTables, net_ports: Iterable[Id[Port]]) -> Id[Item] 
     """
     common: list[Id[Item]] | None = None
     for port in net_ports:
-        mine = [b for b in enclosing_boards(model, port_item(model, port)) if is_sole_unit_root(model, b)]
+        mine = [b for b in enclosing_boards(model, item_of_port(model, port)) if is_sole_unit_root(model, b)]
         common = mine if common is None else [b for b in common if b in mine]
     return common[-1] if common else None
 

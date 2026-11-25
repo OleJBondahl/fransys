@@ -174,7 +174,7 @@ def _row_graph(g: Graph, r: int, env: PageEnv, rooms: Mapping[Step, int], free: 
         above = col in env.attach and box_edge(env.blocks, row, *env.attach[col][:2]) == "N"
         stack_constraints(g, env.pcs[col], env, rooms, rigid=above and col not in loose)
         if col in env.attach:
-            _attach_y(g, env.pcs[col], env, rooms, (above, col in slack))
+            _attach_y(g, env.pcs[col], env, rooms, (above, col in slack or any(b.trunk for b in env.columns[col].box_pins)))
     for b in row.blocks:
         if env.blocks[b].is_card:
             box = env.blocks[b].anchor or ""

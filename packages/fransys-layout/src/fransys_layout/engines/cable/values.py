@@ -19,6 +19,7 @@ class CoreFacts:
     end_a: Id[Any]
     end_b: Id[Any]
     text_width: int
+    text: str
     link: bool = False
     open: bool = False
     landed: bool = True
@@ -31,6 +32,7 @@ class CableFacts:
     cable: Id[Any]
     external: bool
     heading_width: int
+    heading: str
     cores: tuple[CoreFacts, ...]
 
 
@@ -44,6 +46,7 @@ class PinFacts:
     port: Id[Any]
     landed: bool
     marking_width: int
+    marking: str
     cores: tuple[Id[Any], ...] = ()
 
     @property
@@ -60,6 +63,7 @@ class EndFacts:
     dashed: bool
     blank: bool
     label_width: int
+    label: str
     pins: tuple[PinFacts, ...]
 
     @property
@@ -86,6 +90,7 @@ class BlockFacts:
     top: tuple[EndFacts, ...]
     bottom: tuple[EndFacts, ...]
     harness_width: int | None = None
+    harness_label: str | None = None
     wires: tuple[CoreFacts, ...] = ()
     bracket_room: int = 0  # the height above the rows a bracket and its label take
 
@@ -115,6 +120,7 @@ class PlacedCell:
     x: int
     width: int
     landed: bool
+    marking: str
     landings: tuple[CorePlace, ...] = ()
 
 
@@ -126,6 +132,7 @@ class PlacedEnd:
     top: bool
     dashed: bool
     blank: bool
+    label: str
     x: int
     y: int
     width: int
@@ -145,6 +152,8 @@ class PlacedWire:
     run_b: tuple[Point, ...]
     text_x: int
     text_y: int
+    text: str
+    link: bool
     open: bool = False
 
 
@@ -154,6 +163,7 @@ class PlacedCable:
 
     cable: Id[Any]
     external: bool
+    heading: str
     box: Box
 
 
@@ -168,6 +178,7 @@ class PlacedBlock:
     pitch: int
     boxes: tuple[PlacedCable, ...]
     harness: Box | None
+    harness_label: str | None
     ends: tuple[PlacedEnd, ...]
     wires: tuple[PlacedWire, ...]
 

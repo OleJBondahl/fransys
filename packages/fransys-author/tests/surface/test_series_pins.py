@@ -12,25 +12,25 @@ from fransys_model.vocab import Conductor, WireFacet, WireRowHint
 _ROWS = "BK BK BK BU RD BU BU BU BU"
 # Recorded from main (detail.wire at 7257c3f06) before the call was deleted: (record, ends, colours, gauge).
 _OLD = {
-    "pair": [("facet", "H1.1-J1.1", "BK", "0.75"), ("wire", "H1.1-J1.1", None, None)],
+    "pair": [("facet", "H1.1-X1.1", "BK", "0.75"), ("wire", "H1.1-X1.1", None, None)],
     "chain_size": [
         ("hint", "H1.1-H2.1", _ROWS, "0.75"),
-        ("hint", "H1.1-J1.1", _ROWS, "0.75"),
+        ("hint", "H1.1-X1.1", _ROWS, "0.75"),
         ("wire", "H1.1-H2.1", None, None),
-        ("wire", "H1.1-J1.1", None, None),
+        ("wire", "H1.1-X1.1", None, None),
     ],
-    "bare": [("hint", "H1.2-J1.2", _ROWS, "None"), ("wire", "H1.2-J1.2", None, None)],
+    "bare": [("hint", "H1.2-X1.2", _ROWS, "None"), ("wire", "H1.2-X1.2", None, None)],
 }
 _CALLS = {
-    "pair": ((("J1", "1"), ("H1", "1")), ("BK", 0.75)),
-    "chain_size": ((("J1", "1"), ("H1", "1"), ("H2", "1")), 0.75),
-    "bare": ((("J1", "2"), ("H1", "2")), None),
+    "pair": ((("X1", "1"), ("H1", "1")), ("BK", 0.75)),
+    "chain_size": ((("X1", "1"), ("H1", "1"), ("H2", "1")), 0.75),
+    "bare": ((("X1", "2"), ("H1", "2")), None),
 }
 
 
 def _devices() -> tuple[Design, Any, Any, Any]:
     d = design(fransys_parts.load("demo_parts"))
-    return d, d.device("J1", "DEMO-CONN-2P"), d.device("H1", "DEMO-LAMP-24"), d.device("H2", "DEMO-LAMP-24")
+    return d, d.device("X1", "DEMO-CONN-2P"), d.device("H1", "DEMO-LAMP-24"), d.device("H2", "DEMO-LAMP-24")
 
 
 def _ends(key: tuple[str, ...]) -> str:
@@ -61,7 +61,7 @@ def test_a_pin_only_series_writes_the_records_detail_wire_wrote(case: str) -> No
 def test_a_pin_in_the_middle_is_a_node_both_hops_land_on() -> None:
     d, j, h, g = _devices()
     d.series(j["1"], h["1"], g["1"], wire=0.75)
-    assert {r[1] for r in _records(d) if r[0] == "wire"} == {"H1.1-J1.1", "H1.1-H2.1"}
+    assert {r[1] for r in _records(d) if r[0] == "wire"} == {"H1.1-X1.1", "H1.1-H2.1"}
 
 
 def test_a_middle_pin_tuple_of_the_wrong_width_is_refused_with_the_count() -> None:

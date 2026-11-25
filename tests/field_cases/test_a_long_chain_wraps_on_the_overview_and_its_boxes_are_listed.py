@@ -9,7 +9,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 import pytest
 from _field_designs import fc_design
-from _model_build_cover import system_document
+from _model_build_cover import system_document, unit_document
 from fransys.colours import RD
 from fransys_overview._js_panels import JS_PANELS
 
@@ -40,8 +40,8 @@ def _rs(u: fr.Design) -> _Io:
 @pytest.fixture(scope="module")
 def data(tmp_path_factory) -> dict[str, Any]:
     d = fc_design("FC")
-    d.add(_rs, "U1")
-    written = fr.write(fr.build(d, system_document()), tmp_path_factory.mktemp("out"))
+    unit = d.add(_rs, "U1")
+    written = fr.write(fr.build(d, system_document(), unit_document(unit)), tmp_path_factory.mktemp("out"))
     page = next(p for p in written if p.name.endswith("overview.html")).read_text()
     block = re.search(r'id="overview-data">(.*?)</script>', page, re.DOTALL)
     assert block is not None

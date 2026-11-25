@@ -177,7 +177,7 @@ def _ring_cab(d: fr.Design) -> _NoInterface:
     """A wire, a cable core to a motor and a bridged strip: one join of each kind."""
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     d.terminal_strip("X2", "DEMO-TB-2.5", 4).run("P", 4, bridged=True)
-    d.series(strip[1], d.cable("W1", "DEMO-CBL-4G1.5"), d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.series(strip[1], d.cable("W1", "DEMO-CBL-8G0.75"), d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     d.series(strip[2], strip[3], wire=(BK, 2.5))
     return _NoInterface()
 
@@ -212,7 +212,7 @@ def _build_ring_cab(tmp_path: Path, *, ship: bool, text: str) -> fr.BuildResult:
     documents = [fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-cab", cover=cover)]
     if ship:
         io = d.add(_ring_io, "U2", place="CAB")
-        d.series(io.x3[1], d.cable("W9", "DEMO-CBL-4G1.5"), d.device("M2", "DEMO-MOTOR-4KW")["U"])
+        d.series(io.x3[1], d.cable("W9", "DEMO-CBL-8G0.75"), d.device("M2", "DEMO-MOTOR-4KW")["U"])
         d.series(io.x3[2], d.device("M3", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
         documents.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
         documents.append(fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "ring-io", cover=cover))
@@ -243,7 +243,7 @@ def test_every_join_of_the_model_is_one_row_of_the_sheet(tmp_path: Path) -> None
     assert all(r[7] == "" for r in lines if r[1] == "Bridge")
     cores = [r[6] for r in lines if r[1] == "Core"]
     assert cores
-    assert set(cores) == {"1.5"}
+    assert set(cores) == {"0.75"}
 
 
 def test_a_ring_out_word_is_the_consumers(tmp_path: Path) -> None:

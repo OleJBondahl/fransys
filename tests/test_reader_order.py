@@ -78,7 +78,7 @@ def _board(salt: str):
     )
     def board(u: fr.Design) -> _Io:
         pcb = u.device("A1", "DEMO-PCB-IO", name=f"{salt}pcb")
-        j1 = u.device("J1", "DEMO-CONN-4P-MIXED", parent=pcb, unused=True, name=f"{salt}j1")
+        j1 = u.device("X1", "DEMO-CONN-4P-MIXED", parent=pcb, unused=True, name=f"{salt}j1")
         u.series(j1["2"], j1["10"], wire=(BK, 0.5))
         return _Io(j1.x1)
 

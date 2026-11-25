@@ -13,7 +13,7 @@ from pathlib import Path
 import fransys as fr
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import system_document, unit_document
 from fransys._export_ledger import ExportNameClashError
 from fransys.pipeline import BuildResult
 from fransys_author.design import Design
@@ -56,7 +56,7 @@ def _build_worked(settings=None):
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts, tags=("P1", "P2"))
     draft = d.draft()
-    probe = fr.build(parts, draft, system_document()).model
+    probe = fr.build(parts, draft).model
     cabinet = _unit_id(probe, name="demo-pump-cabinet", prefix="pump1")
     board = _unit_id(probe, name="demo-io-board", prefix="pump1")
     covers = Path(tempfile.mkdtemp())
@@ -206,8 +206,8 @@ def _unit_design(*, strip, rack):
         _wire_field_terminal(d, u, c1, grp)
     if rack:
         rack_item = u.item(None, tag="U1", at=c1, group=grp)
-        u.item("DEMO-PLC-DO-2", tag="DO1", name="do", parent=rack_item, position=1, at=c1, group=grp)
-    return fr.build(parts, d.draft(), system_document()), u
+        u.item("DEMO-PLC-DO-2", tag="KE1", name="do", parent=rack_item, position=1, at=c1, group=grp)
+    return fr.build(parts, d.draft(), system_document(), unit_document(u)), u
 
 
 def _unit_names(tmp_path, *, strip, rack):
@@ -392,7 +392,7 @@ def test_a_unit_write_removes_its_own_stale_export_and_keeps_the_current_revisio
     c1 = u.location("C1", "Cabinet")
     grp = u.group("PLC", "PLC")
     _wire_field_terminal(d, u, c1, grp)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), system_document(), unit_document(u))
 
     (tmp_path / "demo-unit-v1.5-bom.csv").write_text("stale", encoding="utf-8")
 

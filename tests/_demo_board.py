@@ -15,6 +15,6 @@ def demo_board(**extra: Any) -> Any:
     @fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB", **extra)
     def board(u: Any) -> Io:
         root = u.device("U9", "DEMO-PCB-IO")
-        return Io(u.device("J1", "DEMO-CONN-2P", parent=root, interface=True, unused=True))
+        return Io(u.device("X1", "DEMO-CONN-2P", parent=root, interface=True, unused=True))
 
     return board

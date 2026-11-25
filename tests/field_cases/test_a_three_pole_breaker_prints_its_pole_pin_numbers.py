@@ -20,7 +20,7 @@ def texts() -> list[str]:
     d = fc_design("T", place="CAB", customer="E", date="2026-10-15")
     cab = d.location("CAB", "Cabinet")
     with d.function("G1", "Mains"):
-        q0 = d.device("Q0", "DEMO-MCB-3P")
+        q0 = d.device("Q1", "DEMO-MCB-3P")
         f3 = d.device("F3", "DEMO-MCB-3P")
         x3 = d.terminal_strip("X3", "DEMO-TB-2.5", 3)
         d.series(q0.element, x3, f3.element, wire=(BK, 1.5))

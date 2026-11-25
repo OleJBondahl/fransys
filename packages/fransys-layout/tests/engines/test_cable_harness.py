@@ -298,11 +298,11 @@ def _two_cable_facts(*, interleaved: bool):
     landing = {ids[n]: (make_id(Conductor, (str(key),)),) for key, *ends in wires for n in ends}
 
     def end(item, *ports, blank=False):
-        pins = tuple(PinFacts(port=p, landed=True, marking_width=16, cores=landing[p]) for p in ports)
-        return EndFacts(item=item, dashed=False, blank=blank, label_width=16, pins=pins)
+        pins = tuple(PinFacts(port=p, landed=True, marking_width=16, marking="m", cores=landing[p]) for p in ports)
+        return EndFacts(item=item, dashed=False, blank=blank, label_width=16, label="e", pins=pins)
 
     def core(key, a, b):
-        return CoreFacts(key=key, conductor=make_id(Conductor, (str(key),)), end_a=a, end_b=b, text_width=16)
+        return CoreFacts(key=key, conductor=make_id(Conductor, (str(key),)), end_a=a, end_b=b, text_width=16, text="t")
 
     top = (end(owner[0], ids[0], ids[1]), end(owner[1], ids[2]))
     cables = (
@@ -310,12 +310,14 @@ def _two_cable_facts(*, interleaved: bool):
             cable=make_id(Item, ("a",)),
             external=False,
             heading_width=16,
+            heading="h",
             cores=tuple(core(key, ids[a], ids[b]) for key, a, b in wires[:2]),
         ),
         CableFacts(
             cable=make_id(Item, ("b",)),
             external=False,
             heading_width=16,
+            heading="h",
             cores=tuple(core(key, ids[a], ids[b]) for key, a, b in wires[2:]),
         ),
     )

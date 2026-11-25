@@ -22,7 +22,7 @@ def _built() -> fr.BuildResult:
     with d.function("G0", "PLC inputs"):
         card = d.device("K1", "DEMO-PLC-DI-16")
     with d.function("F", "Feed"):
-        strip = d.terminal_strip("XF2", "DEMO-TB-2.5", 4)
+        strip = d.terminal_strip("XD2", "DEMO-TB-2.5", 4)
         for terminal, (tag, channel) in enumerate(LANDS.items(), 1):
             contact = d.device(tag, "DEMO-BLOCK-1NO")
             d.series(strip[terminal].inner, contact.no["13"], wire=WIRE)

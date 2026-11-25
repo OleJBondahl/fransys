@@ -150,7 +150,7 @@ def _gnd_top(*, bonded: bool, unit: Any) -> Any:
 
     @fr.unit("demo-gnd-top", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
     def top(u: fr.Design) -> _Top:
-        first, second, recv = u.add(unit, "J1"), u.add(unit, "J2"), u.add(_gnd_receiver, "R1")
+        first, second, recv = u.add(unit, "X2"), u.add(unit, "X3"), u.add(_gnd_receiver, "R1")
         u.series(first.out.outer, recv.ground[1].outer, wire=("BK", 0.75))
         u.series(second.out.outer, recv.ground[2].outer, wire=("BK", 0.75))
         if bonded:
@@ -185,15 +185,15 @@ def test_two_unbonded_ground_sources_print_their_unit_tags_and_the_receiving_pag
     """R2589: each ground symbol of the receiving cabinet prints its source unit's tag; the bare ones of the page are one identity (KI-1407)."""
     result = _build_receiver(tmp_path, bonded=False)
     _expect_unbonded_shape(result)
-    assert {"0V -U1-J1", "0V -U1-J2"} <= _ground_texts(result.model)
+    assert {"0V -U1-X2", "0V -U1-X3"} <= _ground_texts(result.model)
 
 
 def test_a_qualified_ground_prints_the_declared_minus_pole_name(tmp_path: Path) -> None:
-    """R2592: with `names=("24V", "GND")` the receiving cabinet's grounds print `GND -U1-J1` and `GND -U1-J2`, the rail's declared name."""
+    """R2592: with `names=("24V", "GND")` the receiving cabinet's grounds print `GND -U1-X2` and `GND -U1-X3`, the rail's declared name."""
     result = _build_receiver(tmp_path, bonded=False, unit=_named_source)
     _expect_unbonded_shape(result)
     model = result.model
-    assert {"GND -U1-J1", "GND -U1-J2"} <= _ground_texts(model)
+    assert {"GND -U1-X2", "GND -U1-X3"} <= _ground_texts(model)
 
 
 def test_two_bonded_ground_sources_print_no_ground_text_and_raise_no_identity_finding(tmp_path: Path) -> None:
@@ -216,7 +216,7 @@ def test_rail_source_unit_names_the_declaring_unit_of_each_unbonded_source_and_n
             source, cabinet = rail_source_unit(model, p), item_unit(model, item_of_port(model, p))
             if source is not None and cabinet is not None:
                 found.add((tag(model, cabinet), tag(model, source)))
-        assert found == (set() if bonded else {("-U1-R1", "-U1-J1"), ("-U1-R1", "-U1-J2")})
+        assert found == (set() if bonded else {("-U1-R1", "-U1-X2"), ("-U1-R1", "-U1-X3")})
 
 
 def test_a_fused_supply_in_a_qualified_cabinet_prints_the_device_then_the_source_unit(monkeypatch: pytest.MonkeyPatch) -> None:

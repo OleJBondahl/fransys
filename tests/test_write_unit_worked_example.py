@@ -134,7 +134,7 @@ def built(_covers):
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts, tags=("P1", "P2"))
     draft = d.draft()
-    probe_model = fr.build(parts, draft, system_document()).model
+    probe_model = fr.build(parts, draft).model
     pump1_cabinet = _unit_id(probe_model, name="demo-pump-cabinet", prefix="pump1")
     pump1_board = _unit_id(probe_model, name="demo-io-board", prefix="pump1")
     pump2_cabinet = _unit_id(probe_model, name="demo-pump-cabinet", prefix="pump2")
@@ -278,7 +278,7 @@ def test_write_unit_accepts_a_scope_directly(tmp_path):
     d.revision(1, date="2026-09-23", text="First issue", created="XX")
     unit_scope = d.scope("cab").unit("demo-unit", revision=1, interface="1")
     unit_scope.revision(1, date="2026-01-01", text="First release", created="XX")
-    result = fr.build(fr.parts(), d.draft(), system_document())
+    result = fr.build(fr.parts(), d.draft())
     written = fr.write(result, tmp_path, unit=unit_scope)
     assert len(written) > 0
 
@@ -306,7 +306,7 @@ def test_write_unit_str_name_writes_the_same_files_as_the_scope(tmp_path):
     d.revision(1, date="2026-09-23", text="First issue", created="XX")
     unit_scope = d.scope("cab").unit("relay-board", revision=1, interface="1")
     unit_scope.revision(1, date="2026-01-01", text="First release", created="XX")
-    result = fr.build(fr.parts(), d.draft(), system_document())
+    result = fr.build(fr.parts(), d.draft())
 
     by_scope = fr.write(result, tmp_path / "by-scope", unit=unit_scope)
     by_name = fr.write(result, tmp_path / "by-name", unit="relay-board")
@@ -340,7 +340,7 @@ def test_write_unit_str_two_instances_of_the_same_name_writes_the_one_design_set
     first.revision(1, date="2026-01-01", text="First release", created="XX")
     second = d.scope("cab2").unit("dup-name", revision=1, interface="1")
     second.revision(1, date="2026-01-01", text="First release", created="XX")
-    result = fr.build(fr.parts(), d.draft(), system_document())
+    result = fr.build(fr.parts(), d.draft())
     written = fr.write(result, tmp_path, unit="dup-name")
     (designations,) = (p for p in written if p.name.endswith("designations.csv"))
     assert designations.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
@@ -354,7 +354,7 @@ def test_the_default_write_of_two_instances_of_one_name_writes_one_set_under_uni
     for scope in ("cab1", "cab2"):
         unit = d.scope(scope).unit("dup-name", revision=1, interface="1")
         unit.revision(1, date="2026-01-01", text="First release", created="XX")
-    written = fr.write(fr.build(fr.parts(), d.draft(), system_document()), tmp_path)
+    written = fr.write(fr.build(fr.parts(), d.draft()), tmp_path)
     (designations,) = (p for p in written if "dup-name" in p.parts and p.name.endswith("designations.csv"))
     assert designations.read_text(encoding="utf-8").splitlines()[0] == "designation,description"
     (system,) = (p for p in written if "units" not in p.parts and p.name.endswith("designations.csv"))
@@ -375,7 +375,7 @@ def test_write_by_name_of_a_unit_placed_once_keeps_reference_and_its_placed_pdf(
     switch = d.item("DEMO-SWITCH-2P", tag="K1", at=fld, group=grp)
     wire_field_to_switch(d, field[1], switch.fn("x1")["1"], cable_tag="WM1S")
     draft = d.draft()
-    cabinet = _unit_id(fr.build(parts, draft, system_document()).model, name="demo-pump-cabinet", prefix="pump1")
+    cabinet = _unit_id(fr.build(parts, draft).model, name="demo-pump-cabinet", prefix="pump1")
     document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=_cover(tmp_path, "cover.md", "# Cabinet\n"))
     result = fr.build(parts, draft, document, system_document())
     for index, scope in enumerate((cabinet, "demo-pump-cabinet")):

@@ -11,8 +11,6 @@ from plant import Plant as BasePlant
 
 from fransys_model.elecdef import Connector, Gender
 from fransys_model.kernel import Id, Model, Origin, make_id
-from fransys_model.refdef import Aspect
-from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Function, Item, Port, Unit
 from fransys_model.vocab.enums import (
     ConductorKind,
@@ -104,24 +102,6 @@ class Plant(BasePlant):
                 label=label,
             )
         )
-
-    def location(self, key: str, label: str) -> Id[AspectNode]:
-        """Add a LOCATION node."""
-        node = AspectNode(
-            id=make_id(AspectNode, (key,)),
-            key=(key,),
-            aspect=Aspect.LOCATION,
-            parent=None,
-            label=label,
-            description="Invented",
-        )
-        self.add(node)
-        return node.id
-
-    def place(self, item: Id[Item], node: Id[AspectNode]) -> None:
-        """Place `item` at `node`."""
-        key = (*self._key_of(item), "at", *self._key_of(node))
-        self.add(Placement(id=make_id(Placement, key), key=key, item=item, node=node))
 
     def channels(
         self,

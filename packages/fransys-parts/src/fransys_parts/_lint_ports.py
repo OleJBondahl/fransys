@@ -22,6 +22,7 @@ def check_ports(entry: _toml.Table, symbol: object, path: str, line: int) -> lis
             continue
         findings.extend(_fields.check_fields(port, _fields.PORT_FIELDS, path=path, line=line, table_name="port"))
         findings.extend(_check_port(port, symbol, names_seen, path, line))
+        findings.extend(_check_wire_port(port, entry.get("kind"), symbol, path, line))
     return findings
 
 
@@ -35,6 +36,14 @@ def _check_port(port: _toml.Table, symbol: object, names_seen: set[str], path: s
     if "symbol_port" in port and type(symbol) is not str:
         findings.append(_toml.finding("SYMBOL_PORT_WITHOUT_SYMBOL", path, line, f"port {name!r} has symbol_port with no function symbol"))
     return findings
+
+
+def _check_wire_port(port: _toml.Table, kind: object, symbol: object, path: str, line: int) -> list[Finding]:
+    """`CONNECTOR_PIN_NOT_ON_WIRE_SIDE`: a connector pin drawn alone binds its symbol's wire side, `in`; `out` stands at the mating face (KI-1493)."""
+    bound = port.get("symbol_port")
+    if kind != "connector" or type(symbol) is not str or bound in (None, "in"):
+        return []
+    return [_toml.finding("CONNECTOR_PIN_NOT_ON_WIRE_SIDE", path, line, f"connector port {port.get('name')!r} has symbol_port {bound!r}, not 'in'")]
 
 
 def check_links(entry: _toml.Table, path: str, line: int) -> list[Finding]:

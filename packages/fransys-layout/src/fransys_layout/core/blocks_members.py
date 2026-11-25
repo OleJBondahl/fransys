@@ -139,12 +139,14 @@ def _member(acc: _Acc, env: Env) -> Member:
 
 
 def block_group(m: Member, env: Env) -> str | None:
-    """A card takes its box's group; a fan the majority of its legs (L2); a column its own."""
+    """A card takes its box's group; a fan driven by a box pin its driver's, else the majority of its own legs (L2); a column its own."""
     if m.anchor is not None:
         return env.syms[m.anchor].group
     fan = next((f for f in env.flow.fans if f.id == m.fan), None)
     if fan is not None:
-        legs = (env.col_group.get(a.column or "") for a in fan.legs if a.column)
+        if driver := next((env.syms[d.pin.sym].group for d in fan.drivers if d.column is None), None):
+            return driver
+        legs = (env.col_group.get(a.column or "") for a in fan.legs if a.column in m.cols)
         votes = Counter(g for g in legs if g)
         if votes:
             best = max(votes.values())

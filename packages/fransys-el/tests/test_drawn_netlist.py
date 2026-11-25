@@ -599,7 +599,7 @@ def _hidden_pe_design(*, rail: bool = True) -> tuple[Any, Any]:
     """A motor cabled to a declared PE strip (a rail unless `rail` is off) and a 24 V lamp, built with `[export] hide_pe`: PE is in no drawn net."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5-TWIN")
+    x0 = d.terminal_strip("X3", "DEMO-TB-2.5-TWIN")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     pe = d.terminal_strip("PE", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True, rail=rail)
     with d.function("FAN", "Fan"):

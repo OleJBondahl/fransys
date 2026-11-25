@@ -14,7 +14,7 @@ class _Io(NamedTuple):
 
 @fc_unit("starter", title="Starter", number="S-1")
 def _starter(d):
-    x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
+    x0 = d.terminal_strip("X1", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", 230, x0[1], x0[2], x0[3])
     x2 = d.terminal_strip("X2", "DEMO-TB-2.5", 2)
     ac1 = d.ac_supply("230V", 230, x2[1], n=x2[2], names=("CL", "CN"))

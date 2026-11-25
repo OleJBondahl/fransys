@@ -9,12 +9,10 @@ from typing import TYPE_CHECKING, cast
 from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.plc_wiring import plc_settings
 from fransys_model.derive.facts.roles import function_channels
-from fransys_model.derive.facts.units import external
-from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.tables import facets_of, functions, items, parts, ports
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Item, Port, Unit
+lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
 from .facts.children import child_items
@@ -134,21 +132,3 @@ def plc_rack_modules(model: Model, rack: Id[Item], *, unit: Id[Unit] | None = No
         devices=frozendict(channel_devices(model)),
     )
     return tuple(_rack_module(model, idx, facts, found, unit) for found in _modules(model, rack))
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def channel_pins(model: Model) -> frozenset[Id[Port]]:
-    """Count the channel pins: those of a PLC channel template, and every pin of a part-less device.
-
-    It counts channel pins; "is a PLC channel" is `function_channels`. The second
-    case is an external item with no part: its channels are unknown, so each pin is one.
-    """
-    channels = function_channels(model)
-    all_functions, all_items = functions(model), items(model)
-    found = set()
-    for pin in ports(model).values():
-        function = all_functions[pin.function]
-        item = all_items[function.item]
-        if function.id in channels or (item.part is None and external(model, item.id)):
-            found.add(pin.id)
-    return frozenset(found)

@@ -271,10 +271,6 @@ _.L3  # TESTS fransys-author/tests/surface/test_supplies.py:74
 _.letter_rule  # OTHER fransys-parts/src/fransys_parts/lint.py:218
 _.sheet_kind  # FIELDS fransys-model/src/fransys_model/layout/sheets.py:23
 
-# DEL-12: the old engine was the only reader of this model field; it is dead now. The
-# citation is the field itself. Delete the field with DEL-3 (model change, not this lane).
-_.port_pairs  # OTHER fransys-model/src/fransys_model/derive/pairing.py:28
-
 # --- FAN-2 (R338): fields and members whose only reader was the deleted old engine --------
 # The records and values stay (Profile, Chain hints, SymbolChoice, the text-placement options);
 # their fields are read generically. A cleanup round trims the fields no consumer reads.

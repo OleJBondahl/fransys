@@ -45,7 +45,7 @@ class _Source(SeriesElement):
     """A fake protocol element: `width` supply-like ends on the load side of a breaker."""
 
     def __init__(self, d: Design, width: int) -> None:
-        self.ports = _pins(d, "Q0", "TEST-MCB-3P", "main", ["2", "4", "6"][:width])
+        self.ports = _pins(d, "Q2", "TEST-MCB-3P", "main", ["2", "4", "6"][:width])
 
     @override
     def _series_width(self) -> int:
@@ -109,13 +109,13 @@ def test_a_series_that_reaches_no_supply_writes_hinted_wires_and_no_facet(lib: D
 
 def test_a_parallel_of_a_button_and_a_contactor_aux_in_a_one_pole_series(lib: Draft) -> None:
     d = design(lib, place="C1")
-    s0, s1 = d.device("S0", "TEST-BTN-NC"), d.device("S1", "TEST-BTN-NO")
+    s0, s1 = d.device("S5", "TEST-BTN-NC"), d.device("S1", "TEST-BTN-NO")
     k1 = d.device("K1", "TEST-KM-3P")
     d.series(s0.contact, d.parallel(s1, k1.aux), k1.coil, wire=WIRE)
 
     twin = design(lib, place="C1")
     wiring = twin._engine.wiring(colour="BK", gauge="2.5")
-    t0, t1 = (twin._engine.item(m, tag=t, name=t) for t, m in (("S0", "TEST-BTN-NC"), ("S1", "TEST-BTN-NO")))
+    t0, t1 = (twin._engine.item(m, tag=t, name=t) for t, m in (("S5", "TEST-BTN-NC"), ("S1", "TEST-BTN-NO")))
     tk = twin._engine.item("TEST-KM-3P", tag="K1", name="K1")
     out = t0.fn("contact")["22"]
     wiring(out, t1.fn("contact")["13"])
@@ -253,11 +253,11 @@ def test_a_series_element_without_ends_or_a_bridge_without_between_cannot_be_mad
 
 def test_a_parallel_followed_by_a_parallel_is_a_star_from_the_first_member_of_the_earlier_group(lib: Draft) -> None:
     d = design(lib, place="C1")
-    s0, a1, a2, b1, b2 = (d.device(t, "TEST-BTN-NO") for t in ("S0", "S1", "S2", "S3", "S4"))
+    s0, a1, a2, b1, b2 = (d.device(t, "TEST-BTN-NO") for t in ("S5", "S1", "S2", "S3", "S4"))
     d.series(s0.contact, d.parallel(a1.contact, a2.contact), d.parallel(b1.contact, b2.contact), wire=WIRE)
 
     twin = design(lib, place="C1")
-    t0, t1, t2, t3, t4 = (twin._engine.item("TEST-BTN-NO", tag=t, name=t).fn("contact") for t in ("S0", "S1", "S2", "S3", "S4"))
+    t0, t1, t2, t3, t4 = (twin._engine.item("TEST-BTN-NO", tag=t, name=t).fn("contact") for t in ("S5", "S1", "S2", "S3", "S4"))
     wiring = twin._engine.wiring(colour="BK", gauge="2.5")
     wiring(t0["14"], t1["13"])
     wiring(t0["14"], t2["13"])

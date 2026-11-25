@@ -6,7 +6,6 @@ returns the numbered, validated model unlaid, with no layout call attempted -- n
 
 import fransys as fr
 import fransys_pdf
-import fransys_render
 import pytest
 from demo_designs import cabinet_design
 from fransys import pipeline
@@ -14,14 +13,13 @@ from fransys_author.design import Design
 
 from ._spy import spy
 
-_GATED_PIPELINE_NAMES = ("lay_out_if_needed",)
+_GATED_PIPELINE_NAMES = ("lay_out_if_needed", "check_references_off_document")
 
 
 def _spy_every_gated_call(monkeypatch):
     """One call list per function the gate covers, keyed by name."""
     calls = {name: spy(monkeypatch, pipeline, name) for name in _GATED_PIPELINE_NAMES}
     calls["fransys_pdf.check"] = spy(monkeypatch, fransys_pdf, "check")
-    calls["fransys_render.check"] = spy(monkeypatch, fransys_render, "check")
     return calls
 
 
@@ -74,7 +72,7 @@ def test_document_build_runs_layout_and_render(tmp_path, monkeypatch):
 
     assert len(calls["lay_out_if_needed"]) > 0
     assert len(calls["fransys_pdf.check"]) > 0
-    assert len(calls["fransys_render.check"]) > 0
+    assert len(calls["check_references_off_document"]) > 0
 
 
 def _changeover_no_document_draft(parts):
@@ -88,8 +86,8 @@ def _changeover_no_document_draft(parts):
     cab = scope.location("CAB", "Cabinet")
     field = scope.location("FIELD", "Field strips")
     supply = scope.group("SUP", "Supply")
-    field_a = scope.strip("X01", at=field)
-    field_b = scope.strip("X02", at=field)
+    field_a = scope.strip("X1", at=field)
+    field_b = scope.strip("X2", at=field)
     relay = scope.item("DEMO-RLY-4CO-24", tag="K1", at=cab, group=supply)
     wire = scope.wiring(colour="BK", gauge="1.5")
     for pole in (3, 4):

@@ -6,32 +6,21 @@ from fransys_render._cable_ink import Ink
 from fransys_render._cable_pen import Pen
 from fransys_render.cables import _end
 from fransys_render.sheet_check import _overflow
-from library_records import freeze
 
 from electrical_symbols import LIBRARY
-from fransys_layout import PlacedBlock, PlacedEnd
-from fransys_model.kernel import Draft, make_id
+from fransys_layout import PlacedEnd
+from fransys_model.kernel import make_id
 from fransys_model.vocab import Document, Item
 
 
 def test_a_blank_end_draws_no_box_label_or_cell() -> None:
     item = make_id(Item, ("item", "x"))
-    block = PlacedBlock(
-        subject=item,
-        unit=None,
-        width=40,
-        height=16,
-        pitch=4,
-        boxes=(),
-        harness=None,
-        ends=(),
-        wires=(),
-    )
     end = PlacedEnd(
         item=item,
         top=True,
         dashed=False,
         blank=True,
+        label="",
         x=0,
         y=0,
         width=40,
@@ -39,8 +28,7 @@ def test_a_blank_end_draws_no_box_label_or_cell() -> None:
         cells=(),
     )
     ink = Ink(Pen(LIBRARY, module_mm=Decimal("2.5"), text_height_mm=Decimal("2.5"), pad_g=2, font_g=11))
-    model = freeze(Draft())
-    _end(model, ink, block, end)  # a blank end reads neither the model nor the block
+    _end(ink, end)  # a blank end draws nothing
     assert ink.body() == ""
 
 

@@ -106,6 +106,7 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
                 x=left + pin.places * pitch // 2,
                 width=pin.places * pitch,
                 landed=pin.landed,
+                marking=pin.marking,
                 landings=places,
             )
         )
@@ -115,6 +116,7 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
         top=top,
         dashed=end.dashed,
         blank=end.blank,
+        label=end.label,
         x=x0,
         y=y,
         width=end.places * pitch,
@@ -228,6 +230,8 @@ def _core_wire(facts: BlockFacts, box_y: int, core: CoreFacts, landing: Landing,
         run_b=up,
         text_x=text_x(facts, core, top[0]),
         text_y=box_y + box_room(facts)[1],
+        text=core.text,
+        link=core.link,
         open=core.open,
     )
     return wire, (upper, lower_run)
@@ -245,7 +249,7 @@ def _frame(facts: BlockFacts, ends: tuple[PlacedEnd, ...], pitch: int, x0: int, 
     """The cable boxes and the dashed box: one lone box over the top row, or the harness frame."""
     if facts.harness_width is None:
         box = Box(x=x0, y=box_y, width=_box_width(facts, ends), height=box_room(facts)[0])
-        return (PlacedCable(cable=facts.cables[0].cable, external=facts.cables[0].external, box=box),), None
+        return (PlacedCable(cable=facts.cables[0].cable, external=facts.cables[0].external, heading=facts.cables[0].heading, box=box),), None
     boxes = cable_boxes(facts, _spans(facts, ends), pitch, box_y, x0)
     label = (facts.harness_width or 0) + 2 * facts.pad
     if boxes is None:
@@ -305,6 +309,7 @@ def _place_at(facts: BlockFacts, pitch: int, x0: int, tracks: int, plan: Plan) -
         pitch=pitch,
         boxes=boxes,
         harness=harness,
+        harness_label=facts.harness_label,
         ends=ends,
         wires=wires,
     )

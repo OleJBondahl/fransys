@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 lazy from pathlib import Path
 
 import fransys as fr
+from _model_build_cover import unit_document
 
 
 class _Io(NamedTuple):
@@ -33,7 +34,7 @@ def _outer(d: fr.Design) -> _Empty:
 def _build(unit: Any, releases: Path) -> fr.BuildResult:
     d = fr.design("demo_parts")
     d.add(unit, "U1")
-    return fr.build(d, releases=releases)
+    return fr.build(d, unit_document("demo-tie-c" if unit is _outer else "demo-tie-u"), releases=releases)
 
 
 def test_a_container_releases_after_its_nested_unit(tmp_path: Path) -> None:

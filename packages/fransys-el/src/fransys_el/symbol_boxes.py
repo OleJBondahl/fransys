@@ -16,6 +16,7 @@ from fransys_model.derive import (
 )
 from fransys_model.kernel import render_id
 
+from .kit_keys import box_ports
 from .placement_kit import Pick
 
 if TYPE_CHECKING:
@@ -60,13 +61,13 @@ def box_picks(
     found: dict[Id[Function], Pick] = {}
     views = item_box_views(model, candidates, wired)
     for view in (v for v in views if not v.lone):
-        names = {p: box_port_text(name_of[f], port_name(model, p)) for f in view.members for p in function_ports(model, f)}
+        names = {p: box_port_text(name_of[f], port_name(model, p)) for f in view.members for p in box_ports(model, f)}
         rest = tuple(f for f in view.members if f != view.lead)
         found[view.lead] = Pick(GENERIC_BOX_KEY, 1, frozendict(names), rest)
     grouped = {f for view in views if not view.lone for f in view.members}
     for candidate in candidates:
         if candidate.function not in grouped:
-            names = {p: port_name(model, p) for p in candidate.ports}
+            names = {p: port_name(model, p) for p in box_ports(model, candidate.function)}
             found[candidate.function] = Pick(GENERIC_BOX_KEY, 1, frozendict(names))
     return found
 

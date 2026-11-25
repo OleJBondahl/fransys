@@ -213,20 +213,6 @@ The wires from a live pin across a unit boundary to a rail terminal on it: drawn
 
 Any other rail terminal draws no symbol, so its wires are rail ends, not connections.
 
-### box_pairs
-
-```python
-def box_pairs(model: Model, drawn: Collection[Id[Port]] | None=None) -> dict[Id[Function], BoxPair]
-```
-
-Each function wired point to point to one function of another item, and the port pairs.
-
-Every port of the function has a two-port net to a port of that one function, one to one, and
-that function has no other port. Two partners, a split group, a third member or a net of
-three ports leave the function out. The relation is symmetric; which box is fed is layout's
-reading of the box sides. With `drawn`, only the ports in it count on either
-side: a port the profile leaves off the page is no member of its function.
-
 ### box_port_text
 
 ```python
@@ -341,7 +327,7 @@ def cable_rows(model: Model, cable: Id[Item], *, unit: Id[Unit] | None=None) -> 
 
 One `CableRow` per core of `cable`, sorted by `(core.index, conductor id)`.
 
-Cores are the `core`-kind conductors naming `cable` as `carrier`; the colour is `core_colour`'s.
+Cores are the `core`-kind conductors naming `cable` as `carrier`; the colour is `conductor_colour`'s.
 
 Args:
     model: The frozen model to read.
@@ -467,27 +453,6 @@ Returns:
     One `Throws` per common port, sorted by `common`; empty for a function that is not a
     changeover, is not in `model`, or whose ports carry no `COMMON`/`BREAK`/`MAKE` roles.
 
-### channel_pins
-
-```python
-def channel_pins(model: Model) -> frozenset[Id[Port]]
-```
-
-Count the channel pins: those of a PLC channel template, and every pin of a part-less device.
-
-It counts channel pins; "is a PLC channel" is `function_channels`. The second
-case is an external item with no part: its channels are unknown, so each pin is one.
-
-### channel_signal
-
-```python
-def channel_signal(template: Id[FunctionTemplate], channels: Mapping[Id[FunctionTemplate] | None, PlcChannelFacet]) -> SignalType | None
-```
-
-The signal type of the PLC channel function template `template`, `None` if it is none.
-
-`channels` is `plc_channel_facets(model)`, or a library's facets keyed by their subject.
-
 ### channel_takes
 
 ```python
@@ -514,6 +479,14 @@ def check_order_hint_draws_nothing(model: Model) -> tuple[Finding, ...]
 ```
 
 One ERROR per end of an `OrderHint` naming a group in which no function is drawn, in any set.
+
+### check_references_off_document
+
+```python
+def check_references_off_document(model: Model) -> tuple[Finding, ...]
+```
+
+One `REFERENCE_OFF_DOCUMENT` (`WARNING`) per reference to another, unnamed document, in `references_off_document` order.
 
 ### check_unprinted_sets
 
@@ -580,6 +553,27 @@ Args:
 
 Returns:
     `record`'s value for each name in `columns`, in that order.
+
+### conductor_colour
+
+```python
+def conductor_colour(model: Model, conductor: Id[Conductor]) -> str
+```
+
+The colour of core `conductor`: its carrier's `core_colours[index - 1]`.
+
+The one reader of a core's colour: the facet holds only the index, and the colour is the cable
+product's fact. `cable_rows`, the harness rows and wireviz read it here.
+
+Args:
+    model: The frozen model to read.
+    conductor: The core conductor whose colour to render.
+
+Returns:
+    The core's colour, an IEC 60757 code (or code pair); "" for a core past its product.
+
+Raises:
+    SchemaError: `conductor` is not a core of a cable, or has no `core` facet.
 
 ### conductor_ends
 
@@ -843,27 +837,6 @@ def control_of(row: WiringRow) -> WiringRow
 ```
 
 The control row of the path `row` belongs to: AC_CONTROL or DC_CONTROL.
-
-### core_colour
-
-```python
-def core_colour(model: Model, conductor: Id[Conductor]) -> str
-```
-
-The colour of core `conductor`: its carrier's `core_colours[index - 1]`.
-
-The one reader of a core's colour: the facet holds only the index, and the colour is the cable
-product's fact. `cable_rows`, the harness rows and wireviz read it here.
-
-Args:
-    model: The frozen model to read.
-    conductor: The core conductor whose colour to render.
-
-Returns:
-    The core's colour, an IEC 60757 code (or code pair); "" for a core past its product.
-
-Raises:
-    SchemaError: `conductor` is not a core of a cable, or has no `core` facet.
 
 ### core_list_rows
 
@@ -2024,16 +1997,6 @@ def implied_rest(kind: FunctionKind) -> str | None
 
 Example: `contact_no` is `open`; a changeover and a switch imply none.
 
-### ink_net
-
-```python
-def ink_net(model: Model, port: Id[Port]) -> PhysicalNet | None
-```
-
-The net `port`'s ink carries: its physical net, joined with its declared net's pins.
-
-A net with no conductor is one singleton per pin; the declared net still makes them one net.
-
 ### internal_links
 
 ```python
@@ -2259,14 +2222,6 @@ def item_functions(model: Model) -> frozendict[Id[Item], frozenset[Id[Function]]
 ```
 
 Each item that has functions, with the set of its functions.
-
-### item_installed
-
-```python
-def item_installed(model: Model, item: Id[Item]) -> bool
-```
-
-Whether `item` is installed; a drawing greys an item that is not (`installed=False`).
 
 ### item_kind
 
@@ -3804,6 +3759,14 @@ def previous_release_listing(stored: StoredReleases, identity: ReleaseIdentity) 
 
 The listing of `previous_release`, or `None` when there is no previous release.
 
+### printed_by_release
+
+```python
+def printed_by_release(model: Model, unit: Id[Unit]) -> bool
+```
+
+Whether `unit`, or a unit above it, is marked `from_release`: its own release prints its interior.
+
 ### printed_designation
 
 ```python
@@ -4506,20 +4469,6 @@ def sizes_of(model: Model) -> Sizes
 
 The font sizes of the build's pages, from the build's library heights.
 
-### split_colour
-
-```python
-def split_colour(colour: str) -> tuple[str, str] | None
-```
-
-`colour` as `(base codes, core number)`, or `None` when the grammar does not allow it.
-
-`"BU"` gives `("BU", "")`, `"GNYE"` gives `("GNYE", "")`, `"BK1"` gives `("BK", "1")`, and
-the empty colour gives `("", "")`. The base codes come back joined, two letters each, in the
-order written. A core number has no sign, no leading zero and follows a single base code.
-A reserved code gives itself and no number (`"SH"` gives `("SH", "")`), so the first item is
-then not a base code; `SHBK`, `BKSH` and `SH1` give `None`.
-
 ### stale_patterns
 
 ```python
@@ -4981,6 +4930,14 @@ Example: `unit_design_of(model, "relay-board")` with two instances returns the l
 Raises:
     ModelError: no unit of the model is an instance of a release named `name`.
 
+### unit_has_printer
+
+```python
+def unit_has_printer(model: Model, unit: Id[Unit]) -> bool
+```
+
+Whether a document prints `unit`'s interior: its subject is the unit or a unit holding it.
+
 ### unit_ids
 
 ```python
@@ -5387,19 +5344,6 @@ One drawn function offered to `item_box_views`; the caller computes every flag o
 its first authored choice, `""` for none. `symbol_ports`: that symbol's port bound to each of
 `ports`, parallel to `ports`, empty without a choice. a pin view's `function` is its port's id.
 
-### BoxPair
-
-```python
-class BoxPair
-```
-
-One function and the one function of another item it is wired to, pin to pin.
-
-Attributes:
-    function: The function the pairing is read for.
-    partner: The function of another item that every port of `function` reaches.
-    port_pairs: `(port of function, port of partner)`, in the order of `function`'s ports.
-
 ### BoxPort
 
 ```python
@@ -5739,7 +5683,7 @@ The selections one `Document` makes, each read once from its subject.
 class DocumentSheets
 ```
 
-A document's paper, its sizes, its pages' title blocks in page order, each paper's frame.
+A document's paper, its sizes, its pages' title blocks in page order, each paper's frame, the notice text.
 
 ### DrawnPageReading
 
@@ -7031,7 +6975,9 @@ title and number. `parent` is the unit this instance sits in; a subtree is the
 unit and every unit whose `parent` chain reaches it. Guarded by `validators.structure`
 (`UNIT_CYCLE`). `release`'s own `interface` is now checked at release
 (`INTERFACE_NOT_BUMPED`). `tag` is the instance's written tag (`U1`),
-`None` to be numbered; `derive.unit_tag` reads the tag.
+`None` to be numbered; `derive.unit_tag` reads the tag. `from_release` marks an instance whose
+interior its own release prints (`d.add(fn, tag, from_release=True)`); `derive.printed_by_release`
+reads it, and the system document shows the unit as its boundary only.
 
 ### UnitMatrix
 

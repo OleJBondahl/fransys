@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/findings-release/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/findings-release/">
       
       
       
@@ -2058,6 +2058,14 @@
 <td>Add the missing entry: history= on fr.unit, or d.revision(...) for a system release. Write: fr.unit(<name>, ..., history=[<revision entry>])</td>
 </tr>
 <tr>
+<td><a id="release_unit_unprinted"></a>RELEASE_UNIT_UNPRINTED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>A unit being released has no document whose subject is the unit or a unit holding it, so its release would hold no unit PDF.</td>
+<td>Add a document for the unit before you release it. Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, <unit>, cover=<cover>)</td>
+</tr>
+<tr>
 <td><a id="revision_already_released"></a>REVISION_ALREADY_RELEASED</td>
 <td>ERROR</td>
 <td>release</td>
@@ -2067,7 +2075,7 @@
 </tr>
 <tr>
 <td><a id="setting_new_engine_only"></a>SETTING_NEW_ENGINE_ONLY</td>
-<td>WARNING</td>
+<td>INFO</td>
 <td>build</td>
 <td>consumer</td>
 <td>A settings file sets a <code>[font]</code> key. It applies to drawings from the new engine; the old engine, which draws every schematic today, keeps the built-in font until MODEL-TEXT, so this finding goes then.</td>
@@ -2118,7 +2126,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/build/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/build/">
       
       
       
@@ -2529,9 +2529,9 @@ plus five checks of its own -- and any <code>ERROR</code> writes nothing.</p>
     <span class="k">return</span> <span class="n">release_design</span>
 
 
-<span class="n">release_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">release_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">release_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
-<span class="k">assert</span> <span class="n">release_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">release_errors</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">cabinet_cover</span><span class="p">)</span>
+<span class="n">release_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">doc</span><span class="p">)</span>
+<span class="k">assert</span> <span class="ow">not</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">release_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
 
 <span class="n">target</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="n">release_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">target</span> <span class="o">==</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"demo-io-board"</span> <span class="o">/</span> <span class="s2">"1.1"</span>
@@ -2552,9 +2552,8 @@ A history entry that names a revision never released is <code>RELEASE_HISTORY_UN
 stored release to the model as it stands now, without writing anything: use it during a revision. <code>release()</code> writes the same text into <code>changes.md</code> (and the same rows
 into <code>data/changes.csv</code>) once a previous release exists; the first release of a unit gets neither
 file. A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.</p>
-<div class="highlight"><pre><span></span><code><span class="n">second_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X2"</span><span class="p">))</span>
-<span class="n">second_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">second_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
-<span class="k">assert</span> <span class="n">second_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">second_errors</span>
+<div class="highlight"><pre><span></span><code><span class="n">second_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X2"</span><span class="p">),</span> <span class="n">doc</span><span class="p">)</span>
+<span class="k">assert</span> <span class="ow">not</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">second_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
 
 <span class="n">preview</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="s2">"Added `-X2`"</span> <span class="ow">in</span> <span class="n">preview</span>
@@ -2681,7 +2680,7 @@ in a helper that builds a repeated circuit, and the finding names the helper's c
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

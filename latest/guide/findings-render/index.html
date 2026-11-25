@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/findings-render/">
       
       
       
@@ -1958,9 +1958,9 @@
 <td><a id="align_dropped"></a>ALIGN_DROPPED</td>
 <td>WARNING</td>
 <td>render</td>
-<td>consumer</td>
+<td>Fransys</td>
 <td>Symbols of a row group or a band rank, mated pins, or the legs of a trunk, cannot stand level because the stacks in their columns contradict it; layout dropped the alignment.</td>
-<td>Shorten the stack, or move the members to the same end of their columns. Write: d.series(a, b, c) to stand a path in one column.</td>
+<td>No call clears this: a Fransys layout limit, tracked in KI-127 and KI-712.</td>
 </tr>
 <tr>
 <td><a id="block_not_placed"></a>BLOCK_NOT_PLACED</td>
@@ -2076,11 +2076,11 @@
 </tr>
 <tr>
 <td><a id="fill_under_min"></a>FILL_UNDER_MIN</td>
-<td>WARNING</td>
+<td>INFO</td>
 <td>render</td>
-<td>consumer</td>
-<td>A page is filled less than the minimum because no cut of the blocks fills it more.</td>
-<td>Merge the group with its neighbour so the page fills. Write: d.function(name, text) to draw a device in the neighbour group.</td>
+<td>note</td>
+<td>A page is filled less than the minimum because no cut of the blocks, measured as placed, fills it more.</td>
+<td>Nothing is wrong; the page holds all it can without splitting a block.</td>
 </tr>
 <tr>
 <td><a id="function_not_drawn"></a>FUNCTION_NOT_DRAWN</td>
@@ -2094,9 +2094,9 @@
 <td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
 <td>WARNING</td>
 <td>render</td>
-<td>consumer</td>
+<td>Fransys</td>
 <td>A trunk is cut by a page and its head stands on the page with fewer of its legs.</td>
-<td>Reorder the groups so the head and most of its legs share a page. Write: d.layout.order(a, b) with the head's group first.</td>
+<td>No call clears this: a Fransys layout limit, tracked in KI-1008 and KI-1264.</td>
 </tr>
 <tr>
 <td><a id="label_no_room"></a>LABEL_NO_ROOM</td>
@@ -2136,15 +2136,15 @@
 <td>render</td>
 <td>Fransys</td>
 <td>A symbol is drawn but stands in no cell of any column, or in more cells than it has elements, so layout places it by no rule; the message names it.</td>
-<td>No call clears this: report it with the smallest model that shows it.</td>
+<td>No call clears this: a Fransys layout limit, tracked in KI-1515.</td>
 </tr>
 <tr>
 <td><a id="outline_no_room"></a>OUTLINE_NO_ROOM</td>
 <td>ERROR</td>
 <td>render</td>
-<td>consumer</td>
+<td>Fransys</td>
 <td>A nested unit stands on its parent's page, but its frame does not fit the page or would hold another unit's symbol; the unit is drawn with no frame.</td>
-<td>Move the unit's devices together on the page, or give the unit its own page. Write: d.function(name, text) to place each device in one group.</td>
+<td>No call clears this: a Fransys layout limit, tracked in KI-1517.</td>
 </tr>
 <tr>
 <td><a id="out_of_page"></a>OUT_OF_PAGE</td>
@@ -2296,7 +2296,7 @@
 <td>render</td>
 <td>consumer</td>
 <td>A drawing set has pages but no document prints it, so its items are not in any export.</td>
-<td>Add a document for the set's unit or location, passing its handle as the subject, or nest the unit in one that has one. A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)</td>
+<td>Add a document for the set's unit or location, passing its handle as the subject, or nest the unit in one that has one. A unit whose own release prints it is placed with d.add(<unit>, <tag>, from_release=True). A by-others set prints on the SYSTEM document: add one, fr.document(fr.DocumentPreset.SYSTEM, ...) with d.project(...). Write: fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)</td>
 </tr>
 <tr>
 <td><a id="where_text_far"></a>WHERE_TEXT_FAR</td>
@@ -2304,7 +2304,7 @@
 <td>render</td>
 <td>Fransys</td>
 <td>A where-text stands farther from the text before it than one line pitch, the distance the stack guarantees.</td>
-<td>No call clears this: send the smallest model that shows it. The message names the page.</td>
+<td>No call clears this: a Fransys layout limit, tracked in KI-1516.</td>
 </tr>
 <tr>
 <td><a id="wider_than_page"></a>WIDER_THAN_PAGE</td>
@@ -2351,7 +2351,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

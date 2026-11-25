@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/findings-parts/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/findings-parts/">
       
       
       
@@ -2026,6 +2026,14 @@
 <td>Each connector prints its own label, its <code>marking</code> or else its <code>name</code>. Write: marking = "X2"</td>
 </tr>
 <tr>
+<td><a id="connector_pin_not_on_wire_side"></a>CONNECTOR_PIN_NOT_ON_WIRE_SIDE</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>part author</td>
+<td>A port of a <code>connector</code> function sets <code>symbol_port</code> to a port other than <code>in</code>, the wire side of its symbol.</td>
+<td>A connector pin binds the wire side of its symbol, so its wire end stands away from its mate marker. Write: symbol_port = "in"</td>
+</tr>
+<tr>
 <td><a id="contact_without_switched_link"></a>CONTACT_WITHOUT_SWITCHED_LINK</td>
 <td>ERROR</td>
 <td>library load</td>
@@ -2390,7 +2398,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

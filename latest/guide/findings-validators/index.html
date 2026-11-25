@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/findings-validators/">
       
       
       
@@ -2226,6 +2226,14 @@
 <td>state side = line/load on its pins. Write: side = "line"</td>
 </tr>
 <tr>
+<td><a id="pe_core_without_series"></a>PE_CORE_WITHOUT_SERIES</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A protective (green-yellow) core of a cable lands on no PE pin (no series, or parked off the PE net), so it would print spare.</td>
+<td>Give the cabinet a PE terminal, join the device's PE pin to protective earth with d.earth, and run the cable's series to the device so the core lands on its PE pin. Write: pe = x1.run("PE", 2, bridged=True); w1.core(GNYE, m1.motor["PE"], pe[1]); d.earth(m1.motor["PE"], pe[1]); d.series(x1[1:4], w1, m1.motor)</td>
+</tr>
+<tr>
 <td><a id="pe_not_gnye"></a>PE_NOT_GNYE</td>
 <td>WARNING</td>
 <td>validators</td>
@@ -2550,7 +2558,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/moving-to-0.23/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/moving-to-0.23/">
       
       
       
@@ -899,6 +899,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02348" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.48
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02347" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1299,6 +1310,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         <code>DrawnRow.height_g</code> and <code>width_g</code> are now <code>height</code> and <code>width</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frderivecore_colour-is-now-frderiveconductor_colour" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.derive.core_colour</code> is now <code>fr.derive.conductor_colour</code>
       </span>
     </span>
   </a>
@@ -2376,6 +2398,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#new-in-02348" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        New in 0.23.48
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#new-in-02347" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2782,6 +2815,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frderivecore_colour-is-now-frderiveconductor_colour" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.derive.core_colour</code> is now <code>fr.derive.conductor_colour</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2805,12 +2849,23 @@
 
 <h1 id="moving-to-023">Moving to 0.23</h1>
 <p>This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.</p>
+<h2 id="new-in-02348">New in 0.23.48</h2>
+<ul>
+<li>BREAKING: a green-yellow core with no series, or parked off the PE net, is now <code>PE_CORE_WITHOUT_SERIES</code>, an ERROR; it is never printed spare. Migrate: run the cable's series to the device, and join its PE pin to protective earth with <code>d.earth</code>.</li>
+<li>A boundary function of a unit built alone is drawn with open pins, and gives no false <code>FUNCTION_NOT_WIRED</code>.</li>
+<li>A product tag literal is a strict designation, and designations sort in natural order, so a few page packings move.</li>
+<li><code>SETTING_NEW_ENGINE_ONLY</code> and <code>PART_WITHOUT_FOOTPRINT</code> are now INFO. A fix that no call can give now says "a Fransys layout limit".</li>
+<li>A fan's first load stands plumb under its box-pin driver, and a mating stub keeps its port beside a tag.</li>
+<li>Pins: symdef 0.39.0, refdef 0.4.0 and elecdef 0.8.0.</li>
+</ul>
 <h2 id="new-in-02347">New in 0.23.47</h2>
 <ul>
-<li>A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol (KI-1518; the 0.23.46 note claimed it, but a later landing had undone it).</li>
+<li>A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol. The 0.23.46 note claimed this, but a later landing had undone it.</li>
 </ul>
 <h2 id="new-in-02346">New in 0.23.46</h2>
-<p>BREAKING (typing only): <code>fr.Device</code> and <code>fr.Fn</code> are generic, so the generated parts module's classes type-check with no <code>ty: ignore</code> inside Fransys. A part's device and function still annotate as the bare <code>fr.Device</code> and <code>fr.Fn</code>. The device of <code>d.device(tag, None, external=True, pins=...)</code> is no longer a bare <code>fr.Device</code>: annotate it <code>fr.Device[Any, fr.Pin]</code>.</p>
+<p>BREAKING (typing only): <code>fr.Device</code> and <code>fr.Fn</code> are generic, so the generated parts module's classes type-check with no <code>ty: ignore</code> inside Fransys. A part's device and function still annotate as the bare <code>fr.Device</code> and <code>fr.Fn</code>. The device of <code>d.device(tag, None, external=True, pins=...)</code> is no longer a bare <code>fr.Device</code>: annotate it <code>fr.Device[Any, fr.Pin]</code>.
+- BREAKING: a unit's set no longer prints on the system document, which shows a unit as its boundary only. A unit with no document of its own, and none above it, gives <code>UNPRINTED_SET</code>. A system build that places units released as packages, each printing its own unit PDF, marks each one: <code>d.add(board, "U1", from_release=True)</code>. Migrate: add <code>from_release=True</code> to every <code>d.add</code> of a unit your own release prints.
+- BREAKING: <code>fr.release(result, into, unit=...)</code> of a unit that no document prints is refused with <code>RELEASE_UNIT_UNPRINTED</code>; add <code>fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, &lt;unit&gt;, cover=&lt;cover&gt;)</code> to the build. A stored model of schema 36 or older is refused (schema 37); rebuild stored releases with <code>fr.release</code>.</p>
 <ul>
 <li>Two cabinets joined by a PE core no longer raise DRAWING_SHORTS_NETS or RAIL_IDENTITY_SHARED, in any port order.</li>
 <li>A connected cable screen core is refused, and a pair's hint never names a screen core.</li>
@@ -3032,6 +3087,10 @@
 <li>A <code>Drawing</code> is in layout units, one eighth of a G, and its rows were always in that unit, so the <code>_g</code> suffix was wrong. Rename <code>row.height_g</code> to <code>row.height</code> and <code>row.width_g</code> to <code>row.width</code>; the values are the same. An A3 page's <code>area.w</code> is 1312.</li>
 <li>A build with a layout ERROR now returns its pages and rows in <code>result.drawings</code>, so you can see why; <code>fr.write</code> still refuses it.</li>
 </ul>
+<h2 id="frderivecore_colour-is-now-frderiveconductor_colour"><code>fr.derive.core_colour</code> is now <code>fr.derive.conductor_colour</code></h2>
+<ul>
+<li>fr.derive.core_colour is now fr.derive.conductor_colour.</li>
+</ul>
 
 
 
@@ -3067,7 +3126,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

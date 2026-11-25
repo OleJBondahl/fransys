@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.47/guide/keywords-design/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.23.48/guide/keywords-design/">
       
       
       
@@ -2752,6 +2752,12 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td>The identity a released number holds to, when it must differ from the tag.</td>
 <td><code>d.add(board, "U1", name="module1")</code></td>
 </tr>
+<tr>
+<td><a href="../documents/#which-document-prints-a-set"><code>from_release</code></a></td>
+<td><code>False</code></td>
+<td>Says the unit's own release prints its interior: the system document shows its boundary only and the build gives no <code>UNPRINTED_SET</code>.</td>
+<td><code>d.add(board, "U1", from_release=True)</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="dunused"><code>d.unused</code></h2>
@@ -3270,7 +3276,7 @@ listed twice are refused; see <code>units.md</code>, which holds the worked exam
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.23.47 documentation
+      Fransys 0.23.48 documentation
     </div>
   
   

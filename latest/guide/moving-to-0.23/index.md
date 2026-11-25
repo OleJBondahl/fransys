@@ -2,13 +2,24 @@
 
 This page lists what 0.23 adds, what stays refused for now, and the known issues you can meet. Each 0.23 release has its own section below, newest first. Read the BREAKING lines first: they need a change in your part files, calls or stored releases.
 
+## New in 0.23.48
+
+- BREAKING: a green-yellow core with no series, or parked off the PE net, is now `PE_CORE_WITHOUT_SERIES`, an ERROR; it is never printed spare. Migrate: run the cable's series to the device, and join its PE pin to protective earth with `d.earth`.
+- A boundary function of a unit built alone is drawn with open pins, and gives no false `FUNCTION_NOT_WIRED`.
+- A product tag literal is a strict designation, and designations sort in natural order, so a few page packings move.
+- `SETTING_NEW_ENGINE_ONLY` and `PART_WITHOUT_FOOTPRINT` are now INFO. A fix that no call can give now says "a Fransys layout limit".
+- A fan's first load stands plumb under its box-pin driver, and a mating stub keeps its port beside a tag.
+- Pins: symdef 0.39.0, refdef 0.4.0 and elecdef 0.8.0.
+
 ## New in 0.23.47
 
-- A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol (KI-1518; the 0.23.46 note claimed it, but a later landing had undone it).
+- A terminal fed only by its strip's bridge draws as a terminal, never as its net's power symbol. The 0.23.46 note claimed this, but a later landing had undone it.
 
 ## New in 0.23.46
 
 BREAKING (typing only): `fr.Device` and `fr.Fn` are generic, so the generated parts module's classes type-check with no `ty: ignore` inside Fransys. A part's device and function still annotate as the bare `fr.Device` and `fr.Fn`. The device of `d.device(tag, None, external=True, pins=...)` is no longer a bare `fr.Device`: annotate it `fr.Device[Any, fr.Pin]`.
+- BREAKING: a unit's set no longer prints on the system document, which shows a unit as its boundary only. A unit with no document of its own, and none above it, gives `UNPRINTED_SET`. A system build that places units released as packages, each printing its own unit PDF, marks each one: `d.add(board, "U1", from_release=True)`. Migrate: add `from_release=True` to every `d.add` of a unit your own release prints.
+- BREAKING: `fr.release(result, into, unit=...)` of a unit that no document prints is refused with `RELEASE_UNIT_UNPRINTED`; add `fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, <unit>, cover=<cover>)` to the build. A stored model of schema 36 or older is refused (schema 37); rebuild stored releases with `fr.release`.
 
 - Two cabinets joined by a PE core no longer raise DRAWING_SHORTS_NETS or RAIL_IDENTITY_SHARED, in any port order.
 - A connected cable screen core is refused, and a pair's hint never names a screen core.
@@ -226,3 +237,7 @@ BREAKING: stored releases are rebuilt (schema 36); reading an old one gives `Sch
 
 - A `Drawing` is in layout units, one eighth of a G, and its rows were always in that unit, so the `_g` suffix was wrong. Rename `row.height_g` to `row.height` and `row.width_g` to `row.width`; the values are the same. An A3 page's `area.w` is 1312.
 - A build with a layout ERROR now returns its pages and rows in `result.drawings`, so you can see why; `fr.write` still refuses it.
+
+## `fr.derive.core_colour` is now `fr.derive.conductor_colour`
+
+- fr.derive.core_colour is now fr.derive.conductor_colour.
